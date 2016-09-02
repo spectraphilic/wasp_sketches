@@ -1,95 +1,108 @@
 /*  
- *  --[Ag_12] - Reading the Weather station at Agriculture v20 board-- 
+ *  ------------  WaspMote Agriculture Test  -------------- 
  *  
- *  Explanation: Turn on the Agriculture v20 board and read the 
- *  Weather station every minute. Every time a new pluviometer 
- *  pulse is generated the interrruption is captured and stored
- *  
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L. 
- *  http://www.libelium.com 
- *  
- *  This program is free software: you can redistribute it and/or modify 
- *  it under the terms of the GNU General Public License as published by 
- *  the Free Software Foundation, either version 3 of the License, or 
- *  (at your option) any later version. 
- *  
- *  This program is distributed in the hope that it will be useful, 
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- *  GNU General Public License for more details. 
- *  
- *  You should have received a copy of the GNU General Public License 
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. 
- *  
- *  Version:           0.3
- *  Design:            David Gascón 
- *  Implementation:    Manuel Calahorra, Yuri Carmona
  */
 
 #include <WaspSensorAgr_v20.h>
 #include <WaspFrame.h>
+#include <WaspGPS.h>
+#include <WaspXBeeDM.h>
+#include <WaspUIO.h>
 
-// Variable to store the temperature read value
-float temperature;
+char node_ID[] = "WS_test1";
 
-// Variable to store the humidity read value
-float humidity;
-
-// Variable to store the pressure value
+/*** variables to store sensors readings ***/
+float sensirionTemperature;
+float sensirionHumidity;
 float pressure;
-
-
-// Variable to store the anemometer value
+uint8_t wetness;
+float DS18B20Temperature;
 float anemometer;
+uint8_t vane;
+float pluviometer1;
+float pluviometer2;
+float pluviometer3;
 
-// Variable to store the pluviometer value
-float pluviometer1; //mm in current hour 
-float pluviometer2; //mm in previous hour
-float pluviometer3; //mm in last 24 hours
+uint8_t ultrasound;
 
-// Variable to store the vane value
-int vane;
 
-// variable to store the number of pending pulses
+/*** variable to store the number of pending pulses ***/
 int pendingPulses;
 
-// define node identifier
-char nodeID[] = "node_WS";
+/*** GPS variables ***/
+// define GPS timeout when connecting to satellites
+// this time is defined in seconds (240sec = 4minutes)
+#define TIMEOUT 240
+
+// define status variable for GPS connection
+bool status = false;
+char GPSmsg[] = "GPS not connected";
+
+/*** XBee variables ***/
+char RX_ADDRESS[] = "0013a20040779085"; // "0013a20040779085" Meshlium_Finse
 
 
-
-void setup()
+void setup() 
 {
-  // Turn on the USB and print a start message
   USB.ON();
-  USB.println(F("Example AG_12. Weather Station example"));
+  USB.println(F("Weather station test"));
 
-  // set node ID
-  frame.setID( nodeID ); 
-
-  // Turn on the sensor board
-  SensorAgrv20.ON();  
-
-  // Turn on the RTC
   RTC.ON();
-  USB.print(F("Time:"));
+
+  // Set the Waspmote ID
+  frame.setID(node_ID); 
+
+
+  // Set GPS ON  
+  GPS.ON();
+
+  // 1. wait for GPS signal for specific time
+  status = GPS.waitForSignal(TIMEOUT);
+
+  // 2. if GPS is connected then set Time and Date to RTC
+  if(status == true)
+  {    
+    // set time in RTC from GPS time (GMT time)
+    GPS.setTimeFromGPS();
+    USB.print(F("Time GPS: "));
+  }
+  else
+  {
+    xbeeDM.ON();
+    xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+    USB.print(F("Time Meshlium: "));
+  }
   USB.println(RTC.getTime());
 
-}
+  xbeeDM.OFF();
+  GPS.OFF();
+  RTC.OFF();
+  USB.OFF();
 
+  // Turn on the sensor board
+  SensorAgrv20.ON();
 
+  delay(2000);
+}  
 
 void loop()
 {
   /////////////////////////////////////////////
   // 1. Enter sleep mode
   /////////////////////////////////////////////
-  SensorAgrv20.sleepAgr("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE4, SOCKET0_OFF, SENS_AGR_PLUVIOMETER);
+
+  // "00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5" -> Measures every minute
+
+  SensorAgrv20.sleepAgr("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, SOCKET0_OFF, SENS_AGR_PLUVIOMETER);
 
 
   /////////////////////////////////////////////
-  // 2.1. check pluviometer interruption
+  // 2 Check interruptions
   /////////////////////////////////////////////
+
+  SensorAgrv20.detachPluvioInt(); // Is this needed???
+
+  //Check pluviometer interruption
   if( intFlag & PLV_INT)
   {
     USB.println(F("+++ PLV interruption +++"));
@@ -112,17 +125,22 @@ void loop()
     intFlag &= ~(PLV_INT); 
   }
 
-  /////////////////////////////////////////////
-  // 2.2. check RTC interruption
-  /////////////////////////////////////////////
+  //Check RTC interruption
   if(intFlag & RTC_INT)
   {
     USB.println(F("+++ RTC interruption +++"));
 
-    // switch on sensor board
-    SensorAgrv20.ON();
 
-    RTC.ON();
+    // Gets time for Alarm1
+    USB.println(RTC.getAlarm1());
+
+
+    //if (RTC.minute_alarm1 == 0)
+
+      // switch on sensor board
+      //SensorAgrv20.ON();
+
+      RTC.ON();
     USB.print(F("Time:"));
     USB.println(RTC.getTime());        
 
@@ -131,118 +149,216 @@ void loop()
 
     // Clear flag
     intFlag &= ~(RTC_INT); 
-  }  
-
+  }
+  clearIntFlag(); 
+  PWR.clearInterruptionPin();
 }
 
 
+///////////////////////////////////////////
+// Function: measureSensors
+/////////////////////////////////////////// 
 
-
-/*******************************************************************
- *
- *  measureSensors
- *
- *  This function reads from the sensors of the Weather Station and 
- *  then creates a new Waspmote Frame with the sensor fields in order 
- *  to prepare this information to be sent
- *
- *******************************************************************/
 void measureSensors()
 {  
+  // 1. Turn on the sensors
+  USB.print(F("Turn on the sensors..."));
 
-  USB.println(F("------------- Measurement process ------------------"));
-
-  /////////////////////////////////////////////////////
-  // 1. Reading sensors
-  ///////////////////////////////////////////////////// 
-
-  // Turn on the sensors and wait for stabilization and response time
-  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_ANEMOMETER);
+  // Power on Sensirion
   SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
+  // Power on the pressure sensor
   SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
+  // Power on the leaf wetness sensor
+  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
+  // Power on the weather station sensor
+  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_ANEMOMETER);
+  // Power on the temperature sensor
+  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_TEMP_DS18B20);
   delay(10000);
 
-  // Read the sensors
+  // 2. Read sensors
+
+  USB.print(F("Read sensors..."));
+  // Read the digital temperature sensor 
+  sensirionTemperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
+  // Read the digital humidity sensor 
+  sensirionHumidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
+  // Read the pressure sensor
+  pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE);
+  // Read the leaf wetness sensor 
+  wetness = SensorAgrv20.readValue(SENS_AGR_LEAF_WETNESS);
+  //Sensor temperature reading
+  DS18B20Temperature = SensorAgrv20.readValue(SENS_AGR_TEMP_DS18B20);
+  // Read the anemometer sensor 
   anemometer = SensorAgrv20.readValue(SENS_AGR_ANEMOMETER);
+  // Read the vane sensor 
   vane = SensorAgrv20.readValue(SENS_AGR_VANE);
+  // Read the pluviometer sensor 
   pluviometer1 = SensorAgrv20.readPluviometerCurrent();
   pluviometer2 = SensorAgrv20.readPluviometerHour();
   pluviometer3 = SensorAgrv20.readPluviometerDay();
-  temperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
-  humidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
-  pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE);
 
-  // Turn off the sensors
-  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_ANEMOMETER);
+  ultrasound = UIO.readMaxbotixSerial();
+
+  // 3. Turn off the sensors
+
+  USB.print(F("Turn off the sensors..."));
+  // Power off Sensirion
   SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
+  // Power off the pressure sensor
   SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);
+  // Power off the leaf wetness sensor
+  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
+  // Power off the temperature sensor
+  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_TEMP_DS18B20);
+  // Power off the weather station sensor
+  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_ANEMOMETER);
+
+  // 4. Read GPS
+
+  USB.print(F("Power on GPS..."));
+  // Power on GPS
+  GPS.ON();
+  status = GPS.waitForSignal(TIMEOUT);
+
+  // if GPS is connected then get position
+  if(status == true)
+  {
+    // getPosition function gets all basic data 
+    GPS.getPosition();
+    // set time in RTC from GPS time (GMT time)
+    GPS.setTimeFromGPS();
+  }
+  GPS.OFF();
 
 
-  /////////////////////////////////////////////////////
-  // 2. USB: Print the weather values through the USB
-  /////////////////////////////////////////////////////
+  ////////////////////////////////////////////////
+  // 5. Send data
+  ////////////////////////////////////////////////
 
-  // Print the temperature and humidity values through the USB
-  USB.print(F("Temperature: "));
-  USB.print(temperature);
-  USB.println(F("ºC"));
-  USB.print(F("Humidity: "));
-  USB.print(humidity);
-  USB.println(F("%RH"));
+  USB.println(F("Send data..."));
 
-  // Print the pressure value through the USB
-  USB.print(F("Pressure: "));
-  USB.print(pressure);
-  USB.println(F("kPa"));
+  xbeeDM.ON();
+  delay(2000);  
 
-  // Print the accumulated rainfall
-  USB.print(F("Current hour accumulated rainfall (mm/h): "));
-  USB.println( pluviometer1 );
-
-  // Print the accumulated rainfall
-  USB.print(F("Previous hour accumulated rainfall (mm/h): "));
-  USB.println( pluviometer2 );
-
-  // Print the accumulated rainfall
-  USB.print(F("Last 24h accumulated rainfall (mm/day): "));
-  USB.println( pluviometer3 );
-
-  // Print the anemometer value
-  USB.print(F("Anemometer: "));
-  USB.print(anemometer);
-  USB.println(F("km/h"));
-
-  // Print the vane value
-  char vane_str[10] = {
-    0            };
-  USB.print(F("Vane: "));
-  USB.println( vane );
-  USB.println(F("----------------------------------------------------\n"));
+  // 5. Create ASCII frame
+  frame.createFrame(ASCII);
+  // set frame fields (Battery sensor - uint8_t)
+  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+  // set frame fields (Temperature in Celsius sensor - float)
+  frame.addSensor(SENSOR_IN_TEMP, RTC.getTemperature());
+  // set frame fields (XYZ)
+  frame.addSensor(SENSOR_ACC, (int) ACC.getX(), (int) ACC.getY(), (int) ACC.getZ());
 
 
+  // Show the frame
+  frame.showFrame();
+  //  Send XBee packet
+  xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length); 
+  delay(1000);
 
-//  /////////////////////////////////////////////////////
-//  // 3. Create Waspmote Frame
-//  /////////////////////////////////////////////////////
-//
-//  // Create new frame
-//  frame.createFrame(ASCII); 
-//
-//  // add pluviometer value
-//  frame.addSensor( SENSOR_PLV1, pluviometer1 );
-//  // add pluviometer value
-//  frame.addSensor( SENSOR_PLV2, pluviometer2 );
-//  // add pluviometer value
-//  frame.addSensor( SENSOR_PLV3, pluviometer3 );
-//  // add anemometer value
-//  frame.addSensor( SENSOR_ANE, anemometer );
-//  // add pluviometer value
-//  frame.addSensor( SENSOR_WV, SensorAgrv20.vaneDirection );
-//
-//  // Print frame
-//  frame.showFrame();
+  // 5. Create ASCII frame
+  frame.createFrame(ASCII);
+  // Add digital temperature
+  frame.addSensor(SENSOR_TCB, sensirionTemperature);
+  // Add digital humidity
+  frame.addSensor(SENSOR_HUMB, sensirionHumidity);
+  // Add pressure
+  frame.addSensor(SENSOR_PA, pressure);
+  // Show the frame
+  frame.showFrame();
+  //  Send XBee packet
+  xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length); 
+  delay(1000);
 
+  // 5. Create ASCII frame
+  frame.createFrame(ASCII);
+  // Add wetness
+  frame.addSensor(SENSOR_LW, wetness);
+  // Add DS18B20 temperature
+  frame.addSensor(SENSOR_TCC, DS18B20Temperature);
+  // Show the frame
+  frame.showFrame();
+  //  Send XBee packet
+  xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length); 
+  delay(1000);
+
+  // 5. Create ASCII frame
+  frame.createFrame(ASCII);
+  // Add anemometer value
+  frame.addSensor( SENSOR_ANE, anemometer );
+  // Add wind vane value
+  frame.addSensor( SENSOR_WV, vane );
+  // Add ultrasound
+  frame.addSensor(SENSOR_US, ultrasound);
+  // Show the frame
+  frame.showFrame();
+  //  Send XBee packet
+  xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length); 
+  delay(1000);
+
+  // 5. Create ASCII frame
+  frame.createFrame(ASCII);
+  // Add pluviometer value
+  frame.addSensor( SENSOR_PLV1, pluviometer1 );
+  // Add pluviometer value
+  frame.addSensor( SENSOR_PLV2, pluviometer2 );
+  // Add pluviometer value
+  frame.addSensor( SENSOR_PLV3, pluviometer3 );
+  // Show the frame
+  frame.showFrame();
+  //  Send XBee packet
+  xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length); 
+  delay(1000);
+
+  // if GPS is connected then get position
+  if( status == true )
+  {
+    // 5. Create ASCII frame
+    frame.createFrame(ASCII);
+    // add GPS values
+    frame.addSensor(SENSOR_GPS, 
+    GPS.convert2Degrees(GPS.latitude, GPS.NS_indicator),
+    GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator) );
+    // Show the frame
+    frame.showFrame();
+    //  Send XBee packet
+    xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length);
+  }
+  delay(1000);
+
+  // 5.4 Communication module to OFF
+  xbeeDM.OFF();
+  delay(1000);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
