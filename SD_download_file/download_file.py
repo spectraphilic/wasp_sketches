@@ -26,7 +26,7 @@ import serial
 ## whether or not the arduino is connected
 connected = False
 text_file = "log_WSP_ID.TXT"
-filename = "log.TXT"
+filename = "logfile.txt"
 ## establish connection to the serial port that your arduino 
 ## is connected to.
 
