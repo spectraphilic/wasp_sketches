@@ -5,7 +5,7 @@
  */
 
 // define file name: MUST be 8.3 SHORT FILE NAME
-char filename[]="loog.TXT";
+char filename[]="logfile.txt";
 int numlines2print = 5;
 
 // array in order to read data
