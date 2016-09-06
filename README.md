@@ -1,5 +1,6 @@
 # wasp_sketches
 Waspmote sketches develoded by LATICE group at UiO. 
+
 Current developper: 
 - John Hulth	([john.hulth@geo.uio.no](john.hulth@geo.uio.no))
 - Simon Filhol 	([simon.filhol@geo.uio.no](simon.filhol@geo.uio.no))
@@ -38,4 +39,3 @@ Script to download a given text file stored on the SD card using USB Serail and 
 ## Script for development purposes
 - test_logfile 	->	
 - OTA_test ->
-- 
