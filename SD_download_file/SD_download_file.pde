@@ -4,6 +4,8 @@
  * August 29, 2016
  */
 
+#include <Serial.h>
+
 // define file name: MUST be 8.3 SHORT FILE NAME
 char filename[]="";
 int numlines2print = 1;
@@ -25,7 +27,7 @@ void setup()
   USB.println(F("List of file available on SD showing date last modified and file size (byte):"));
   SD.ls( LS_R | LS_DATE | LS_SIZE );
   USB.println(F("---------------------------"));
-  USB.print()
+  USB.print();
   delay(1000); 
   USB.print("Filename to download?");
   filename = USB.read();
@@ -36,7 +38,7 @@ void setup()
 
 void loop()
 { 
-  while(Serial.available() == 0){}
+  while(USB.available() == 0){}
   if(SD.isFile(filename) == 1){
     int totallines = SD.numln(filename);
     USB.print("File ");
