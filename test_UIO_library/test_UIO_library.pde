@@ -19,27 +19,35 @@
  *  You should have received a copy of the GNU General Public License  
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.  
  */
-     
+
 // Put your libraries here (#include ...)
 
 #include <WaspUIO.h>
 #include <WaspXBeeDM.h>
+#include <WaspFrame.h>
 
+// Define variables
+//#define key_access "LIBELIUM"   // in use for OTA programing
+//char RX_ADDRESS = "0013a20040779085"; // "0013a20040779085" Meshlium_Finse mac address
+//char node_ID[10];
 
 void setup() {
-    // put your setup code here, to run once:
+  // put your setup code here, to run once:
 
-
-
-UIO.initSD();
-UIO.initNet('Finse');
-UIO.readMaxbotixSerial(6); // OK!!!
-
+  UIO.initSD();
+  
+  UIO.initNet('Finse');
+  
+  
+  
+  
+  USB.print(UIO.RX_ADDRESS);
+  
+  UIO.readMaxbotixSerial(6); // OK!!!
+  UIO.logActivity("hghgjhjh");
 }
-
-
 void loop() {
-    // put your main code here, to run repeatedly:
-
+  // put your main code here, to run repeatedly:
 }
+
 
