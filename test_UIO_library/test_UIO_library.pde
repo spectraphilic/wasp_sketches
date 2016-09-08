@@ -21,7 +21,6 @@
  */
 
 // Put your libraries here (#include ...)
-
 #include <WaspUIO.h>
 #include <WaspXBeeDM.h>
 #include <WaspFrame.h>
