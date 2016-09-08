@@ -27,6 +27,8 @@
  
 
 #include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+char RX_ADDRESS[] = "0013a20040db6048";
 
 #define key_access "LIBELIUM"
 #define id_mote "WASPMOTE00000001"
@@ -66,10 +68,18 @@ void loop()
   }
   
   // Blink LED1 while messages are not received
-  USB.println("you got me !!");
+  USB.println("I am here !!");
   delay(100);
   USB.println("-----------");
   delay(100);
+  
+  frame.createFrame(ASCII);
+  frame.addSensor(SENSOR_TIME, RTC.getTime() ); 
+  frame.addSensor(SENSOR_STR,"drop");
+  frame.showFrame();
+  xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+  delay(100);
+  
     
 }
 
