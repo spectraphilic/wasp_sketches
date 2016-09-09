@@ -29,7 +29,6 @@
 //#define key_access "LIBELIUM"   // in use for OTA programing
 //char RX_ADDRESS = "0013a20040779085"; // "0013a20040779085" Meshlium_Finse mac address
 //char node_ID[10];
-
 void setup() {
   // put your setup code here, to run once:
 
