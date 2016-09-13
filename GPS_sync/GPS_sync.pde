@@ -14,100 +14,83 @@
 // this time is defined in seconds (240sec = 4minutes)
 #define TIMEOUT 240
 
-// define status variable for GPS connection
-bool status;
-
-/*** XBee variables ***/
-// Destination MAC address
+bool status; // define status variable for GPS connection
 uint8_t error; // XbeeDM send error
-
-unsigned long gps_sync_time;
-unsigned long epoch;
-
 
 void setup()
 {  
   USB.ON();  // open USB port
-  GPS.ON();  // set GPS ON  
   RTC.ON();  // set RTC ON
 
     UIO.initSD();
   UIO.initNet('Finse');
 
-  // set mote Identifier (16-Byte max)
+  // set mote Identifier for GPS sync unit
   frame.setID("GPS_sync");
+  GPS.ON();  // set GPS ON
 }
 
 
 void loop()
 {
-  status = GPS.waitForSignal(TIMEOUT);
+  RTC.setAlarm1("00:00:00:00",RTC_ABSOLUTE,RTC_ALM1_MODE5); // Set alarm to send every full minute
 
-  xbeeDM.ON();
-  delay(100);
+  status = GPS.waitForSignal(TIMEOUT); // OBS, problems with 'loadEphems()' DO NOT USE!!!
 
-  // Create Frame depending on the connectivity
-  frame.createFrame(ASCII);
-  frame.setFrameSize(DIGIMESH, BROADCAST, DISABLED, DISABLED);
-  frame.setFrameType(SERVICE1_FRAME); // set a TIMEOUT frame type
+  if (intFlag & RTC_INT) // RTC captured
+  {
+    xbeeDM.ON();
+    delay(100);
 
-  // if GPS is connected then get time
-  if( status == true )
-  {    
-    // set time in RTC from GPS time (GMT time)
-    GPS.setTimeFromGPS();
-    epoch = RTC.getEpochTime();
-    gps_sync_time = epoch;
-    // add message fields to Frame
-    frame.addSensor(SENSOR_STR,"GPS updated epoch time");
-    // add 'RTC.getEpochTime' timestamp in frame to avoid delays
+    // Create Frame depending on the connectivity
+    frame.createFrame(ASCII);
+    frame.setFrameType(SERVICE1_FRAME); // set a TIMEOUT frame type
+
+    // if GPS is connected then set time from GPS...
+    if( status == true )
+    {    
+      // add message fields to Frame
+      frame.addSensor(SENSOR_STR,"GPS updated epoch time");
+      // set time in RTC from GPS time (GMT time)
+      GPS.setTimeFromGPS();
+    }
+    // ...otherwise, use time from RTC
+    else
+    {
+      // add message fields to Frame
+      frame.addSensor(SENSOR_STR,"not updated epoch time");
+    }
+    // add 'RTC.getEpochTime' timestamp in frame
     frame.addSensor(SENSOR_TST, RTC.getEpochTime());
-  }
-  else
-  {
-    // add message fields to Frame
-    frame.addSensor(SENSOR_STR,"not updated epoch time");
-    // add 'RTC.getEpochTime' timestamp in frame to avoid delays
-    frame.addSensor(SENSOR_TST, RTC.getEpochTime());
-    // add 'RTC.getEpochTime' timestamp in frame to avoid delays
-    //frame.addSensor(SENSOR_TST, gps_sync_time);
-  }
 
-  // Send epoch time message
-  error = xbeeDM.send(UIO.BROADCAST_ADDRESS, frame.buffer, frame.length); 
-  //error = xbeeDM.send("000000000000FFFF", frame.buffer, frame.length); 
 
-  // 2.3 Check TX flag
-  if (error == 0)
-  {
-    frame.showFrame();
-    
-    UIO.logActivity("Time sync frame sent OK");
-    
-        frame.showFrame();
+    // Send GPS_sync message
+    error = xbeeDM.send(UIO.BROADCAST_ADDRESS, frame.buffer, frame.length); 
+    delay(100),
+    xbeeDM.OFF();
 
-  }
-  else 
-  {
-    UIO.logActivity("Time sync frame not sent!!!");
-  }
+    // Check TX flag
+    if (error == 0)
+    {
+      UIO.logActivity("Time sync frame sent OK");
+    }
+    else 
+    {
+      UIO.logActivity("Time sync frame not sent!!!");
+    }
 
-  if(status == false)
-  {
-    UIO.logActivity("No GPS signal!!!");
-
-    //    UIO.logActivity("No GPS signal, waspmote reboots!!!");
-    //    delay(60000); // Delay one minute before rebooting
-    //    PWR.reboot();
+    if(status == false)
+    {
+      UIO.logActivity("No GPS signal, GPS_sync unit reboots!!!");
+      delay(60000); // Delay one minute before rebooting
+      PWR.reboot(); // It seems to be a bug in the GPS, reboot is needed if no GPS signal
+    }
+    // Clear interuption flag
+    intFlag &= ~(RTC_INT); 
+    clearIntFlag(); 
+    PWR.clearInterruptionPin();
   }
 }
-
-
-
-
-
-
-
 
 
 
