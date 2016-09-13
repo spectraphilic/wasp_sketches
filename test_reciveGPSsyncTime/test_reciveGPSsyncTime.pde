@@ -50,19 +50,19 @@ void setup()
 
 void loop()
 { 
-  // receive XBee packet (wait for 10 seconds)
-  error = xbeeDM.receivePacketTimeout(10000);
+  // receive XBee packet (wait for 2 minutes)
+  error = xbeeDM.receivePacketTimeout(120000);
 
   // check answer  
-  if( error == 0 ) 
+  if(error == 0) 
   {
     // Show data stored in '_payload' buffer indicated by '_length'
     USB.print(F("Data: "));  
     USB.println( xbeeDM._payload, xbeeDM._length);
-    
-    // Show data stored in '_payload' buffer indicated by '_length'
-    USB.print(F("Length: "));  
-    USB.println( xbeeDM._length,DEC);
+
+
+
+
   }
   else
   {
