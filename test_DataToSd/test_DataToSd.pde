@@ -69,7 +69,7 @@ void loop()
   frame.showFrame();
 
 
-  UIO.FrameToSd();
+  FrameToSd();
 
 
 
