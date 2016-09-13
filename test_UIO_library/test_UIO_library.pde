@@ -32,20 +32,20 @@
 void setup() {
   // put your setup code here, to run once:
 
-  UIO.initSD();
-  
-  UIO.initNet('Finse');
-  
-  
-  
-  
-  USB.print(UIO.RX_ADDRESS);
-  
-  UIO.readMaxbotixSerial(6); // OK!!!
-  UIO.logActivity("hghgjhjh");
+  UIO.initSD(); // Function OK!
+
+  UIO.initNet('Finse'); // Function OK!
+
+  UIO.logActivity("testing logActivity function"); // UIO.logActivity and UIO.Frame2Sd functions OK!
+
+  USB.println(UIO.RX_ADDRESS);
+ // USB.println(UIO.BROADCAST_ADDRESS, HEX);
+
+  UIO.readMaxbotixSerial(6); // Function OK, but need some work!
 }
 void loop() {
   // put your main code here, to run repeatedly:
 }
+
 
 
