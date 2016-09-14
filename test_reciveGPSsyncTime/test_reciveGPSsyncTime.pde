@@ -32,7 +32,11 @@
 
 // define variable
 uint8_t error;
-
+char buffer[100];
+char * pch;
+unsigned long epoch; // Define variable for epoch time
+timestamp_t time; // Define variable for UTC timestamps
+char * pEnd;
 
 void setup()
 {  
@@ -40,7 +44,7 @@ void setup()
   USB.ON();
   USB.println(F("Receiving example"));
 
-    UIO.initSD();
+  UIO.initSD();
   UIO.initNet('Finse');
 
   // init XBee 
@@ -50,19 +54,55 @@ void setup()
 
 void loop()
 { 
-  // receive XBee packet (wait for 2 minutes)
-  error = xbeeDM.receivePacketTimeout(120000);
+  // receive XBee packet (wait for 5 minutes)
+  error = xbeeDM.receivePacketTimeout(300000);
+
 
   // check answer  
   if(error == 0) 
   {
     // Show data stored in '_payload' buffer indicated by '_length'
-    USB.print(F("Data: "));  
-    USB.println( xbeeDM._payload, xbeeDM._length);
+    USB.println( xbeeDM._payload, xbeeDM._length); // For debug!!!
+
+    // clear buffers
+    memset(buffer, 0x00, sizeof(buffer));
+    // copy _payload to buffer
+    memcpy(buffer, xbeeDM._payload, xbeeDM._length);
+
+    if (strstr(buffer,"GPS_sync") != 0) // check that this frame commes from the 'GPS_sync' unit
+    {
+      pch = strstr(buffer,"TST:");
+      USB.println(pch); // For debug!!!
+      //----------------------------------------
+      // Simon, you are free to do want you want here! ;)
+
+
+      // Gave up here!!! Find solution to convert "TST:1473853802#" -> 1473853802   !!!!
 
 
 
+      //----------------------------------------
+      // epoch = strtol (pch,&pEnd,10);
 
+      // epoch = atol("1473849722"); // For debug
+      // epoch = epoch + 2; // Add some seconds for the delays, Check this!!!
+      USB.println (epoch);
+
+      // Break Epoch time into UTC time
+      RTC.breakTimeAbsolute( epoch, &time );
+      // Available info: UTC Date
+      USB.print( time.year, DEC );
+      USB.print( time.month, DEC );
+      USB.print( time.date, DEC );
+      USB.print( time.hour, DEC );
+      USB.print( time.minute, DEC );
+      USB.print( time.second, DEC );
+
+    }
+    else
+    {
+      USB.println ("Frame resived from other than 'GPS_sync' unit. Ignore!!!");
+    }
   }
   else
   {
@@ -75,8 +115,22 @@ void loop()
      * '3' : Checksum byte is not available	
      * '2' : Frame Type is not valid
      * '1' : Timeout when receiving answer   
-    */
+     */
     USB.print(F("Error receiving a packet:"));
     USB.println(error,DEC);     
   }
 } 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
