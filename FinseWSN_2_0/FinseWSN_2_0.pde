@@ -1,75 +1,122 @@
 /*  
+ SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
+ 14 September 2016, Simon Filhol, John Hulth
  */
 
 // Put your libraries here (#include ...)
-#include <xbeeDM.h>
+#include <WaspXBeeDM.h>
 #include <WaspUIO.h>
+#include <WaspSensorAgr_v20.h>
+#include <WaspFrame.h>
 
-// Define variables
-char log_file = "logfile.txt";
-char tmp_file = "tmpfile.txt";
-char data_file = "datafile.txt";
-char unsent_file = "usentfil.txt";
-
-
-char RX_ADDRESS = "0013a20040779085"; // "0013a20040779085" Meshlium_Finse mac address
 char node_ID[10];
+char message[40];
+int pendingPulses;
+int minutes;
+int hours;
+
+void setup(){
+
+  USB.ON();
+  RTC.ON();
+  xbeeDM.ON();
+  xbeeDM.checkNewProgram(); // CheckNewProgram is mandatory in every OTA program
 
 
+    // Function to initialize SD card
+  UIO.initSD();
 
-void setup() {
+  UIO.logActivity("Waspmote starting");
 
-	USB.ON();
-	SD.ON();
-	xbeeDM.ON();
+  // Function to initialize
+  UIO.initNet('Finse');
 
-  	// Function to initialize SD card
-	UIO.initSD();
+  UIO.logActivity("SD and XbeeDM initialized");
 
-  	// Function to initialize
-	UIO.initNet();
+  // Turn on the sensor board
+  SensorAgrv20.ON();
+  SensorAgrv20.attachPluvioInt();
+  delay(2000);
 
-	USB.OFF();	
-	SD.OFF();
-	xbeeDM.OFF();
+  UIO.logActivity("Waspmote all set and ready");
+
+  xbeeDM.OFF();
+  USB.OFF();
+  RTC.OFF();
 }
 
 
-void loop() {
+void loop(){
 
-  // loop to record sensors, add data to tmp file
-	if()
-	{
-		SD.ON();
-		if(USB.available()){USB.ON();}
+  SensorAgrv20.sleepAgr("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, SOCKET0_OFF, SENS_AGR_PLUVIOMETER);
+  SensorAgrv20.detachPluvioInt(); 
 
-		// [INCLUDE CODE HERE] to read sensor and store values into tmp file
-
-		SD.OFF();
-		USB.OFF();
-	}
+  RTC.ON();
+  RTC.getTime();
+  minutes = RTC.minute;
+  hours = RTC.hour;
+  RTC.OFF();
 
 
-  // loop to start xbeeDM and exchange data through network
-	if()
-	{
-		xbeeDM.ON();
-		SD.ON();
-		if(USB.available()){USB.ON();}
+  //If statement to record pluviometer interruptions
+  if( intFlag & PLV_INT)
+  {	
 
-		// [INCLUDE CODE HERE] Synchronize time
+    UIO.start_RTC_SD_USB();
+    UIO.logActivity("+++ PLV interruption +++");
+    pendingPulses = intArray[PLV_POS];
+    sprintf(message, "Number of pending pulses: %d",pendingPulses);
+    UIO.logActivity(message);
 
+    for(int i=0 ; i<pendingPulses; i++)
+    {
+      // Enter pulse information inside class structure
+      SensorAgrv20.storePulse();
 
-		// Transfer frames from tmp_file to data file, unsent_file if no connectoin
-		UIO.Frame2Meshlium( tmp_file, data_file, unsent_file,  RX_ADDRESS,  log_file );
+      // decrease number of pulses
+      intArray[PLV_POS]--;
+    }
 
-		
+    // Clear flag
+    intFlag &= ~(PLV_INT); 
+    UIO.stop_RTC_SD_USB();
+  }
 
-  		// [INCLUDE CODE HERE]
+  //Check RTC interruption
+  if(intFlag & RTC_INT)
+  {
+    UIO.start_RTC_SD_USB();
+    UIO.logActivity("+++ RTC interruption +++");
+    Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-		xbeeDM.OFF();
-		SD.OFF();
-		USB.OFF();
-	}
+    // Sample every 10 minutes
+    if ((minutes%10)==0)
+    { 
+
+      // Measure sensors
+      UIO.logActivity("+++ Sampling +++");
+      UIO.measureSensorsBasicSet();
+
+      if(minutes == 0) 
+      {
+        // send frame to Meshlium every hours
+        xbeeDM.ON();
+        delay(50);
+        UIO.Frame2Meshlium();
+        //UIO.synchrnizeTimeGPS();
+        
+        delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
+        xbeeDM.OFF();
+      }
+    }
+
+    // Clear flag
+    intFlag &= ~(RTC_INT); 
+    UIO.stop_RTC_SD_USB();
+
+    clearIntFlag(); 
+    PWR.clearInterruptionPin();
+  }
+  UIO.stop_RTC_SD_USB();
 }
 
