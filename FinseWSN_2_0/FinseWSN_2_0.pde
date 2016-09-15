@@ -14,6 +14,7 @@ char message[40];
 int pendingPulses;
 int minutes;
 int hours;
+int randomNumber;
 
 void setup(){
 
@@ -37,6 +38,9 @@ void setup(){
   SensorAgrv20.ON();
   SensorAgrv20.attachPluvioInt();
   delay(2000);
+
+  // set random seed
+  srandom(42);
 
   UIO.logActivity("Waspmote all set and ready");
 
@@ -102,8 +106,14 @@ void loop(){
         // send frame to Meshlium every hours
         xbeeDM.ON();
         delay(50);
+        
+        // delay sending of frame by a random time within 0 to 100 ms to avoid jaming the network
+        randomNumber = rand()%100;
+        delay(randomNumber);
+
         UIO.Frame2Meshlium();
-        //UIO.synchrnizeTimeGPS();
+        UIO.sendLogActivity2Meshlium();  // sent last 10 log activity through DM network
+        UIO.receiveGPSsyncTime();
         
         delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
         xbeeDM.OFF();
