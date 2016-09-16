@@ -8,6 +8,8 @@
 # python download_file.py
 # python download_file.py -i inputfile
 
+#Sept 2016, Simon Filhol, simon.filhol@geo.uio.no
+
 #####################################################################################
 ## import the serial library
 import serial
