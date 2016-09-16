@@ -44,9 +44,6 @@ void loop()
     val = USB.read();
     snprintf(filename, sizeof(filename),"%s%c", filename,val);
   }
-  USB.println(F("******"));
-  USB.println(filename);
-
   if(SD.isFile(filename) == 1){
     int totallines = SD.numln(filename);
     USB.print(F("File "));
@@ -56,11 +53,8 @@ void loop()
     for(int i = 0; i < totallines; i++){
       SD.catln(filename, i,1);
       USB.print(SD.buffer);
-      if(i >= totallines)
-      {
-        USB.println(F("Finish uploading file"));
-      }
     }
+    USB.println(F("Finish uploading file"));
   }
   else
   {
