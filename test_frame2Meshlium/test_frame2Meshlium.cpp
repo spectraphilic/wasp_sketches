@@ -1,6 +1,5 @@
 /*  
- SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
- 14 September 2016, Simon Filhol, John Hulth
+ SCRIPT to test the frame to meshlium function
  */
 
 // Put your libraries here (#include ...)
@@ -34,14 +33,6 @@ void setup(){
 
   UIO.logActivity("SD and XbeeDM initialized");
 
-  // Attempt to initialize timestamp from GPS mote
-  if(UIO.receiveGPSsyncTime())
-  {
-    UIO.logActivity("+++ Sync GPS time passed +++");
-  }
-  else{
-    UIO.logActivity("+++ Failed to initialize timstamp from GPS mote +++");
-  }
   // Turn on the sensor board
   SensorAgrv20.ON();
   SensorAgrv20.attachPluvioInt();
@@ -72,7 +63,7 @@ void loop(){
 
   //If statement to record pluviometer interruptions
   if( intFlag & PLV_INT)
-  {	
+  { 
 
     UIO.start_RTC_SD_USB();
     UIO.logActivity("+++ PLV interruption +++");
@@ -109,27 +100,21 @@ void loop(){
       UIO.logActivity("+++ Sampling +++");
       UIO.measureSensorsBasicSet();
 
-      if(minutes == 0) 
-      {
-        // send frame to Meshlium every hours
-        xbeeDM.ON();
-        delay(50);
+      // send frame to Meshlium every hours
+      xbeeDM.ON();
+      delay(50);
         
-        // delay sending of frame by a random time within 0 to 100 ms to avoid jaming the network
-        randomNumber = rand()%100;
-        delay(randomNumber);
+      // delay sending of frame by a random time within 0 to 100 ms to avoid jaming the network
+      randomNumber = rand()%100;
+      delay(randomNumber);
 
-        UIO.Frame2Meshlium();
-        UIO.logActivity("+++ Frame to Meshlium passed +++");
-
-        if(hours == 12){
-          UIO.receiveGPSsyncTime();
-          UIO.logActivity("+++ Sync GPS time passed +++");
-          delay(10*60000);  // daily delay of 10min for passing frame from station with large anount of frame
-        }
-        delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
-        xbeeDM.OFF();
-      }
+      UIO.Frame2Meshlium();
+      UIO.logActivity("+++ Frame to Meshlium passed +++");
+      //UIO.receiveGPSsyncTime();
+      //UIO.logActivity("+++ Sync GPS time passed +++");
+      //delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
+      xbeeDM.OFF();
+      
     }
 
     // Clear flag
