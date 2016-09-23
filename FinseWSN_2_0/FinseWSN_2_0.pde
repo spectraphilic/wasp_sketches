@@ -35,13 +35,8 @@ void setup(){
   UIO.logActivity("SD and XbeeDM initialized");
 
   // Attempt to initialize timestamp from GPS mote
-  if(UIO.receiveGPSsyncTime())
-  {
-    UIO.logActivity("+++ Sync GPS time passed +++");
-  }
-  else{
-    UIO.logActivity("+++ Failed to initialize timstamp from GPS mote +++");
-  }
+  UIO.receiveGPSsyncTime();
+  
   // Turn on the sensor board
   SensorAgrv20.ON();
   SensorAgrv20.attachPluvioInt();
@@ -51,7 +46,8 @@ void setup(){
   srandom(42);
 
   UIO.logActivity("Waspmote all set and ready");
-
+  UIO.readBatteryLevel();
+  
   xbeeDM.OFF();
   USB.OFF();
   RTC.OFF();
@@ -125,7 +121,7 @@ void loop(){
         if(hours == 12){
           UIO.receiveGPSsyncTime();
           UIO.logActivity("+++ Sync GPS time passed +++");
-          delay(10*60000);  // daily delay of 10min for passing frame from station with large anount of frame
+          delay(3*60000);  // daily delay of 3min for passing frame from station with large anount of frame
         }
         delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
         xbeeDM.OFF();
