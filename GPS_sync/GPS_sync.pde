@@ -22,7 +22,7 @@ void setup()
   USB.ON();  // open USB port
   RTC.ON();  // set RTC ON
 
-    UIO.initSD();
+  UIO.initSD();
   UIO.initNet('Finse');
 
   // set mote Identifier for GPS sync unit
@@ -66,7 +66,7 @@ void loop()
 
     // Send GPS_sync message
     error = xbeeDM.send(UIO.BROADCAST_ADDRESS, frame.buffer, frame.length); 
-    delay(100),
+    delay(100);
     xbeeDM.OFF();
 
     // Check TX flag

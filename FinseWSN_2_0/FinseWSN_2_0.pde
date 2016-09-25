@@ -9,7 +9,7 @@
 #include <WaspSensorAgr_v20.h>
 #include <WaspFrame.h>
 
-char node_ID[10];
+
 char message[40];
 int pendingPulses;
 int minutes;
@@ -23,15 +23,12 @@ void setup(){
   xbeeDM.ON();
   xbeeDM.checkNewProgram(); // CheckNewProgram is mandatory in every OTA program
 
-
-    // Function to initialize SD card
+  // Function to initialize SD card
   UIO.initSD();
-
   UIO.logActivity("Waspmote starting");
 
   // Function to initialize
   UIO.initNet('Finse');
-
   UIO.logActivity("SD and XbeeDM initialized");
 
   // Attempt to initialize timestamp from GPS mote
