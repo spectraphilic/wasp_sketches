@@ -5,6 +5,7 @@
 
 TO INCLUDE:
 	- OTA once a week if battery and connection to Meshlium exist
+	- Frame2Meshlium(), do not copy data line by line everytime. Use a third file (most likely) MODIFY in waspUIO.cpp
 	- 
 
 
@@ -75,10 +76,8 @@ void loop()
   if( intFlag & PLV_INT)
   {	
     UIO.start_RTC_SD_USB();
-    UIO.logActivity("+++ PLV interruption +++");
+    UIO.logActivity("+ PLV interruption +");
     pendingPulses = intArray[PLV_POS];
-    sprintf(message, "Nb of pending pulses: %d",pendingPulses);
-    UIO.logActivity(message);
 
     for(int i=0 ; i<pendingPulses; i++)
     {
@@ -128,10 +127,17 @@ void loop()
             UIO.receiveGPSsyncTime();
             UIO.logActivity("Sync GPS time passed");
             delay(3*60000);  // daily delay of 3min for passing frame from station with large anount of frame
+          	
+          	// Allow for OTA connection
+          	if(RTC.dow() == 3)
+          	{
+          		UIO.OTA_communication(4); // function to open OTA for a 4minute weekly window on tuesday
+          	}
           }
           delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
           xbeeDM.OFF();
         }
+
       }
       else
       {
