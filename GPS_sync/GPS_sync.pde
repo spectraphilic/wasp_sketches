@@ -16,13 +16,16 @@
 
 bool status; // define status variable for GPS connection
 uint8_t error; // XbeeDM send error
+int counter = 0; //loop counter 
+int counter2 = 0; //loop counter 
+char buffer[50];
 
 void setup()
 {  
   USB.ON();  // open USB port
   RTC.ON();  // set RTC ON
 
-  UIO.initSD();
+    UIO.initSD();
   UIO.initNet('Finse');
 
   // set mote Identifier for GPS sync unit
@@ -33,14 +36,37 @@ void setup()
 
 void loop()
 {
-  RTC.setAlarm1("00:00:00:00",RTC_ABSOLUTE,RTC_ALM1_MODE5); // Set alarm to send every full minute
-
   status = GPS.waitForSignal(TIMEOUT); // OBS, problems with 'loadEphems()' DO NOT USE!!!
+
+  USB.print("status: "); // Debug
+  USB.println(status); // Debug
+
+
+  if (counter<60 || counter2 < 8)
+  {
+    RTC.setAlarm1("00:00:00:00",RTC_ABSOLUTE,RTC_ALM1_MODE5); // Set alarm to send every full minute
+  }
+  else
+  {
+    PWR.deepSleep("00:00:56:00",RTC_ABSOLUTE,RTC_ALM1_MODE4,ALL_OFF); // Set alarm to wake-up  once an hour
+    GPS.ON();  // set GPS ON
+    counter2 = 0; // Reset counter2
+
+    UIO.logActivity("Wake-up");
+    
+    UIO.delLogActivity();
+  }
+
+
 
   if (intFlag & RTC_INT) // RTC captured
   {
+    UIO.logActivity("Alarm captured");
     xbeeDM.ON();
     delay(100);
+
+    sprintf(buffer,"Battery: %d%%", PWR.getBatteryLevel());
+    UIO.logActivity(buffer);
 
     // Create Frame depending on the connectivity
     frame.createFrame(ASCII);
@@ -58,7 +84,7 @@ void loop()
     else
     {
       // add message fields to Frame
-      frame.addSensor(SENSOR_STR,"not updated epoch time");
+      frame.addSensor(SENSOR_STR,"not updated time");
     }
     // add 'RTC.getEpochTime' timestamp in frame
     frame.addSensor(SENSOR_TST, RTC.getEpochTime());
@@ -68,29 +94,60 @@ void loop()
     error = xbeeDM.send(UIO.BROADCAST_ADDRESS, frame.buffer, frame.length); 
     delay(100);
     xbeeDM.OFF();
+    
+    frame.showFrame(); // Debug
 
     // Check TX flag
     if (error == 0)
     {
-      UIO.logActivity("Time sync frame sent OK");
+      UIO.logActivity("sync sent OK");
     }
     else 
     {
-      UIO.logActivity("Time sync frame not sent!!!");
+      UIO.logActivity("sync not sent!");
     }
 
     if(status == false)
     {
-      UIO.logActivity("No GPS signal, GPS_sync unit reboots!!!");
-      delay(60000); // Delay one minute before rebooting
-      PWR.reboot(); // It seems to be a bug in the GPS, reboot is needed if no GPS signal
+      UIO.logActivity("No GPS signal");
+      // delay(60000); // Delay one minute before rebooting
+      // PWR.reboot(); // It seems to be a bug in the GPS, reboot is needed if no GPS signal
     }
     // Clear interuption flag
     intFlag &= ~(RTC_INT); 
     clearIntFlag(); 
     PWR.clearInterruptionPin();
+
+    counter++; //add to loop counter 
+    counter2++; //add to loop counter2 
+
+    sprintf(buffer,"c: %d, c2: %d", counter, counter2);
+    UIO.logActivity(buffer);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
