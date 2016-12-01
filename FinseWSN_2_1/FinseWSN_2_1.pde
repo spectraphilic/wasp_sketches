@@ -1,15 +1,15 @@
 /*  
  SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
  14 September 2016, Simon Filhol, John Hulth
-
-Script description:
-  - sample sensors every 10 minutes
-	- OTA once a week (Tuesday 12pm UTC = 2pm Oslo) if battery and connection to Meshlium exist. OTA accessible for 4 min
-	- send data to Meshlium every hour if battery > 60% otherwise only every 6hours
-	- Try sendind nusent frames only once a day. If not able to send data for the last 20000 frames, move frames to permanent storage on SD
-  - Update time from GPS unit once a day
-  - If battery power is less than 30%, waspmote only sample from sensors, save data to SD and nothing else.
-
+ 
+ Script description:
+ - sample sensors every 10 minutes
+ - OTA once a week (Tuesday 12pm UTC = 2pm Oslo) if battery and connection to Meshlium exist. OTA accessible for 4 min
+ - send data to Meshlium every hour if battery > 60% otherwise only every 6hours
+ - Try sendind nusent frames only once a day. If not able to send data for the last 20000 frames, move frames to permanent storage on SD
+ - Update time from GPS unit once a day
+ - If battery power is less than 30%, waspmote only sample from sensors, save data to SD and nothing else.
+ 
  */
 
 // Put your libraries here (#include ...)
@@ -24,7 +24,7 @@ int pendingPulses;
 int minutes;
 int hours;
 int randomNumber;
-uint8_t USB_output = 0;   // pass to 1 for printing info to serial
+uint8_t USB_output = 1;   // pass to 1 for printing info to serial
 
 
 void setup()
@@ -34,20 +34,28 @@ void setup()
   xbeeDM.ON();
   xbeeDM.checkNewProgram(); // CheckNewProgram is mandatory in every OTA program
 
-  // Function to initialize SD card
+    // Function to initialize SD card
   UIO.initSD();
   UIO.logActivity("Waspmote starting");
+  USB.println("initSD done");
 
   // Function to initialize
   UIO.initNet('Finse');
   UIO.logActivity("SD,XbeeDM initialized");
+  USB.println("xbee initialized done");
+
 
   // Attempt to initialize timestamp from GPS mote
-  UIO.receiveGPSsyncTime();
-  
+  //UIO.receiveGPSsyncTime();
+  //USB.println("GPS done");
+
   // Turn on the sensor board
   SensorAgrv20.ON();
+  USB.println("AGR board ON");
+
   SensorAgrv20.attachPluvioInt();
+  USB.println("Pluvio interrupt started");
+
   delay(2000);
 
   // set random seed
@@ -55,7 +63,8 @@ void setup()
 
   UIO.logActivity("Waspmote set and ready");
   UIO.readBatteryLevel();
-  
+  USB.println("waspmote ready");
+
   xbeeDM.OFF();
   USB.OFF();
   RTC.OFF();
@@ -77,7 +86,7 @@ void loop()
   //If statement to record pluviometer interruptions
   if( intFlag & PLV_INT)
   {	
-    UIO.start_RTC_SD_USB(USB_output);
+    UIO.start_RTC_SD_USB();
     UIO.logActivity("+ PLV interruption +");
     pendingPulses = intArray[PLV_POS];
 
@@ -92,13 +101,13 @@ void loop()
 
     // Clear flag
     intFlag &= ~(PLV_INT); 
-    UIO.stop_RTC_SD_USB(USB_output);
+    UIO.stop_RTC_SD_USB();
   }
 
   //Check RTC interruption
   if(intFlag & RTC_INT)
   {
-    UIO.start_RTC_SD_USB(USB_output);
+    UIO.start_RTC_SD_USB();
     UIO.logActivity("+ RTC interruption +");
     Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
@@ -107,8 +116,8 @@ void loop()
     { 
       // Measure sensors
       UIO.logActivity("+ Sampling +");
-      UIO.measureSensorsBasicSet(USB_output);
-      
+      UIO.measureSensorsBasicSet();
+
       if(PWR.getBatteryLevel()>60)
       {
         if(minutes == 0) 
@@ -116,30 +125,30 @@ void loop()
           // send frame to Meshlium every hours
           xbeeDM.ON();
           delay(50);
-          
+
           // delay sending of frame by a random time within 0 to 100 ms to avoid jaming the network
           randomNumber = rand()%500;
           delay(randomNumber);
 
-          UIO.Frame2Meshlium(USB_output);
+          UIO.Frame2Meshlium();
           UIO.logActivity("Frame2Meshlium passed");
 
           if(hours == 12){
 
-            // send once a day the unsent frame (if unsent_file is less than 20000 lines otherwise save frames to SD permanently)
+            // attempt once a day to send the unsent frames (if unsent_file is less than 20000 lines otherwise save frames to SD permanently)
             UIO.manage_unsent_data();
-            UIO.Frame2Meshlium(USB_output);
+            UIO.Frame2Meshlium();
 
             UIO.receiveGPSsyncTime();
             UIO.logActivity("Sync GPS time passed");
             delay(3*60000);  // daily delay of 3min for passing frame from station with large anount of frame
-          	
-          	// Allow for OTA connection on tuesdays at about 12:03 after GPS time synchronization and sending data out
-          	if(RTC.day == 3)
-          	{
-          		UIO.OTA_communication(4); // function to open OTA for a 4minute weekly window on tuesday
-              UIO.delLogActivity();
-          	}
+
+            // // Allow for OTA connection on tuesdays at about 12:03 after GPS time synchronization and sending data out
+            // if(RTC.day == 3)
+            // {
+            //   UIO.OTA_communication(4); // function to open OTA for a 4minute weekly window on tuesday
+            //   UIO.delLogActivity();
+            // }
           }
           delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
           xbeeDM.OFF();
@@ -159,7 +168,7 @@ void loop()
             randomNumber = rand()%100;
             delay(randomNumber);
 
-            UIO.Frame2Meshlium(USB_output);
+            UIO.Frame2Meshlium();
             UIO.logActivity("Frame2Meshlium passed");
 
             if(hours == 12)
@@ -168,25 +177,26 @@ void loop()
               UIO.logActivity("Sync GPS time passed");
               delay(1*60000);  // daily delay of 1min for passing frame from station with large anount of frame
             }
-              delay(10000); // leave xbee on for 10 second, making sure it synchronizes with other motes
-              xbeeDM.OFF();
-            }
-          }
-          else
-          {
-          // Battery level less than 30% so do not send data over network
-          // Do not synchronize time from GPS
-            UIO.logActivity("+ Low Battery +");
+            delay(10000); // leave xbee on for 10 second, making sure it synchronizes with other motes
+            xbeeDM.OFF();
           }
         }
+        else
+        {
+          // Battery level less than 30% so do not send data over network
+          // Do not synchronize time from GPS
+          UIO.logActivity("+ Low Battery +");
+        }
       }
-    // Clear flag
-      intFlag &= ~(RTC_INT); 
-      UIO.stop_RTC_SD_USB(USB_output);
-
-      clearIntFlag(); 
-      PWR.clearInterruptionPin();
     }
-    UIO.stop_RTC_SD_USB(USB_output);
+    // Clear flag
+    intFlag &= ~(RTC_INT); 
+    UIO.stop_RTC_SD_USB();
+
+    clearIntFlag(); 
+    PWR.clearInterruptionPin();
   }
+  UIO.stop_RTC_SD_USB();
+}
+
 

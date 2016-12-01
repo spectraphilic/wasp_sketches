@@ -16,7 +16,7 @@
 
 bool status; // define status variable for GPS connection
 uint8_t error; // XbeeDM send error
-int counter = 0; //loop counter 
+unsigned int counter = 0; //loop counter 
 int counter2 = 0; //loop counter 
 char buffer[50];
 
@@ -25,7 +25,7 @@ void setup()
   USB.ON();  // open USB port
   RTC.ON();  // set RTC ON
 
-    UIO.initSD();
+  UIO.initSD();
   UIO.initNet('Finse');
 
   // set mote Identifier for GPS sync unit
@@ -49,15 +49,13 @@ void loop()
   else
   {
     PWR.deepSleep("00:00:56:00",RTC_ABSOLUTE,RTC_ALM1_MODE4,ALL_OFF); // Set alarm to wake-up  once an hour
-    GPS.ON();  // set GPS ON
     counter2 = 0; // Reset counter2
 
+    counter=60; // reset counter to 60 to force if-statement to false
     UIO.logActivity("Wake-up");
-    
+
     UIO.delLogActivity();
   }
-
-
 
   if (intFlag & RTC_INT) // RTC captured
   {
@@ -75,6 +73,7 @@ void loop()
     // if GPS is connected then set time from GPS...
     if( status == true )
     {    
+      GPS.ON();  // set GPS ON
       // add message fields to Frame
       frame.addSensor(SENSOR_STR,"GPS updated epoch time");
       // set time in RTC from GPS time (GMT time)
@@ -94,7 +93,7 @@ void loop()
     error = xbeeDM.send(UIO.BROADCAST_ADDRESS, frame.buffer, frame.length); 
     delay(100);
     xbeeDM.OFF();
-    
+
     frame.showFrame(); // Debug
 
     // Check TX flag
@@ -119,12 +118,17 @@ void loop()
     PWR.clearInterruptionPin();
 
     counter++; //add to loop counter 
+    if(counter>10000)
+    {
+      counter=61;
+    }
     counter2++; //add to loop counter2 
 
     sprintf(buffer,"c: %d, c2: %d", counter, counter2);
     UIO.logActivity(buffer);
   }
 }
+
 
 
 
