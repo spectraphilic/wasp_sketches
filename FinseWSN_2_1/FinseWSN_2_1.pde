@@ -24,16 +24,20 @@ int pendingPulses;
 int minutes;
 int hours;
 int randomNumber;
-uint8_t USB_output = 1;   // pass to 1 for printing info to serial
-
 
 void setup()
 {
+  // Flags to turn USB print, OTA programming ON or OFF
+  UIO.USB_output = 1;   // turn print to USB ON/OFF
+  uint8_t OTA_ON = 0;   // pass to 1 for allowing OTA
+  
   USB.ON();
   RTC.ON();
   xbeeDM.ON();
-  xbeeDM.checkNewProgram(); // CheckNewProgram is mandatory in every OTA program
 
+  if(OTA_ON){
+    xbeeDM.checkNewProgram(); // CheckNewProgram is mandatory in every OTA program
+  }
     // Function to initialize SD card
   UIO.initSD();
   UIO.logActivity("Waspmote starting");
@@ -143,12 +147,14 @@ void loop()
             UIO.logActivity("Sync GPS time passed");
             delay(3*60000);  // daily delay of 3min for passing frame from station with large anount of frame
 
-            // // Allow for OTA connection on tuesdays at about 12:03 after GPS time synchronization and sending data out
-            // if(RTC.day == 3)
-            // {
-            //   UIO.OTA_communication(4); // function to open OTA for a 4minute weekly window on tuesday
-            //   UIO.delLogActivity();
-            // }
+            if(OTA_ON){
+              // Allow for OTA connection on tuesdays at about 12:03 after GPS time synchronization and sending data out
+              if(RTC.day == 3)
+              {
+                UIO.OTA_communication(4); // function to open OTA for a 4minute weekly window on tuesday
+                UIO.delLogActivity();
+              }
+            }
           }
           delay(30000); // leave xbee on for 30 second, making sure it synchronizes with other motes
           xbeeDM.OFF();
