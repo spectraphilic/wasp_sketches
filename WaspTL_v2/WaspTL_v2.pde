@@ -1,21 +1,24 @@
 
 /*  
- SCRIPT to trigger a Time-lapse camera using the UiO Tmie-Lapse v1 shield
+ SCRIPT to trigger a Time-lapse camera using the UiO Tmie-Lapse v2 shield
 
-Simon Filhol, January 2016, Oslo, Norway
+Simon Filhol, April 2016, Oslo, Norway
 
-Designed for Time-Lapse shield v1 attached to a Sony QX1
+Designed for Time-Lapse shield v2 attached to a Sony QX1
 
 USE:
-	set the time step in minutes with variable timeStep. Default is 10 min 
+	- set the time step in minutes with variable timeStep. Default is 10 min 
+	- download filename from SD Card to file
+
 
 
 Further Development:
-	- Include waspnmtoe to wireless network, send frame for confirming Picture taken
+	- Include waspmoote to wireless network, send frame for confirming Picture taken
 	- Sync time with Network GPS 
 
 	- include sunrise sunset time switch with the library:
 	https://github.com/chaeplin/Sunrise
+		- add system to read battery voltage to make sure the battery load does not get below a threshold
  */
 
 
@@ -37,6 +40,7 @@ const int camPowerPin = DIGITAL1;
 //================================================================
 
 int timeStep = 10; // time step in minute 
+String imageFiles = "IMAGES.TXT";
 
 //================================================================
 //================================================================
@@ -65,6 +69,18 @@ void setup(){
 
 	RTC.setAlarm2(0,0,timeStep, RTC_OFFSET, RTC_ALM2_MODE4);
 
+	// create a text file IMAGE.TXT
+	UIO.createFile(imageFiles);
+
+	//=======================================
+	// set Time at deployement
+	RTC.getTime();
+	if(RTC.year<2017){
+	// Setting time [yy:mm:dd:dow:hh:mm:ss]
+	RTC.setTime("17:04:20:04:12:00:00");
+	}
+	//=======================================
+
 	sprintf(message2log, "Alarm set to %d min", timeStep);
 	UIO.logActivity(message2log);
 }
@@ -85,11 +101,7 @@ void loop(){
 	if (intFlag & RTC_INT){
 		intFlag &= ~(RTC_INT); // Clear flag
 
-		camPowerON();
-	    camON();
-	    camTrigger();
-	    camOFF();
-	    camPowerOFF();
+		takePicture();
 		// RTC captured
 
 		if(RTC.alarmTriggered == 2){
@@ -101,6 +113,34 @@ void loop(){
 //================================================================
 // =========== Local functions
 //================================================================
+
+void takePicture(){
+	camPowerON();
+    camON();
+    camTrigger();
+    camOFF();
+    collectImageName();
+    camPowerOFF();
+}
+
+
+void collectImageName(){
+	char mystring[40];          // String to hold commands to be sent
+
+	// 1. read file from SD card using hobbytronics
+	sprintf(mystring,"$size %s line\r",filename);
+ 	mySerial.write(mystring);
+
+ 	while(!mySerial.available()); 
+	// 2. write file to local file IMAGE.TXT
+}
+
+
+void flash_data(char *pstring)
+{
+  Serial.println(pstring); 
+  delay(50); 
+}  
 
 void camPowerON(){
 	// function to switch power to camera

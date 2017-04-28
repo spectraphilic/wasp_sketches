@@ -1,15 +1,9 @@
 /*  
  SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
- 14 September 2016, Simon Filhol, John Hulth
+ April 2017, Simon Filhol
  
  Script description:
- - sample sensors every 10 minutes
- - OTA once a week (Tuesday 12pm UTC = 2pm Oslo) if battery and connection to Meshlium exist. OTA accessible for 4 min
- - send data to Meshlium every hour if battery > 60% otherwise only every 6hours
- - Try sendind nusent frames only once a day. If not able to send data for the last 20000 frames, move frames to permanent storage on SD
- - Update time from GPS unit once a day
- - If battery power is less than 30%, waspmote only sample from sensors, save data to SD and nothing else.
- 
+
  */
 
 // Put your libraries here (#include ...)
@@ -19,7 +13,7 @@
 #include <WaspFrame.h>
 
 // Define local variables:
-char message[40];
+char message[100];
 int pendingPulses;
 int minutes;
 int hours;
@@ -27,37 +21,49 @@ int randomNumber;
 int batteryLevel;
 
 // define the sampling period in minute MUST BE between 0 and 29 minute
-int SamplingPeriod = 10;
+int SamplingPeriod = 3;
 
-
+String targetUnsentFile = " ";
+String archive_file = " ";
 
 void setup()
 {
   // Flags to turn USB print, OTA programming ON or OFF
   UIO.USB_output = 1;   // turn print to USB ON/OFF
+
+  // Turn on the sensor board
+  SensorAgrv20.ON();
+  delay(100);
   
-  USB.ON();
-  RTC.ON();
+  UIO.start_RTC_SD_USB();
+  USB.println("Wasp started, Agr board ON");
+
+  UIO.setTime(17, 4, 28, 13, 0, 0);
+  USB.print("Time set at: ");
+  USB.println(RTC.getTime());
+
   xbeeDM.ON();
   delay(50);
 
   // Function to initialize SD card
-  UIO.initSD();
+  archive_file = UIO.initSD();
+  UIO.println(archive_file);
+  delay(100);
+  
   UIO.logActivity("Waspmote starting");
+  targetUnsentFile = UIO.unsent_fileA;
 
   // Function to initialize
-  UIO.initNet('Finse');
+  UIO.initNet('Broadcast');
   UIO.logActivity("SD,XbeeDM initialized");
 
-  // Turn on the sensor board
-  SensorAgrv20.ON();
-  delay(5000);
 
   // set random seed
   srandom(42);
 
+  //UIO.readOwnMAC();
   UIO.readBatteryLevel();
-  UIO.logActivity("Waspmote set and ready");
+  UIO.logActivity("Waspmote set and ready");  
 
   xbeeDM.OFF();
   USB.OFF();
@@ -91,31 +97,34 @@ void loop()
       // Measure sensors
       sprintf(message, "+ %d min Sampling +", SamplingPeriod);
       UIO.logActivity(message);
-      batteryLevel = PWR.getBatteryLevel()
+      batteryLevel = PWR.getBatteryLevel();
 
       //-----------------------------------------
-      if((batteryLevel > 30) && (batteryLevel =< 55)){
+      if((batteryLevel > 30) && (batteryLevel <= 55)){
         // Measure sensors every 2 sampling period
         if(minutes%(SamplingPeriod*2) == 0){
            UIO.measureAgriSensorsBasicSet();
+           archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
          }
       }
 
       //-----------------------------------------
-      if((batteryLevel > 55) && (batteryLevel =< 65)){
+      if((batteryLevel > 55) && (batteryLevel <= 65)){
         // Measure sensors every sampling period
         UIO.measureAgriSensorsBasicSet();
+        archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
       }
 
       //-----------------------------------------
-      if((batteryLevel > 65) && (batteryLevel =< 75)){
+      if((batteryLevel > 65) && (batteryLevel <= 75)){
         // Measure sensors every sampling period
         UIO.measureAgriSensorsBasicSet();
+        archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
 
         // Attempt sending data every 3 hours
         if(hours%3 == 0){
           // send data
-          UIO.Frame2Meshlium();
+          UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
         }
       }
 
@@ -123,15 +132,30 @@ void loop()
       if(batteryLevel > 75){
         // Measure sensors every sampling period
         UIO.measureAgriSensorsBasicSet();
+        archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
+
         if(minutes == 0){
           //send data
-          UIO.Frame2Meshlium();
+          UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
         }
         if(hours == 13){
           // GPS time synchronyzation
           UIO.receiveGPSsyncTime();
-        }
 
+          // Once a day try to send all data in current unsent file. 
+          if(targetUnsentFile.equals(UIO.unsent_fileA)){
+            UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
+            UIO.delFile(UIO.unsent_fileA);
+            UIO.createFile(UIO.unsent_fileA);
+            targetUnsentFile = UIO.unsent_fileB;
+          }
+          if(targetUnsentFile.equals(UIO.unsent_fileB)){
+            UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
+            UIO.delFile(UIO.unsent_fileB);
+            UIO.createFile(UIO.unsent_fileB);
+            targetUnsentFile = UIO.unsent_fileA;
+          }
+        }
       }
     }
  
