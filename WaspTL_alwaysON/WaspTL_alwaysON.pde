@@ -2,7 +2,7 @@
 /*  
  SCRIPT to trigger a Time-lapse camera using the UiO Tmie-Lapse v2 shield
 
-Simon Filhol, April 2016, Oslo, Norway
+Simon Filhol, May 2017, Oslo, Norway
 
 Designed for Time-Lapse shield v2 attached to a Sony QX1
 
@@ -24,8 +24,7 @@ Further Development:
 
 //================================================================
 // Put your libraries here (#include ...)
-#include <WaspXBeeDM.h>
-#include <WaspUIO.h>
+
 
 //================================================================
 // Define pin
@@ -39,18 +38,25 @@ const int camPowerPin = DIGITAL1;
 //========== SET time step !! ====================================
 //================================================================
 
-int timeStep = 10; // time step in minute 
+int timeStep = 1; // time step in minute 
 //String imageFiles = "IMAGES.TXT";
 
 //================================================================
 //================================================================
 
 char message2log[100];
-
+char* logfile = "LOG.TXT";
 //================================================================
 void setup(){
 
-	UIO.start_RTC_SD_USB();
+	SD.ON();
+	RTC.ON();
+	USB.ON();
+
+	// Create log file on SD card:
+	SD.create(logfile);
+	USB.print(logfile);
+	USB.println(" created");
 
 	pinMode(focusPin, OUTPUT);
 	digitalWrite(focusPin, LOW);
@@ -62,51 +68,24 @@ void setup(){
 	digitalWrite(onoffPin, LOW);
 
 	pinMode(camPowerPin, OUTPUT);
-	digitalWrite(camPowerPin, LOW);
+	digitalWrite(camPowerPin, HIGH); // Provide power to camera
 
-	UIO.initSD();
-	UIO.logActivity("=== Waspmote starting ===");
-
-	RTC.setAlarm2(0,0,timeStep, RTC_OFFSET, RTC_ALM2_MODE4);
-
-	// create a text file IMAGE.TXT
-	UIO.createFile(imageFiles);
-
-	//=======================================
-	// set Time at deployement
-	RTC.getTime();
-	if(RTC.year<2017){
-	// Setting time [yy:mm:dd:dow:hh:mm:ss]
-	RTC.setTime("17:04:20:04:12:00:00");
-	}
-	//=======================================
-
-	sprintf(message2log, "Alarm set to %d min", timeStep);
-	UIO.logActivity(message2log);
+	logActivity("=== Waspmote starting ===");
 }
 
 //================================================================
 void loop(){
-	USB.println(F("Mote to sleep ..."));
-	UIO.logActivity("Mote to sleep ...");
-	PWR.sleep(ALL_OFF);
 
-	UIO.start_RTC_SD_USB();
-	USB.println(F("Mote awaking!!"));
-	UIO.logActivity("Mote awaking");
-	USB.print(F("Time: "));
-	USB.println(RTC.getTime());
+	logActivity("Mote to sleep ...");
+	PWR.deepSleep("00:00:10:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF);
+	//PWR.sleep(ALL_OFF);
+	logActivity("Mote awaking");
 
 
 	if (intFlag & RTC_INT){
 		intFlag &= ~(RTC_INT); // Clear flag
 
 		takePicture();
-		// RTC captured
-
-		if(RTC.alarmTriggered == 2){
-			RTC.setAlarm2(0,0,timeStep, RTC_OFFSET, RTC_ALM2_MODE4);
-		}
 	}
 }
 
@@ -114,28 +93,48 @@ void loop(){
 // =========== Local functions
 //================================================================
 
+void logActivity(String message){
+  SD.ON();
+  RTC.ON();
+  delay(50);
+  uint8_t answer = 0;
+  String message2write;
+
+
+  char datetime[20];
+  RTC.getTime();
+  sprintf(datetime,"%02u-%02u-%02u %02u:%02u:%02u ----> ",RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
+  
+
+  message2write = String(datetime) + message;
+
+  if(SD.isFile((const char*)&logfile[0]))
+    { 
+      if(SD.appendln((const char*)&logfile[0], (const char*)&message2write[0]))
+      { 
+        //frame.showFrame(); // Print frame to USB
+        USB.print("------------>: ");
+        USB.println((const char*)&message2write[0]);
+        answer = 1;
+        delay(50);
+      }
+      else
+      {
+        USB.print("--------> Failed to append message: ");
+        USB.println((const char*)&message2write[0]);
+      } 
+    }
+  SD.OFF();
+}
+
+
 void takePicture(){
-	camPowerON();
     camON();
+    delay(5000);
     camTrigger();
+    delay(2000);
     camOFF();
     //collectImageName();
-    camPowerOFF();
-}
-
-void camPowerON(){
-	// function to switch power to camera
-	digitalWrite(camPowerPin, HIGH);
-	delay(50);
-	USB.println("Camera powered");
-	UIO.logActivity("Cam powered");
-}
-
-void camPowerOFF(){
-	// function to switch power off from camera
-	digitalWrite(camPowerPin, LOW);
-	USB.println("Camera unpowered");
-	UIO.logActivity("Cam unpowered");
 }
 
 void camON(){
@@ -144,46 +143,27 @@ void camON(){
 	delay(20);
 	digitalWrite(onoffPin, LOW);
 	USB.println("Camera turned ON");
-	UIO.logActivity("Cam ON");
+	logActivity("Cam ON");
 }
 
 void camOFF(){
 	// function to turn camera OFF
 	digitalWrite(onoffPin, HIGH);
-	delay(20);
+	delay(60);
 	digitalWrite(onoffPin, LOW);
 	USB.println("Camera turned OFF");
-	UIO.logActivity("Cam OFF");
+	logActivity("Cam OFF");
 }
 
 void camTrigger(){
 	// function to focus, and trigger the camera shutter
-	digitalWrite(focusPin, HIGH);	
-	delay(50);
+	//digitalWrite(focusPin, HIGH);	
+	//delay(50);
 	digitalWrite(shutterPin, HIGH);	
-	delay(50);
+	delay(300);
 	digitalWrite(shutterPin, LOW);	
-	digitalWrite(focusPin, LOW);	
-	delay(100);
+	//digitalWrite(focusPin, LOW);	
+	//delay(100);
 	USB.println("Photo captured");
-	UIO.logActivity("Photo captured");
+	logActivity("Photo captured");
 }
-
-
-// void collectImageName(){
-// 	char mystring[40];          // String to hold commands to be sent
-
-// 	// 1. read file from SD card using hobbytronics
-// 	sprintf(mystring,"$size %s line\r",filename);
-//  	mySerial.write(mystring);
-
-//  	while(!mySerial.available()); 
-// 	// 2. write file to local file IMAGE.TXT
-// }
-
-
-// void flash_data(char *pstring)
-// {
-//   Serial.println(pstring); 
-//   delay(50); 
-// }  
