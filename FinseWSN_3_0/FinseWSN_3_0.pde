@@ -59,7 +59,7 @@ void setup()
 
 
   // set random seed
-  srandom(42);
+  //srandom(42);
 
   //UIO.readOwnMAC();
   UIO.readBatteryLevel();
