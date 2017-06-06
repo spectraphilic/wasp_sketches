@@ -40,7 +40,7 @@ void setup()
   UIO.start_RTC_SD_USB();
   USB.println("Wasp started, Agr board ON");
 
-  error = RTC.setTime(17, 6, 6, 3, 13, 0, 0);
+  error = UIO.setTime(17, 6, 6, 13, 0, 0);
   USB.print("Time set at: ");
   USB.println(RTC.getTime());
 
