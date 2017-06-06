@@ -28,6 +28,8 @@ String archive_file = " ";
 
 void setup()
 {
+  uint8_t error;
+
   // Flags to turn USB print, OTA programming ON or OFF
   UIO.USB_output = 1;   // turn print to USB ON/OFF
 
@@ -38,7 +40,7 @@ void setup()
   UIO.start_RTC_SD_USB();
   USB.println("Wasp started, Agr board ON");
 
-  UIO.setTime(17, 4, 28, 13, 0, 0);
+  error = RTC.setTime(17, 6, 6, 3, 13, 0, 0);
   USB.print("Time set at: ");
   USB.println(RTC.getTime());
 
