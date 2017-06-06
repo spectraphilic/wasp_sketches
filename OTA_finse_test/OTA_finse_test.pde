@@ -50,7 +50,7 @@ void setup()
   // CheckNewProgram is mandatory in every OTA program
   xbeeDM.checkNewProgram();  
   UIO.initSD();
-  UIO.initNet('Finse');
+  UIO.initNet(NETWORK_FINSE);
 
 
 }

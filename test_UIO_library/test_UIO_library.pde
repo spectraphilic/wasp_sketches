@@ -34,7 +34,7 @@ void setup() {
 
   UIO.initSD(); // Function OK!
 
-  UIO.initNet('Finse'); // Function OK!
+  UIO.initNet(NETWORK_FINSE); // Function OK!
 
   UIO.logActivity("testing logActivity function"); // UIO.logActivity and UIO.Frame2Sd functions OK!
 

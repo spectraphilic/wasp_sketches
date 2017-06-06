@@ -35,7 +35,7 @@ void loop() {
     Utils.long2array(m,message);
     USB.println(m);
     
-    UIO.initNet('Finse');
+    UIO.initNet(NETWORK_FINSE);
     UIO.readMaxbotixSerial();
     USB.println("\n message logged");
   }

@@ -45,7 +45,7 @@ void setup()
   USB.println(F("Receiving example"));
 
   UIO.initSD();
-  UIO.initNet('Finse');
+  UIO.initNet(NETWORK_FINSE);
 
   // init XBee 
   xbeeDM.ON();

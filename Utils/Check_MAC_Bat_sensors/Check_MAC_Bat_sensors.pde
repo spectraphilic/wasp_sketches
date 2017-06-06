@@ -49,7 +49,7 @@ void setup()
   USB.println("SD initialized");
 
   // Function to initialize
-  UIO.initNet('Finse');
+  UIO.initNet(NETWORK_FINSE);
   USB.println("Network intialized");
   delay(100);
 

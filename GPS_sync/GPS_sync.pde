@@ -26,7 +26,7 @@ void setup()
   RTC.ON();  // set RTC ON
 
   UIO.initSD();
-  UIO.initNet('Finse');
+  UIO.initNet(NETWORK_FINSE);
 
   // set mote Identifier for GPS sync unit
   frame.setID("GPS_sync");

@@ -54,7 +54,7 @@ void setup()
   targetUnsentFile = UIO.unsent_fileA;
 
   // Function to initialize
-  UIO.initNet('Broadcast');
+  UIO.initNet(NETWORK_BROADCAST);
   UIO.logActivity("SD,XbeeDM initialized");
 
 

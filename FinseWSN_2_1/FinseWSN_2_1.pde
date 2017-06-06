@@ -44,7 +44,7 @@ void setup()
   USB.println("initSD done");
 
   // Function to initialize
-  UIO.initNet('Finse');
+  UIO.initNet(NETWORK_FINSE);
   UIO.logActivity("SD,XbeeDM initialized");
   USB.println("xbee initialized done");
 

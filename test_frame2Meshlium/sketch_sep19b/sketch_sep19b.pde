@@ -29,7 +29,7 @@ void setup(){
   UIO.logActivity("Waspmote starting");
 
   // Function to initialize
-  UIO.initNet('Finse');
+  UIO.initNet(NETWORK_FINSE);
 
   UIO.logActivity("SD and XbeeDM initialized");
 
