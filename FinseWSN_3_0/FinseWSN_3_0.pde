@@ -31,7 +31,7 @@ int hours;
 int randomNumber;
 int batteryLevel;
 
-String targetUnsentFile = " ";
+char* targetUnsentFile;
 String archive_file = " ";
 
 void setup()
@@ -46,9 +46,7 @@ void setup()
   UIO.start_RTC_SD_USB();
   USB.println("Wasp started, Agr board ON");
 
-  error = UIO.setTime(17, 6, 9, 15, 10, 0);
-  USB.print("Time set at: ");
-  USB.println(RTC.getTime());
+  UIO.setTimeFromUser();
 
   xbeeDM.ON();
   delay(50);
@@ -59,7 +57,7 @@ void setup()
   delay(100);
 
   UIO.logActivity("Waspmote starting");
-  targetUnsentFile = UIO.unsent_fileA;
+  targetUnsentFile = (char*)UIO.unsent_fileA;
 
   // Function to initialize
   UIO.initNet(NETWORK_BROADCAST);
@@ -154,17 +152,17 @@ void loop()
         UIO.receiveGPSsyncTime();
 
         // Once a day try to send all data in current unsent file.
-        if(targetUnsentFile.equals(UIO.unsent_fileA)){
+        if (targetUnsentFile == UIO.unsent_fileA) {
           UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
           UIO.delFile(UIO.unsent_fileA);
           UIO.createFile(UIO.unsent_fileA);
-          targetUnsentFile = UIO.unsent_fileB;
+          targetUnsentFile = (char*)UIO.unsent_fileB;
         }
-        if(targetUnsentFile.equals(UIO.unsent_fileB)){
+        if (targetUnsentFile == UIO.unsent_fileB) {
           UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
           UIO.delFile(UIO.unsent_fileB);
           UIO.createFile(UIO.unsent_fileB);
-          targetUnsentFile = UIO.unsent_fileA;
+          targetUnsentFile = (char*)UIO.unsent_fileA;
         }
       }
     }
@@ -180,5 +178,3 @@ void loop()
   // Set whole agri board and waspmote to sleep, until next alarm.
   SensorAgrv20.sleepAgr(SAMPLING_PERIOD_STR, RTC_OFFSET, RTC_ALM1_MODE4, ALL_OFF);
 }
-
-
