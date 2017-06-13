@@ -21,7 +21,7 @@
 #define SAMPLING_PERIOD_STR "00:00:02:00"
 
 // 3. Global variables declaration
-uint8_t error;
+bool error;
 uint8_t alarmMinutes;
 char alarmTime[] = "00:00:00:00";
 char message[100];
@@ -32,7 +32,6 @@ int randomNumber;
 int batteryLevel;
 
 char* targetUnsentFile;
-String archive_file = " ";
 
 void setup()
 {
@@ -52,8 +51,8 @@ void setup()
   delay(50);
 
   // Function to initialize SD card
-  archive_file = UIO.initSD();
-  UIO.println(archive_file);
+  error = UIO.initSD();
+  UIO.println(UIO.archive_file);
   delay(100);
 
   UIO.logActivity("Waspmote starting");
@@ -113,7 +112,7 @@ void loop()
       // Measure sensors every 2 sampling period
       if(minutes%(SAMPLING_PERIOD*2) == 0){
          UIO.measureAgriSensorsBasicSet();
-         archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
+         error = UIO.frame2archive(UIO.tmp_file, false);
        }
     }
 
@@ -121,14 +120,14 @@ void loop()
     if((batteryLevel > 55) && (batteryLevel <= 65)){
       // Measure sensors every sampling period
       UIO.measureAgriSensorsBasicSet();
-      archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
+      error = UIO.frame2archive(UIO.tmp_file, false);
     }
 
     //-----------------------------------------
     if((batteryLevel > 65) && (batteryLevel <= 75)){
       // Measure sensors every sampling period
       UIO.measureAgriSensorsBasicSet();
-      archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
+      error = UIO.frame2archive(UIO.tmp_file, false);
 
       // Attempt sending data every 3 hours
       if(hours%3 == 0){
@@ -141,7 +140,7 @@ void loop()
     if(batteryLevel > 75){
       // Measure sensors every sampling period
       UIO.measureAgriSensorsBasicSet();
-      archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
+      error = UIO.frame2archive(UIO.tmp_file, false);
 
       if(minutes == 0){
         //send data
