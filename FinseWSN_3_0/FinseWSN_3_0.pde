@@ -45,7 +45,7 @@ void setup()
   UIO.start_RTC_SD_USB();
   USB.println("Wasp started, Agr board ON");
 
-  UIO.setTimeFromUser();
+  UIO.interactive();
 
   xbeeDM.ON();
   delay(50);
