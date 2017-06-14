@@ -142,12 +142,13 @@ void loop()
       UIO.measureAgriSensorsBasicSet();
       error = UIO.frame2archive(UIO.tmp_file, false);
 
-      if(minutes == 0){
-        //send data
+      // Attempt sending data every hour
+      if(minutes == 0) {
         UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
       }
-      if(hours == 13){
-        // GPS time synchronyzation
+
+      // GPS time synchronyzation once a day
+      if(hours == 13 && minutes == 0) {
         UIO.receiveGPSsyncTime();
 
         // Once a day try to send all data in current unsent file.
