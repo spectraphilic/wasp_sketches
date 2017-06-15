@@ -17,8 +17,20 @@
 // Sampling period in minutes, keep these two definitions in sync. The value
 // must be a factor of 60 to get equally spaced samples.
 // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
-#define SAMPLING_PERIOD 2
-#define SAMPLING_PERIOD_STR "00:00:02:00"
+// Different values for different battery levels.
+struct Sampling {
+  const uint8_t offset;
+  const char* offset_str;
+};
+
+Sampling samplings[3] = {
+  { 12, "00:00:12:00" }, // <= 30
+  {  4, "00:00:04:00" }, // <= 55
+  {  2, "00:00:02:00" }, //  > 55
+};
+
+Sampling* sampling = NULL;
+
 
 // 3. Global variables declaration
 bool error;
@@ -29,9 +41,21 @@ int pendingPulses;
 int minutes;
 int hours;
 int randomNumber;
-int batteryLevel;
+uint8_t batteryLevel;
 
 char* targetUnsentFile;
+
+
+Sampling getSampling() {
+  if (batteryLevel <= 30) {
+    sampling = &samplings[0];
+  } else if (batteryLevel <= 55) {
+    sampling = &samplings[1];
+  } else {
+    sampling = &samplings[2];
+  }
+}
+
 
 void setup()
 {
@@ -73,8 +97,11 @@ void setup()
   xbeeDM.OFF();
 
   // Calculate first alarm
+  batteryLevel = PWR.getBatteryLevel();
+  getSampling();
+
   RTC.getTime();
-  alarmMinutes = (RTC.minute / SAMPLING_PERIOD) * SAMPLING_PERIOD + SAMPLING_PERIOD;
+  alarmMinutes = (RTC.minute / sampling->offset) * sampling->offset + sampling->offset;
   if (alarmMinutes >= 60)
     alarmMinutes = 0;
   sprintf(alarmTime, "00:00:%02d:00", alarmMinutes);
@@ -82,73 +109,55 @@ void setup()
   USB.OFF();
   RTC.OFF();
 
-  SensorAgrv20.sleepAgr("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF);
+  SensorAgrv20.sleepAgr(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
 
 
 void loop()
 {
-  // extract RTC time
-  RTC.ON();
-  RTC.getTime();
-  minutes = RTC.minute;
-  hours = RTC.hour;
-  RTC.OFF();
+  UIO.start_RTC_SD_USB();
 
-  //Check RTC interruption
-  if(intFlag & RTC_INT)
+  // Battery level
+  batteryLevel = PWR.getBatteryLevel();
+  sprintf(message, "Loop, battery level = %d", batteryLevel);
+  UIO.logActivity(message);
+
+  // Check RTC interruption
+  if (intFlag & RTC_INT)
   {
-    UIO.start_RTC_SD_USB();
     UIO.logActivity("+ RTC interruption +");
     Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
+    // Battery too low, do nothing
+    if (batteryLevel <= 30) {
+      goto sleep;
+    }
+
     // Measure sensors
-    sprintf(message, "+ %d min Sampling +", SAMPLING_PERIOD);
-    UIO.logActivity(message);
-    batteryLevel = PWR.getBatteryLevel();
+    UIO.measureAgriSensorsBasicSet();
+    error = UIO.frame2archive(UIO.tmp_file, false);
+
+    RTC.getTime();
+    minutes = RTC.minute;
+    hours = RTC.hour;
 
     //-----------------------------------------
-    if((batteryLevel > 30) && (batteryLevel <= 55)){
-      // Measure sensors every 2 sampling period
-      if(minutes%(SAMPLING_PERIOD*2) == 0){
-         UIO.measureAgriSensorsBasicSet();
-         error = UIO.frame2archive(UIO.tmp_file, false);
-       }
-    }
-
-    //-----------------------------------------
-    if((batteryLevel > 55) && (batteryLevel <= 65)){
-      // Measure sensors every sampling period
-      UIO.measureAgriSensorsBasicSet();
-      error = UIO.frame2archive(UIO.tmp_file, false);
-    }
-
-    //-----------------------------------------
-    if((batteryLevel > 65) && (batteryLevel <= 75)){
-      // Measure sensors every sampling period
-      UIO.measureAgriSensorsBasicSet();
-      error = UIO.frame2archive(UIO.tmp_file, false);
-
-      // Attempt sending data every 3 hours
-      if(hours%3 == 0){
-        // send data
+    if ((batteryLevel > 65) && (batteryLevel <= 75)) {
+      // Attempt sending data every 3 hours, if battery <= 75%
+      if (hours % 3 == 0) {
         UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
       }
     }
 
     //-----------------------------------------
-    if(batteryLevel > 75){
-      // Measure sensors every sampling period
-      UIO.measureAgriSensorsBasicSet();
-      error = UIO.frame2archive(UIO.tmp_file, false);
-
-      // Attempt sending data every hour
-      if(minutes == 0) {
+    if (batteryLevel > 75) {
+      // Attempt sending data every hour, if battery > 75%
+      if (minutes == 0) {
         UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
       }
 
-      // GPS time synchronyzation once a day
-      if(hours == 13 && minutes == 0) {
+      // GPS time synchronyzation once a day, at 13:00
+      if (hours == 13 && minutes == 0) {
         UIO.receiveGPSsyncTime();
 
         // Once a day try to send all data in current unsent file.
@@ -166,15 +175,16 @@ void loop()
         }
       }
     }
-
-    // Clear flag
-    intFlag &= ~(RTC_INT);
-    UIO.stop_RTC_SD_USB();
-
-    clearIntFlag();
-    PWR.clearInterruptionPin();
   }
 
+sleep:
+  UIO.stop_RTC_SD_USB();
+
+  // Clear interruption flag & pin
+  clearIntFlag();
+  PWR.clearInterruptionPin();
+
   // Set whole agri board and waspmote to sleep, until next alarm.
-  SensorAgrv20.sleepAgr(SAMPLING_PERIOD_STR, RTC_OFFSET, RTC_ALM1_MODE4, ALL_OFF);
+  getSampling();
+  SensorAgrv20.sleepAgr(sampling->offset_str, RTC_OFFSET, RTC_ALM1_MODE4, ALL_OFF);
 }
