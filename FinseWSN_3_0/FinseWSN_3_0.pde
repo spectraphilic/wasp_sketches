@@ -36,7 +36,6 @@ Sampling* sampling = NULL;
 bool error;
 uint8_t alarmMinutes;
 char alarmTime[] = "00:00:00:00";
-char message[100];
 int pendingPulses;
 int minutes;
 int hours;
@@ -86,7 +85,6 @@ void setup()
   UIO.initNet(NETWORK_BROADCAST);
   UIO.logActivity("SD,XbeeDM initialized");
 
-
   // set random seed
   //srandom(42);
 
@@ -106,8 +104,7 @@ void setup()
     alarmMinutes = 0;
   sprintf(alarmTime, "00:00:%02d:00", alarmMinutes);
 
-  USB.OFF();
-  RTC.OFF();
+  UIO.stop_RTC_SD_USB();
 
   SensorAgrv20.sleepAgr(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
@@ -119,8 +116,7 @@ void loop()
 
   // Battery level
   batteryLevel = PWR.getBatteryLevel();
-  sprintf(message, "Loop, battery level = %d", batteryLevel);
-  UIO.logActivity(message);
+  UIO.logActivity("Loop, battery level = %d", batteryLevel);
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
