@@ -42,7 +42,7 @@ int hours;
 int randomNumber;
 uint8_t batteryLevel;
 
-char* targetUnsentFile;
+const char* targetUnsentFile;
 
 
 Sampling getSampling() {
@@ -79,7 +79,7 @@ void setup()
   delay(100);
 
   UIO.logActivity("Waspmote starting");
-  targetUnsentFile = (char*)UIO.unsent_fileA;
+  targetUnsentFile = UIO.unsent_fileA;
 
   // Function to initialize
   UIO.initNet(NETWORK_BROADCAST);
@@ -161,13 +161,13 @@ void loop()
           UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
           UIO.delFile(UIO.unsent_fileA);
           UIO.createFile(UIO.unsent_fileA);
-          targetUnsentFile = (char*)UIO.unsent_fileB;
+          targetUnsentFile = UIO.unsent_fileB;
         }
         if (targetUnsentFile == UIO.unsent_fileB) {
           UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
           UIO.delFile(UIO.unsent_fileB);
           UIO.createFile(UIO.unsent_fileB);
-          targetUnsentFile = (char*)UIO.unsent_fileA;
+          targetUnsentFile = UIO.unsent_fileA;
         }
       }
     }
