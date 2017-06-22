@@ -41,6 +41,8 @@ int minutes;
 int hours;
 int randomNumber;
 uint8_t batteryLevel;
+unsigned long time;
+float volts;
 
 const char* targetUnsentFile;
 
@@ -58,44 +60,43 @@ Sampling getSampling() {
 
 void setup()
 {
+  time = millis();
+
   // Flags to turn USB print, OTA programming ON or OFF
   UIO.USB_output = 1;   // turn print to USB ON/OFF
 
-  // Turn on the sensor board
+  // First turn on the sensor board
+  // XXX Since we are not measuring at setup, do we need this?
   SensorAgrv20.ON();
   delay(100);
 
+  // Log
   UIO.start_RTC_SD_USB();
-  USB.println("Wasp started, Agr board ON");
+  batteryLevel = PWR.getBatteryLevel();
+  UIO.logActivity(F("INFO <<< Booting. Agr board ON. Battery level is %d"), batteryLevel);
 
+  // Interactive mode
   UIO.interactive();
 
-  xbeeDM.ON();
-  delay(50);
-
-  // Function to initialize SD card
+  // Create files in SD
   error = UIO.initSD();
-  UIO.println(UIO.archive_file);
   delay(100);
-
-  UIO.logActivity("Waspmote starting");
   targetUnsentFile = UIO.unsent_fileA;
 
-  // Function to initialize
+  // Initialize network
+  xbeeDM.ON();
+  delay(50);
   UIO.initNet(NETWORK_BROADCAST);
-  UIO.logActivity("SD,XbeeDM initialized");
+  xbeeDM.OFF();
 
   // set random seed
   //srandom(42);
 
   //UIO.readOwnMAC();
   UIO.readBatteryLevel();
-  UIO.logActivity("Waspmote set and ready");
+  UIO.logActivity(F("INFO >>> Boot done in %d ms"), UIO.millisDiff(time, millis()));
 
-  xbeeDM.OFF();
-
-  // Calculate first alarm
-  batteryLevel = PWR.getBatteryLevel();
+  // Calculate first alarm (requires batteryLevel)
   getSampling();
 
   RTC.getTime();
@@ -104,24 +105,27 @@ void setup()
     alarmMinutes = 0;
   sprintf(alarmTime, "00:00:%02d:00", alarmMinutes);
 
+  // Go to sleep
   UIO.stop_RTC_SD_USB();
-
   SensorAgrv20.sleepAgr(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
 
 
 void loop()
 {
+  time = millis();
   UIO.start_RTC_SD_USB();
 
   // Battery level
+  volts = PWR.getBatteryVolts();
   batteryLevel = PWR.getBatteryLevel();
-  UIO.logActivity("Loop, battery level = %d", batteryLevel);
+  UIO.logActivity("INFO <<< Loop starts, battery level = %d (volts = %d)", batteryLevel, (long) (volts * 1000000));
+  USB.println(volts);
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
   {
-    UIO.logActivity("+ RTC interruption +");
+    UIO.logActivity("DEBUG RTC interruption");
     Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     // Battery too low, do nothing
@@ -174,6 +178,9 @@ void loop()
   }
 
 sleep:
+  time = UIO.millisDiff(time, millis());
+  UIO.logActivity("INFO >>> Loop done in %lu ms.", time);
+
   UIO.stop_RTC_SD_USB();
 
   // Clear interruption flag & pin
