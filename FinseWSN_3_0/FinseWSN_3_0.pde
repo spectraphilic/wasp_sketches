@@ -116,6 +116,11 @@ void loop()
   time = millis();
   UIO.start_RTC_SD_USB();
 
+  // Update RTC time at least once. Kepp minuts and hour for later.
+  RTC.getTime();
+  minutes = RTC.minute;
+  hours = RTC.hour;
+
   // Battery level
   volts = PWR.getBatteryVolts();
   batteryLevel = PWR.getBatteryLevel();
@@ -135,11 +140,7 @@ void loop()
 
     // Measure sensors
     UIO.measureAgriSensorsBasicSet();
-    error = UIO.frame2archive(UIO.tmp_file, false);
-
-    RTC.getTime();
-    minutes = RTC.minute;
-    hours = RTC.hour;
+    error = UIO.frame2archive(UIO.tmp_file);
 
     //-----------------------------------------
     if ((batteryLevel > 65) && (batteryLevel <= 75)) {
@@ -157,6 +158,7 @@ void loop()
       }
 
       // GPS time synchronyzation once a day, at 13:00
+      // FIXME We may skip this if not exactly 13:00
       if (hours == 13 && minutes == 0) {
         UIO.receiveGPSsyncTime();
 
