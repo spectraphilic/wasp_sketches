@@ -140,7 +140,6 @@ void loop()
 
     // Measure sensors
     UIO.measureAgriSensorsBasicSet();
-    error = UIO.frame2archive(UIO.tmp_file);
 
     //-----------------------------------------
     if ((batteryLevel > 65) && (batteryLevel <= 75)) {
@@ -156,6 +155,9 @@ void loop()
       if (minutes == 0) {
         UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
       }
+
+      // FIXME This is not robust to reboots, as the state (of which is the
+      // unsent file) is kept in memory. State must be persistent to be robust.
 
       // GPS time synchronyzation once a day, at 13:00
       // FIXME We may skip this if not exactly 13:00
