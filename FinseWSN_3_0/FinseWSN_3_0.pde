@@ -84,9 +84,11 @@ void setup()
   targetUnsentFile = UIO.unsent_fileA;
 
   // Initialize network
+  // TODO Store the address in EEPROM instead
   xbeeDM.ON();
-  delay(50);
-  UIO.initNet(NETWORK_BROADCAST);
+  xbeeDM.getPAN();
+  UIO.RX_ADDRESS = UIO.networks[xbeeDM.PAN_ID[1]].rx_address;
+  UIO.logActivity(F("INFO Network is: %s"), UIO.networks[xbeeDM.PAN_ID[1]].name);
   xbeeDM.OFF();
 
   // set random seed
