@@ -64,11 +64,6 @@ void setup()
   // Initialize variables, from EEPROM (USB print, OTA programming, ..)
   UIO.initVars();
 
-  // First turn on the sensor board
-  // XXX Since we are not measuring at setup, do we need this?
-  SensorAgrv20.ON();
-  delay(100);
-
   // Log
   UIO.start_RTC_SD_USB();
   batteryLevel = PWR.getBatteryLevel();
@@ -100,7 +95,7 @@ void setup()
 
   // Go to sleep
   UIO.stop_RTC_SD_USB();
-  SensorAgrv20.sleepAgr(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
 
 
