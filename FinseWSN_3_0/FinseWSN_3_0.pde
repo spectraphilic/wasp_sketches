@@ -7,7 +7,6 @@
  */
 
 // 1. Include Libraries
-#include <WaspXBeeDM.h>
 #include <WaspUIO.h>
 #include <WaspSensorAgr_v20.h>
 #include <WaspFrame.h>
@@ -62,8 +61,8 @@ void setup()
 {
   time = millis();
 
-  // Flags to turn USB print, OTA programming ON or OFF
-  UIO.USB_output = 1;   // turn print to USB ON/OFF
+  // Initialize variables, from EEPROM (USB print, OTA programming, ..)
+  UIO.initVars();
 
   // First turn on the sensor board
   // XXX Since we are not measuring at setup, do we need this?
@@ -82,14 +81,6 @@ void setup()
   error = UIO.initSD();
   delay(100);
   targetUnsentFile = UIO.unsent_fileA;
-
-  // Initialize network
-  // TODO Store the address in EEPROM instead
-  xbeeDM.ON();
-  xbeeDM.getPAN();
-  UIO.RX_ADDRESS = UIO.networks[xbeeDM.PAN_ID[1]].rx_address;
-  UIO.logActivity(F("INFO Network is: %s"), UIO.networks[xbeeDM.PAN_ID[1]].name);
-  xbeeDM.OFF();
 
   // set random seed
   //srandom(42);
