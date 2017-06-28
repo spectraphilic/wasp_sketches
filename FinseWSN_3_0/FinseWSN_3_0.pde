@@ -101,52 +101,59 @@ void loop()
   time = millis();
   UIO.start_RTC_SD_USB();
 
-  // Update RTC time at least once. Kepp minuts and hour for later.
+  // Update RTC time at least once. Kepp minute and hour for later.
   RTC.getTime();
   minutes = RTC.minute;
   hours = RTC.hour;
 
-  // Battery level
-  batteryLevel = PWR.getBatteryLevel();
-  UIO.logActivity("INFO <<< Loop starts, battery level = %d", batteryLevel);
-
   // Check RTC interruption
   if (intFlag & RTC_INT)
   {
-    UIO.logActivity("DEBUG RTC interruption");
-    Utils.blinkGreenLED(); // blink green once every minute to show it is alive
-
-    // Battery too low, do nothing
+    // Battery level, do nothing if too low
+    batteryLevel = PWR.getBatteryLevel();
     if (batteryLevel <= 30) {
+      UIO.logActivity("DEBUG RTC interruption, low battery = %d", batteryLevel);
       goto sleep;
     }
 
-    // Measure sensors
-    UIO.measureAgriSensorsBasicSet();
+    UIO.logActivity("INFO RTC interruption, battery level = %d", batteryLevel);
+    //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-    //-----------------------------------------
-    if ((batteryLevel > 65) && (batteryLevel <= 75)) {
-      // Attempt sending data every 3 hours, if battery <= 75%
-      if (hours % 3 == 0) {
+    // Warm sensors
+    UIO.warmSensors();
+
+    // Send frames once an hour at most
+    bool sendFrames = (
+      (batteryLevel > 75 && minutes == 0) ||                 // Once an hour
+      (batteryLevel > 65 && minutes == 0 && hours % 3 == 0)  // Once every 3 hours
+    );
+
+    // Sync time once a day
+    bool syncTime = (
+      (batteryLevel > 75 && hours == 13 && minutes == 0)
+    );
+
+    unsigned long start = millis();
+    unsigned long diff;
+    while (true)
+    {
+      diff = UIO.millisDiff(start, millis());
+
+      if (sendFrames)
+      {
+        sendFrames = false; // Flag not to call this twice
         UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
       }
-    }
 
-    //-----------------------------------------
-    if (batteryLevel > 75) {
-      // Attempt sending data every hour, if battery > 75%
-      if (minutes == 0) {
-        UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
-      }
+      if (syncTime)
+      {
+        syncTime = false; // Flag not to call this twice
 
-      // FIXME This is not robust to reboots, as the state (of which is the
-      // unsent file) is kept in memory. State must be persistent to be robust.
-
-      // GPS time synchronyzation once a day, at 13:00
-      // FIXME We may skip this if not exactly 13:00
-      if (hours == 13 && minutes == 0) {
+        // GPS time synchronyzation once a day, at 13:00
         UIO.receiveGPSsyncTime();
 
+        // FIXME This is not robust to reboots, as the state (of which is the
+        // unsent file) is kept in memory. State must be persistent to be robust.
         // Once a day try to send all data in current unsent file.
         if (targetUnsentFile == UIO.unsent_fileA) {
           UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
@@ -161,13 +168,26 @@ void loop()
           targetUnsentFile = UIO.unsent_fileA;
         }
       }
+
+      // Last (exit) action!!
+      // Read sensors once they are warm, 10s after
+      if (diff > 10000)
+      {
+        // XXX Sensors read this loop will be sent next time
+        UIO.readSensors();
+        break; // Last action!! go to sleep
+      }
+
     }
+  }
+  else
+  {
+    UIO.logActivity(F("WARN Unexpected interruption %d"), intFlag);
   }
 
 sleep:
   time = UIO.millisDiff(time, millis());
-  UIO.logActivity("INFO >>> Loop done in %lu ms.", time);
-
+  UIO.logActivity("INFO Loop done in %lu ms.", time);
   UIO.stop_RTC_SD_USB();
 
   // Clear interruption flag & pin
