@@ -38,7 +38,6 @@ const int camPowerPin = DIGITAL1;
 //========== SET time step !! ====================================
 //================================================================
 
-int timeStep = 1; // time step in minute 
 //String imageFiles = "IMAGES.TXT";
 
 //================================================================
@@ -69,15 +68,25 @@ void setup(){
 
 	pinMode(camPowerPin, OUTPUT);
 	digitalWrite(camPowerPin, HIGH); // Provide power to camera
+	delay(10000);
 
+	RTC.setTime("00:01:01:01:00:00:00");
 	logActivity("=== Waspmote starting ===");
+
+
+	camON();
+	delay(120000);
+	camTrigger();
+	delay(1000);
+	camOFF();
+
 }
 
 //================================================================
 void loop(){
 
 	logActivity("Mote to sleep ...");
-	PWR.deepSleep("00:00:10:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF);
+	PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 	//PWR.sleep(ALL_OFF);
 	logActivity("Mote awaking");
 
@@ -130,9 +139,9 @@ void logActivity(String message){
 
 void takePicture(){
     camON();
-    delay(5000);
+    delay(15000);
     camTrigger();
-    delay(2000);
+    delay(10000);
     camOFF();
     //collectImageName();
 }
