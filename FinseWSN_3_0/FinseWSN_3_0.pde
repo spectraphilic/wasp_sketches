@@ -1,173 +1,185 @@
-/*  
+/*
  SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
  April 2017, Simon Filhol
- 
+
  Script description:
 
  */
 
-// Put your libraries here (#include ...)
-#include <WaspXBeeDM.h>
+// 1. Include Libraries
 #include <WaspUIO.h>
 #include <WaspSensorAgr_v20.h>
 #include <WaspFrame.h>
 
-// Define local variables:
-char message[100];
+// 2. Definitions
+
+// Sampling period in minutes, keep these two definitions in sync. The value
+// must be a factor of 60 to get equally spaced samples.
+// Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
+// Different values for different battery levels.
+struct Sampling {
+  const uint8_t offset;
+  const char* offset_str;
+};
+
+Sampling samplings[3] = {
+  { 12, "00:00:12:00" }, // <= 30
+  {  4, "00:00:04:00" }, // <= 55
+  {  2, "00:00:02:00" }, //  > 55
+};
+
+Sampling* sampling = NULL;
+
+
+// 3. Global variables declaration
+bool error;
+uint8_t alarmMinutes;
+char alarmTime[] = "00:00:00:00";
 int pendingPulses;
 int minutes;
 int hours;
 int randomNumber;
-int batteryLevel;
+uint8_t batteryLevel;
+unsigned long time;
+float volts;
 
-// define the sampling period in minute MUST BE between 0 and 29 minute
-int SamplingPeriod = 3;
+const char* targetUnsentFile;
 
-String targetUnsentFile = " ";
-String archive_file = " ";
+
+Sampling getSampling() {
+  if (batteryLevel <= 30) {
+    sampling = &samplings[0];
+  } else if (batteryLevel <= 55) {
+    sampling = &samplings[1];
+  } else {
+    sampling = &samplings[2];
+  }
+}
+
 
 void setup()
 {
-  uint8_t error;
+  time = millis();
 
-  // Flags to turn USB print, OTA programming ON or OFF
-  UIO.USB_output = 1;   // turn print to USB ON/OFF
+  // Initialize variables, from EEPROM (USB print, OTA programming, ..)
+  UIO.initVars();
 
-  // Turn on the sensor board
-  SensorAgrv20.ON();
-  delay(100);
-  
+  // Log
   UIO.start_RTC_SD_USB();
-  USB.println("Wasp started, Agr board ON");
+  batteryLevel = PWR.getBatteryLevel();
+  UIO.logActivity(F("INFO <<< Booting. Agr board ON. Battery level is %d"), batteryLevel);
 
-  error = UIO.setTime(17, 6, 6, 13, 0, 0);
-  USB.print("Time set at: ");
-  USB.println(RTC.getTime());
+  // Interactive mode
+  UIO.interactive();
 
-  xbeeDM.ON();
-  delay(50);
-
-  // Function to initialize SD card
-  archive_file = UIO.initSD();
-  UIO.println(archive_file);
+  // Create files in SD
+  error = UIO.initSD();
   delay(100);
-  
-  UIO.logActivity("Waspmote starting");
   targetUnsentFile = UIO.unsent_fileA;
-
-  // Function to initialize
-  UIO.initNet(NETWORK_BROADCAST);
-  UIO.logActivity("SD,XbeeDM initialized");
-
 
   // set random seed
   //srandom(42);
 
   //UIO.readOwnMAC();
   UIO.readBatteryLevel();
-  UIO.logActivity("Waspmote set and ready");  
+  UIO.logActivity(F("INFO >>> Boot done in %d ms"), UIO.millisDiff(time, millis()));
 
-  xbeeDM.OFF();
-  USB.OFF();
-  RTC.OFF();
+  // Calculate first alarm (requires batteryLevel)
+  getSampling();
+
+  RTC.getTime();
+  alarmMinutes = (RTC.minute / sampling->offset) * sampling->offset + sampling->offset;
+  if (alarmMinutes >= 60)
+    alarmMinutes = 0;
+  sprintf(alarmTime, "00:00:%02d:00", alarmMinutes);
+
+  // Go to sleep
+  UIO.stop_RTC_SD_USB();
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
 
 
 void loop()
 {
+  time = millis();
+  UIO.start_RTC_SD_USB();
 
-  // set whole agri board and waspmote to sleep. Wake up every minute to
-  SensorAgrv20.sleepAgr("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF);
-
-  // extract RTC time
-  RTC.ON();
+  // Update RTC time at least once. Kepp minuts and hour for later.
   RTC.getTime();
   minutes = RTC.minute;
   hours = RTC.hour;
-  RTC.OFF();
 
-  //Check RTC interruption
-  if(intFlag & RTC_INT)
+  // Battery level
+  volts = PWR.getBatteryVolts();
+  batteryLevel = PWR.getBatteryLevel();
+  UIO.logActivity("INFO <<< Loop starts, battery level = %d (volts = %d)", batteryLevel, (long) (volts * 1000000));
+  USB.println(volts);
+
+  // Check RTC interruption
+  if (intFlag & RTC_INT)
   {
-    UIO.start_RTC_SD_USB();
-    UIO.logActivity("+ RTC interruption +");
+    UIO.logActivity("DEBUG RTC interruption");
     Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-    // Sample every sampling period minutes
-    if ((minutes%SamplingPeriod)==0)
-    { 
-      // Measure sensors
-      sprintf(message, "+ %d min Sampling +", SamplingPeriod);
-      UIO.logActivity(message);
-      batteryLevel = PWR.getBatteryLevel();
+    // Battery too low, do nothing
+    if (batteryLevel <= 30) {
+      goto sleep;
+    }
 
-      //-----------------------------------------
-      if((batteryLevel > 30) && (batteryLevel <= 55)){
-        // Measure sensors every 2 sampling period
-        if(minutes%(SamplingPeriod*2) == 0){
-           UIO.measureAgriSensorsBasicSet();
-           archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
-         }
+    // Measure sensors
+    UIO.measureAgriSensorsBasicSet();
+
+    //-----------------------------------------
+    if ((batteryLevel > 65) && (batteryLevel <= 75)) {
+      // Attempt sending data every 3 hours, if battery <= 75%
+      if (hours % 3 == 0) {
+        UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
+      }
+    }
+
+    //-----------------------------------------
+    if (batteryLevel > 75) {
+      // Attempt sending data every hour, if battery > 75%
+      if (minutes == 0) {
+        UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
       }
 
-      //-----------------------------------------
-      if((batteryLevel > 55) && (batteryLevel <= 65)){
-        // Measure sensors every sampling period
-        UIO.measureAgriSensorsBasicSet();
-        archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
-      }
+      // FIXME This is not robust to reboots, as the state (of which is the
+      // unsent file) is kept in memory. State must be persistent to be robust.
 
-      //-----------------------------------------
-      if((batteryLevel > 65) && (batteryLevel <= 75)){
-        // Measure sensors every sampling period
-        UIO.measureAgriSensorsBasicSet();
-        archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
+      // GPS time synchronyzation once a day, at 13:00
+      // FIXME We may skip this if not exactly 13:00
+      if (hours == 13 && minutes == 0) {
+        UIO.receiveGPSsyncTime();
 
-        // Attempt sending data every 3 hours
-        if(hours%3 == 0){
-          // send data
-          UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
+        // Once a day try to send all data in current unsent file.
+        if (targetUnsentFile == UIO.unsent_fileA) {
+          UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
+          UIO.delFile(UIO.unsent_fileA);
+          UIO.createFile(UIO.unsent_fileA);
+          targetUnsentFile = UIO.unsent_fileB;
         }
-      }
-
-      //-----------------------------------------
-      if(batteryLevel > 75){
-        // Measure sensors every sampling period
-        UIO.measureAgriSensorsBasicSet();
-        archive_file = UIO.frame2archive(UIO.tmp_file, archive_file, false);
-
-        if(minutes == 0){
-          //send data
-          UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
-        }
-        if(hours == 13){
-          // GPS time synchronyzation
-          UIO.receiveGPSsyncTime();
-
-          // Once a day try to send all data in current unsent file. 
-          if(targetUnsentFile.equals(UIO.unsent_fileA)){
-            UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
-            UIO.delFile(UIO.unsent_fileA);
-            UIO.createFile(UIO.unsent_fileA);
-            targetUnsentFile = UIO.unsent_fileB;
-          }
-          if(targetUnsentFile.equals(UIO.unsent_fileB)){
-            UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
-            UIO.delFile(UIO.unsent_fileB);
-            UIO.createFile(UIO.unsent_fileB);
-            targetUnsentFile = UIO.unsent_fileA;
-          }
+        if (targetUnsentFile == UIO.unsent_fileB) {
+          UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
+          UIO.delFile(UIO.unsent_fileB);
+          UIO.createFile(UIO.unsent_fileB);
+          targetUnsentFile = UIO.unsent_fileA;
         }
       }
     }
- 
-  // Clear flag
-  intFlag &= ~(RTC_INT); 
+  }
+
+sleep:
+  time = UIO.millisDiff(time, millis());
+  UIO.logActivity("INFO >>> Loop done in %lu ms.", time);
+
   UIO.stop_RTC_SD_USB();
 
-  clearIntFlag(); 
+  // Clear interruption flag & pin
+  clearIntFlag();
   PWR.clearInterruptionPin();
-  }
+
+  // Set whole agri board and waspmote to sleep, until next alarm.
+  getSampling();
+  SensorAgrv20.sleepAgr(sampling->offset_str, RTC_OFFSET, RTC_ALM1_MODE4, ALL_OFF);
 }
-
-

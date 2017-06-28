@@ -39,8 +39,8 @@ const int camPowerPin = DIGITAL1;
 //========== SET time step !! ====================================
 //================================================================
 
-int timeStep = 60; // time step in minute 
-//String imageFiles = "IMAGES.TXT";
+int timeStep = 10; // time step in minute 
+//const char* imageFiles = "IMAGES.TXT";
 
 //================================================================
 //================================================================
@@ -83,12 +83,6 @@ void setup(){
 
 	sprintf(message2log, "Alarm set to %d min", timeStep);
 	UIO.logActivity(message2log);
-
-	camON();
-	delay(120000);
-	camOFF();
-
-
 }
 
 //================================================================
@@ -147,7 +141,7 @@ void camPowerOFF(){
 void camON(){
 	// function to turn camera ON
 	digitalWrite(onoffPin, HIGH);
-	delay(1000);
+	delay(20);
 	digitalWrite(onoffPin, LOW);
 	USB.println("Camera turned ON");
 	UIO.logActivity("Cam ON");
@@ -164,12 +158,12 @@ void camOFF(){
 
 void camTrigger(){
 	// function to focus, and trigger the camera shutter
-	//digitalWrite(focusPin, HIGH);	
+	digitalWrite(focusPin, HIGH);	
 	delay(50);
 	digitalWrite(shutterPin, HIGH);	
 	delay(50);
 	digitalWrite(shutterPin, LOW);	
-	//digitalWrite(focusPin, LOW);	
+	digitalWrite(focusPin, LOW);	
 	delay(100);
 	USB.println("Photo captured");
 	UIO.logActivity("Photo captured");

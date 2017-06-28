@@ -45,7 +45,7 @@ void setup()
   delay(50);
   
   // Function to initialize SD card
-  archiveFile = UIO.initSD();
+  UIO.initSD();
   USB.println("SD initialized");
 
   // Function to initialize

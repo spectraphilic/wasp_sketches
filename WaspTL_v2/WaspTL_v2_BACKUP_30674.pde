@@ -39,8 +39,13 @@ const int camPowerPin = DIGITAL1;
 //========== SET time step !! ====================================
 //================================================================
 
+<<<<<<< HEAD
 int timeStep = 60; // time step in minute 
 //String imageFiles = "IMAGES.TXT";
+=======
+int timeStep = 10; // time step in minute 
+//const char* imageFiles = "IMAGES.TXT";
+>>>>>>> 7fed7051f77caffd8433207c7e4877fd32d1dda9
 
 //================================================================
 //================================================================
