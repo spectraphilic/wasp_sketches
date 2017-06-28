@@ -41,7 +41,6 @@ int hours;
 int randomNumber;
 uint8_t batteryLevel;
 unsigned long time;
-float volts;
 
 const char* targetUnsentFile;
 
@@ -74,14 +73,12 @@ void setup()
 
   // Create files in SD
   error = UIO.initSD();
-  delay(100);
   targetUnsentFile = UIO.unsent_fileA;
 
   // set random seed
   //srandom(42);
 
   //UIO.readOwnMAC();
-  UIO.readBatteryLevel();
   UIO.logActivity(F("INFO >>> Boot done in %d ms"), UIO.millisDiff(time, millis()));
 
   // Calculate first alarm (requires batteryLevel)
@@ -110,10 +107,8 @@ void loop()
   hours = RTC.hour;
 
   // Battery level
-  volts = PWR.getBatteryVolts();
   batteryLevel = PWR.getBatteryLevel();
-  UIO.logActivity("INFO <<< Loop starts, battery level = %d (volts = %d)", batteryLevel, (long) (volts * 1000000));
-  USB.println(volts);
+  UIO.logActivity("INFO <<< Loop starts, battery level = %d", batteryLevel);
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
