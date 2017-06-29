@@ -17,54 +17,45 @@
 // must be a factor of 60 to get equally spaced samples.
 // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
 // Different values for different battery levels.
-struct Sampling {
-  const uint8_t offset;
-  const char* offset_str;
-};
-
-Sampling samplings[3] = {
-  { 12, "00:00:12:00" }, // <= 30
-  {  4, "00:00:04:00" }, // <= 55
-  {  2, "00:00:02:00" }, //  > 55
-};
-
-Sampling* sampling = NULL;
+const uint8_t samplings[3] = {12, 4, 2};
 
 
 // 3. Global variables declaration
 bool error;
-uint8_t alarmMinutes;
-char alarmTime[] = "00:00:00:00";
+const char* alarmTime;
 int pendingPulses;
-int minutes;
-int hours;
+int minute;
+int hour;
 int randomNumber;
 uint8_t batteryLevel;
-unsigned long time;
 
 const char* targetUnsentFile;
 
 
-Sampling getSampling() {
-  if (batteryLevel <= 30) {
-    sampling = &samplings[0];
-  } else if (batteryLevel <= 55) {
-    sampling = &samplings[1];
-  } else {
-    sampling = &samplings[2];
+const uint8_t getSampling() {
+  if (batteryLevel <= 30)
+  {
+    return samplings[0];
   }
+
+  if (batteryLevel <= 55)
+  {
+    return samplings[1];
+  }
+
+  return samplings[2];
 }
 
 
 void setup()
 {
-  time = millis();
+  UIO.initTime();
 
   // Initialize variables, from EEPROM (USB print, OTA programming, ..)
   UIO.initVars();
 
   // Log
-  UIO.start_RTC_SD_USB();
+  UIO.start_RTC_SD_USB(false);
   batteryLevel = PWR.getBatteryLevel();
   UIO.logActivity(F("INFO <<< Booting. Agr board ON. Battery level is %d"), batteryLevel);
 
@@ -79,18 +70,12 @@ void setup()
   //srandom(42);
 
   //UIO.readOwnMAC();
-  UIO.logActivity(F("INFO >>> Boot done in %d ms"), UIO.millisDiff(time, millis()));
 
   // Calculate first alarm (requires batteryLevel)
-  getSampling();
-
-  RTC.getTime();
-  alarmMinutes = (RTC.minute / sampling->offset) * sampling->offset + sampling->offset;
-  if (alarmMinutes >= 60)
-    alarmMinutes = 0;
-  sprintf(alarmTime, "00:00:%02d:00", alarmMinutes);
+  alarmTime = UIO.getNextAlarm(getSampling());
 
   // Go to sleep
+  UIO.logActivity(F("INFO Boot done in %d ms"), UIO.millisDiff(UIO.start, millis()));
   UIO.stop_RTC_SD_USB();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
@@ -98,13 +83,14 @@ void setup()
 
 void loop()
 {
-  time = millis();
-  UIO.start_RTC_SD_USB();
+  UIO.initTime();
+
+  UIO.start_RTC_SD_USB(false);
 
   // Update RTC time at least once. Kepp minute and hour for later.
-  RTC.getTime();
-  minutes = RTC.minute;
-  hours = RTC.hour;
+  RTC.breakTimeAbsolute(UIO.getTime(), &UIO.time);
+  minute = UIO.time.minute;
+  hour = UIO.time.hour;
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
@@ -124,13 +110,13 @@ void loop()
 
     // Send frames once an hour at most
     bool sendFrames = (
-      (batteryLevel > 75 && minutes == 0) ||                 // Once an hour
-      (batteryLevel > 65 && minutes == 0 && hours % 3 == 0)  // Once every 3 hours
+      (batteryLevel > 75 && minute == 0) ||                // Once an hour
+      (batteryLevel > 65 && minute == 0 && hour % 3 == 0)  // Once every 3 hours
     );
 
     // Sync time once a day
     bool syncTime = (
-      (batteryLevel > 75 && hours == 13 && minutes == 0)
+      (batteryLevel > 75 && hour == 13 && minute == 0)
     );
 
     unsigned long start = millis();
@@ -186,8 +172,10 @@ void loop()
   }
 
 sleep:
-  time = UIO.millisDiff(time, millis());
-  UIO.logActivity("INFO Loop done in %lu ms.", time);
+  // Calculate first alarm (requires batteryLevel)
+  alarmTime = UIO.getNextAlarm(getSampling());
+
+  UIO.logActivity("INFO Loop done in %lu ms.", UIO.millisDiff(UIO.start, millis()));
   UIO.stop_RTC_SD_USB();
 
   // Clear interruption flag & pin
@@ -195,6 +183,5 @@ sleep:
   PWR.clearInterruptionPin();
 
   // Set whole agri board and waspmote to sleep, until next alarm.
-  getSampling();
-  SensorAgrv20.sleepAgr(sampling->offset_str, RTC_OFFSET, RTC_ALM1_MODE4, ALL_OFF);
+  SensorAgrv20.sleepAgr(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
