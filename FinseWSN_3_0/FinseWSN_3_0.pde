@@ -19,6 +19,43 @@
 // Different values for different battery levels.
 const uint8_t samplings[3] = {12, 4, 2};
 
+struct Action {
+  unsigned long ms; // ms after the loop start when to run the action
+  void (*f)();  // method (action) to call
+  const char* name; // For debugging purpuses only
+};
+
+// Array of actions, must be ordered by ms, will be executed in order.
+//
+// The length of the loop is defined by the long warm up time of the sensirion
+// (10s). So the first action is to warm up the sensirion, and the last ones
+// are to read the sensirion and then make its frame.
+//
+const uint8_t nActions = 15;
+Action actions[nActions] = {
+  {    0, &WaspUIO::warmSensirion,        "Warm Sensirion"},
+  {  100, &WaspUIO::createArchiveFile,    "Create archive file"},
+  {  300, &WaspUIO::warmPressure,         "Warm Pressure"},
+  {  350, &WaspUIO::warmPressure,         "Read Pressure"},
+  {  400, &WaspUIO::warmLeafWetness,      "Warm LeafWetness"},
+  {  450, &WaspUIO::warmLeafWetness,      "Read LeafWetness"},
+//  {  500, &WaspUIO::warmAnemometer,       "Warm Anemometer"},
+//  {  550, &WaspUIO::warmAnemometer,       "Read Anemometer"},
+//  {  600, &WaspUIO::warmVane,             "Warm Vane"},
+//  {  650, &WaspUIO::warmVane,             "Read Vane"},
+//  {  700, &WaspUIO::warmTempDS18B20,      "Warm TempDS18B20"},
+//  {  750, &WaspUIO::warmTempDS18B20,      "Read TempDS18B20"},
+  { 1000, &WaspUIO::warmRTC,              "Warm RTC"},
+  { 1050, &WaspUIO::warmRTC,              "Read RTC"},
+  { 1100, &WaspUIO::warmACC,              "Warm ACC"},
+  { 1150, &WaspUIO::warmACC,              "Read ACC"},
+  { 2000, &WaspUIO::frameHealth,          "Create Health frame"},
+  { 2100, &WaspUIO::framePressureWetness, "Create Pressure/Wetness frame"},
+  { 2000, &WaspUIO::frameWind,            "Create Wind frame"},
+  {10000, &WaspUIO::readSensirion,        "Read Sensirion"},
+  {10100, &WaspUIO::frameSensirion,       "Create Sensirion frame"}
+};
+
 
 // 3. Global variables declaration
 bool error;
@@ -83,8 +120,10 @@ void setup()
 
 void loop()
 {
-  UIO.initTime();
+  uint8_t i;
+  Action* action;
 
+  UIO.initTime();
   UIO.start_RTC_SD_USB(false);
 
   // Update RTC time at least once. Kepp minute and hour for later.
@@ -106,7 +145,7 @@ void loop()
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     // Warm sensors
-    UIO.warmSensors();
+    //UIO.warmSensors();
 
     // Send frames once an hour at most
     bool sendFrames = (
@@ -121,50 +160,53 @@ void loop()
 
     unsigned long start = millis();
     unsigned long diff;
-    while (true)
+    i = 0;
+    while (i < nActions)
     {
       diff = UIO.millisDiff(start, millis());
+      action = &actions[i];
 
-      if (sendFrames)
+      if (action->ms < diff)
       {
-        sendFrames = false; // Flag not to call this twice
-        UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
+        UIO.logActivity("DEBUG Action %s", action->name);
+	action->f();
+	i++;
       }
-
-      if (syncTime)
-      {
-        syncTime = false; // Flag not to call this twice
-
-        // GPS time synchronyzation once a day, at 13:00
-        UIO.receiveGPSsyncTime();
-
-        // FIXME This is not robust to reboots, as the state (of which is the
-        // unsent file) is kept in memory. State must be persistent to be robust.
-        // Once a day try to send all data in current unsent file.
-        if (targetUnsentFile == UIO.unsent_fileA) {
-          UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
-          UIO.delFile(UIO.unsent_fileA);
-          UIO.createFile(UIO.unsent_fileA);
-          targetUnsentFile = UIO.unsent_fileB;
-        }
-        if (targetUnsentFile == UIO.unsent_fileB) {
-          UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
-          UIO.delFile(UIO.unsent_fileB);
-          UIO.createFile(UIO.unsent_fileB);
-          targetUnsentFile = UIO.unsent_fileA;
-        }
-      }
-
-      // Last (exit) action!!
-      // Read sensors once they are warm, 10s after
-      if (diff > 10000)
-      {
-        // XXX Sensors read this loop will be sent next time
-        UIO.readSensors();
-        break; // Last action!! go to sleep
-      }
-
     }
+
+    // ** TODO ** Transform the code below into actions
+    if (sendFrames)
+    {
+      sendFrames = false; // Flag not to call this twice
+      UIO.frame2Meshlium(UIO.tmp_file, targetUnsentFile);
+    }
+
+    if (syncTime)
+    {
+      syncTime = false; // Flag not to call this twice
+
+      // GPS time synchronyzation once a day, at 13:00
+      UIO.receiveGPSsyncTime();
+
+      // FIXME This is not robust to reboots, as the state (of which is the
+      // unsent file) is kept in memory. State must be persistent to be robust.
+      // Once a day try to send all data in current unsent file.
+      if (targetUnsentFile == UIO.unsent_fileA) {
+        UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileB);
+        UIO.delFile(UIO.unsent_fileA);
+        UIO.createFile(UIO.unsent_fileA);
+        targetUnsentFile = UIO.unsent_fileB;
+      }
+      if (targetUnsentFile == UIO.unsent_fileB) {
+        UIO.frame2Meshlium(targetUnsentFile, UIO.unsent_fileA);
+        UIO.delFile(UIO.unsent_fileB);
+        UIO.createFile(UIO.unsent_fileB);
+        targetUnsentFile = UIO.unsent_fileA;
+      }
+    }
+    // ** TODO ** Transform the code below into actions
+
+
   }
   else
   {
