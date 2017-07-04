@@ -10,6 +10,7 @@
 #include <WaspUIO.h>
 #include <WaspSensorAgr_v20.h>
 #include <WaspFrame.h>
+#include <WaspXBeeDM.h>
 
 // 2. Definitions
 
@@ -40,54 +41,62 @@ struct Action {
 // Filter functions, to be used in the actions table below.
 // These functions return true if the action is to be done, false if not.
 // The decission is based in battery level and/or time.
+bool filter_1h()
+{
+  return (minute == 0);
+}
+
 bool sendFramesFilter()
 {
+  if (! filter_1h()) { return false; } // Net ops happen once/hour at most
   return (
-    (batteryLevel > 75 && minute == 0) ||                // Once an hour
-    (batteryLevel > 65 && minute == 0 && hour % 3 == 0)  // Once every 3 hours
+    (batteryLevel > 75) ||                // Once an hour
+    (batteryLevel > 65 && hour % 3 == 0)  // Once every 3 hours
   );
 }
 
 bool sendUnsentFilter()
 {
-  return (batteryLevel > 75 && hour == 13 && minute == 0);
-}
-
-bool syncTimeFilter()
-{
-  return (batteryLevel > 75 && hour == 13 && minute == 0);
+  if (! filter_1h()) { return false; } // Net ops happen once/hour at most
+  return (batteryLevel > 75 && hour == 13);
 }
 
 // Array of actions, must be ordered by ms, will be executed in order.
 //
 // The length of the loop is defined by the long warm up time of the sensirion
 // (10s). So the first action is to warm up the sensirion, and the last ones
-// are to read the sensirion and then make its frame.
+// are to read the sensirion and then make its frame. This means that the
+// sensirion frame will be sent in the next loop, always one loop behind the
+// others.
 //
-const uint8_t nActions = 18;
+const uint8_t nActions = 19;
 Action actions[nActions] = {
   {    0, &WaspUIO::warmSensirion,        NULL,              "Warm Sensirion"},
   {  100, &WaspUIO::createArchiveFile,    NULL,              "Create archive file"},
   {  300, &WaspUIO::warmPressure,         NULL,              "Warm Pressure"},
-  {  350, &WaspUIO::warmPressure,         NULL,              "Read Pressure"},
+  {  350, &WaspUIO::readPressure,         NULL,              "Read Pressure"},
   {  400, &WaspUIO::warmLeafWetness,      NULL,              "Warm LeafWetness"},
-  {  450, &WaspUIO::warmLeafWetness,      NULL,              "Read LeafWetness"},
+  {  450, &WaspUIO::readLeafWetness,      NULL,              "Read LeafWetness"},
 //{  500, &WaspUIO::warmAnemometer,       NULL,              "Warm Anemometer"},
-//{  550, &WaspUIO::warmAnemometer,       NULL,              "Read Anemometer"},
+//{  550, &WaspUIO::readAnemometer,       NULL,              "Read Anemometer"},
 //{  600, &WaspUIO::warmVane,             NULL,              "Warm Vane"},
-//{  650, &WaspUIO::warmVane,             NULL,              "Read Vane"},
+//{  650, &WaspUIO::readVane,             NULL,              "Read Vane"},
 //{  700, &WaspUIO::warmTempDS18B20,      NULL,              "Warm TempDS18B20"},
-//{  750, &WaspUIO::warmTempDS18B20,      NULL,              "Read TempDS18B20"},
-  { 1000, &WaspUIO::warmRTC,              NULL,              "Warm RTC"},
-  { 1050, &WaspUIO::warmRTC,              NULL,              "Read RTC"},
-  { 1100, &WaspUIO::warmACC,              NULL,              "Warm ACC"},
-  { 1150, &WaspUIO::warmACC,              NULL,              "Read ACC"},
-  { 2000, &WaspUIO::frameHealth,          NULL,              "Create Health frame"},
-  { 2100, &WaspUIO::framePressureWetness, NULL,              "Create Pressure/Wetness frame"},
-  { 2000, &WaspUIO::frameWind,            NULL,              "Create Wind frame"},
+//{  750, &WaspUIO::readTempDS18B20,      NULL,              "Read TempDS18B20"},
+  {  800, &WaspUIO::warmRTC,              NULL,              "Warm RTC"},
+  {  850, &WaspUIO::readRTC,              NULL,              "Read RTC"},
+  {  900, &WaspUIO::warmACC,              NULL,              "Warm ACC"},
+  {  950, &WaspUIO::readACC,              NULL,              "Read ACC"},
+  { 1500, &WaspUIO::frameHealth,          NULL,              "Create Health frame"},
+  { 1600, &WaspUIO::framePressureWetness, NULL,              "Create Pressure/Wetness frame"},
+  { 1700, &WaspUIO::frameWind,            NULL,              "Create Wind frame"},
+
+  // The network window (6s)
+  { 2000, &WaspUIO::startNetwork,         &filter_1h,        "Start network"},
   { 3000, &WaspUIO::sendFrames,           &sendFramesFilter, "Send frames"},
   { 4000, &WaspUIO::sendFramesUnsent,     &sendUnsentFilter, "Send frames (unsent)"},
-  { 5000, &WaspUIO::receiveGPSsyncTime,   &syncTimeFilter,   "Sync time from GPS"},
+  { 8000, &WaspUIO::stopNetwork,          &filter_1h,        "Stop network"},
+
   {10000, &WaspUIO::readSensirion,        NULL,              "Read Sensirion"},
   {10100, &WaspUIO::frameSensirion,       NULL,              "Create Sensirion frame"}
 };
@@ -186,9 +195,20 @@ void loop()
       // Action
       if (action->ms < diff)
       {
+        i++;
         UIO.logActivity("DEBUG Action %s", action->name);
         error = action->action();
-        i++;
+        if (error)
+        {
+          UIO.logActivity("ERROR Action %s: %d", action->name, error);
+        }
+      }
+
+      // Network (receive)
+      if (xbeeDM.XBee_ON && xbeeDM.available())
+      {
+         UIO.logActivity("DEBUG New packet available");
+         UIO.receivePacket();
       }
     }
   }
