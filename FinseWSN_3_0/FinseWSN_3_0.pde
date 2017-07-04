@@ -71,34 +71,41 @@ bool sendUnsentFilter()
 //
 const uint8_t nActions = 19;
 Action actions[nActions] = {
-  {    0, &WaspUIO::warmSensirion,        NULL,              "Warm Sensirion"},
-  {  100, &WaspUIO::createArchiveFile,    NULL,              "Create archive file"},
-  {  300, &WaspUIO::warmPressure,         NULL,              "Warm Pressure"},
-  {  350, &WaspUIO::readPressure,         NULL,              "Read Pressure"},
-  {  400, &WaspUIO::warmLeafWetness,      NULL,              "Warm LeafWetness"},
-  {  450, &WaspUIO::readLeafWetness,      NULL,              "Read LeafWetness"},
-//{  500, &WaspUIO::warmAnemometer,       NULL,              "Warm Anemometer"},
-//{  550, &WaspUIO::readAnemometer,       NULL,              "Read Anemometer"},
-//{  600, &WaspUIO::warmVane,             NULL,              "Warm Vane"},
-//{  650, &WaspUIO::readVane,             NULL,              "Read Vane"},
-//{  700, &WaspUIO::warmTempDS18B20,      NULL,              "Warm TempDS18B20"},
-//{  750, &WaspUIO::readTempDS18B20,      NULL,              "Read TempDS18B20"},
-  {  800, &WaspUIO::warmRTC,              NULL,              "Warm RTC"},
-  {  850, &WaspUIO::readRTC,              NULL,              "Read RTC"},
-  {  900, &WaspUIO::warmACC,              NULL,              "Warm ACC"},
-  {  950, &WaspUIO::readACC,              NULL,              "Read ACC"},
-  { 1500, &WaspUIO::frameHealth,          NULL,              "Create Health frame"},
-  { 1600, &WaspUIO::framePressureWetness, NULL,              "Create Pressure/Wetness frame"},
-  { 1700, &WaspUIO::frameWind,            NULL,              "Create Wind frame"},
+  {    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
+  {  100, &WaspUIO::createArchiveFile,      NULL,              "Create archive file"},
+
+  // Frame: Health
+  {  200, &WaspUIO::onRTC,                  NULL,              "Warm RTC"},
+  {  250, &WaspUIO::readRTC,                NULL,              "Read RTC"},
+  {  300, &WaspUIO::onACC,                  NULL,              "Warm ACC"},
+  {  350, &WaspUIO::readACC,                NULL,              "Read ACC"},
+  {  400, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},
+
+  // Frame: Pressure & Wetness
+  {  500, &WaspUIO::readLeafWetness,        NULL,              "Read LeafWetness"},
+//{  550, &WaspUIO::readTempDS18B20,        NULL,              "Read TempDS18B20"},
+  {  600, &WaspUIO::onPressureSensor,       NULL,              "Turn on the Atmospheric Pressure Sensor"},
+  {  700, &WaspUIO::readPressure,           NULL,              "Read Pressure"},
+  {  750, &WaspUIO::offPressureSensor,      NULL,              "Turn off the Atmospheric Pressure Sensor"},
+  {  800, &WaspUIO::framePressureWetness,   NULL,              "Create Pressure/Wetness frame"},
+
+  // Frame: Wind
+//{  900, &WaspUIO::onMeteorologyGroup,     NULL,              "Turn on the Meteorology Group"},
+//{ 1000, &WaspUIO::readAnemometer,         NULL,              "Read Anemometer"},
+//{ 1100, &WaspUIO::readVane,               NULL,              "Read Vane"},
+//{ 1150, &WaspUIO::offMeteorologyGroup,    NULL,              "Turn off the Meteorology Group"},
+//{ 1200, &WaspUIO::frameWind,              NULL,              "Create Wind frame"},
 
   // The network window (6s)
-  { 2000, &WaspUIO::startNetwork,         &filter_1h,        "Start network"},
-  { 3000, &WaspUIO::sendFrames,           &sendFramesFilter, "Send frames"},
-  { 4000, &WaspUIO::sendFramesUnsent,     &sendUnsentFilter, "Send frames (unsent)"},
-  { 8000, &WaspUIO::stopNetwork,          &filter_1h,        "Stop network"},
+  { 2000, &WaspUIO::startNetwork,           &filter_1h,        "Start network"},
+  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
+  { 4000, &WaspUIO::sendFramesUnsent,       &sendUnsentFilter, "Send frames (unsent)"},
+  { 8000, &WaspUIO::stopNetwork,            &filter_1h,        "Stop network"},
 
-  {10000, &WaspUIO::readSensirion,        NULL,              "Read Sensirion"},
-  {10100, &WaspUIO::frameSensirion,       NULL,              "Create Sensirion frame"}
+  // Frame: Sensirion
+  {10000, &WaspUIO::readSensirion,          NULL,              "Read Sensirion"},
+  {10100, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},
+  {10150, &WaspUIO::offLowConsumptionGroup, NULL,              "Turn off the Low Consumption Group"},
 };
 
 
@@ -145,7 +152,7 @@ void setup()
   alarmTime = UIO.getNextAlarm(getSampling());
 
   // Go to sleep
-  UIO.logActivity(F("INFO Boot done in %d ms"), UIO.millisDiff(UIO.start, millis()));
+  UIO.logActivity(F("INFO Boot done in %lu ms"), UIO.millisDiff(UIO.start, millis()));
   UIO.stop_RTC_SD_USB();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
@@ -159,7 +166,7 @@ void loop()
   UIO.initTime();
   UIO.start_RTC_SD_USB(false);
 
-  // Update RTC time at least once. Kepp minute and hour for later.
+  // Update RTC time at least once. Keep minute and hour for later.
   RTC.breakTimeAbsolute(UIO.getTime(), &UIO.time);
   minute = UIO.time.minute;
   hour = UIO.time.hour;
@@ -176,6 +183,9 @@ void loop()
 
     UIO.logActivity("INFO RTC interruption, battery level = %d", batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
+
+    // Sensor board on. Apparently it requires RTC.
+    SensorAgrv20.ON();
 
     unsigned long start = millis();
     unsigned long diff;
