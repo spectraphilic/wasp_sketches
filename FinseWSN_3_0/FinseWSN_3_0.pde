@@ -27,20 +27,25 @@ uint8_t batteryLevel;
 // must be a factor of 60 to get equally spaced samples.
 // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
 // Different values for different battery levels.
-const uint8_t samplings[3] = {12, 4, 2};
+const uint8_t samplings[] PROGMEM = {12, 4, 2};
 
 
 struct Action {
   unsigned long ms; // ms after the loop start when to run the action
   uint8_t (*action)(); // function (action) to call
   bool (*filter)(); // filter function, see documentation below
-  const char* name; // For debugging purpuses only
 };
 
 
 // Filter functions, to be used in the actions table below.
 // These functions return true if the action is to be done, false if not.
 // The decission is based in battery level and/or time.
+bool filter_never()
+{
+  return false;
+}
+
+
 bool filter_1h()
 {
   return (minute == 0);
@@ -69,58 +74,110 @@ bool sendUnsentFilter()
 // sensirion frame will be sent in the next loop, always one loop behind the
 // others.
 //
-const uint8_t nActions = 19;
+
+char buffer[60];
+const char action_00[] PROGMEM = "Turn on the Low Consumption Group";
+const char action_01[] PROGMEM = "Create archive file";
+const char action_02[] PROGMEM = "Warm RTC";
+const char action_03[] PROGMEM = "Read RTC";
+const char action_04[] PROGMEM = "Warm ACC";
+const char action_05[] PROGMEM = "Read ACC";
+const char action_06[] PROGMEM = "Create Health frame";
+const char action_07[] PROGMEM = "Read LeafWetness";
+const char action_08[] PROGMEM = "Read TempDS18B20";
+const char action_09[] PROGMEM = "Turn on the Atmospheric Pressure Sensor";
+const char action_10[] PROGMEM = "Read Pressure";
+const char action_11[] PROGMEM = "Turn off the Atmospheric Pressure Sensor";
+const char action_12[] PROGMEM = "Create Pressure/Wetness frame";
+const char action_13[] PROGMEM = "Turn on the Meteorology Group";
+const char action_14[] PROGMEM = "Read Anemometer";
+const char action_15[] PROGMEM = "Read Vane";
+const char action_16[] PROGMEM = "Turn off the Meteorology Group";
+const char action_17[] PROGMEM = "Create Wind frame";
+const char action_18[] PROGMEM = "Start network";
+const char action_19[] PROGMEM = "Send frames";
+const char action_20[] PROGMEM = "Send frames (unsent)";
+const char action_21[] PROGMEM = "Stop network";
+const char action_22[] PROGMEM = "Read Sensirion";
+const char action_23[] PROGMEM = "Create Sensirion frame";
+const char action_24[] PROGMEM = "Turn off the Low Consumption Group";
+
+const char* const action_messages[] PROGMEM = {
+  action_00,
+  action_01,
+  action_02,
+  action_03,
+  action_04,
+  action_05,
+  action_06,
+  action_07,
+  action_08,
+  action_09,
+  action_10,
+  action_11,
+  action_12,
+  action_13,
+  action_14,
+  action_15,
+  action_16,
+  action_17,
+  action_18,
+  action_19,
+  action_20,
+  action_21,
+  action_22,
+  action_23,
+  action_24,
+};
+
+const uint8_t nActions = 25;
 Action actions[nActions] = {
-  {    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
-  {  100, &WaspUIO::createArchiveFile,      NULL,              "Create archive file"},
-
+  {    0, &WaspUIO::onLowConsumptionGroup,  NULL},
+  {  100, &WaspUIO::createArchiveFile,      NULL},
   // Frame: Health
-  {  200, &WaspUIO::onRTC,                  NULL,              "Warm RTC"},
-  {  250, &WaspUIO::readRTC,                NULL,              "Read RTC"},
-  {  300, &WaspUIO::onACC,                  NULL,              "Warm ACC"},
-  {  350, &WaspUIO::readACC,                NULL,              "Read ACC"},
-  {  400, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},
-
+  {  200, &WaspUIO::onRTC,                  NULL},
+  {  250, &WaspUIO::readRTC,                NULL},
+  {  300, &WaspUIO::onACC,                  NULL},
+  {  350, &WaspUIO::readACC,                NULL},
+  {  400, &WaspUIO::frameHealth,            NULL},
   // Frame: Pressure & Wetness
-  {  500, &WaspUIO::readLeafWetness,        NULL,              "Read LeafWetness"},
-//{  550, &WaspUIO::readTempDS18B20,        NULL,              "Read TempDS18B20"},
-  {  600, &WaspUIO::onPressureSensor,       NULL,              "Turn on the Atmospheric Pressure Sensor"},
-  {  700, &WaspUIO::readPressure,           NULL,              "Read Pressure"},
-  {  750, &WaspUIO::offPressureSensor,      NULL,              "Turn off the Atmospheric Pressure Sensor"},
-  {  800, &WaspUIO::framePressureWetness,   NULL,              "Create Pressure/Wetness frame"},
-
+  {  500, &WaspUIO::readLeafWetness,        NULL},
+  {  550, &WaspUIO::readTempDS18B20,        &filter_never},
+  {  600, &WaspUIO::onPressureSensor,       NULL},
+  {  700, &WaspUIO::readPressure,           NULL},
+  {  750, &WaspUIO::offPressureSensor,      NULL},
+  {  800, &WaspUIO::framePressureWetness,   NULL},
   // Frame: Wind
-//{  900, &WaspUIO::onMeteorologyGroup,     NULL,              "Turn on the Meteorology Group"},
-//{ 1000, &WaspUIO::readAnemometer,         NULL,              "Read Anemometer"},
-//{ 1100, &WaspUIO::readVane,               NULL,              "Read Vane"},
-//{ 1150, &WaspUIO::offMeteorologyGroup,    NULL,              "Turn off the Meteorology Group"},
-//{ 1200, &WaspUIO::frameWind,              NULL,              "Create Wind frame"},
-
+  {  900, &WaspUIO::onMeteorologyGroup,     &filter_never},
+  { 1000, &WaspUIO::readAnemometer,         &filter_never},
+  { 1100, &WaspUIO::readVane,               &filter_never},
+  { 1150, &WaspUIO::offMeteorologyGroup,    &filter_never},
+  { 1200, &WaspUIO::frameWind,              &filter_never},
   // The network window (6s)
-  { 2000, &WaspUIO::startNetwork,           &filter_1h,        "Start network"},
-  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
-  { 4000, &WaspUIO::sendFramesUnsent,       &sendUnsentFilter, "Send frames (unsent)"},
-  { 8000, &WaspUIO::stopNetwork,            &filter_1h,        "Stop network"},
-
+  { 2000, &WaspUIO::startNetwork,           &filter_1h},
+  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter},
+  { 4000, &WaspUIO::sendFramesUnsent,       &sendUnsentFilter},
+  { 8000, &WaspUIO::stopNetwork,            &filter_1h},
   // Frame: Sensirion
-  {10000, &WaspUIO::readSensirion,          NULL,              "Read Sensirion"},
-  {10100, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},
-  {10150, &WaspUIO::offLowConsumptionGroup, NULL,              "Turn off the Low Consumption Group"},
+  {10000, &WaspUIO::readSensirion,          NULL},
+  {10100, &WaspUIO::frameSensirion,         NULL},
+  {10150, &WaspUIO::offLowConsumptionGroup, NULL},
 };
 
 
 const uint8_t getSampling() {
+  uint8_t i = 2;
+
   if (batteryLevel <= 30)
   {
-    return samplings[0];
+    i = 0;
   }
-
-  if (batteryLevel <= 55)
+  else if (batteryLevel <= 55)
   {
-    return samplings[1];
+    i = 1;
   }
 
-  return samplings[2];
+  return pgm_read_byte_near(samplings + i);
 }
 
 
@@ -205,12 +262,13 @@ void loop()
       // Action
       if (action->ms < diff)
       {
+        strcpy_P(buffer, (char*)pgm_read_word(&(action_messages[i])));
         i++;
-        UIO.logActivity("DEBUG Action %s", action->name);
+        UIO.logActivity(F("DEBUG Action %s"), buffer);
         error = action->action();
         if (error)
         {
-          UIO.logActivity("ERROR Action %s: %d", action->name, error);
+          UIO.logActivity(F("ERROR Action %s: %d"), buffer, error);
         }
       }
 
