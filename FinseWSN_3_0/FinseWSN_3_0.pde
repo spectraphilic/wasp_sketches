@@ -185,6 +185,11 @@ void setup()
 {
   UIO.initTime();
 
+  // Hard-code behaviour. Uncomment this if you do not wish to initialize
+  // interactively.
+  //UIO.updateEEPROM(EEPROM_UIO_FLAGS, FLAG_USB_OUTPUT);
+  //UIO.initNet(NETWORK_BROADCAST);
+
   // Initialize variables, from EEPROM (USB print, OTA programming, ..)
   UIO.initVars();
 
