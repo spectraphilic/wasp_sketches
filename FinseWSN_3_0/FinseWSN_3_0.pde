@@ -191,7 +191,7 @@ void setup()
   // Log
   UIO.start_RTC_SD_USB(false);
   batteryLevel = PWR.getBatteryLevel();
-  UIO.logActivity(F("INFO <<< Booting. Agr board ON. Battery level is %d"), batteryLevel);
+  UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), batteryLevel);
 
   // Interactive mode
   UIO.interactive();
@@ -275,8 +275,8 @@ void loop()
       // Network (receive)
       if (xbeeDM.XBee_ON && xbeeDM.available())
       {
-         UIO.logActivity("DEBUG New packet available");
-         UIO.receivePacket();
+        UIO.logActivity(F("DEBUG New packet available"));
+        UIO.receivePacket();
       }
     }
   }
