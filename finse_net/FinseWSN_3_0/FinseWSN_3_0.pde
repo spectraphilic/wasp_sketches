@@ -199,8 +199,8 @@ void setup()
   // Create files in SD
   error = UIO.initSD();
 
-  // set random seed
-  //srandom(42);
+  // Set random seed, different for every device
+  srandom(Utils.readSerialID());
 
   //UIO.readOwnMAC();
 
