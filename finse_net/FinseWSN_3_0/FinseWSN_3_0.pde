@@ -51,9 +51,16 @@ bool filter_1h()
   return (minute == 0);
 }
 
+bool filter_20min()
+{
+  return ((minute == 0) || (minute == 20) || (minute == 40));
+}
+
+
 bool sendFramesFilter()
 {
   if (! filter_1h()) { return false; } // Net ops happen once/hour at most
+  if (! filter_20min()) { return false; } // Net ops happen once/hour at most
   return (
     (batteryLevel > 75) ||                // Once an hour
     (batteryLevel > 65 && hour % 3 == 0)  // Once every 3 hours
@@ -143,9 +150,9 @@ Action actions[nActions] = {
   { 1050, &WaspUIO::offMeteorologyGroup,    &filter_never},
   { 1100, &WaspUIO::frameWind,              &filter_never},
   // The network window (6s)
-  { 2000, &WaspUIO::startNetwork,           &filter_1h},
+  { 2000, &WaspUIO::startNetwork,           &filter_20min},
   { 3000, &WaspUIO::sendFrames,             &sendFramesFilter},
-  { 8000, &WaspUIO::stopNetwork,            &filter_1h},
+  { 8000, &WaspUIO::stopNetwork,            &filter_20min},
   // Frame: Sensirion
   {10000, &WaspUIO::readSensirion,          NULL},
   {10100, &WaspUIO::frameSensirion,         NULL},
@@ -234,7 +241,9 @@ void loop()
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     // Sensor board on. Apparently it requires RTC.
+    USB.println("before ON");
     SensorAgrv20.ON();
+    USB.println("after ON");
 
     unsigned long start = millis();
     unsigned long diff;
