@@ -59,7 +59,7 @@ bool filter_20min()
 
 bool sendFramesFilter()
 {
-  if (! filter_1h()) { return false; } // Net ops happen once/hour at most
+  //if (! filter_1h()) { return false; } // Net ops happen once/hour at most
   if (! filter_20min()) { return false; } // Net ops happen once/hour at most
   return (
     (batteryLevel > 75) ||                // Once an hour
