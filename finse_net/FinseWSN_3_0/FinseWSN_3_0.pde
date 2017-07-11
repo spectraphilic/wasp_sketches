@@ -30,11 +30,12 @@ uint8_t batteryLevel;
 const uint8_t samplings[] PROGMEM = {12, 4, 2};
 
 
-struct Action {
+typedef struct {
   unsigned long ms; // ms after the loop start when to run the action
   uint8_t (*action)(); // function (action) to call
   bool (*filter)(); // filter function, see documentation below
-};
+  char name[50];
+} Action;
 
 
 // Filter functions, to be used in the actions table below.
@@ -70,90 +71,37 @@ bool sendFramesFilter()
 // Array of actions, must be ordered by ms, will be executed in order.
 //
 
-char buffer[60];
-const char action_00[] PROGMEM = "Turn on the Low Consumption Group";
-const char action_01[] PROGMEM = "Warm RTC";
-const char action_02[] PROGMEM = "Read RTC";
-const char action_03[] PROGMEM = "Warm ACC";
-const char action_04[] PROGMEM = "Read ACC";
-const char action_05[] PROGMEM = "Create Health frame";
-const char action_06[] PROGMEM = "Read LeafWetness";
-const char action_07[] PROGMEM = "Read TempDS18B20";
-const char action_08[] PROGMEM = "Turn on the Atmospheric Pressure Sensor";
-const char action_09[] PROGMEM = "Read Pressure";
-const char action_10[] PROGMEM = "Turn off the Atmospheric Pressure Sensor";
-const char action_11[] PROGMEM = "Create Pressure/Wetness frame";
-const char action_12[] PROGMEM = "Turn on the Meteorology Group";
-const char action_13[] PROGMEM = "Read Anemometer";
-const char action_14[] PROGMEM = "Read Vane";
-const char action_15[] PROGMEM = "Turn off the Meteorology Group";
-const char action_16[] PROGMEM = "Create Wind frame";
-const char action_17[] PROGMEM = "Read Sensirion";
-const char action_18[] PROGMEM = "Create Sensirion frame";
-const char action_19[] PROGMEM = "Turn off the Low Consumption Group";
-const char action_20[] PROGMEM = "Turn off the Agri board";
-const char action_21[] PROGMEM = "Start network";
-const char action_22[] PROGMEM = "Send frames";
-const char action_23[] PROGMEM = "Stop network";
-
-const char* const action_messages[] PROGMEM = {
-  action_00,
-  action_01,
-  action_02,
-  action_03,
-  action_04,
-  action_05,
-  action_06,
-  action_07,
-  action_08,
-  action_09,
-  action_10,
-  action_11,
-  action_12,
-  action_13,
-  action_14,
-  action_15,
-  action_16,
-  action_17,
-  action_18,
-  action_19,
-  action_20,
-  action_21,
-  action_22,
-  action_23,
-};
-
 const uint8_t nActions = 24;
-Action actions[nActions] = {
-  {    0, &WaspUIO::onLowConsumptionGroup,  NULL},
+const Action actions[nActions] PROGMEM = {
+  {    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
   // Frame: Health
-  {  100, &WaspUIO::onRTC,                  NULL},
-  {  150, &WaspUIO::readRTC,                NULL},
-  {  200, &WaspUIO::onACC,                  NULL},
-  {  250, &WaspUIO::readACC,                NULL},
-  {  300, &WaspUIO::frameHealth,            NULL}, // Building frames takes about ~100ms
+  {  100, &WaspUIO::onRTC,                  NULL,              "Warm RTC"},
+  {  150, &WaspUIO::readRTC,                NULL,              "Read RTC"},
+  {  200, &WaspUIO::onACC,                  NULL,              "Warm ACC"},
+  {  250, &WaspUIO::readACC,                NULL,              "Read ACC"},
+  {  300, &WaspUIO::frameHealth,            NULL,              "Create Health frame"}, // ~100ms
   // Frame: Pressure & Wetness
-  {  400, &WaspUIO::readLeafWetness,        NULL},
-  {  450, &WaspUIO::readTempDS18B20,        &filter_never},
-  {  500, &WaspUIO::onPressureSensor,       NULL},
-  {  600, &WaspUIO::readPressure,           NULL},
-  {  650, &WaspUIO::offPressureSensor,      NULL},
-  {  700, &WaspUIO::framePressureWetness,   NULL},
+  {  400, &WaspUIO::readLeafWetness,        NULL,              "Read LeafWetness"},
+  {  450, &WaspUIO::readTempDS18B20,        &filter_never,     "Read TempDS18B20"},
+  {  500, &WaspUIO::onPressureSensor,       NULL,              "Turn on the Atmospheric Pressure Sensor"},
+  {  600, &WaspUIO::readPressure,           NULL,              "Read Pressure"},
+  {  650, &WaspUIO::offPressureSensor,      NULL,              "Turn off the Atmospheric Pressure Sensor"},
+  {  700, &WaspUIO::framePressureWetness,   NULL,              "Create Pressure/Wetness frame"},
   // Frame: Wind
-  {  800, &WaspUIO::onMeteorologyGroup,     &filter_never},
-  {  900, &WaspUIO::readAnemometer,         &filter_never},
-  { 1000, &WaspUIO::readVane,               &filter_never},
-  { 1050, &WaspUIO::offMeteorologyGroup,    &filter_never},
-  { 1100, &WaspUIO::frameWind,              &filter_never},
+  {  800, &WaspUIO::onMeteorologyGroup,     &filter_never,     "Turn on the Meteorology Group"},
+  {  900, &WaspUIO::readAnemometer,         &filter_never,     "Read Anemometer"},
+  { 1000, &WaspUIO::readVane,               &filter_never,     "Read Vane"},
+  { 1050, &WaspUIO::offMeteorologyGroup,    &filter_never,     "Turn off the Meteorology Group"},
+  { 1100, &WaspUIO::frameWind,              &filter_never,     "Create Wind frame"},
   // Frame: Sensirion
-  { 1200, &WaspUIO::readSensirion,          NULL}, // This is slow, about 312ms
-  { 1500, &WaspUIO::frameSensirion,         NULL},
-  { 1600, &WaspUIO::offLowConsumptionGroup, NULL},
-  { 1700, &WaspUIO::offAgrBoard,            NULL},
+  { 1200, &WaspUIO::readSensirion,          NULL,              "Read Sensirion"}, // This is slow, ~312ms
+  { 1500, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},
+  { 1600, &WaspUIO::offLowConsumptionGroup, NULL,              "Turn off the Low Consumption Group"},
+  { 1700, &WaspUIO::offAgrBoard,            NULL,              "Turn off the Agri board"},
   // The network window (6s)
-  { 2000, &WaspUIO::startNetwork,           &filter_20min},
-  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter},
-  { 8000, &WaspUIO::stopNetwork,            &filter_20min},
+  { 2000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
+  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
+  { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},
 };
 
 
@@ -214,7 +162,7 @@ void setup()
 void loop()
 {
   uint8_t i;
-  Action* action;
+  Action action;
 
   UIO.initTime();
   UIO.start_RTC_SD_USB(false);
@@ -248,25 +196,24 @@ void loop()
     while (i < nActions)
     {
       diff = UIO.millisDiff(start, millis());
-      action = &actions[i];
+      memcpy_P(&action, &actions[i], sizeof action);
 
       // Filter
-      if (action->filter != NULL && action->filter() == false)
+      if (action.filter != NULL && action.filter() == false)
       {
         i++;
         continue;
       }
 
       // Action
-      if (action->ms < diff)
+      if (action.ms < diff)
       {
-        strcpy_P(buffer, (char*)pgm_read_word(&(action_messages[i])));
         i++;
-        UIO.logActivity(F("DEBUG Action %s"), buffer);
-        error = action->action();
+        UIO.logActivity(F("DEBUG Action %s"), action.name);
+        error = action.action();
         if (error)
         {
-          UIO.logActivity(F("ERROR Action %s: %d"), buffer, error);
+          UIO.logActivity(F("ERROR Action %s: %d"), action.name, error);
         }
       }
 
