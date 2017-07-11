@@ -100,6 +100,7 @@ const char action_19[] PROGMEM = "Stop network";
 const char action_20[] PROGMEM = "Read Sensirion";
 const char action_21[] PROGMEM = "Create Sensirion frame";
 const char action_22[] PROGMEM = "Turn off the Low Consumption Group";
+const char action_23[] PROGMEM = "Turn off the Agri board";
 
 const char* const action_messages[] PROGMEM = {
   action_00,
@@ -125,9 +126,10 @@ const char* const action_messages[] PROGMEM = {
   action_20,
   action_21,
   action_22,
+  action_23,
 };
 
-const uint8_t nActions = 23;
+const uint8_t nActions = 24;
 Action actions[nActions] = {
   {    0, &WaspUIO::onLowConsumptionGroup,  NULL},
   // Frame: Health
@@ -157,6 +159,7 @@ Action actions[nActions] = {
   {10000, &WaspUIO::readSensirion,          NULL},
   {10100, &WaspUIO::frameSensirion,         NULL},
   {10150, &WaspUIO::offLowConsumptionGroup, NULL},
+  {10200, &WaspUIO::offAgrBoard,            NULL},
 };
 
 
@@ -298,5 +301,5 @@ sleep:
   PWR.clearInterruptionPin();
 
   // Set whole agri board and waspmote to sleep, until next alarm.
-  SensorAgrv20.sleepAgr(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
