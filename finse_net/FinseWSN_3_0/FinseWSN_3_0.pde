@@ -47,6 +47,11 @@ bool filter_never()
 }
 
 
+bool filter_1day()
+{
+  return (minute == 0 && hour == 0);
+}
+
 bool filter_1h()
 {
   return (minute == 0);
@@ -71,7 +76,7 @@ bool sendFramesFilter()
 // Array of actions, must be ordered by ms, will be executed in order.
 //
 
-const uint8_t nActions = 24;
+const uint8_t nActions = 25;
 const Action actions[nActions] PROGMEM = {
   {    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
   // Frame: Health
@@ -102,6 +107,8 @@ const Action actions[nActions] PROGMEM = {
   { 2000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
   { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
   { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},
+  // GPS (once a day)
+  { 9000, &WaspUIO::setTimeFromGPS,         &filter_1day,      "Set RTC time from GPS"},
 };
 
 
