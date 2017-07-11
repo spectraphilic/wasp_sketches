@@ -69,12 +69,6 @@ bool sendFramesFilter()
 
 // Array of actions, must be ordered by ms, will be executed in order.
 //
-// The length of the loop is defined by the long warm up time of the sensirion
-// (10s). So the first action is to warm up the sensirion, and the last ones
-// are to read the sensirion and then make its frame. This means that the
-// sensirion frame will be sent in the next loop, always one loop behind the
-// others.
-//
 
 char buffer[60];
 const char action_00[] PROGMEM = "Turn on the Low Consumption Group";
@@ -94,13 +88,13 @@ const char action_13[] PROGMEM = "Read Anemometer";
 const char action_14[] PROGMEM = "Read Vane";
 const char action_15[] PROGMEM = "Turn off the Meteorology Group";
 const char action_16[] PROGMEM = "Create Wind frame";
-const char action_17[] PROGMEM = "Start network";
-const char action_18[] PROGMEM = "Send frames";
-const char action_19[] PROGMEM = "Stop network";
-const char action_20[] PROGMEM = "Read Sensirion";
-const char action_21[] PROGMEM = "Create Sensirion frame";
-const char action_22[] PROGMEM = "Turn off the Low Consumption Group";
-const char action_23[] PROGMEM = "Turn off the Agri board";
+const char action_17[] PROGMEM = "Read Sensirion";
+const char action_18[] PROGMEM = "Create Sensirion frame";
+const char action_19[] PROGMEM = "Turn off the Low Consumption Group";
+const char action_20[] PROGMEM = "Turn off the Agri board";
+const char action_21[] PROGMEM = "Start network";
+const char action_22[] PROGMEM = "Send frames";
+const char action_23[] PROGMEM = "Stop network";
 
 const char* const action_messages[] PROGMEM = {
   action_00,
@@ -137,7 +131,7 @@ Action actions[nActions] = {
   {  150, &WaspUIO::readRTC,                NULL},
   {  200, &WaspUIO::onACC,                  NULL},
   {  250, &WaspUIO::readACC,                NULL},
-  {  300, &WaspUIO::frameHealth,            NULL},
+  {  300, &WaspUIO::frameHealth,            NULL}, // Building frames takes about ~100ms
   // Frame: Pressure & Wetness
   {  400, &WaspUIO::readLeafWetness,        NULL},
   {  450, &WaspUIO::readTempDS18B20,        &filter_never},
@@ -151,15 +145,15 @@ Action actions[nActions] = {
   { 1000, &WaspUIO::readVane,               &filter_never},
   { 1050, &WaspUIO::offMeteorologyGroup,    &filter_never},
   { 1100, &WaspUIO::frameWind,              &filter_never},
+  // Frame: Sensirion
+  { 1200, &WaspUIO::readSensirion,          NULL}, // This is slow, about 312ms
+  { 1500, &WaspUIO::frameSensirion,         NULL},
+  { 1600, &WaspUIO::offLowConsumptionGroup, NULL},
+  { 1700, &WaspUIO::offAgrBoard,            NULL},
   // The network window (6s)
   { 2000, &WaspUIO::startNetwork,           &filter_20min},
   { 3000, &WaspUIO::sendFrames,             &sendFramesFilter},
   { 8000, &WaspUIO::stopNetwork,            &filter_20min},
-  // Frame: Sensirion
-  {10000, &WaspUIO::readSensirion,          NULL},
-  {10100, &WaspUIO::frameSensirion,         NULL},
-  {10150, &WaspUIO::offLowConsumptionGroup, NULL},
-  {10200, &WaspUIO::offAgrBoard,            NULL},
 };
 
 
