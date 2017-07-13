@@ -18,8 +18,6 @@
 uint8_t error;
 const char* alarmTime;
 int pendingPulses;
-int minute;
-int hour;
 int randomNumber;
 uint8_t batteryLevel;
 
@@ -47,19 +45,26 @@ bool filter_never()
 }
 
 
-bool filter_1day()
+bool filter_gps()
 {
-  return (minute == 0 && hour == 0);
+  // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
+  // about 0.3s per day, with aging it may be worse.
+  // See https://www.maximintegrated.com/en/app-notes/index.mvp/id/3566
+
+  // As clock sync between the devices is critical for the network to work
+  // properly, we update the RTC time from GPS daily. But the GPS draws power,
+  // so this may need to be tuned.
+  return (UIO.time.minute == 0 && UIO.time.hour == 0);
 }
 
 bool filter_1h()
 {
-  return (minute == 0);
+  return (UIO.time.minute % 60 ==  0);
 }
 
 bool filter_20min()
 {
-  return ((minute == 0) || (minute == 20) || (minute == 40));
+  return (UIO.time.minute % 20 == 0);
 }
 
 
@@ -69,7 +74,7 @@ bool sendFramesFilter()
   if (! filter_20min()) { return false; } // Net ops happen once/hour at most
   return (
     (batteryLevel > 75) ||                // Once an hour
-    (batteryLevel > 65 && hour % 3 == 0)  // Once every 3 hours
+    (batteryLevel > 65 && UIO.time.hour % 3 == 0)  // Once every 3 hours
   );
 }
 
@@ -108,7 +113,7 @@ const Action actions[nActions] PROGMEM = {
   { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
   { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},
   // GPS (once a day)
-  { 9000, &WaspUIO::setTimeFromGPS,         &filter_1day,      "Set RTC time from GPS"},
+  { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
 };
 
 
@@ -131,6 +136,14 @@ const uint8_t getSampling() {
 void setup()
 {
   UIO.initTime();
+
+  // Set time from GPS if wrong time is detected
+  // XXX Do this unconditionally to update location?
+  if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
+  {
+    UIO.logActivity(F("WARN Wrong time detected, updating from GPS"));
+    UIO.setTimeFromGPS();
+  }
 
   // Hard-code behaviour. Uncomment this if you do not wish to initialize
   // interactively.
@@ -176,8 +189,6 @@ void loop()
 
   // Update RTC time at least once. Keep minute and hour for later.
   RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
-  minute = UIO.time.minute;
-  hour = UIO.time.hour;
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
