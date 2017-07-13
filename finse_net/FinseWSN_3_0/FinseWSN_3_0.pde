@@ -185,11 +185,11 @@ void loop()
     // Battery level, do nothing if too low
     batteryLevel = PWR.getBatteryLevel();
     if (batteryLevel <= 30) {
-      UIO.logActivity("DEBUG RTC interruption, low battery = %d", batteryLevel);
+      UIO.logActivity(F("DEBUG RTC interruption, low battery = %d"), batteryLevel);
       goto sleep;
     }
 
-    UIO.logActivity("INFO RTC interruption, battery level = %d", batteryLevel);
+    UIO.logActivity(F("INFO RTC interruption, battery level = %d"), batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     // Sensor board on. Apparently it requires RTC.
@@ -241,7 +241,7 @@ sleep:
   // Calculate first alarm (requires batteryLevel)
   alarmTime = UIO.getNextAlarm(getSampling());
 
-  UIO.logActivity("INFO Loop done in %lu ms.", UIO.millisDiff(UIO.start, millis()));
+  UIO.logActivity(F("INFO Loop done in %lu ms."), UIO.millisDiff(UIO.start, millis()));
   UIO.stop_RTC_SD_USB();
 
   // Clear interruption flag & pin
