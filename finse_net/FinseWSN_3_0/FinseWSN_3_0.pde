@@ -81,7 +81,7 @@ bool sendFramesFilter()
 // Array of actions, must be ordered by ms, will be executed in order.
 //
 
-const uint8_t nActions = 25;
+const uint8_t nActions = 30;
 const Action actions[nActions] PROGMEM = {
   {    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
   // Frame: Health
@@ -108,12 +108,18 @@ const Action actions[nActions] PROGMEM = {
   { 1500, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},
   { 1600, &WaspUIO::offLowConsumptionGroup, NULL,              "Turn off the Low Consumption Group"},
   { 1700, &WaspUIO::offAgrBoard,            NULL,              "Turn off the Agri board"},
+  // Frame: SDI-12 (XXX This requires tunning)
+  { 2000, &WaspUIO::SDI12_on,               &filter_never,     "SDI-12 turn ON"},
+  { 2100, &WaspUIO::SDI12_CTD10_measure,    &filter_never,     "SDI-12 CTD10, send Measure command"},
+  { 2600, &WaspUIO::SDI12_CTD10_data,       &filter_never,     "SDI-12 CTD10, read data"},
+  { 2700, &WaspUIO::SDI12_off,              &filter_never,     "SDI-12 turn OFF"},
+  { 2900, &WaspUIO::SDI12_CTD10_frame,      &filter_never,     "SDI-12 CTD10 Create frame"},
   // The network window (6s)
-  { 2000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
-  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
-  { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},
+  { 3000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
+  { 4000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
+  { 9000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},
   // GPS (once a day)
-  { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
+  {10000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
 };
 
 
@@ -160,6 +166,9 @@ void setup()
 
   // Interactive mode
   UIO.interactive();
+
+  // SDI-12
+  // UIO.SDI12_CTD10_ident();
 
   // Create files in SD
   error = UIO.initSD();
