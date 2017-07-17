@@ -86,7 +86,7 @@ bool sendFramesFilter()
 // Array of actions, must be ordered by ms, will be executed in order.
 //
 
-const uint8_t nActions = 28;
+const uint8_t nActions = 15;
 const Action actions[nActions] PROGMEM = {
   //{    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
   // Frame: Health
@@ -114,8 +114,8 @@ const Action actions[nActions] PROGMEM = {
   // Frame: SDI-12 (XXX This requires tunning)
   { 1700, &WaspUIO::SDI12_on,               &filter_1min,     "SDI-12 turn ON"},
   { 1800, &WaspUIO::SDI12_CTD10_measure,    &filter_1min,     "SDI-12 CTD10, send Measure command"},
-  { 2300, &WaspUIO::SDI12_CTD10_data,       &filter_1min,     "SDI-12 CTD10, read data"},
-  { 2400, &WaspUIO::SDI12_off,              &filter_1min,     "SDI-12 turn OFF"},
+  { 2000, &WaspUIO::SDI12_CTD10_data,       &filter_1min,     "SDI-12 CTD10, read data"},
+  { 2200, &WaspUIO::SDI12_off,              &filter_1min,     "SDI-12 turn OFF"},
   { 2500, &WaspUIO::SDI12_CTD10_frame,      &filter_1min,     "SDI-12 CTD10 Create frame"},
   // The network window (6s)
   { 3000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
