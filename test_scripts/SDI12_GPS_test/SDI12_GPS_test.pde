@@ -19,8 +19,8 @@ void setup()
   USB.println(F("Starting"));
 
   syncRTCtoGPS();
-  USB.println(getLatitudeGPS());
-  USB.println(getLongitudeGPS());
+  //USB.println(getLatitudeGPS());
+  //USB.println(getLongitudeGPS());
   
   PWR.setSensorPower(SENS_5V, SENS_ON); 
   delay(500); // Sensor exitation delay
@@ -115,11 +115,14 @@ float getLongitudeGPS(void){
 
 void syncRTCtoGPS(void){
 GPS.ON();
+USB.println("GPS ON");
 RTC.ON();
 bool status = GPS.waitForSignal(TIMEOUT);
 if ( status == true ){
+  USB.println("GPS fixed");
   GPS.setTimeFromGPS();
-}
+  USB.println("RTC updated");
+}else{USB.println("No GPS signal");}
 GPS.OFF();
 RTC.OFF();
 }

@@ -67,6 +67,11 @@ bool filter_20min()
   return (UIO.time.minute % 20 == 0);
 }
 
+bool filter_1min()
+{
+  return (UIO.time.minute % 1 == 0);
+}
+
 
 bool sendFramesFilter()
 {
@@ -83,18 +88,18 @@ bool sendFramesFilter()
 
 const uint8_t nActions = 28;
 const Action actions[nActions] PROGMEM = {
-  {    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
+  //{    0, &WaspUIO::onLowConsumptionGroup,  NULL,              "Turn on the Low Consumption Group"},
   // Frame: Health
-  {  100, &WaspUIO::onACC,                  NULL,              "Warm ACC"},
-  {  150, &WaspUIO::readACC,                NULL,              "Read ACC"},
-  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"}, // ~100ms
+  //{  100, &WaspUIO::onACC,                  NULL,              "Warm ACC"},
+  //{  150, &WaspUIO::readACC,                NULL,              "Read ACC"},
+  //{  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"}, // ~100ms
   // Frame: Pressure & Wetness
-  {  300, &WaspUIO::readLeafWetness,        NULL,              "Read LeafWetness"},
+  //{  300, &WaspUIO::readLeafWetness,        NULL,              "Read LeafWetness"},
   {  350, &WaspUIO::readTempDS18B20,        &filter_never,     "Read TempDS18B20"},
-  {  400, &WaspUIO::onPressureSensor,       NULL,              "Turn on the Atmospheric Pressure Sensor"},
-  {  500, &WaspUIO::readPressure,           NULL,              "Read Pressure"},
-  {  550, &WaspUIO::offPressureSensor,      NULL,              "Turn off the Atmospheric Pressure Sensor"},
-  {  600, &WaspUIO::framePressureWetness,   NULL,              "Create Pressure/Wetness frame"},
+  //{  400, &WaspUIO::onPressureSensor,       NULL,              "Turn on the Atmospheric Pressure Sensor"},
+  //{  500, &WaspUIO::readPressure,           NULL,              "Read Pressure"},
+  //{  550, &WaspUIO::offPressureSensor,      NULL,              "Turn off the Atmospheric Pressure Sensor"},
+  //{  600, &WaspUIO::framePressureWetness,   NULL,              "Create Pressure/Wetness frame"},
   // Frame: Wind
   {  700, &WaspUIO::onMeteorologyGroup,     &filter_never,     "Turn on the Meteorology Group"},
   {  800, &WaspUIO::readAnemometer,         &filter_never,     "Read Anemometer"},
@@ -102,16 +107,16 @@ const Action actions[nActions] PROGMEM = {
   {  950, &WaspUIO::offMeteorologyGroup,    &filter_never,     "Turn off the Meteorology Group"},
   { 1000, &WaspUIO::frameWind,              &filter_never,     "Create Wind frame"},
   // Frame: Sensirion
-  { 1100, &WaspUIO::readSensirion,          NULL,              "Read Sensirion"}, // This is slow, ~312ms
-  { 1400, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},
-  { 1500, &WaspUIO::offLowConsumptionGroup, NULL,              "Turn off the Low Consumption Group"},
-  { 1600, &WaspUIO::offAgrBoard,            NULL,              "Turn off the Agri board"},
+  //{ 1100, &WaspUIO::readSensirion,          NULL,              "Read Sensirion"}, // This is slow, ~312ms
+  //{ 1400, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},
+  //{ 1500, &WaspUIO::offLowConsumptionGroup, NULL,              "Turn off the Low Consumption Group"},
+  //{ 1600, &WaspUIO::offAgrBoard,            NULL,              "Turn off the Agri board"},
   // Frame: SDI-12 (XXX This requires tunning)
-  { 1700, &WaspUIO::SDI12_on,               &filter_never,     "SDI-12 turn ON"},
-  { 1800, &WaspUIO::SDI12_CTD10_measure,    &filter_never,     "SDI-12 CTD10, send Measure command"},
-  { 2300, &WaspUIO::SDI12_CTD10_data,       &filter_never,     "SDI-12 CTD10, read data"},
-  { 2400, &WaspUIO::SDI12_off,              &filter_never,     "SDI-12 turn OFF"},
-  { 2500, &WaspUIO::SDI12_CTD10_frame,      &filter_never,     "SDI-12 CTD10 Create frame"},
+  { 1700, &WaspUIO::SDI12_on,               &filter_1min,     "SDI-12 turn ON"},
+  { 1800, &WaspUIO::SDI12_CTD10_measure,    &filter_1min,     "SDI-12 CTD10, send Measure command"},
+  { 2300, &WaspUIO::SDI12_CTD10_data,       &filter_1min,     "SDI-12 CTD10, read data"},
+  { 2400, &WaspUIO::SDI12_off,              &filter_1min,     "SDI-12 turn OFF"},
+  { 2500, &WaspUIO::SDI12_CTD10_frame,      &filter_1min,     "SDI-12 CTD10 Create frame"},
   // The network window (6s)
   { 3000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
   { 4000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
