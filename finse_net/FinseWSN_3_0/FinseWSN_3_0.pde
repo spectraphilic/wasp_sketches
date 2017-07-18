@@ -141,8 +141,8 @@ const Action actions[] PROGMEM = {
   // Frame: SDI-12 (XXX This requires tunning)
   { 1900, &WaspUIO::SDI12_on,               &filter_cdt10,     "SDI-12 turn ON"},
   { 2000, &WaspUIO::SDI12_CTD10_measure,    &filter_cdt10,     "SDI-12 CTD10, send Measure command"},
-  { 2200, &WaspUIO::SDI12_CTD10_data,       &filter_cdt10,     "SDI-12 CTD10, read data"},
-  { 2400, &WaspUIO::SDI12_off,              &filter_cdt10,     "SDI-12 turn OFF"},
+  { 2500, &WaspUIO::SDI12_CTD10_data,       &filter_cdt10,     "SDI-12 CTD10, read data"},
+  { 2600, &WaspUIO::SDI12_off,              &filter_cdt10,     "SDI-12 turn OFF"},
   { 2700, &WaspUIO::SDI12_CTD10_frame,      &filter_cdt10,     "SDI-12 CTD10 Create frame"},
   // The network window (6s)
   { 3000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
