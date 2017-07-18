@@ -225,7 +225,7 @@ void loop()
   Action action;
 
   UIO.initTime();
-  UIO.start_RTC_SD_USB(true);
+  UIO.start_RTC_SD_USB(false);
 
   // Update RTC time at least once. Keep minute and hour for later.
   RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
