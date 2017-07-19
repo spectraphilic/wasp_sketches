@@ -28,7 +28,7 @@ const uint8_t samplings[] PROGMEM = {12, 4, 2};
 
 typedef struct {
   unsigned long ms; // ms after the loop start when to run the action
-  action_t (*action)(); // function (action) to call
+  uint8_t (*action)(); // function (action) to call
   bool (*filter)(); // filter function, see documentation below
   char name[50];
 } Action;
@@ -238,18 +238,14 @@ void loop()
         i++;
         t0 = millis();
         //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
-        switch (action.action())
+        if (action.action())
         {
-           case ACTION_NOOP:
-             //UIO.logActivity(F("DEBUG Action %s: skipped"), action.name);
-             break;
-           case ACTION_DONE:
-             UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
-             break;
-           case ACTION_ERROR:
-             UIO.logActivity(F("ERROR Action %s: error"), action.name);
-             break;
-        }
+           UIO.logActivity(F("ERROR Action %s: error"), action.name);
+	}
+	else
+	{
+           UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
+	}
       }
 
       // Network (receive)
