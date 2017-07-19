@@ -150,19 +150,17 @@ void setup()
   // Initialize variables, from EEPROM (USB print, OTA programming, ..)
   UIO.initVars();
 
-  // Log
+  // Interactive mode
   UIO.start_RTC_SD_USB(false);
+  UIO.interactive();
+
+  // Boot
+  error = UIO.initSD();
   batteryLevel = PWR.getBatteryLevel();
   UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), batteryLevel);
 
-  // Interactive mode
-  UIO.interactive();
-
   // SDI-12
   // UIO.SDI12_CTD10_ident();
-
-  // Create files in SD
-  error = UIO.initSD();
 
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
@@ -173,7 +171,7 @@ void setup()
   alarmTime = UIO.getNextAlarm(getSampling());
 
   // Go to sleep
-  UIO.logActivity(F("INFO Boot done in %lu ms"), UIO.millisDiff(UIO.start));
+  UIO.logActivity(F("INFO Boot done, go to sleep"));
   UIO.stop_RTC_SD_USB();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
@@ -200,7 +198,7 @@ void loop()
       goto sleep;
     }
 
-    UIO.logActivity(F("INFO RTC interruption, battery level = %d"), batteryLevel);
+    UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     unsigned long start = millis();
@@ -257,6 +255,7 @@ sleep:
   alarmTime = UIO.getNextAlarm(getSampling());
 
   UIO.logActivity(F("INFO Loop done in %lu ms."), UIO.millisDiff(UIO.start));
+  //UIO.print(F("LOOP %lu"), UIO.millisDiff(UIO.start));
   UIO.stop_RTC_SD_USB();
 
   // Clear interruption flag & pin
