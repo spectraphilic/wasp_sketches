@@ -28,7 +28,7 @@ const uint8_t samplings[] PROGMEM = {12, 4, 2};
 
 typedef struct {
   unsigned long ms; // ms after the loop start when to run the action
-  uint8_t (*action)(); // function (action) to call
+  action_t (*action)(); // function (action) to call
   bool (*filter)(); // filter function, see documentation below
   char name[50];
 } Action;
@@ -65,36 +65,6 @@ bool filter_20min()
   return (UIO.time.minute % 20 == 0);
 }
 
-bool filter_pressure()
-{
-  return (UIO.sensors & SENSOR_AGR_PRESSURE);
-}
-
-bool filter_leafwetness()
-{
-  return (UIO.sensors & SENSOR_AGR_LEAFWETNESS);
-}
-
-bool filter_sensirion()
-{
-  return (UIO.sensors & SENSOR_AGR_SENSIRION);
-}
-
-bool filter_lowconsumptiongroup()
-{
-  return filter_leafwetness() || filter_sensirion();
-}
-
-bool filter_agr()
-{
-  return filter_lowconsumptiongroup() || filter_pressure();
-}
-
-bool filter_cdt10()
-{
-  return (UIO.sensors & SENSOR_SDI12_CDT10);
-}
-
 bool sendFramesFilter()
 {
   //if (! filter_1h()) { return false; } // Net ops happen once/hour at most
@@ -109,45 +79,37 @@ bool sendFramesFilter()
 //
 
 const Action actions[] PROGMEM = {
-  {    0, &WaspUIO::onAgrBoard,             &filter_agr,       "Turn on the Agri board"},
-  {  100, &WaspUIO::onLowConsumptionGroup,  &filter_lowconsumptiongroup,  "Turn on the Low Consumption Group"},
-  // Frame: Health
-  {  200, &WaspUIO::onACC,                  NULL,              "Warm ACC"},
-  {  250, &WaspUIO::readACC,                NULL,              "Read ACC"},
-  {  300, &WaspUIO::frameHealth,            NULL,              "Create Health frame"}, // ~100ms
-  // Frame: Leaf Wetness
-  {  400, &WaspUIO::readLeafWetness,        &filter_leafwetness, "Read LeafWetness"},
-  {  500, &WaspUIO::frameLeafWetness,       &filter_leafwetness, "Create Leaf Wetness frame"},
-  // Frame: Pressure
-  {  600, &WaspUIO::onPressureSensor,       &filter_pressure,  "Turn on the Atmospheric Pressure Sensor"},
-  {  700, &WaspUIO::readPressure,           &filter_pressure,  "Read Pressure"},
-  {  750, &WaspUIO::offPressureSensor,      &filter_pressure,  "Turn off the Atmospheric Pressure Sensor"},
-  {  800, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"},
-  // Other sensors
-  //{  350, &WaspUIO::readTempDS18B20,        &filter_never,     "Read TempDS18B20"},
-  // Frame: Wind
-  {  900, &WaspUIO::onMeteorologyGroup,     &filter_never,     "Turn on the Meteorology Group"},
-  { 1000, &WaspUIO::readAnemometer,         &filter_never,     "Read Anemometer"},
-  { 1100, &WaspUIO::readVane,               &filter_never,     "Read Vane"},
-  { 1150, &WaspUIO::offMeteorologyGroup,    &filter_never,     "Turn off the Meteorology Group"},
-  { 1200, &WaspUIO::frameWind,              &filter_never,     "Create Wind frame"},
-  // Frame: Sensirion
-  { 1300, &WaspUIO::readSensirion,          &filter_sensirion, "Read Sensirion"}, // This is slow, ~312ms
-  { 1700, &WaspUIO::frameSensirion,         &filter_sensirion, "Create Sensirion frame"},
-  { 1800, &WaspUIO::offLowConsumptionGroup, &filter_lowconsumptiongroup, "Turn off the Low Consumption Group"},
-  { 1900, &WaspUIO::offAgrBoard,            &filter_agr,       "Turn off the Agri board"},
-  // Frame: SDI-12 (XXX This requires tunning)
-  { 1900, &WaspUIO::SDI12_on,               &filter_cdt10,     "SDI-12 turn ON"},
-  { 2000, &WaspUIO::SDI12_CTD10_measure,    &filter_cdt10,     "SDI-12 CTD10, send Measure command"},
-  { 3000, &WaspUIO::SDI12_CTD10_data,       &filter_cdt10,     "SDI-12 CTD10, read data"},
-  { 3200, &WaspUIO::SDI12_off,              &filter_cdt10,     "SDI-12 turn OFF"},
-  { 3400, &WaspUIO::SDI12_CTD10_frame,      &filter_cdt10,     "SDI-12 CTD10 Create frame"},
-  // The network window (6s)
-  { 4000, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},
-  { 5000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},
-  { 9000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},
+  {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~59ms
+  {    0, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},             // ~557ms
+  // Internal sensors (health)
+  {  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                  // ~131ms
+  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~261ms
+  // Agr: Pressure
+  {  500, &WaspUIO::Agr_Pressure,           NULL,              "Read Pressure"},             // ~145ms XXX
+  {  700, &WaspUIO::framePressure,          NULL,              "Create Pressure frame"},     // ~204ms
+  // Agr: Wind
+  {  500, &WaspUIO::Agr_Meteo_Anemometer,   &filter_never,     "Read Anemometer"},
+  {  700, &WaspUIO::Agr_Meteo_Vane,         &filter_never,     "Read Vane"},
+  {  900, &WaspUIO::frameWind,              &filter_never,     "Create Wind frame"},
+  // Agr: Low consumption group
+  {  500, &WaspUIO::Agr_LCGroup_LeafWetness, NULL,             "Read LeafWetness"},          // ~144ms XXX
+  {  600, &WaspUIO::Agr_LCGroup_SoilTemp,   &filter_never,     "Read TempDS18B20"},
+  {  900, &WaspUIO::Agr_LCGroup_Sensirion,  NULL,              "Read Sensirion"},            // ~446ms XXX
+  { 1100, &WaspUIO::frameLeafWetness,       NULL,              "Create Leaf Wetness frame"}, // ~202ms
+  { 1300, &WaspUIO::frameSensirion,         NULL,              "Create Sensirion frame"},    // ~209ms
+  // SDI-12
+  {  500, &WaspUIO::SDI12_on,               NULL,              "SDI-12 turn ON"}, // ~500ms after 5V on
+  {  600, &WaspUIO::SDI12_CTD10_measure,    NULL,              "SDI-12 CTD10, send Measure command"},
+  { 1400, &WaspUIO::SDI12_CTD10_data,       NULL,              "SDI-12 CTD10, read data"}, // ~800ms after measure
+  { 1500, &WaspUIO::SDI12_off,              NULL,              "SDI-12 turn OFF"},
+  { 1600, &WaspUIO::SDI12_CTD10_frame,      NULL,              "SDI-12 CTD10 Create frame"},
+  // Turn Off sensors, as soon as possible
+  {    0, &WaspUIO::sensorsPowerOff,        NULL,              "Sensors power Off"},         // ~43ms
+  // The network window (8s minimum)
+  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
+  { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},              // ~43ms
   // GPS (once a day)
-  {10000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
+  { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
 };
 const uint8_t nActions = sizeof actions / sizeof actions[0];
 
@@ -262,15 +224,18 @@ void loop()
       {
         i++;
         t0 = millis();
-        UIO.logActivity(F("DEBUG Action %s"), action.name);
-        error = action.action();
-        if (error)
+        //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
+        switch (action.action())
         {
-          UIO.logActivity(F("ERROR Action %s: %d"), action.name, error);
-        }
-        else
-        {
-          UIO.logActivity(F("DEBUG Action done in %lu ms"), UIO.millisDiff(t0));
+           case ACTION_NOOP:
+             //UIO.logActivity(F("DEBUG Action %s: skipped"), action.name);
+             break;
+           case ACTION_DONE:
+             UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
+             break;
+           case ACTION_ERROR:
+             UIO.logActivity(F("ERROR Action %s: error"), action.name);
+             break;
         }
       }
 
