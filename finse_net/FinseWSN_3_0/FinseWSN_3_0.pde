@@ -99,20 +99,23 @@ bool sendFramesFilter()
 //
 
 const Action actions[] PROGMEM = {
-  {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~11ms
+      {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},     
   {    0, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},             // ~557ms ?
+// ~11ms
   // Internal sensors (health)
-  {  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                  // ~37ms
-  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~133ms
+  //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                  // ~37ms
+  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},   
+// ~133ms
   // SDI-12
   {  500, &WaspUIO::SDI12_on,               &filter_sdi12,     "SDI-12 turn ON"}, // ~500ms after 5V on
   {  600, &WaspUIO::SDI12_CTD10_measure,    &filter_sdi12,     "SDI-12 CTD10, send Measure command"},
-  { 1400, &WaspUIO::SDI12_CTD10_data,       &filter_sdi12,     "SDI-12 CTD10, read data"}, // ~800ms after measure
-  { 1500, &WaspUIO::SDI12_off,              &filter_sdi12,     "SDI-12 turn OFF"},
-  { 1600, &WaspUIO::SDI12_CTD10_frame,      &filter_sdi12,     "SDI-12 CTD10 Create frame"},
+  { 1200, &WaspUIO::SDI12_CTD10_data,       &filter_sdi12,     "SDI-12 CTD10, read data"}, // ~800ms after measure
+  { 1300, &WaspUIO::SDI12_off,              &filter_sdi12,     "SDI-12 turn OFF"},
+  { 1400, &WaspUIO::SDI12_CTD10_frame,      &filter_sdi12,     "SDI-12 CTD10 Create frame"},
   // Agr: Pressure
   {  500, &WaspUIO::Agr_Pressure,           &filter_pressure,  "Read Pressure"},             // ~51ms
-  {  700, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"},     // ~114ms
+  {  700, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"}, 
+// ~114ms
   // Agr: Wind
   //{  500, &WaspUIO::Agr_Meteo_Anemometer,   NULL,     "Read Anemometer"},
   //{  700, &WaspUIO::Agr_Meteo_Vane,         NULL,     "Read Vane"},

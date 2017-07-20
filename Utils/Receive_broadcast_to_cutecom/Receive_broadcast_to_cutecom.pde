@@ -92,10 +92,11 @@ void loop()
       currenttime = millis();
     }
     xbeeDM.OFF();
-  }
+   }
   }
   else{
     xbeeDM.ON();
+    delay(50);
           error = xbeeDM.receivePacketTimeout( 10000 );
     
       // check answer  
