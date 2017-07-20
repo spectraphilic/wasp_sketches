@@ -82,6 +82,11 @@ bool filter_sensirion()
 
 bool sendFramesFilter()
 {
+  if (! UIO.hasSD)
+  {
+    return false;
+  }
+
   //if (! filter_1h()) { return false; } // Net ops happen once/hour at most
   if (! filter_20min()) { return false; } // Net ops happen once/hour at most
   return (
@@ -121,7 +126,7 @@ const Action actions[] PROGMEM = {
   // Turn Off sensors, as soon as possible
   {    0, &WaspUIO::sensorsPowerOff,        NULL,              "Sensors power Off"},         // ~43ms ?
   // The network window (8s minimum)
-  { 3000, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
+  {    0, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
   { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},              // ~43ms ?
   // GPS (once a day)
   { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
