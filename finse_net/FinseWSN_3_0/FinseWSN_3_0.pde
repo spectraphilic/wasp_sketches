@@ -99,13 +99,11 @@ bool sendFramesFilter()
 //
 
 const Action actions[] PROGMEM = {
-      {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},     
+  {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~11ms
   {    0, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},             // ~557ms ?
-// ~11ms
   // Internal sensors (health)
-  //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                  // ~37ms
-  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},   
-// ~133ms
+  //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                // ~37ms
+  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~133ms
   // SDI-12
   {  500, &WaspUIO::SDI12_on,               &filter_sdi12,     "SDI-12 turn ON"}, // ~500ms after 5V on
   {  600, &WaspUIO::SDI12_CTD10_measure,    &filter_sdi12,     "SDI-12 CTD10, send Measure command"},
@@ -114,8 +112,7 @@ const Action actions[] PROGMEM = {
   { 1400, &WaspUIO::SDI12_CTD10_frame,      &filter_sdi12,     "SDI-12 CTD10 Create frame"},
   // Agr: Pressure
   {  500, &WaspUIO::Agr_Pressure,           &filter_pressure,  "Read Pressure"},             // ~51ms
-  {  700, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"}, 
-// ~114ms
+  {  700, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"},     // ~114ms
   // Agr: Wind
   //{  500, &WaspUIO::Agr_Meteo_Anemometer,   NULL,     "Read Anemometer"},
   //{  700, &WaspUIO::Agr_Meteo_Vane,         NULL,     "Read Vane"},
@@ -157,14 +154,6 @@ void setup()
 {
   UIO.initTime();
 
-  // Set time from GPS if wrong time is detected
-  // XXX Do this unconditionally to update location?
-  if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
-  {
-    UIO.logActivity(F("WARN Wrong time detected, updating from GPS"));
-    UIO.setTimeFromGPS();
-  }
-
   // Hard-code behaviour. Uncomment this if you do not wish to initialize
   // interactively.
   //UIO.updateEEPROM(EEPROM_UIO_FLAGS, FLAG_USB_OUTPUT);
@@ -177,8 +166,19 @@ void setup()
   UIO.start_RTC_SD_USB(false);
   UIO.interactive();
 
-  // Boot
+  // Create/Open files
   error = UIO.initSD();
+  UIO.openFiles();
+
+  // Set time from GPS if wrong time is detected
+  // XXX Do this unconditionally to update location?
+  if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
+  {
+    UIO.logActivity(F("WARN Wrong time detected, updating from GPS"));
+    UIO.setTimeFromGPS();
+  }
+
+  // Boot
   batteryLevel = PWR.getBatteryLevel();
   UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), batteryLevel);
 
@@ -195,6 +195,7 @@ void setup()
 
   // Go to sleep
   UIO.logActivity(F("INFO Boot done, go to sleep"));
+  UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
@@ -207,6 +208,7 @@ void loop()
 
   UIO.initTime();
   UIO.start_RTC_SD_USB(false);
+  UIO.openFiles();
 
   // Update RTC time at least once. Keep minute and hour for later.
   RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
@@ -249,11 +251,11 @@ void loop()
         if (action.action())
         {
            UIO.logActivity(F("ERROR Action %s: error"), action.name);
-	}
-	else
-	{
+        }
+        else
+        {
            UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
-	}
+        }
       }
 
       // Network (receive)
@@ -275,6 +277,7 @@ sleep:
 
   UIO.logActivity(F("INFO Loop done in %lu ms."), UIO.millisDiff(UIO.start));
   //UIO.print(F("LOOP %lu"), UIO.millisDiff(UIO.start));
+  UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
 
   // Clear interruption flag & pin
