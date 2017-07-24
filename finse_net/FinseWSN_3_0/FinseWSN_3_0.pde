@@ -50,14 +50,12 @@ bool filter_gps()
   return (UIO.time.minute == 0 && UIO.time.hour == 0);
 }
 
-bool filter_1h()
+bool filter_network()
 {
-  return (UIO.time.minute % 60 ==  0);
-}
-
-bool filter_20min()
-{
-  return (UIO.time.minute % 20 == 0);
+  return (
+    UIO.featureNetwork &
+    UIO.time.minute % 20 == 0 // XXX Every 20 minutes, should be 1h in deployment
+  );
 }
 
 bool filter_sdi12()
@@ -87,8 +85,7 @@ bool sendFramesFilter()
     return false;
   }
 
-  //if (! filter_1h()) { return false; } // Net ops happen once/hour at most
-  if (! filter_20min()) { return false; } // Net ops happen once/hour at most
+  if (! filter_network()) { return false; } // Net ops happen once/hour at most
   return (
     (batteryLevel > 75) ||                // Once an hour
     (batteryLevel > 65 && UIO.time.hour % 3 == 0)  // Once every 3 hours
@@ -100,7 +97,7 @@ bool sendFramesFilter()
 
 const Action actions[] PROGMEM = {
   {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~11ms
-  {    0, &WaspUIO::startNetwork,           &filter_20min,     "Start network"},             // ~557ms ?
+  {    0, &WaspUIO::startNetwork,           &filter_network,   "Start network"},             // ~557ms ?
   // Internal sensors (health)
   //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                // ~37ms
   {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~133ms
@@ -127,7 +124,7 @@ const Action actions[] PROGMEM = {
   {    0, &WaspUIO::sensorsPowerOff,        NULL,              "Sensors power Off"},         // ~43ms ?
   // The network window (8s minimum)
   {    0, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
-  { 8000, &WaspUIO::stopNetwork,            &filter_20min,     "Stop network"},              // ~43ms ?
+  { 8000, &WaspUIO::stopNetwork,            &filter_network,   "Stop network"},              // ~43ms ?
   // GPS (once a day)
   { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
 };
