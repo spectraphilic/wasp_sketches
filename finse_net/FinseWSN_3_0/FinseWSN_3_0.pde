@@ -60,7 +60,7 @@ bool filter_network()
 
 bool filter_sdi12()
 {
-  return (UIO.sensors & SENSOR_SDI12_CDT10);
+  return (UIO.sensors & SENSOR_SDI12_CTD10);
 }
 
 bool filter_pressure()
@@ -105,6 +105,8 @@ const Action actions[] PROGMEM = {
   {  500, &WaspUIO::SDI12_on,               &filter_sdi12,     "SDI-12 turn ON"}, // ~500ms after 5V on
   {  600, &WaspUIO::SDI12_CTD10_measure,    &filter_sdi12,     "SDI-12 CTD10, send Measure command"},
   { 1200, &WaspUIO::SDI12_CTD10_data,       &filter_sdi12,     "SDI-12 CTD10, read data"}, // ~800ms after measure
+  //{  600, &WaspUIO::SDI12_DS2_measure,    &filter_ds2,         "SDI-12 DS2, send Measure command"},
+  //{ 1200, &WaspUIO::SDI12_DS2_data,       &filter_ds2,         "SDI-12 DS2, read data"},
   { 1300, &WaspUIO::SDI12_off,              &filter_sdi12,     "SDI-12 turn OFF"},
   { 1400, &WaspUIO::SDI12_CTD10_frame,      &filter_sdi12,     "SDI-12 CTD10 Create frame"},
   // Agr: Pressure
@@ -178,9 +180,6 @@ void setup()
   // Boot
   batteryLevel = PWR.getBatteryLevel();
   UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), batteryLevel);
-
-  // SDI-12
-  // UIO.SDI12_CTD10_ident();
 
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
