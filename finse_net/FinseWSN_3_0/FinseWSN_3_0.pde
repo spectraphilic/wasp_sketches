@@ -17,21 +17,12 @@ uint8_t error;
 const char* alarmTime;
 int pendingPulses;
 int randomNumber;
-uint8_t batteryLevel;
 
 // Sampling period in minutes, keep these two definitions in sync. The value
 // must be a factor of 60 to get equally spaced samples.
 // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
 // Different values for different battery levels.
 const uint8_t samplings[] PROGMEM = {12, 4, 2};
-
-
-typedef struct {
-  unsigned long ms; // ms after the loop start when to run the action
-  uint8_t (*action)(); // function (action) to call
-  bool (*filter)(); // filter function, see documentation below
-  char name[50];
-} Action;
 
 
 // Filter functions, to be used in the actions table below.
@@ -53,8 +44,9 @@ bool filter_gps()
 bool filter_network()
 {
   return (
-    UIO.featureNetwork &
-    UIO.time.minute % 20 == 0 // XXX Every 20 minutes, should be 1h in deployment
+    UIO.featureNetwork
+    //&
+    //UIO.time.minute % 20 == 0 // XXX Every 20 minutes, should be 1h in deployment
   );
 }
 
@@ -78,69 +70,14 @@ bool filter_sensirion()
   return (UIO.sensors & SENSOR_AGR_SENSIRION);
 }
 
-bool sendFramesFilter()
-{
-  if (! UIO.hasSD)
-  {
-    return false;
-  }
-
-  if (! filter_network()) { return false; } // Net ops happen once/hour at most
-  return (
-    (batteryLevel > 75) ||                // Once an hour
-    (batteryLevel > 65 && UIO.time.hour % 3 == 0)  // Once every 3 hours
-  );
-}
-
-// Array of actions, must be ordered by ms, will be executed in order.
-//
-
-const Action actions[] PROGMEM = {
-  {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~11ms
-  {    0, &WaspUIO::startNetwork,           &filter_network,   "Start network"},             // ~557ms ?
-  // Internal sensors (health)
-  //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                // ~37ms
-  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~133ms
-  // SDI-12
-  {  500, &WaspUIO::SDI12_on,               &filter_sdi12,     "SDI-12 turn ON"}, // ~500ms after 5V on
-  {  600, &WaspUIO::SDI12_CTD10_measure,    &filter_sdi12,     "SDI-12 CTD10, send Measure command"},
-  { 1200, &WaspUIO::SDI12_CTD10_data,       &filter_sdi12,     "SDI-12 CTD10, read data"}, // ~800ms after measure
-  //{  600, &WaspUIO::SDI12_DS2_measure,    &filter_ds2,         "SDI-12 DS2, send Measure command"},
-  //{ 1200, &WaspUIO::SDI12_DS2_data,       &filter_ds2,         "SDI-12 DS2, read data"},
-  { 1300, &WaspUIO::SDI12_off,              &filter_sdi12,     "SDI-12 turn OFF"},
-  { 1400, &WaspUIO::SDI12_CTD10_frame,      &filter_sdi12,     "SDI-12 CTD10 Create frame"},
-  // Agr: Pressure
-  {  500, &WaspUIO::Agr_Pressure,           &filter_pressure,  "Read Pressure"},             // ~51ms
-  {  700, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"},     // ~114ms
-  // Agr: Wind
-  //{  500, &WaspUIO::Agr_Meteo_Anemometer,   NULL,     "Read Anemometer"},
-  //{  700, &WaspUIO::Agr_Meteo_Vane,         NULL,     "Read Vane"},
-  //{  900, &WaspUIO::frameWind,              NULL,     "Create Wind frame"},
-  // Agr: Low consumption group
-  {  500, &WaspUIO::Agr_LCGroup_LeafWetness, &filter_lw,       "Read LeafWetness"},          // ~51ms
-  //{  600, &WaspUIO::Agr_LCGroup_SoilTemp,   NULL,     "Read TempDS18B20"},
-  {  900, &WaspUIO::Agr_LCGroup_Sensirion,  &filter_sensirion, "Read Sensirion"},            // ~356ms
-  { 1100, &WaspUIO::frameLeafWetness,       &filter_lw,        "Create Leaf Wetness frame"}, // ~152ms
-  { 1300, &WaspUIO::frameSensirion,         &filter_sensirion, "Create Sensirion frame"},    // ~119ms
-  // Turn Off sensors, as soon as possible
-  {    0, &WaspUIO::sensorsPowerOff,        NULL,              "Sensors power Off"},         // ~43ms ?
-  // The network window (8s minimum)
-  {    0, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
-  { 8000, &WaspUIO::stopNetwork,            &filter_network,   "Stop network"},              // ~43ms ?
-  // GPS (once a day)
-  { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
-};
-const uint8_t nActions = sizeof actions / sizeof actions[0];
-
-
 const uint8_t getSampling() {
   uint8_t i = 2;
 
-  if (batteryLevel <= 30)
+  if (UIO.batteryLevel <= 30)
   {
     i = 0;
   }
-  else if (batteryLevel <= 55)
+  else if (UIO.batteryLevel <= 55)
   {
     i = 1;
   }
@@ -178,8 +115,7 @@ void setup()
   }
 
   // Boot
-  batteryLevel = PWR.getBatteryLevel();
-  UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), batteryLevel);
+  UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), UIO.batteryLevel);
 
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
@@ -199,12 +135,28 @@ void setup()
 
 void loop()
 {
-  uint8_t i;
+  bool run;
   Action action;
 
+  // Time
   UIO.initTime();
   UIO.start_RTC_SD_USB(false);
   UIO.openFiles();
+
+  // Initialize the action table
+  UIO.reset();
+  UIO.schedule(ACTION_SENSORS_ON, 1);
+  UIO.schedule(ACTION_FRAME_HEALTH, 100);
+  // Network
+  if (filter_network())
+  {
+    UIO.schedule(ACTION_NETWORK_START, 50);
+  }
+  // GPS
+  if (filter_gps())
+  {
+    UIO.schedule(ACTION_GPS, 9000);
+  }
 
   // Update RTC time at least once. Keep minute and hour for later.
   RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
@@ -213,45 +165,44 @@ void loop()
   if (intFlag & RTC_INT)
   {
     // Battery level, do nothing if too low
-    batteryLevel = PWR.getBatteryLevel();
-    if (batteryLevel <= 30) {
-      UIO.logActivity(F("DEBUG RTC interruption, low battery = %d"), batteryLevel);
+    if (UIO.batteryLevel <= 30) {
+      UIO.logActivity(F("DEBUG RTC interruption, low battery = %d"), UIO.batteryLevel);
       goto sleep;
     }
 
-    UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), batteryLevel);
+    UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     unsigned long start = millis();
     unsigned long diff;
     unsigned long t0;
-    i = 0;
-    while (i < nActions)
+    do
     {
+      run = false;
       diff = UIO.millisDiff(start);
-      memcpy_P(&action, &actions[i], sizeof action);
 
-      // Filter
-      if (action.filter != NULL && action.filter() == false)
+      // Iter through the actions table
+      for (uint8_t i=0; i < nActions; i++)
       {
-        i++;
-        continue;
-      }
-
-      // Action
-      if (action.ms < diff)
-      {
-        i++;
-        t0 = millis();
-        //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
-        if (action.action())
-        {
-           UIO.logActivity(F("ERROR Action %s: error"), action.name);
-        }
-        else
-        {
-           UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
-        }
+        uint16_t ms = UIO.actionsQ[i];
+	if (ms > 0)
+	{
+	  run = true;
+	  if (ms <= diff)
+	  {
+	    UIO.actionsQ[i] = 0; // Un-schedule
+            memcpy_P(&action, &actions[i], sizeof action);
+            t0 = millis();
+            if (action.action())
+            {
+               UIO.logActivity(F("ERROR Action %s: error"), action.name);
+            }
+            else
+            {
+               UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
+            }
+	  }
+	}
       }
 
       // Network (receive)
@@ -260,7 +211,9 @@ void loop()
         UIO.logActivity(F("DEBUG New packet available"));
         UIO.receivePacket();
       }
+
     }
+    while (run);
   }
   else
   {
