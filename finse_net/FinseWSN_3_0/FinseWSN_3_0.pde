@@ -22,7 +22,7 @@ int randomNumber;
 // must be a factor of 60 to get equally spaced samples.
 // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
 // Different values for different battery levels.
-const uint8_t samplings[] PROGMEM = {12, 4, 2};
+const uint8_t samplings[] PROGMEM = {15, 10, 5};
 
 
 // Filter functions, to be used in the actions table below.
@@ -44,9 +44,8 @@ bool filter_gps()
 bool filter_network()
 {
   return (
-    UIO.featureNetwork
-    //&
-    //UIO.time.minute % 20 == 0 // XXX Every 20 minutes, should be 1h in deployment
+    UIO.featureNetwork &&
+    UIO.time.hour % 2 == 0 // XXX Every 2h
   );
 }
 
@@ -77,7 +76,7 @@ const uint8_t getSampling() {
   {
     i = 0;
   }
-  else if (UIO.batteryLevel <= 55)
+  else if (UIO.batteryLevel <= 40)
   {
     i = 1;
   }
@@ -193,6 +192,7 @@ void loop()
 	    UIO.actionsQ[i] = 0; // Un-schedule
             memcpy_P(&action, &actions[i], sizeof action);
             t0 = millis();
+            //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
             if (action.action())
             {
                UIO.logActivity(F("ERROR Action %s: error"), action.name);
