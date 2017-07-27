@@ -54,7 +54,21 @@ bool filter_network()
 {
   return (
     UIO.featureNetwork &&
-    UIO.time.minute % 10 == 0 // XXX Every 20 minutes, should be 1h in deployment
+    UIO.time.hour % 2 == 0 // XXX Every 2h 
+  );
+}
+
+bool sendFramesFilter()
+{
+  if (! UIO.hasSD)
+  {
+    return false;
+  }
+
+  if (! filter_network()) { return false; } // Net ops happen once/hour at most
+  return (
+    (batteryLevel > 75) ||                // Once an hour
+    (batteryLevel > 55 && UIO.time.hour % 12 == 0)  // Once every 3 hours
   );
 }
 
@@ -78,26 +92,13 @@ bool filter_sensirion()
   return (UIO.sensors & SENSOR_AGR_SENSIRION);
 }
 
-bool sendFramesFilter()
-{
-  if (! UIO.hasSD)
-  {
-    return false;
-  }
-
-  if (! filter_network()) { return false; } // Net ops happen once/hour at most
-  return (
-    (batteryLevel > 40) ||                // Once an hour
-    (batteryLevel > 35 && UIO.time.hour % 3 == 0)  // Once every 3 hours
-  );
-}
 
 // Array of actions, must be ordered by ms, will be executed in order.
 //
 
 const Action actions[] PROGMEM = {
   {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~11ms
-  {    0, &WaspUIO::startNetwork,           &filter_network,   "Start network"},             // ~557ms ?
+  {    0, &WaspUIO::startNetwork,           &sendFramesFilter,   "Start network"},             // ~557ms ?
   // Internal sensors (health)
   //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                // ~37ms
   {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~133ms
@@ -124,7 +125,7 @@ const Action actions[] PROGMEM = {
   {    0, &WaspUIO::sensorsPowerOff,        NULL,              "Sensors power Off"},         // ~43ms ?
   // The network window (8s minimum)
   {    0, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
-  { 8000, &WaspUIO::stopNetwork,            &filter_network,   "Stop network"},              // ~43ms ?
+  { 8000, &WaspUIO::stopNetwork,            &sendFramesFilter,   "Stop network"},              // ~43ms ?
   // GPS (once a day)
   { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
 };
