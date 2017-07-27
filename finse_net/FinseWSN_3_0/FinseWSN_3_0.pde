@@ -136,6 +136,7 @@ void loop()
 {
   bool run;
   Action action;
+  int16_t action_ret;
 
   // Time
   UIO.initTime();
@@ -184,25 +185,33 @@ void loop()
       for (uint8_t i=0; i < nActions; i++)
       {
         uint16_t ms = UIO.actionsQ[i];
-	if (ms > 0)
-	{
-	  run = true;
-	  if (ms <= diff)
-	  {
-	    UIO.actionsQ[i] = 0; // Un-schedule
+        if (ms > 0)
+        {
+          run = true;
+          if (ms <= diff)
+          {
+            UIO.actionsQ[i] = 0; // Un-schedule
             memcpy_P(&action, &actions[i], sizeof action);
             t0 = millis();
             //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
-            if (action.action())
+            action_ret = action.action();
+            if (action_ret < 0)
             {
-               UIO.logActivity(F("ERROR Action %s: error"), action.name);
+              UIO.actionsQ[i] = 0; // Un-schedule
+              UIO.logActivity(F("ERROR Action %s: error"), action.name);
+            }
+            else if (action_ret == 0)
+            {
+              UIO.actionsQ[i] = 0; // Un-schedule
+              UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
             }
             else
             {
-               UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
+              UIO.schedule((action_type)i, action_ret); // Re-schedule
+              UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
             }
-	  }
-	}
+          }
+        }
       }
 
       // Network (receive)
