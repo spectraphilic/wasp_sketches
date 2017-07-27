@@ -23,7 +23,7 @@ uint8_t batteryLevel;
 // must be a factor of 60 to get equally spaced samples.
 // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
 // Different values for different battery levels.
-const uint8_t samplings[] PROGMEM = {12, 4, 2};
+const uint8_t samplings[] PROGMEM = {15, 10, 5};
 
 
 typedef struct {
@@ -54,13 +54,13 @@ bool filter_network()
 {
   return (
     UIO.featureNetwork &
-    UIO.time.minute % 20 == 0 // XXX Every 20 minutes, should be 1h in deployment
+    UIO.time.minute % 10 == 0 // XXX Every 20 minutes, should be 1h in deployment
   );
 }
 
 bool filter_sdi12()
 {
-  return (UIO.sensors & SENSOR_SDI12_CDT10);
+  return ((UIO.sensors & SENSOR_SDI12_CDT10) );        
 }
 
 bool filter_pressure()
@@ -87,8 +87,8 @@ bool sendFramesFilter()
 
   if (! filter_network()) { return false; } // Net ops happen once/hour at most
   return (
-    (batteryLevel > 75) ||                // Once an hour
-    (batteryLevel > 65 && UIO.time.hour % 3 == 0)  // Once every 3 hours
+    (batteryLevel > 40) ||                // Once an hour
+    (batteryLevel > 35 && UIO.time.hour % 3 == 0)  // Once every 3 hours
   );
 }
 
@@ -138,7 +138,7 @@ const uint8_t getSampling() {
   {
     i = 0;
   }
-  else if (batteryLevel <= 55)
+  else if (batteryLevel <= 40)
   {
     i = 1;
   }
@@ -244,7 +244,7 @@ void loop()
       {
         i++;
         t0 = millis();
-        //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
+        UIO.logActivity(F("DEBUG Action %s: start"), action.name);
         if (action.action())
         {
            UIO.logActivity(F("ERROR Action %s: error"), action.name);
