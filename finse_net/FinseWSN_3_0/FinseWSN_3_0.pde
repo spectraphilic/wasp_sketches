@@ -52,7 +52,6 @@ bool filter_gps()
 
 bool filter_network()
 {
-  UIO.print(F("filter_network %d - %d"), UIO.featureNetwork, UIO.time.minute);
   return (
     UIO.featureNetwork &
     UIO.time.minute % 10 == 0 // XXX Every 20 minutes, should be 1h in deployment
