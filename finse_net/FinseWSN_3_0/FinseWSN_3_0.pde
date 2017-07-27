@@ -53,7 +53,7 @@ bool filter_gps()
 bool filter_network()
 {
   return (
-    UIO.featureNetwork &
+    UIO.featureNetwork &&
     UIO.time.minute % 10 == 0 // XXX Every 20 minutes, should be 1h in deployment
   );
 }
