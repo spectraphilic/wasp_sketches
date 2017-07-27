@@ -111,7 +111,7 @@ void setup()
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
     UIO.logActivity(F("WARN Wrong time detected, updating from GPS"));
-    UIO.setTimeFromGPS();
+    actionGps();
   }
 
   // Boot
@@ -145,12 +145,12 @@ void loop()
 
   // Initialize the action table
   UIO.reset();
-  UIO.schedule(ACTION_SENSORS_ON, 1);
+  UIO.schedule(ACTION_SENSORS, 1);
   UIO.schedule(ACTION_FRAME_HEALTH, 100);
   // Network
   if (filter_network())
   {
-    UIO.schedule(ACTION_NETWORK_START, 50);
+    UIO.schedule(ACTION_NETWORK, 50);
   }
   // GPS
   if (filter_gps())
