@@ -25,50 +25,6 @@ int randomNumber;
 const uint8_t samplings[] PROGMEM = {15, 10, 5};
 
 
-// Filter functions, to be used in the actions table below.
-// These functions return true if the action is to be done, false if not.
-// The decission is based in battery level and/or time.
-
-bool filter_gps()
-{
-  // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
-  // about 0.3s per day, with aging it may be worse.
-  // See https://www.maximintegrated.com/en/app-notes/index.mvp/id/3566
-
-  // As clock sync between the devices is critical for the network to work
-  // properly, we update the RTC time from GPS daily. But the GPS draws power,
-  // so this may need to be tuned.
-  return (UIO.time.minute == 0 && UIO.time.hour == 0);
-}
-
-bool filter_network()
-{
-  return (
-    UIO.featureNetwork &&
-    UIO.time.hour % 2 == 0 // XXX Every 2h
-  );
-}
-
-bool filter_sdi12()
-{
-  return (UIO.sensors & SENSOR_SDI12_CTD10);
-}
-
-bool filter_pressure()
-{
-  return (UIO.sensors & SENSOR_AGR_PRESSURE);
-}
-
-bool filter_lw()
-{
-  return (UIO.sensors & SENSOR_AGR_LEAFWETNESS);
-}
-
-bool filter_sensirion()
-{
-  return (UIO.sensors & SENSOR_AGR_SENSIRION);
-}
-
 const uint8_t getSampling() {
   uint8_t i = 2;
 
@@ -143,21 +99,6 @@ void loop()
   UIO.start_RTC_SD_USB(false);
   UIO.openFiles();
 
-  // Initialize the action table
-  UIO.reset();
-  UIO.schedule(ACTION_SENSORS, 1);
-  UIO.schedule(ACTION_FRAME_HEALTH, 100);
-  // Network
-  if (filter_network())
-  {
-    UIO.schedule(ACTION_NETWORK, 50);
-  }
-  // GPS
-  if (filter_gps())
-  {
-    UIO.schedule(ACTION_GPS, 9000);
-  }
-
   // Update RTC time at least once. Keep minute and hour for later.
   RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
 
@@ -173,13 +114,35 @@ void loop()
     UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-    unsigned long start = millis();
+    // Initialize the action table
+    UIO.reset();
+    UIO.schedule(ACTION_SENSORS, 0);
+    UIO.schedule(ACTION_FRAME_HEALTH, 100);
+    // Network (XXX Every 2h)
+    if (UIO.featureNetwork && UIO.time.hour % 2 == 0)
+    {
+      UIO.schedule(ACTION_NETWORK, 50);
+    }
+
+    // GPS (Once a day)
+    // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
+    // about 0.3s per day, with aging it may be worse.
+    // See https://www.maximintegrated.com/en/app-notes/index.mvp/id/3566
+    //
+    // As clock sync between the devices is critical for the network to work
+    // properly, we update the RTC time from GPS daily. But the GPS draws power,
+    // so this may need to be tuned.
+    if (UIO.time.minute == 0 && UIO.time.hour == 0);
+    {
+      UIO.schedule(ACTION_GPS, 9000);
+    }
+
     unsigned long diff;
     unsigned long t0;
     do
     {
       run = false;
-      diff = UIO.millisDiff(start);
+      diff = UIO.millisDiff(UIO.start);
 
       // Iter through the actions table
       for (uint8_t i=0; i < nActions; i++)
@@ -195,12 +158,12 @@ void loop()
             t0 = millis();
             //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
             action_ret = action.action();
-            if (action_ret < 0)
+            if (action_ret < -1)
             {
               UIO.actionsQ[i] = 0; // Un-schedule
               UIO.logActivity(F("ERROR Action %s: error"), action.name);
             }
-            else if (action_ret == 0)
+            else if (action_ret == -1)
             {
               UIO.actionsQ[i] = 0; // Un-schedule
               UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
