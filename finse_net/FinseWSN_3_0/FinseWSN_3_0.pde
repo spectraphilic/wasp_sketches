@@ -148,8 +148,13 @@ void loop()
       for (uint8_t i=0; i < nActions; i++)
       {
         uint16_t ms = UIO.actionsQ[i];
-        if (ms > 0)
+        if (ms == 0)
         {
+          // Not running
+        }
+        else if (ms > 0)
+        {
+          // Waiting some time to run
           run = true;
           if (ms <= diff)
           {
@@ -158,21 +163,42 @@ void loop()
             t0 = millis();
             //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
             action_ret = action.action();
-            if (action_ret < -1)
+            if (action_ret == TASK_ERROR)
             {
+              // Error
               UIO.actionsQ[i] = 0; // Un-schedule
               UIO.logActivity(F("ERROR Action %s: error"), action.name);
             }
-            else if (action_ret == -1)
+            else if (action_ret == TASK_STOP)
             {
+              // Success
               UIO.actionsQ[i] = 0; // Un-schedule
-              UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
+              UIO.logActivity(F("DEBUG Action %s: done (%lu ms)"), action.name, UIO.millisDiff(t0));
             }
-            else
+            else if (action_ret > 0)
             {
+              // Wait some time
               UIO.schedule((action_type)i, action_ret); // Re-schedule
-              UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
+              UIO.logActivity(F("DEBUG Action %s: suspended (%lu ms)"), action.name, UIO.millisDiff(t0));
             }
+            else if (action_ret < 0)
+            {
+              // Wait for another task to end
+              UIO.actionsQ[i] = action_ret;
+              UIO.logActivity(F("DEBUG Action %s: suspended (%lu ms)"), action.name, UIO.millisDiff(t0));
+            }
+          }
+        }
+        else if (ms < 0)
+        {
+          run = true;
+          // Waiting for some other task to end
+          UIO.print(F("WAITING FOR %d"), ms);
+          if (UIO.actionsQ[-ms] == 0)
+          {
+            // Re-schedule for immediate execution
+            // TODO Instead, resume the task straight away
+            UIO.schedule((action_type)i, 0);
           }
         }
       }
@@ -197,7 +223,6 @@ sleep:
   alarmTime = UIO.getNextAlarm(getSampling());
 
   UIO.logActivity(F("INFO Loop done in %lu ms."), UIO.millisDiff(UIO.start));
-  //UIO.print(F("LOOP %lu"), UIO.millisDiff(UIO.start));
   UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
 
