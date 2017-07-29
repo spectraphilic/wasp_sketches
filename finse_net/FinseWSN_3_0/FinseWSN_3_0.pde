@@ -91,8 +91,6 @@ void setup()
 void loop()
 {
   bool run;
-  Action action;
-  int16_t action_ret;
 
   // Time
   UIO.initTime();
@@ -138,7 +136,6 @@ void loop()
     }
 
     unsigned long diff;
-    unsigned long t0;
     do
     {
       run = false;
@@ -158,47 +155,16 @@ void loop()
           run = true;
           if (ms <= diff)
           {
-            UIO.actionsQ[i] = 0; // Un-schedule
-            memcpy_P(&action, &actions[i], sizeof action);
-            t0 = millis();
-            //UIO.logActivity(F("DEBUG Action %s: start"), action.name);
-            action_ret = action.action();
-            if (action_ret == TASK_ERROR)
-            {
-              // Error
-              UIO.actionsQ[i] = 0; // Un-schedule
-              UIO.logActivity(F("ERROR Action %s: error"), action.name);
-            }
-            else if (action_ret == TASK_STOP)
-            {
-              // Success
-              UIO.actionsQ[i] = 0; // Un-schedule
-              UIO.logActivity(F("DEBUG Action %s: done (%lu ms)"), action.name, UIO.millisDiff(t0));
-            }
-            else if (action_ret > 0)
-            {
-              // Wait some time
-              UIO.schedule((action_type)i, action_ret); // Re-schedule
-              UIO.logActivity(F("DEBUG Action %s: suspended (%lu ms)"), action.name, UIO.millisDiff(t0));
-            }
-            else if (action_ret < 0)
-            {
-              // Wait for another task to end
-              UIO.actionsQ[i] = action_ret;
-              UIO.logActivity(F("DEBUG Action %s: suspended (%lu ms)"), action.name, UIO.millisDiff(t0));
-            }
+	    UIO.resume((action_type)i);
           }
         }
         else if (ms < 0)
         {
-          run = true;
           // Waiting for some other task to end
-          UIO.print(F("WAITING FOR %d"), ms);
+          run = true;
           if (UIO.actionsQ[-ms] == 0)
           {
-            // Re-schedule for immediate execution
-            // TODO Instead, resume the task straight away
-            UIO.schedule((action_type)i, 0);
+	    UIO.resume((action_type)i);
           }
         }
       }
