@@ -37,6 +37,7 @@ const uint8_t getSampling() {
     i = 1;
   }
 
+  return 2;
   return pgm_read_byte_near(samplings + i);
 }
 
@@ -66,7 +67,7 @@ void setup()
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
     UIO.logActivity(F("WARN Wrong time detected, updating from GPS"));
-    actionGps();
+    //actionGps();
   }
 
   // Boot
@@ -86,7 +87,6 @@ void setup()
   UIO.stop_RTC_SD_USB();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
-
 
 void loop()
 {
@@ -112,16 +112,14 @@ void loop()
     UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-    // Initialize the action table
-    UIO.reset();
-    UIO.schedule(ACTION_SENSORS, 0);
-    UIO.schedule(ACTION_FRAME_HEALTH, 100);
-    // Network (XXX Every 2h)
+    cr_loop.reset();
+    //cr_loop.spawn(taskHealthFrame);
+    cr_loop.spawn(taskSensors);
+    // Network (Every 2h)
     if (UIO.featureNetwork && UIO.time.hour % 2 == 0)
     {
-      UIO.schedule(ACTION_NETWORK, 50);
+      cr_loop.spawn(taskNetwork);
     }
-
     // GPS (Once a day)
     // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
     // about 0.3s per day, with aging it may be worse.
@@ -132,52 +130,19 @@ void loop()
     // so this may need to be tuned.
     if (UIO.time.minute == 0 && UIO.time.hour == 0);
     {
-      UIO.schedule(ACTION_GPS, 9000);
+      //cr_loop.spawn(taskGps);
     }
+    cr_loop.run();
 
-    unsigned long diff;
-    do
+    // Network (receive)
+    // TODO Move this one to the network task
+/*
+    if (xbeeDM.XBee_ON && xbeeDM.available())
     {
-      run = false;
-      diff = UIO.millisDiff(UIO.start);
-
-      // Iter through the actions table
-      for (uint8_t i=0; i < nActions; i++)
-      {
-        uint16_t ms = UIO.actionsQ[i];
-        if (ms == 0)
-        {
-          // Not running
-        }
-        else if (ms > 0)
-        {
-          // Waiting some time to run
-          run = true;
-          if (ms <= diff)
-          {
-	    UIO.resume((action_type)i);
-          }
-        }
-        else if (ms < 0)
-        {
-          // Waiting for some other task to end
-          run = true;
-          if (UIO.actionsQ[-ms] == 0)
-          {
-	    UIO.resume((action_type)i);
-          }
-        }
-      }
-
-      // Network (receive)
-      if (xbeeDM.XBee_ON && xbeeDM.available())
-      {
-        UIO.logActivity(F("DEBUG New packet available"));
-        UIO.receivePacket();
-      }
-
+      UIO.logActivity(F("DEBUG New packet available"));
+      UIO.receivePacket();
     }
-    while (run);
+*/
   }
   else
   {
@@ -188,7 +153,7 @@ sleep:
   // Calculate first alarm (requires batteryLevel)
   alarmTime = UIO.getNextAlarm(getSampling());
 
-  UIO.logActivity(F("INFO Loop done in %lu ms."), UIO.millisDiff(UIO.start));
+  UIO.logActivity(F("INFO Loop done in %lu ms."), cr_loop.millisDiff(UIO.start));
   UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
 
