@@ -132,16 +132,6 @@ void loop()
       //cr.spawn(taskGps);
     }
     cr.run();
-
-    // Network (receive)
-    // TODO Move this one to the network task
-/*
-    if (xbeeDM.XBee_ON && xbeeDM.available())
-    {
-      UIO.logActivity(F("DEBUG New packet available"));
-      UIO.receivePacket();
-    }
-*/
   }
   else
   {
