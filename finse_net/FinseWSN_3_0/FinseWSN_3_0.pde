@@ -37,7 +37,6 @@ const uint8_t getSampling() {
     i = 1;
   }
 
-  return 2;
   return pgm_read_byte_near(samplings + i);
 }
 
@@ -116,7 +115,7 @@ void loop()
     cr.spawn(taskHealthFrame);
     cr.spawn(taskSensors);
     // Network (Every 2h)
-    if (UIO.featureNetwork && UIO.time.hour % 2 == 0)
+    if (UIO.featureNetwork && UIO.time.hour % 2 == 0 && UIO.time.minute == 0)
     {
       cr.spawn(taskNetwork);
     }
