@@ -17,7 +17,6 @@ uint8_t error;
 const char* alarmTime;
 int pendingPulses;
 int randomNumber;
-uint8_t batteryLevel;
 
 // Sampling period in minutes, keep these two definitions in sync. The value
 // must be a factor of 60 to get equally spaced samples.
@@ -26,120 +25,14 @@ uint8_t batteryLevel;
 const uint8_t samplings[] PROGMEM = {15, 10, 5};
 
 
-typedef struct {
-  unsigned long ms; // ms after the loop start when to run the action
-  uint8_t (*action)(); // function (action) to call
-  bool (*filter)(); // filter function, see documentation below
-  char name[50];
-} Action;
-
-
-// Filter functions, to be used in the actions table below.
-// These functions return true if the action is to be done, false if not.
-// The decission is based in battery level and/or time.
-
-bool filter_gps()
-{
-  // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
-  // about 0.3s per day, with aging it may be worse.
-  // See https://www.maximintegrated.com/en/app-notes/index.mvp/id/3566
-
-  // As clock sync between the devices is critical for the network to work
-  // properly, we update the RTC time from GPS daily. But the GPS draws power,
-  // so this may need to be tuned.
-  return (UIO.time.minute == 0 && UIO.time.hour == 0);
-}
-
-bool filter_network()
-{
-  return (
-    UIO.featureNetwork &&
-    UIO.time.hour % 2 == 0 // XXX Every 2h 
-  );
-}
-
-bool sendFramesFilter()
-{
-  if (! UIO.hasSD)
-  {
-    return false;
-  }
-
-  if (! filter_network()) { return false; } // Net ops happen once/hour at most
-  return (
-    (batteryLevel > 75) ||                // Once an hour
-    (batteryLevel > 55 && UIO.time.hour % 12 == 0)  // Once every 3 hours
-  );
-}
-
-bool filter_sdi12()
-{
-  return ((UIO.sensors & SENSOR_SDI12_CDT10) );        
-}
-
-bool filter_pressure()
-{
-  return (UIO.sensors & SENSOR_AGR_PRESSURE);
-}
-
-bool filter_lw()
-{
-  return (UIO.sensors & SENSOR_AGR_LEAFWETNESS);
-}
-
-bool filter_sensirion()
-{
-  return (UIO.sensors & SENSOR_AGR_SENSIRION);
-}
-
-
-// Array of actions, must be ordered by ms, will be executed in order.
-//
-
-const Action actions[] PROGMEM = {
-  {    0, &WaspUIO::sensorsPowerOn,         NULL,              "Sensors power On"},          // ~11ms
-  {    0, &WaspUIO::startNetwork,           &sendFramesFilter,   "Start network"},             // ~557ms ?
-  // Internal sensors (health)
-  //{  100, &WaspUIO::readACC,                NULL,              "Read ACC"},                // ~37ms
-  {  200, &WaspUIO::frameHealth,            NULL,              "Create Health frame"},       // ~133ms
-  // SDI-12
-  {  500, &WaspUIO::SDI12_on,               &filter_sdi12,     "SDI-12 turn ON"}, // ~500ms after 5V on
-  {  600, &WaspUIO::SDI12_CTD10_measure,    &filter_sdi12,     "SDI-12 CTD10, send Measure command"},
-  { 1200, &WaspUIO::SDI12_CTD10_data,       &filter_sdi12,     "SDI-12 CTD10, read data"}, // ~800ms after measure
-  { 1300, &WaspUIO::SDI12_off,              &filter_sdi12,     "SDI-12 turn OFF"},
-  { 1400, &WaspUIO::SDI12_CTD10_frame,      &filter_sdi12,     "SDI-12 CTD10 Create frame"},
-  // Agr: Pressure
-  {  500, &WaspUIO::Agr_Pressure,           &filter_pressure,  "Read Pressure"},             // ~51ms
-  {  700, &WaspUIO::framePressure,          &filter_pressure,  "Create Pressure frame"},     // ~114ms
-  // Agr: Wind
-  //{  500, &WaspUIO::Agr_Meteo_Anemometer,   NULL,     "Read Anemometer"},
-  //{  700, &WaspUIO::Agr_Meteo_Vane,         NULL,     "Read Vane"},
-  //{  900, &WaspUIO::frameWind,              NULL,     "Create Wind frame"},
-  // Agr: Low consumption group
-  {  500, &WaspUIO::Agr_LCGroup_LeafWetness, &filter_lw,       "Read LeafWetness"},          // ~51ms
-  //{  600, &WaspUIO::Agr_LCGroup_SoilTemp,   NULL,     "Read TempDS18B20"},
-  {  900, &WaspUIO::Agr_LCGroup_Sensirion,  &filter_sensirion, "Read Sensirion"},            // ~356ms
-  { 1100, &WaspUIO::frameLeafWetness,       &filter_lw,        "Create Leaf Wetness frame"}, // ~152ms
-  { 1300, &WaspUIO::frameSensirion,         &filter_sensirion, "Create Sensirion frame"},    // ~119ms
-  // Turn Off sensors, as soon as possible
-  {    0, &WaspUIO::sensorsPowerOff,        NULL,              "Sensors power Off"},         // ~43ms ?
-  // The network window (8s minimum)
-  {    0, &WaspUIO::sendFrames,             &sendFramesFilter, "Send frames"},               // ~59ms / frame
-  { 8000, &WaspUIO::stopNetwork,            &sendFramesFilter,   "Stop network"},              // ~43ms ?
-  // GPS (once a day)
-  { 9000, &WaspUIO::setTimeFromGPS,         &filter_gps,       "Set RTC time from GPS"},
-};
-const uint8_t nActions = sizeof actions / sizeof actions[0];
-
-
 const uint8_t getSampling() {
   uint8_t i = 2;
 
-  if (batteryLevel <= 30)
+  if (UIO.batteryLevel <= 30)
   {
     i = 0;
   }
-  else if (batteryLevel <= 40)
+  else if (UIO.batteryLevel <= 40)
   {
     i = 1;
   }
@@ -173,15 +66,11 @@ void setup()
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
     UIO.logActivity(F("WARN Wrong time detected, updating from GPS"));
-    UIO.setTimeFromGPS();
+    //actionGps();
   }
 
   // Boot
-  batteryLevel = PWR.getBatteryLevel();
-  UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), batteryLevel);
-
-  // SDI-12
-  // UIO.SDI12_CTD10_ident();
+  UIO.logActivity(F("INFO *** Booting (setup). Battery level is %d"), UIO.batteryLevel);
 
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
@@ -198,12 +87,11 @@ void setup()
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
 
-
 void loop()
 {
-  uint8_t i;
-  Action action;
+  bool run;
 
+  // Time
   UIO.initTime();
   UIO.start_RTC_SD_USB(false);
   UIO.openFiles();
@@ -215,55 +103,45 @@ void loop()
   if (intFlag & RTC_INT)
   {
     // Battery level, do nothing if too low
-    batteryLevel = PWR.getBatteryLevel();
-    if (batteryLevel <= 30) {
-      UIO.logActivity(F("DEBUG RTC interruption, low battery = %d"), batteryLevel);
+    if (UIO.batteryLevel <= 30) {
+      UIO.logActivity(F("DEBUG RTC interruption, low battery = %d"), UIO.batteryLevel);
       goto sleep;
     }
 
-    UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), batteryLevel);
+    UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-    unsigned long start = millis();
-    unsigned long diff;
-    unsigned long t0;
-    i = 0;
-    while (i < nActions)
+    cr.reset();
+    cr.spawn(taskHealthFrame);
+    cr.spawn(taskSensors);
+    // Network (Every 2h)
+    if (UIO.featureNetwork && UIO.time.hour % 2 == 0 && UIO.time.minute == 0)
     {
-      diff = UIO.millisDiff(start);
-      memcpy_P(&action, &actions[i], sizeof action);
-
-      // Filter
-      if (action.filter != NULL && action.filter() == false)
-      {
-        UIO.logActivity(F("DEBUG Action %s: filtered"), action.name);
-        i++;
-        continue;
-      }
-
-      // Action
-      if (action.ms < diff)
-      {
-        i++;
-        t0 = millis();
-        UIO.logActivity(F("DEBUG Action %s: start"), action.name);
-        if (action.action())
-        {
-           UIO.logActivity(F("ERROR Action %s: error"), action.name);
-        }
-        else
-        {
-           UIO.logActivity(F("DEBUG Action %s: done in %lu ms"), action.name, UIO.millisDiff(t0));
-        }
-      }
-
-      // Network (receive)
-      if (xbeeDM.XBee_ON && xbeeDM.available())
-      {
-        UIO.logActivity(F("DEBUG New packet available"));
-        UIO.receivePacket();
-      }
+      cr.spawn(taskNetwork);
     }
+    // GPS (Once a day)
+    // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
+    // about 0.3s per day, with aging it may be worse.
+    // See https://www.maximintegrated.com/en/app-notes/index.mvp/id/3566
+    //
+    // As clock sync between the devices is critical for the network to work
+    // properly, we update the RTC time from GPS daily. But the GPS draws power,
+    // so this may need to be tuned.
+    if (UIO.time.minute == 0 && UIO.time.hour == 0);
+    {
+      //cr.spawn(taskGps);
+    }
+    cr.run();
+
+    // Network (receive)
+    // TODO Move this one to the network task
+/*
+    if (xbeeDM.XBee_ON && xbeeDM.available())
+    {
+      UIO.logActivity(F("DEBUG New packet available"));
+      UIO.receivePacket();
+    }
+*/
   }
   else
   {
@@ -274,8 +152,7 @@ sleep:
   // Calculate first alarm (requires batteryLevel)
   alarmTime = UIO.getNextAlarm(getSampling());
 
-  UIO.logActivity(F("INFO Loop done in %lu ms."), UIO.millisDiff(UIO.start));
-  //UIO.print(F("LOOP %lu"), UIO.millisDiff(UIO.start));
+  UIO.logActivity(F("INFO Loop done in %lu ms."), cr.millisDiff(UIO.start));
   UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
 
