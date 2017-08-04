@@ -112,13 +112,13 @@ void loop()
     UIO.logActivity(F("INFO *** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
-    cr_loop.reset();
-    //cr_loop.spawn(taskHealthFrame);
-    cr_loop.spawn(taskSensors);
+    cr.reset();
+    cr.spawn(taskHealthFrame);
+    cr.spawn(taskSensors);
     // Network (Every 2h)
     if (UIO.featureNetwork && UIO.time.hour % 2 == 0)
     {
-      cr_loop.spawn(taskNetwork);
+      cr.spawn(taskNetwork);
     }
     // GPS (Once a day)
     // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
@@ -130,9 +130,9 @@ void loop()
     // so this may need to be tuned.
     if (UIO.time.minute == 0 && UIO.time.hour == 0);
     {
-      //cr_loop.spawn(taskGps);
+      //cr.spawn(taskGps);
     }
-    cr_loop.run();
+    cr.run();
 
     // Network (receive)
     // TODO Move this one to the network task
@@ -153,7 +153,7 @@ sleep:
   // Calculate first alarm (requires batteryLevel)
   alarmTime = UIO.getNextAlarm(getSampling());
 
-  UIO.logActivity(F("INFO Loop done in %lu ms."), cr_loop.millisDiff(UIO.start));
+  UIO.logActivity(F("INFO Loop done in %lu ms."), cr.millisDiff(UIO.start));
   UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
 
