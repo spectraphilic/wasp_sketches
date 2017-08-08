@@ -2,8 +2,8 @@
 /*
     ------ Waspmote Pro Code Example --------
 
-    Explanation: This is the basic Code for Waspmote Pro
-  Snow Logger Thomas (SLT)
+Code to test the photodiodes
+Simon Filhol
 
 */
 
@@ -12,7 +12,7 @@
 
 
 // define folder and file to store data
-char filename[] = "LOG.TXT";
+char filename[] = "DATA.TXT";
 
 // buffer to write into Sd File
 uint8_t sd_answer;

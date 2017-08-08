@@ -7,14 +7,14 @@ Simon Filhol, August 2017
 */
 
 #include <SDI12.h>
-#include <WaspUIO.h>
+//#include <WaspUIO.h>
 
 #define DATAPIN 6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
 
 char ret_input = 'Y';
 char newAddr = '0';
-char oldAddr = '0';
+char oldAddr='0';
 
 
 
@@ -40,10 +40,13 @@ void setup() {
 
   if(ret_input== 'Y')
   {
-    ret_input = input_serial("Type new sensor address (e.g. 3):");
 
+    ret_input = input_serial("Type old sensor address (e.g. 3):");
+    oldAddr = ret_input;
+    
+    ret_input = input_serial("Type new sensor address (e.g. 3):");
     newAddr = ret_input;
-    strncpy(oldAddr, mySDI12.sdi12_buffer, sizeof(mySDI12.sdi12_buffer));
+    //oldAddr = mySDI12.sdi12_buffer;
 
     USB.print("Old sensor address: ");
     USB.println(oldAddr);
@@ -77,24 +80,16 @@ void loop()
 
 
 char input_serial(const char* question){
-  char val;
-  long time;
-    USB.println(question);
-    time = millis();
-    while(millis()-time < 10000)
-    {
-        if (USB.available() > 0)
-        {
-            val = USB.read();
-        }
+  char c;  
+  USB.print(question);
+  USB.flush();
+  while (!USB.available()) {
+  }
+  delay(400);
 
-        // Condition to avoid an overflow (DO NOT REMOVE)
-        if (millis() < time)
-        {
-            time = millis();  
-        }
-    }
-return val;
+  c = USB.read();
+  USB.println(c);
+  return c;
 }
 
 
