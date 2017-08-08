@@ -2,16 +2,22 @@
 /*
 
 Script to read and change SDI 12 sensor address
-
+Simon Filhol, August 2017
 
 */
 
 #include <SDI12.h>
-#include <SDI12.h>
+#include <WaspUIO.h>
 
 #define DATAPIN 6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
-char sdiResponse[30];
+
+char ret_input = 'Y';
+char newAddr = '0';
+char oldAddr = '0';
+
+
+
 int i;
 /*
   '?' is a wildcard character which asks any and all sensors to respond
@@ -21,68 +27,75 @@ int i;
 
 void setup() {
   USB.ON();
-  PWR.setSensorPower(SENS_5V, SENS_ON); // (JH)
+  PWR.setSensorPower(SENS_5V, SENS_ON); 
   delay(500); // Sensor exitation delay
 
   mySDI12.begin();
+  mySDI12.read_address();
 
-  // -'-'-'-'-'-'-INFO COMMAND-'-'-'-'-'-'-
-  mySDI12.sendCommand("?!");
-  i = 0;
 
-  // delay(300);                  // wait a while for a response
-  while (mySDI12.available())  // write the response to the screen
+  USB.println("Do you want to change the sensor address?");
+  ret_input = input_serial("Y/N:");
+
+
+  if(ret_input== 'Y')
   {
-    char c = mySDI12.read();
-    if ((c != '\n') && (c != '\r'))
-      {
-        sdiResponse[i] = c;
-        i++;
-      }
-      delay(5);
+    ret_input = input_serial("Type new sensor address (e.g. 3):");
+
+    newAddr = ret_input;
+    strncpy(oldAddr, mySDI12.sdi12_buffer, sizeof(mySDI12.sdi12_buffer));
+
+    USB.print("Old sensor address: ");
+    USB.println(oldAddr);
+
+    USB.print("New sensor address: ");
+    USB.println(newAddr);
+
+    ret_input = input_serial("Apply new address? Y/N");
+
+    if(ret_input== 'Y'){
+      mySDI12.set_address(oldAddr, newAddr);
+      mySDI12.read_address();
     }
-    USB.println(sdiResponse); //write the response to the screen
+  }else{
 
-    delay(1000);
-    mySDI12.flush();
+  USB.println("No new address for sensor...");
+
   }
 
-  void loop()
-  {
-//    // -'-'-'-'-MEASUREMENT COMMAND-'-'-'-'-
-//    mySDI12.sendCommand("0M!");
-//    // delay(300);                   // let the data transfer
-//    while (mySDI12.available())   // write the response to the screen
-//    {
-//      USB.printf("%c", mySDI12.read());
-//    }
-//    delay(1000); // Needed for CTD10 pressure sensor
-//    mySDI12.flush();
-//
-//
-//    // -'-'-'-'-'-'-DATA COMMAND-'-'-'-'-'-'- // (JH) Working examle
-//    mySDI12.sendCommand("0D0!");
-//
-//    // delay(300);                  // let the data transfer
-//    while (mySDI12.available())  // write the response to the screen
-//    {
-//      USB.printf("%c", mySDI12.read());
-//    }
-//    mySDI12.flush();
+  USB.println("Done!  \t Restart waspmote");
 
-    USB.println("- - - - - - - - - - - - - - - -");
+}
 
-    delay(5000); //
-  }
+void loop()
+{
+
+}
 
 
 
 
 
+char input_serial(const char* question){
+  char val;
+  long time;
+    USB.println(question);
+    time = millis();
+    while(millis()-time < 10000)
+    {
+        if (USB.available() > 0)
+        {
+            val = USB.read();
+        }
 
-
-
-
+        // Condition to avoid an overflow (DO NOT REMOVE)
+        if (millis() < time)
+        {
+            time = millis();  
+        }
+    }
+return val;
+}
 
 
 
