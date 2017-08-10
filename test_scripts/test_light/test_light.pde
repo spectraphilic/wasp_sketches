@@ -80,7 +80,7 @@ void setup() // put your setup code here, to run once:
   USB.println("here");
   if (sd_answer == 1){
     USB.println(F("log created"));
-    SD.appendln(filename, "Epoch, YY, MM, DD, hh, mm, ss, SW_47, SW_100, SW_220, SW_330, SW_470, SW_680, SW_2200");
+    SD.appendln(filename, "YY,MM,DD,hh,mm,ss,SW_47,SW_100,SW_220,SW_330,SW_470,SW_680,SW_2200");
   }
   else{
     USB.println(F("log not created"));
@@ -116,7 +116,7 @@ void write2SD(char file[], int SW_47, int SW_100, int SW_220, int SW_330, int SW
   char dataStr[200];
 
   // Create data string to write on SD file
-  sprintf(dataStr, "%d, %u, %u, %u, %u, %u, %u, %d, %d, %d, %d, %d, %d, %d",RTC.getEpochTime(), RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second, SW_47, SW_100, SW_220, SW_330, SW_470, SW_680, SW_2200);
+  sprintf(dataStr, "%u,%u,%u,%u,%u,%u,%d,%d,%d,%d,%d,%d,%d", RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second, SW_47, SW_100, SW_220, SW_330, SW_470, SW_680, SW_2200);
   USB.println(dataStr);
   // Appends 'dataStr' at the end of the file
   SD.ON();

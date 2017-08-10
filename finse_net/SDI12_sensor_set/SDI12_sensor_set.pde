@@ -7,7 +7,7 @@ Simon Filhol, August 2017
 */
 
 #include <SDI12.h>
-//#include <WaspUIO.h>
+
 
 #define DATAPIN 6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
@@ -31,6 +31,7 @@ void setup() {
   delay(500); // Sensor exitation delay
 
   mySDI12.begin();
+  delay(500);
   mySDI12.read_address();
 
 
@@ -74,9 +75,6 @@ void loop()
 {
 
 }
-
-
-
 
 
 char input_serial(const char* question){
