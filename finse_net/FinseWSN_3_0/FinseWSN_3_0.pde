@@ -55,7 +55,7 @@ void setup()
 
   // Interactive mode
   UIO.start_RTC_SD_USB(false);
-  UIO.interactive();
+  UIO.menu();
 
   // Create/Open files
   error = UIO.initSD();
