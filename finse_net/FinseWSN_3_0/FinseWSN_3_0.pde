@@ -65,12 +65,12 @@ void setup()
   // XXX Do this unconditionally to update location?
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
-    cr.log(F("WARN Wrong time detected, updating from GPS"));
+    warn(F("Wrong time detected, updating from GPS"));
     //actionGps();
   }
 
   // Boot
-  cr.log(F("INFO *** Booting (setup). Battery level is %d"), UIO.batteryLevel);
+  info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
 
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
@@ -81,7 +81,7 @@ void setup()
   alarmTime = UIO.getNextAlarm(getSampling());
 
   // Go to sleep
-  cr.log(F("INFO Boot done, go to sleep"));
+  debug(F("Boot done, go to sleep"));
   UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
@@ -104,11 +104,11 @@ void loop()
   {
     // Battery level, do nothing if too low
     if (UIO.batteryLevel <= 30) {
-      cr.log(F("DEBUG RTC interruption, low battery = %d"), UIO.batteryLevel);
+      debug(F("RTC interruption, low battery = %d"), UIO.batteryLevel);
       goto sleep;
     }
 
-    cr.log(F("INFO *** RTC interruption, battery level = %d"), UIO.batteryLevel);
+    info(F("*** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
     cr.reset();
@@ -135,14 +135,14 @@ void loop()
   }
   else
   {
-    cr.log(F("WARN Unexpected interruption %d"), intFlag);
+    warn(F("Unexpected interruption %d"), intFlag);
   }
 
 sleep:
   // Calculate first alarm (requires batteryLevel)
   alarmTime = UIO.getNextAlarm(getSampling());
 
-  cr.log(F("INFO Loop done in %lu ms."), cr.millisDiff(UIO.start));
+  info(F("Loop done in %lu ms."), cr.millisDiff(UIO.start));
   UIO.closeFiles();
   UIO.stop_RTC_SD_USB();
 
