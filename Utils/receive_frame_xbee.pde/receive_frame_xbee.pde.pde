@@ -1,7 +1,12 @@
 /*  
 script to receive frames
  */
+
+
+// 1. Include Libraries
 #include <WaspUIO.h>
+#include <WaspSensorAgr_v20.h>
+#include <WaspFrame.h>
 #include <WaspXBeeDM.h>
 
 // define variable
@@ -12,15 +17,20 @@ int savePower = 0;
 
 void setup()
 {  
-  // init USB port
-  USB.ON();
-  USB.println(F("Receiving BROADCAST packets"));
+  // initialize time
+  UIO.initTime();
+  // Initialize variables, from EEPROM (USB print, OTA programming, ..)
+  UIO.initVars();
 
-  USB.print(PWR.getBatteryLevel(),DEC);
-  USB.println(F(" %"));
+  // Interactive mode
+  UIO.start_RTC_SD_USB(false);
+  UIO.menu();
 
-  // init XBee 
-  
+  info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
+  debug(F("Boot done"));
+  UIO.stop_RTC_SD_USB();
+  RTC.ON();
+
 }
 
 
@@ -29,15 +39,15 @@ void loop()
 { 
   if(savePower == 1){
   RTC.getTime();
-  if((RTC.minute == 59)||(RTC.minute == 19)||(RTC.minute == 39)){
+  if((RTC.minute == 58)||(RTC.minute == 18)||(RTC.minute == 38)){
+
     long starttime = millis();
-    long interval = 120000;
+    long interval = 10 * 1000 * 60;
     long currenttime = millis();
 
     xbeeDM.ON();
     while(currenttime - starttime <= interval){
     
-        
        // receive XBee packet (wait for 10 seconds)
       error = xbeeDM.receivePacketTimeout( 10000 );
     
@@ -85,7 +95,7 @@ void loop()
       }
       else
       {
-        if(error!=1){
+        //if(error!=1){
           // Print error message:
           /*
            * '7' : Buffer full. Not enough memory space
@@ -99,7 +109,7 @@ void loop()
           USB.print(F("Error receiving a packet:"));
           USB.println(error,DEC);     
           USB.println(F("--------------------------------"));
-        }
+        //}
       }
     
     }
