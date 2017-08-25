@@ -160,7 +160,7 @@ void Loop::run()
  */
 
 /**
- * Copy string from Flash to RAM.
+ * Copy (strncpy_F) or concatenate (strncat_F) string from Flash to RAM.
  *
  * Parameters:
  * - dst        Pointer to the char array where the content is to be copied
@@ -172,7 +172,7 @@ void Loop::run()
  * This is like strncpy, but source is const __FlashStringHelper *
  */
 
-char* Loop::strncpy_F(char* dst, const __FlashStringHelper * src, size_t size)
+char* strncpy_F(char* dst, const __FlashStringHelper * src, size_t size)
 {
   const char * __attribute__((progmem)) p = (const char * ) src;
   unsigned char c;
@@ -191,6 +191,41 @@ char* Loop::strncpy_F(char* dst, const __FlashStringHelper * src, size_t size)
 
   return dst;
 }
+
+char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size)
+{
+  size_t len = strlen(dst);
+
+  strncpy_F(dst + len, src, size - len);
+  return dst;
+}
+
+/**
+ * Helper function to implement the equivalent to Python's '..'.join([])
+ *
+ * Concatenates src to dst, prepended with delimiter if dst is not empty.
+ * Usage example:
+ *
+ * buffer[0] = '\0';
+ * strnjoin_F(buffer, F("A"), F(", "), sizeof(buffer));
+ * strnjoin_F(buffer, F("B"), F(", "), sizeof(buffer));
+ * strnjoin_F(buffer, F("C"), F(", "), sizeof(buffer));
+ *
+ * At the end buffer will hold "A, B, C"
+ */
+char* strnjoin_F (char* dst, const __FlashStringHelper * src, const __FlashStringHelper * delimiter, size_t size)
+{
+  const char * __attribute__((progmem)) p = (const char * ) src;
+
+  if (dst[0])
+  {
+    strncat_F(dst, delimiter, size);
+  }
+
+  strncat_F(dst, src, size);
+  return dst;
+}
+
 
 /*
  * Functions to calculate the distance between two calls to millis(), taking

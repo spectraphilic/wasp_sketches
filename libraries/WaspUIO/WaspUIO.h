@@ -77,13 +77,11 @@ private:
 // Helper functions to work with files
 int append(SdFile &file, const void* buf, size_t nbyte);
 
+// Filenames
 const char* archive_dir = "/data";
-
-// Logging and debug
 const char* logFilename = "LOG.TXT";
 
 // Interactive mode
-void menuPrint();
 void menuTime();
 void menuTimeManual();
 void menuNetwork();

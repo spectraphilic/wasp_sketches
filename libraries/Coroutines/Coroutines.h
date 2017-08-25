@@ -154,9 +154,6 @@ class Loop
     int spawn(tstate_t (*fun)(), unsigned int delay=0);
     void run();
 
-    // Utility functions to work with program memory (flash)
-    char* strncpy_F(char* dst, const __FlashStringHelper * src, size_t num);
-
     // millisDiff is to calculate the difference between two calls to millis(),
     // but taking into account overflow. This is only needed if the device runs
     // without sleep for longer than 49 days.
@@ -177,6 +174,11 @@ class Loop
     void log(loglevel_t level, const __FlashStringHelper *, ...);
     const char* loglevel2str(loglevel_t level);
 };
+
+// Utility functions to work with program memory (flash)
+char* strncpy_F(char* dst, const __FlashStringHelper * src, size_t num);
+char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size);
+char* strnjoin_F(char* dst, const __FlashStringHelper * src, const __FlashStringHelper * delimiter, size_t size);
 
 extern Loop cr;
 

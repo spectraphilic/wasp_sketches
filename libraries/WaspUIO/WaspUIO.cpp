@@ -273,7 +273,7 @@ void WaspUIO::initNet(network_t value)
   // linkEncryption = DISABLED (not supported by DIGIMESH, apparently)
   // AESEncryption = DISABLED
   frame.setFrameSize(DIGIMESH, addressing, DISABLED, DISABLED);
-  cr.print(F("INFO Frame size is %d"), frame.getFrameSize());
+  cr.print(F("DEBUG Frame size is %d"), frame.getFrameSize());
 
   // init XBee
   xbeeDM.ON();
@@ -282,7 +282,7 @@ void WaspUIO::initNet(network_t value)
   // Set channel, check AT commmand execution flag
   xbeeDM.setChannel(network->channel);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("INFO Channel set OK")); // Implement string in print function
+    cr.print(F("DEBUG Channel set OK")); // Implement string in print function
   } else {
     cr.print(F("ERORR with setChannel()"));
   }
@@ -290,7 +290,7 @@ void WaspUIO::initNet(network_t value)
   // set PANID, check AT commmand execution flag
   xbeeDM.setPAN(network->panid);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("INFO PAN ID set OK"));
+    cr.print(F("DEBUG PAN ID set OK"));
   } else {
     cr.print(F("ERROR calling 'setPAN()'"));
   }
@@ -298,7 +298,7 @@ void WaspUIO::initNet(network_t value)
   // set encryption mode (1:enable; 0:disable), check AT commmand execution flag
   xbeeDM.setEncryptionMode( encryptionMode );
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("INFO AES encryption Mode OK"));
+    cr.print(F("DEBUG AES encryption Mode OK"));
   } else {
     cr.print(F("ERROR no setEncryptionMode()"));
   }
@@ -306,7 +306,7 @@ void WaspUIO::initNet(network_t value)
   // set encryption key, check AT commmand execution flag
   xbeeDM.setLinkKey(encryptionKey);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("INFO AES encryption key set OK"));
+    cr.print(F("DEBUG AES encryption key set OK"));
   } else {
     cr.print(F("ERROR with setLinkKey()"));
   }
@@ -314,7 +314,7 @@ void WaspUIO::initNet(network_t value)
   // write values to XBee module memory, check AT commmand execution flag
   xbeeDM.writeValues();
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("INFO Changes stored OK"));
+    cr.print(F("DEBUG Changes stored OK"));
   } else {
     cr.print(F("ERROR with writeValues()"));
   }
@@ -573,7 +573,7 @@ const char* WaspUIO::input(const __FlashStringHelper * prompt_F, unsigned long t
   size_t max = sizeof(buffer) - 1;
   int i = 0;
 
-  cr.strncpy_F(prompt, prompt_F, sizeof(prompt));
+  strncpy_F(prompt, prompt_F, sizeof(prompt));
   if (strlen(prompt))
   {
     cr.print(prompt);
@@ -625,11 +625,11 @@ const char* WaspUIO::input(const __FlashStringHelper * prompt_F, unsigned long t
 void WaspUIO::menu()
 {
   const char* str;
+  char buffer[100];
+  size_t size = sizeof(buffer);
 
   USB.ON();
   RTC.ON();
-
-  menuPrint();
 
   // Go interactive or not
   if (input(F("Press Enter to start interactive mode. Wait 2 seconds to skip:"), 2000) == NULL)
@@ -639,14 +639,50 @@ void WaspUIO::menu()
   }
 
   do {
-    menuPrint();
-    cr.print(F("0. Print variables"));
-    cr.print(F("1. Set time (RTC)"));
-    cr.print(F("2. Log (SD, USB)"));
-    cr.print(F("3. Network"));
-    cr.print(F("4. Sensors (Agr board)"));
-    cr.print(F("5. Sensors (SDI-12)"));
-    cr.print(F("6. Open SD menu"));
+    cr.print();
+    cr.print(F("Battery: %d %%"), batteryLevel);
+    if (! hasSD)
+    {
+      cr.print(F("SD card is missing!"));
+    }
+    cr.print();
+
+    // Time
+    cr.print(F("1. Time     : %s"), RTC.getTime());
+
+    // Logging
+    buffer[0] = '\0';
+    if (flags & FLAG_LOG_USB) strnjoin_F(buffer, F("USB"), F(", "), size);
+    if (flags & FLAG_LOG_SD)  strnjoin_F(buffer, F("SD"), F(", "), size);
+    cr.print(F("2. Log      : level=%s output=%s"), cr.loglevel2str(cr.loglevel), buffer);
+
+    // Network
+    if (featureNetwork == 0)  strncpy_F(buffer, F("Disabled"), size);
+    else if (network == NULL) strncpy_F(buffer, F("UNDEFINED"), size);
+    else                      strncpy(buffer, network->name, size);
+    cr.print(F("3. Network  : %s"), buffer);
+
+    // Agr board
+    buffer[0] = '\0';
+    if (sensors & FLAG_AGR_SENSIRION)   strnjoin_F(buffer, F("Sensirion"), F(", "), size);
+    if (sensors & FLAG_AGR_PRESSURE)    strnjoin_F(buffer, F("Pressure"), F(", "), size);
+    if (sensors & FLAG_AGR_LEAFWETNESS) strnjoin_F(buffer, F("Leaf Wetness"), F(", "), size);
+    if (! buffer[0])                    strncpy_F(buffer, F("(none)"), size);
+    cr.print(F("4. Agr board: %s"), buffer);
+
+    // SDI-12
+    buffer[0] = '\0';
+    if (sensors & FLAG_SDI12_CTD10)     strnjoin_F(buffer, F("CTD-10"), F(", "), size);
+    if (sensors & FLAG_SDI12_DS2)       strnjoin_F(buffer, F("DS-2"), F(", "), size);
+    if (! buffer[0])                    strncpy_F(buffer, F("(none)"), size);
+    cr.print(F("5. SDI-12   : %s"), buffer);
+
+    // SD
+    if (hasSD)
+    {
+      cr.print(F("6. Open SD menu"));
+    }
+
     cr.print(F("9. Exit"));
     cr.print();
     str = input(F("==> Enter numeric option:"), 0);
@@ -668,8 +704,11 @@ void WaspUIO::menu()
         menuSDI12();
         break;
       case '6':
-        SD.menu(30000);
-        break;
+        if (hasSD)
+	{
+          SD.menu(30000);
+          break;
+        }
       case '9':
         cr.print();
         goto exit;
@@ -677,66 +716,13 @@ void WaspUIO::menu()
   } while (true);
 
 exit:
+  // TODO Log configuration
+
   RTC.OFF();
   if (! featureUSB)
   {
     USB.OFF();
   }
-}
-
-/**
- * Function to print configuration to USB
- *
- * Parameters: void
- * Returns   : void
- *
- */
-
-void WaspUIO::menuPrint()
-{
-  cr.print();
-
-  // Time
-  cr.print(F("Time   : %s"), RTC.getTime());
-
-  // Battery
-  cr.print(F("Battery: %d %%"), batteryLevel);
-
-  // USB
-  if (featureUSB)
-  {
-    cr.print(F("USB    : Enabled"));
-  }
-  else
-  {
-    cr.print(F("USB    : Disabled"));
-  }
-
-  // Network
-  if (featureNetwork == 0)
-  {
-    cr.print(F("Network: Disabled"));
-  }
-  else if (network == NULL)
-  {
-    cr.print(F("Network: UNDEFINED"));
-  }
-  else
-  {
-    cr.print(F("Network: %s"), network->name);
-  }
-
-  // SD
-  if (hasSD)
-  {
-    cr.print(F("SD card: Available"));
-  }
-  else
-  {
-    cr.print(F("SD card: MISSING"));
-  }
-
-  cr.print();
 }
 
 /**
