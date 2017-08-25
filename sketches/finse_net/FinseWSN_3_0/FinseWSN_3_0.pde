@@ -64,9 +64,6 @@ void setup()
     //actionGps();
   }
 
-  // Boot
-  info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
-
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
 

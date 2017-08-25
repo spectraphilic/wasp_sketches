@@ -94,6 +94,10 @@ void menuSDI12();
 void menuSDI12Sensor(uint32_t sensor);
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint32_t sensor);
+const char* menuFormatLog(char* dst, size_t size);
+const char* menuFormatNetwork(char* dst, size_t size);
+const char* menuFormatAgr(char* dst, size_t size);
+const char* menuFormatSdi(char* dst, size_t size);
 
 /// public methods and attributes ////////////
 public:

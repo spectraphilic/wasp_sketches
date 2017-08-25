@@ -622,6 +622,42 @@ const char* WaspUIO::input(const __FlashStringHelper * prompt_F, unsigned long t
  *
  */
 
+const char* WaspUIO::menuFormatLog(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (flags & FLAG_LOG_USB) strnjoin_F(dst, F("USB"), F(", "), size);
+  if (flags & FLAG_LOG_SD)  strnjoin_F(dst, F("SD"), F(", "), size);
+  return dst;
+}
+
+const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
+{
+  if (featureNetwork == 0)  strncpy_F(dst, F("Disabled"), size);
+  else if (network == NULL) strncpy_F(dst, F("UNDEFINED"), size);
+  else                      strncpy(dst, network->name, size);
+  return dst;
+}
+
+const char* WaspUIO::menuFormatAgr(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (sensors & FLAG_AGR_SENSIRION)   strnjoin_F(dst, F("Sensirion"), F(", "), size);
+  if (sensors & FLAG_AGR_PRESSURE)    strnjoin_F(dst, F("Pressure"), F(", "), size);
+  if (sensors & FLAG_AGR_LEAFWETNESS) strnjoin_F(dst, F("Leaf Wetness"), F(", "), size);
+  if (! dst[0])                       strncpy_F(dst, F("(none)"), size);
+  return dst;
+}
+
+const char* WaspUIO::menuFormatSdi(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (sensors & FLAG_SDI12_CTD10) strnjoin_F(dst, F("CTD-10"), F(", "), size);
+  if (sensors & FLAG_SDI12_DS2)   strnjoin_F(dst, F("DS-2"), F(", "), size);
+  if (! dst[0])                   strncpy_F(dst, F("(none)"), size);
+  return dst;
+}
+
+
 void WaspUIO::menu()
 {
   const char* str;
@@ -647,37 +683,12 @@ void WaspUIO::menu()
     }
     cr.print();
 
-    // Time
+    // Menu
     cr.print(F("1. Time     : %s"), RTC.getTime());
-
-    // Logging
-    buffer[0] = '\0';
-    if (flags & FLAG_LOG_USB) strnjoin_F(buffer, F("USB"), F(", "), size);
-    if (flags & FLAG_LOG_SD)  strnjoin_F(buffer, F("SD"), F(", "), size);
-    cr.print(F("2. Log      : level=%s output=%s"), cr.loglevel2str(cr.loglevel), buffer);
-
-    // Network
-    if (featureNetwork == 0)  strncpy_F(buffer, F("Disabled"), size);
-    else if (network == NULL) strncpy_F(buffer, F("UNDEFINED"), size);
-    else                      strncpy(buffer, network->name, size);
-    cr.print(F("3. Network  : %s"), buffer);
-
-    // Agr board
-    buffer[0] = '\0';
-    if (sensors & FLAG_AGR_SENSIRION)   strnjoin_F(buffer, F("Sensirion"), F(", "), size);
-    if (sensors & FLAG_AGR_PRESSURE)    strnjoin_F(buffer, F("Pressure"), F(", "), size);
-    if (sensors & FLAG_AGR_LEAFWETNESS) strnjoin_F(buffer, F("Leaf Wetness"), F(", "), size);
-    if (! buffer[0])                    strncpy_F(buffer, F("(none)"), size);
-    cr.print(F("4. Agr board: %s"), buffer);
-
-    // SDI-12
-    buffer[0] = '\0';
-    if (sensors & FLAG_SDI12_CTD10)     strnjoin_F(buffer, F("CTD-10"), F(", "), size);
-    if (sensors & FLAG_SDI12_DS2)       strnjoin_F(buffer, F("DS-2"), F(", "), size);
-    if (! buffer[0])                    strncpy_F(buffer, F("(none)"), size);
-    cr.print(F("5. SDI-12   : %s"), buffer);
-
-    // SD
+    cr.print(F("2. Log      : level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
+    cr.print(F("3. Network  : %s"), menuFormatNetwork(buffer, size));
+    cr.print(F("4. Agr board: %s"), menuFormatAgr(buffer, size));
+    cr.print(F("5. SDI-12   : %s"), menuFormatSdi(buffer, size));
     if (hasSD)
     {
       cr.print(F("6. Open SD menu"));
@@ -716,7 +727,11 @@ void WaspUIO::menu()
   } while (true);
 
 exit:
-  // TODO Log configuration
+  info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
+  info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
+  info(F("Config Network: %s"), menuFormatNetwork(buffer, size));
+  info(F("Config Agr board: %s"), menuFormatAgr(buffer, size));
+  info(F("Config SDI-12: %s"), menuFormatSdi(buffer, size));
 
   RTC.OFF();
   if (! featureUSB)
