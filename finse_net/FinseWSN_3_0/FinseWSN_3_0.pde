@@ -45,11 +45,6 @@ void setup()
 {
   UIO.initTime();
 
-  // Hard-code behaviour. Uncomment this if you do not wish to initialize
-  // interactively.
-  //UIO.updateEEPROM(EEPROM_UIO_FLAGS, FLAG_USB_OUTPUT);
-  //UIO.initNet(NETWORK_BROADCAST);
-
   // Initialize variables, from EEPROM (USB print, OTA programming, ..)
   UIO.initVars();
 
@@ -111,6 +106,9 @@ void loop()
     info(F("*** RTC interruption, battery level = %d"), UIO.batteryLevel);
     //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
 
+    // Create the first frame
+    UIO.createFrame(true);
+
     cr.reset();
     cr.spawn(taskHealthFrame);
     cr.spawn(taskSensors);
@@ -132,6 +130,12 @@ void loop()
       //cr.spawn(taskGps);
     }
     cr.run();
+
+    // Save the last frame, if there is something to save
+    if (frame.numFields > 1)
+    {
+      UIO.frame2Sd();
+    }
   }
   else
   {
