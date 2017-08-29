@@ -6,22 +6,36 @@ Current developers:
 
 # Installation
 
-Installation in 2 steps.
+(1) Let's say we have everything in one folder. First clone our projects, our
+fork of waspmoteapi and the sketches:
 
-Replace the libraries from the ide by those in our fork of waspmoteapi:
+    $ mkdir waspmote-uio
+    $ cd waspmote-uio
+    $ git clone git@github.com:spectraphilic/waspmoteapi-uio.git
+    $ git clone git@github.com:spectraphilic/wasp_sketches.git
 
-    $ git clone https://github.com/spectraphilic/waspmoteapi-uio.git waspmoteapi
-    $ cd [...]/waspmote-pro-ide-v06.02
+(2) Download and install the IDE:
+
+    $ mkdir waspmote-pro-ide-v06.02
+    $ cd waspmote-pro-ide-v06.02
+    $ wget http://downloads.libelium.com/waspmote-pro-ide-v06.02-linux64.zip
+    $ unzip waspmote-pro-ide-v06.02-linux64.zip
+    $ ./install.sh
+
+(3) Replace the libraries from the IDE by those in our fork of waspmoteapi:
+
+    $ cd waspmote-pro-ide-v06.02
     $ mv libraries libraries.bak
+    $ ln -s ../waspmoteapi-uio/libraries
 
-Open the Preferences dialog in the IDE and change the "Sketchbook location"
-to point to the project root (where the libraries folder is). For example:
+(4) Open the Preferences dialog in the IDE and change the "Sketchbook location"
+to point to the sketches project (where the libraries folder is). For example:
 
     [...]/wasp_sketches
 
-*Alternative*: Open the Preferences dialog in the IDE to find out where is your
-"Sketchbook location". For example mine is "~/Arduino". Then change directory
-to the libraries folder within:
+(4 alternative) Open the Preferences dialog in the IDE to find out where is
+your "Sketchbook location". For example mine is "~/Arduino". Then change
+directory to the libraries folder within:
 
     $ cd ~/Arduino/libraries
 
