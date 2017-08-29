@@ -770,7 +770,7 @@ void WaspUIO::menuTime()
         break;
       case '2':
         cr.print(F("Setting time from GPS, please wait, it may take a few minutes"));
-        //actionGps();
+        taskGps();
         break;
       case '9':
         cr.print();
