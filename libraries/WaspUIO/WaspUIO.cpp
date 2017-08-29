@@ -795,6 +795,7 @@ void WaspUIO::menuTimeManual()
     if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
     {
       setTime(year, month, day, hour, minute, second);
+      initTime();
       cr.print(F("Current time is %s"), RTC.getTime());
       return;
     }
@@ -2106,6 +2107,7 @@ CR_TASK(taskGps)
   // Set time (XXX could optimize, as part of the work in setTimeFromGPS is
   // already done in getPosition above)
   GPS.setTimeFromGPS();
+  UIO.initTime();
   info(F("setTimeFromGPS: Success, time updated"));
 
   // Location
