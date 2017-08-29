@@ -2112,7 +2112,7 @@ CR_TASK(taskGps)
   ADD_SENSOR(SENSOR_GPS,
              GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator),
              GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator));
-  ADD_SENSOR(SENSOR_ALTITUDE, GPS.altitude);
+  //ADD_SENSOR(SENSOR_ALTITUDE, GPS.altitude);
   //ADD_SENSOR(SENSOR_SPEED, GPS.speed);
   //ADD_SENSOR(SENSOR_COURSE, GPS.course);
 
