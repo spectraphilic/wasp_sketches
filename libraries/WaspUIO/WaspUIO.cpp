@@ -446,9 +446,13 @@ void WaspUIO::createFrame(bool discard)
     frame2Sd();
   }
 
-  frame.createFrame(ASCII);
+  frame.createFrame(BINARY);
+
+  // In binary frames, the timestamp must be first, that's what I deduce from
+  // frame.addTimestamp
   frame.addSensor(SENSOR_TST, epochTime);
 }
+
 
 /**
  * This function:
@@ -522,10 +526,156 @@ uint8_t WaspUIO::frame2Sd()
   // (4) Print frame to USB
   if (featureUSB)
   {
-    frame.showFrame();
+    showFrame();
   }
 
   return 0;
+}
+
+/**
+ * Print the frame to USB. If it's ASCII just call frame.showFrame; if it's
+ * binary decode and print it.
+ */
+
+void WaspUIO::showFrame()
+{
+   uint8_t *p;
+   uint8_t nbytes;
+   char waspmote_id[17];
+   uint8_t i, j;
+   char c;
+
+   // ASCII Frame
+   if (frame.buffer[3] & 128)
+   {
+     frame.showFrame();
+     return;
+   }
+
+   //frame.showFrame();
+
+   // Binary Frame
+   cr.print(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
+   p = frame.buffer;
+
+   // Start delimiter
+   if (strncmp((const char*) p, "<=>", 3) != 0)
+   {
+     cr.print(F("Error reading Start delimiter <=>"));
+     return;
+   }
+   p += 3;
+
+   // Frame type (TODO Print text identifier: Information, TimeOut, ...)
+   // Don't clear the most significant bit, we already know it's zero
+   cr.print(F("Frame type: %d"), *p++);
+
+   // Number of bytes
+   nbytes = *p++;
+   //cr.print(F("Number of bytes left: %d"), nbytes);
+
+   // Serial ID
+   //cr.print(F("BOOT VERSION %c"), _boot_version);
+   if (_boot_version >= 'G')
+   {
+     // v15
+     p += 8;
+     cr.print(F("Serial ID: TODO"));
+   }
+   else
+   {
+     // v12
+     cr.print(F("Serial ID: %lu"), *(uint32_t *)p);
+     p += 4; // v12
+   }
+
+   // Waspmote ID
+   //memset(waspmote_id, 0x00, sizeof(waspmote_id));
+   for (i = 0; i < 17 ; i++)
+   {
+     c = (char) *p++;
+     if (c == '#')
+     {
+       waspmote_id[i] = '\0';
+       break;
+     }
+     waspmote_id[i] = c;
+   }
+   if (c != '#')
+   {
+     cr.print(F("Error reading Waspmote ID"));
+     return;
+   }
+   cr.print(F("Waspmote ID: %s"), waspmote_id);
+
+   // Sequence
+   cr.print(F("Sequence: %d"), *p++);
+
+   // Payload
+   uint8_t sensor_id, nfields, type, decimals;
+   uint8_t len;
+   char name[20];
+   char value[50];
+   for (i = 0; i < frame.numFields; i++)
+   {
+     sensor_id = *p++;
+     if (_boot_version >= 'G')
+     {
+       // v12
+       strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[sensor_id])));
+       nfields = (uint8_t)pgm_read_word(&(FRAME_SENSOR_FIELD_TABLE[sensor_id]));
+       type = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[sensor_id]));
+       decimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[sensor_id]));
+     }
+     else
+     {
+       // v15
+       strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[sensor_id])));
+       nfields = (uint8_t)pgm_read_word(&(SENSOR_FIELD_TABLE[sensor_id]));
+       type = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[sensor_id]));
+       decimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[sensor_id]));
+     }
+     for (j = 0; j < nfields; j++)
+     {
+       switch (type)
+       {
+         case 0: // uint8_t
+           cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
+           break;
+         case 1: // int
+           cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
+           p += 2;
+           break;
+         case 2: // double
+           Utils.float2String(*(float *)p, value, decimals);
+           cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+           p += 4;
+           break;
+         case 3: // char*
+           len = *p++;
+           if (len > sizeof(value) - 1)
+           {
+             cr.print(F("Error reading sensor value, string too long %d"), len);
+             return;
+           }
+           strncpy(value, (char*) p, len);
+           p += len;
+           cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+           break;
+         case 4: // uint32_t
+           cr.print(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
+           p += 4;
+           break;
+         case 5: // uint8_t*
+           cr.print(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
+           return;
+         default:
+           cr.print(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
+           return;
+       }
+     }
+   }
+   cr.print(F("=========================================="), frame.numFields, frame.length);
 }
 
 
@@ -716,7 +866,7 @@ void WaspUIO::menu()
         break;
       case '6':
         if (hasSD)
-	{
+        {
           SD.menu(30000);
           break;
         }

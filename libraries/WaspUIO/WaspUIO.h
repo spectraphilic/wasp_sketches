@@ -182,6 +182,7 @@ void delLogActivity(void);
 // Frames
 void createFrame(bool discard=false);
 uint8_t frame2Sd();
+void showFrame();
 
 // Network related
 void OTA_communication(int OTA_duration);
