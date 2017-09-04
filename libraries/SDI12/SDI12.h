@@ -1,7 +1,7 @@
 /* ======================== Arduino SDI-12 =================================
 
-Arduino library for SDI-12 communications to a wide variety of environmental 
-sensors. This library provides a general software solution, without requiring 
+Arduino library for SDI-12 communications to a wide variety of environmental
+sensors. This library provides a general software solution, without requiring
 any additional hardware.
 
 ======================== Attribution & License =============================
@@ -39,10 +39,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef SDI12_h
 #define SDI12_h
 
-								//  Import Required Libraries
+                //  Import Required Libraries
 #include <avr/interrupt.h>      // interrupt handling
 #include <util/parity.h>         // optimized parity bit handling
-#include <inttypes.h>			// integer types library
+#include <inttypes.h>      // integer types library
 #include <WaspClasses.h>            // Waspmote core library
 #include <WString.h>  // TODO Better avoid use of string
 #include <Coroutines.h> // coroutine for millisdiff fucntions
@@ -55,7 +55,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     PJ0-6 = PCINT9-PCINT15     *Not available on 1281
     PK0-7 = PCINT16-PCINT23    *Not available on 1281
 
-  The Waspmote uses a 1281 uProcessor and utilizes all its interrupt pins 
+  The Waspmote uses a 1281 uProcessor and utilizes all its interrupt pins
   for other things. Without the ability to generate a pin change interrupt
   we have to modify this library to poll for a response.
 */
@@ -63,34 +63,34 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class SDI12
 {
 private:
-  static SDI12 *_activeObject;	// static pointer to active SDI12 instance
+  static SDI12 *_activeObject;  // static pointer to active SDI12 instance
   void setState(uint8_t state); // sets the state of the SDI12 objects
-  void wakeSensors();			// used to wake up the SDI12 bus
-  void writeChar(uint8_t out); 	// used to send a char out on the data line
-  int receiveChar();			// used by the ISR to grab a char from data line /*  Modified for Waspmote: return value indicates whether char was seen  */
-  
-  static const char * getStateName(uint8_t state);     // get state name (in ASCII)  
-  
+  void wakeSensors();      // used to wake up the SDI12 bus
+  void writeChar(uint8_t out);   // used to send a char out on the data line
+  int receiveChar();      // used by the ISR to grab a char from data line /*  Modified for Waspmote: return value indicates whether char was seen  */
+
+  static const char * getStateName(uint8_t state);     // get state name (in ASCII)
+
 public:
   char sdi12_buffer[75];
-  SDI12(uint8_t dataPin);		// constructor
-  ~SDI12();						// destructor
-  void begin();					// enable SDI-12 object
-  void end();					// disable SDI-12 object
-  
-  void forceHold(); 			// sets line state to HOLDING
-  void sendCommand(String cmd);	// sends the string 'cmd' out on the data line
-  void sendResponse(String resp);	// sends the String resp out on the data line (JH)
-  
+  SDI12(uint8_t dataPin);    // constructor
+  ~SDI12();            // destructor
+  void begin();          // enable SDI-12 object
+  void end();          // disable SDI-12 object
+
+  void forceHold();       // sets line state to HOLDING
+  void sendCommand(String cmd);  // sends the string 'cmd' out on the data line
+  void sendResponse(String resp);  // sends the String resp out on the data line (JH)
+
   int listen(unsigned long listenTimeout); // returns 0 if chars received   /* Added for Waspmote: polls for characters */
 
-  int available();			// returns the number of bytes available in buffer
-  int peek();				// reveals next byte in buffer without consuming
-  int read();				// returns next byte in the buffer (consumes)
-  void flush();				// clears the buffer 
+  int available();      // returns the number of bytes available in buffer
+  int peek();        // reveals next byte in buffer without consuming
+  int read();        // returns next byte in the buffer (consumes)
+  void flush();        // clears the buffer
 
-  bool setActive(); 		// set this instance as the active SDI-12 instance
-  bool isActive();			// check if this instance is active
+  bool setActive();     // set this instance as the active SDI-12 instance
+  bool isActive();      // check if this instance is active
 
   static inline void handleInterrupt(); // intermediary used by the ISR
 
