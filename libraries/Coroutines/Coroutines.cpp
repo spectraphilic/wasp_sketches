@@ -118,6 +118,12 @@ void Loop::run()
   start = millis();
   Task* task;
 
+  // Reset if stuck for 4 minutes (v15 only)
+  if (_boot_version >= 'H')
+  {
+    RTC.setWatchdog(4);
+  }
+
   while (next - first)
   {
     //USB.printf((char*)"%d %d\n", first, next);
@@ -151,6 +157,12 @@ void Loop::run()
         }
       }
     }
+  }
+
+  // v15 only
+  if (_boot_version >= 'H')
+  {
+    RTC.unSetWatchdog();
   }
 }
 
