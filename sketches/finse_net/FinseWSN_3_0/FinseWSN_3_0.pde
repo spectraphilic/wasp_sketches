@@ -13,10 +13,7 @@
 // 2. Definitions
 
 // 3. Global variables declaration
-uint8_t error;
 const char* alarmTime;
-int pendingPulses;
-int randomNumber;
 
 // Sampling period in minutes, keep these two definitions in sync. The value
 // must be a factor of 60 to get equally spaced samples.
@@ -53,7 +50,7 @@ void setup()
   UIO.menu();
 
   // Create/Open files
-  error = UIO.initSD();
+  UIO.initSD();
   UIO.openFiles();
 
   // Set time from GPS if wrong time is detected
@@ -67,10 +64,12 @@ void setup()
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
 
-  //UIO.readOwnMAC();
+  //char mac[17];
+  //UIO.readOwnMAC(mac);
 
   // Calculate first alarm (requires batteryLevel)
-  alarmTime = UIO.getNextAlarm(getSampling());
+  char alarmTime[12]; // "00:00:00:00"
+  UIO.getNextAlarm(alarmTime, getSampling());
 
   // Go to sleep
   debug(F("Boot done, go to sleep"));
@@ -141,7 +140,8 @@ void loop()
 
 sleep:
   // Calculate first alarm (requires batteryLevel)
-  alarmTime = UIO.getNextAlarm(getSampling());
+  char alarmTime[12]; // "00:00:00:00"
+  UIO.getNextAlarm(alarmTime, getSampling());
 
   info(F("Loop done in %lu ms."), cr.millisDiff(UIO.start));
   UIO.closeFiles();

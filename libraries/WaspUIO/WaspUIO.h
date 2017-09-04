@@ -57,7 +57,19 @@ struct Network {
   char name[12];
   uint8_t panid[2];
   uint8_t channel;
-  const char* rx_address;
+  char rx_address[17];
+};
+
+// NOTE The low bit of the network id (panID) must start at zero and increment
+// one by one. This is because the low bit is used as an index to this same
+// array.
+
+const Network networks[] PROGMEM = {
+  {"Finse"    , {0x12, 0x00}, 0x0F, "0013A20040779085"},
+  {"Gateway"  , {0x12, 0x01}, 0x0F, "0013A20040DB6048"},
+  {"Broadcast", {0x12, 0x02}, 0x0F, "000000000000FFFF"},
+  {"Finse_alt", {0x12, 0x03}, 0x0F, "13A200416A072300"},
+  {"Other"    , {0x12, 0x04}, 0x0F, "13A200416A072300"}, // Default
 };
 
 /******************************************************************************
@@ -110,7 +122,7 @@ bool hasSD;
 SdFile logFile;
 
 // Network related
-Network* network;
+Network network;
 char buffer[100];
 uint8_t receiveGPSsyncTime();
 uint8_t readRSSI2Frame(void);
@@ -118,8 +130,7 @@ uint8_t readRSSI2Frame(void);
 // Frame files
 const char* tmpFilename = "TMP_2.TXT"; // Change name as format did change
 SdFile tmpFile;
-char dataFilename[18]; // /data/YYMMDD.txt
-void getDataFilename(uint8_t year, uint8_t month, uint8_t date);
+void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 int readline(SdFile &file);
 
 // To keep time without calling RCT each time
@@ -132,32 +143,9 @@ bool updateEEPROM(int address, uint8_t value);
 bool updateEEPROM(int address, uint32_t value);
 
 // Variables: sensors
-float sensirionTemperature;
-float sensirionHumidity;
-float pressure;
-float wetness;
-float DS18B20Temperature;
-float anemometer;
-uint8_t vane;
-int16_t accX, accY, accZ;
 float rtc_temp;
 
-// NOTE The low bit of the network id (panID) must start at zero and increment
-// one by one. This is because the low bit is used as an index to this same
-// array.
-Network networks[5] = {
-  {"Finse",     {0x12, 0x00} , 0x0F, "0013A20040779085"},
-  {"Gateway",   {0x12, 0x01} , 0x0F, "0013A20040DB6048"},
-  {"Broadcast", {0x12, 0x02} , 0x0F, "000000000000FFFF"},
-  {"Finse_alt", {0x12, 0x03} , 0x0F, "13A200416A072300"},
-  {"Other",     {0x12, 0x04} , 0x0F, "13A200416A072300"},
-};
-
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
-const char* RX_ADDRESS;
-uint8_t channel;
-uint8_t encryptionMode;
-uint8_t answer = 0;
 uint8_t featureUSB = 1;
 uint8_t featureNetwork = 1;
 
@@ -186,7 +174,7 @@ void showFrame();
 
 // Network related
 void OTA_communication(int OTA_duration);
-const char* readOwnMAC(void);
+const char* readOwnMAC(char* mac);
 
 // Interactive mode
 const char* input(const __FlashStringHelper *, unsigned long timeout);
@@ -199,7 +187,7 @@ unsigned long getEpochTime(uint16_t &ms);
 uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 
 // Sleep related
-const char* getNextAlarm(const uint8_t minute);
+const char* getNextAlarm(char* alarmTime, const uint8_t minute);
 
 // Other
 uint8_t readMaxbotixSerial(uint8_t samples);

@@ -113,13 +113,11 @@ bool WaspUIO::initVars()
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
   if (panid_low > NETWORK_OTHER)
   {
-    network = NULL;
+    panid_low = 4; // Default: Other
+                   // Be careful to update this if the networks table changes
   }
-  else
-  {
-    network = &networks[panid_low];
-    initNet((network_t) panid_low);
-  }
+  memcpy_P(&network, &networks[panid_low], sizeof network);
+  initNet((network_t) panid_low);
 
   // Sensors
   sensors = eeprom_read_dword((const uint32_t *)EEPROM_UIO_SENSORS);
@@ -226,10 +224,10 @@ void WaspUIO::setNetwork(network_t value)
   updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
 
   // Save panID to EEPROM
-  network = &networks[value];
+  memcpy_P(&network, &networks[value], sizeof network);
   if (
-    updateEEPROM(EEPROM_UIO_NETWORK, network->panid[0]) &&
-    updateEEPROM(EEPROM_UIO_NETWORK+1, network->panid[1])
+    updateEEPROM(EEPROM_UIO_NETWORK, network.panid[0]) &&
+    updateEEPROM(EEPROM_UIO_NETWORK+1, network.panid[1])
   )
   {
     cr.print(F("INFO Network id saved to EEPROM"));
@@ -257,16 +255,15 @@ void WaspUIO::initNet(network_t value)
   featureNetwork = 1;
 
   // Addressing
-  network = &networks[value];
-  cr.print(F("INFO Configure network: %s"), network->name);
-  if (strcmp(network->rx_address, "000000000000FFFF") == 0)
+  memcpy_P(&network, &networks[value], sizeof network);
+  cr.print(F("INFO Configure network: %s"), network.name);
+  if (strcmp(network.rx_address, "000000000000FFFF") == 0)
   {
     addressing = BROADCAST_MODE;
   }
 
   // This is common to all networks, for now
   frame.setID((char*) "");
-  encryptionMode = 0;
   //Utils.setAuthKey(key_access);
 
   // Set Frame size. Will be 73 bytes for XBeeDM-pro S1
@@ -280,7 +277,7 @@ void WaspUIO::initNet(network_t value)
   delay(50);
 
   // Set channel, check AT commmand execution flag
-  xbeeDM.setChannel(network->channel);
+  xbeeDM.setChannel(network.channel);
   if( xbeeDM.error_AT == 0 ) {
     cr.print(F("DEBUG Channel set OK")); // Implement string in print function
   } else {
@@ -288,7 +285,7 @@ void WaspUIO::initNet(network_t value)
   }
 
   // set PANID, check AT commmand execution flag
-  xbeeDM.setPAN(network->panid);
+  xbeeDM.setPAN(network.panid);
   if( xbeeDM.error_AT == 0 ) {
     cr.print(F("DEBUG PAN ID set OK"));
   } else {
@@ -296,7 +293,8 @@ void WaspUIO::initNet(network_t value)
   }
 
   // set encryption mode (1:enable; 0:disable), check AT commmand execution flag
-  xbeeDM.setEncryptionMode( encryptionMode );
+  // XXX Should we use encryption
+  xbeeDM.setEncryptionMode(0);
   if( xbeeDM.error_AT == 0 ) {
     cr.print(F("DEBUG AES encryption Mode OK"));
   } else {
@@ -483,6 +481,7 @@ uint8_t WaspUIO::frame2Sd()
 {
   int32_t size;
   uint8_t item[7];
+  char dataFilename[18]; // /data/YYMMDD.txt
 
   if (! hasSD)
   {
@@ -494,25 +493,25 @@ uint8_t WaspUIO::frame2Sd()
   item[0] = RTC.year;
   item[1] = RTC.month;
   item[2] = RTC.date;
-  getDataFilename(item[0], item[1], item[2]);
+  getDataFilename(dataFilename, item[0], item[1], item[2]);
 
   // (2) Store frame in archive file
-  if (UIO.createFile(UIO.dataFilename))
+  if (UIO.createFile(dataFilename))
   {
-    error(F("frame2Sd: Failed to create %s"), UIO.dataFilename);
+    error(F("frame2Sd: Failed to create %s"), dataFilename);
     return 1;
   }
 
-  size = SD.getFileSize(UIO.dataFilename);
+  size = SD.getFileSize(dataFilename);
   if (size < 0)
   {
-    error(F("frame2Sd: Failed to get size from %s"), UIO.dataFilename);
+    error(F("frame2Sd: Failed to get size from %s"), dataFilename);
     return 1;
   }
 
-  if (SD.appendln(UIO.dataFilename, frame.buffer, frame.length) == 0)
+  if (SD.appendln(dataFilename, frame.buffer, frame.length) == 0)
   {
-    error(F("frame2Sd: Failed to append frame to %s"), UIO.dataFilename);
+    error(F("frame2Sd: Failed to append frame to %s"), dataFilename);
     return 1;
   }
 
@@ -719,7 +718,7 @@ uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour,
 
 const char* WaspUIO::input(const __FlashStringHelper * prompt_F, unsigned long timeout)
 {
-  static char buffer[100];
+  static char buffer[80];
   char prompt[100];
   size_t max = sizeof(buffer) - 1;
   int i = 0;
@@ -783,9 +782,15 @@ const char* WaspUIO::menuFormatLog(char* dst, size_t size)
 
 const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
 {
-  if (featureNetwork == 0)  strncpy_F(dst, F("Disabled"), size);
-  else if (network == NULL) strncpy_F(dst, F("UNDEFINED"), size);
-  else                      strncpy(dst, network->name, size);
+  if (featureNetwork == 0)
+  {
+    strncpy_F(dst, F("Disabled"), size);
+  }
+  else
+  {
+    strncpy(dst, network.name, size);
+  }
+
   return dst;
 }
 
@@ -1551,9 +1556,9 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t nbyte)
  *
  * Return the length of the line. Or -1 for EOF. Or -2 if error.
  */
-void WaspUIO::getDataFilename(uint8_t year, uint8_t month, uint8_t date)
+void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date)
 {
-  sprintf(dataFilename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
+  sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
 }
 
 /// Preinstantiate Objects /////////////////////////////////////////////////////
@@ -1563,9 +1568,8 @@ WaspUIO UIO = WaspUIO();
 /******************************************************************************/
 /* Function to read Mac Address
 */
-const char* WaspUIO::readOwnMAC(void)
+const char* WaspUIO::readOwnMAC(char* mac)
 {
-  static char mac[17];
   bool on;
 
   // On
@@ -1600,14 +1604,14 @@ const char* WaspUIO::readOwnMAC(void)
 
 uint8_t WaspUIO::readRSSI2Frame(void)
 {
-  const char* ownMAC;
+  char ownMAC[17];
   char sourceMAC[17];
   uint8_t sourcePower;
   int rssi;
   uint8_t error;
 
   // 1. read own MAC address
-  ownMAC = readOwnMAC();
+  readOwnMAC(ownMAC);
 
   xbeeDM.getRSSI();
   //sprintf(archiveFile,"%02u%02u%02u.TXT",RTC.year, RTC.month, RTC.date);
@@ -1699,10 +1703,9 @@ unsigned long WaspUIO::getEpochTime(uint16_t &ms)
  * Return the string of the next alarm.
  *
  */
-const char* WaspUIO::getNextAlarm(const uint8_t minute)
+const char* WaspUIO::getNextAlarm(char* alarmTime, const uint8_t minute)
 {
   uint8_t alarmMinute;
-  static char alarmTime[12]; // "00:00:00:00"
 
   RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
   alarmMinute = (UIO.time.minute / minute) * minute + minute;
@@ -1726,6 +1729,8 @@ const char* WaspUIO::getNextAlarm(const uint8_t minute)
 
 CR_TASK(taskAcc)
 {
+  int16_t accX, accY, accZ;
+
   // ON
   ACC.ON();
 
@@ -1737,12 +1742,15 @@ CR_TASK(taskAcc)
   }
 
   // Read values
-  UIO.accX = ACC.getX();
-  UIO.accY = ACC.getY();
-  UIO.accZ = ACC.getZ();
+  accX = ACC.getX();
+  accY = ACC.getY();
+  accZ = ACC.getZ();
 
   // OFF
   ACC.OFF();
+
+  // Frame
+  ADD_SENSOR(SENSOR_ACC, accX, accY, accZ);
 
   return CR_TASK_STOP;
 }
@@ -1752,7 +1760,6 @@ CR_TASK(taskHealthFrame)
   // Frame: Device's health (battery, rtc temperature, acc)
   ADD_SENSOR(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel()); // Battery level (uint8_t)
   ADD_SENSOR(SENSOR_IN_TEMP, UIO.rtc_temp); // RTC temperature in Celsius (float)
-  //ADD_SENSOR(SENSOR_ACC, UIO.accX, UIO.accY, UIO.accZ); // Accelerometer
 
   return CR_TASK_STOP;
 }
@@ -1858,13 +1865,15 @@ CR_TASK(taskAgr)
 
 CR_TASK(taskAgrPressure)
 {
+  float pressure;
+
   CR_BEGIN;
 
   SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);   // On
   CR_DELAY(50);
-  UIO.pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE); // Read
+  pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE); // Read
   SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);  // Off
-  ADD_SENSOR(SENSOR_PA, UIO.pressure);
+  ADD_SENSOR(SENSOR_PA, pressure);
 
   CR_END;
 }
@@ -1872,6 +1881,8 @@ CR_TASK(taskAgrPressure)
 /* The Low consumption group. */
 CR_TASK(taskAgrLC)
 {
+  float temperature, humidity, wetness;
+
   CR_BEGIN;
 
   // Leaf wetness
@@ -1880,9 +1891,8 @@ CR_TASK(taskAgrLC)
     info(F("Agr Leaf Wetness ON"));
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
     CR_DELAY(50);
-    UIO.wetness = SensorAgrv20.readValue(SENS_AGR_LEAF_WETNESS);
-    ADD_SENSOR(SENSOR_LW, UIO.wetness);
-    //ADD_SENSOR(SENSOR_TCC, DS18B20Temperature); // Add DS18B20 temperature
+    wetness = SensorAgrv20.readValue(SENS_AGR_LEAF_WETNESS);
+    ADD_SENSOR(SENSOR_LW, wetness);
   }
 
   // Sensirion (temperature, humidity)
@@ -1890,10 +1900,10 @@ CR_TASK(taskAgrLC)
   {
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
     CR_DELAY(50);
-    UIO.sensirionTemperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
-    UIO.sensirionHumidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
-    ADD_SENSOR(SENSOR_TCB, UIO.sensirionTemperature); // Add digital temperature
-    ADD_SENSOR(SENSOR_HUMB, UIO.sensirionHumidity); // Add digital humidity
+    temperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
+    humidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
+    ADD_SENSOR(SENSOR_TCB, temperature); // Add digital temperature
+    ADD_SENSOR(SENSOR_HUMB, humidity); // Add digital humidity
   }
 
   // Soil temp (XXX Not yet implemented)
@@ -1901,7 +1911,8 @@ CR_TASK(taskAgrLC)
   {
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_TEMP_DS18B20);
     CR_DELAY(50);
-    UIO.DS18B20Temperature = SensorAgrv20.readValue(SENS_AGR_TEMP_DS18B20);
+    temperature = SensorAgrv20.readValue(SENS_AGR_TEMP_DS18B20);
+    ADD_SENSOR(SENSOR_TCC, temperature); // Add DS18B20 temperature
   }
 
   // OFF
@@ -1925,25 +1936,26 @@ CR_TASK(taskAgrLC)
 /* The Meteorology group. */
 CR_TASK(taskAgrMeteo)
 {
+  float anemometer;
+  uint8_t vane;
+
   CR_BEGIN;
 
   // Anemometer
   SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_ANEMOMETER);
   CR_DELAY(50);
-  UIO.anemometer = SensorAgrv20.readValue(SENS_AGR_ANEMOMETER);
+  anemometer = SensorAgrv20.readValue(SENS_AGR_ANEMOMETER);
+  ADD_SENSOR(SENSOR_ANE, anemometer);  // Add anemometer value
 
   // Vane
   SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_VANE);
   CR_DELAY(50);
-  UIO.vane = SensorAgrv20.readValue(SENS_AGR_VANE);
+  vane = SensorAgrv20.readValue(SENS_AGR_VANE);
+  ADD_SENSOR(SENSOR_WV, vane);  // Add wind vane value
 
   // Off
   SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_VANE);
   SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_ANEMOMETER);
-
-  // Frame: anemometer, vane
-  ADD_SENSOR(SENSOR_ANE, UIO.anemometer);  // Add anemometer value
-  ADD_SENSOR(SENSOR_WV, UIO.vane);  // Add wind vane value
 
   CR_END;
 }
@@ -2103,6 +2115,7 @@ CR_TASK(taskNetworkSend)
   uint32_t fileSize;
   uint8_t item[7];
   uint32_t t0;
+  char dataFilename[18]; // /data/YYMMDD.txt
 
   CR_BEGIN;
 
@@ -2133,10 +2146,10 @@ CR_TASK(taskNetworkSend)
     }
 
     // Read the frame
-    UIO.getDataFilename(item[0], item[1], item[2]);
-    if (!SD.openFile((char*)UIO.dataFilename, &archive, O_RDONLY))
+    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
+    if (!SD.openFile((char*)dataFilename, &archive, O_RDONLY))
     {
-      error(F("sendFrames: fail to open %s"), UIO.dataFilename);
+      error(F("sendFrames: fail to open %s"), dataFilename);
       CR_ERROR;
     }
     archive.seekSet(*(uint32_t *)(item + 3));
@@ -2144,7 +2157,7 @@ CR_TASK(taskNetworkSend)
     archive.close();
 
     // Send the frame
-    if (xbeeDM.send((char*)UIO.network->rx_address, SD.buffer) == 1)
+    if (xbeeDM.send((char*)UIO.network.rx_address, SD.buffer) == 1)
     {
       warn(F("sendFrames: Send failure"));
       CR_ERROR;
