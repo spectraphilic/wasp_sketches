@@ -446,7 +446,8 @@ void WaspUIO::createFrame(bool discard)
     frame2Sd();
   }
 
-  frame.createFrame(BINARY);
+  frame.createFrame(ASCII);
+  //frame.createFrame(BINARY);
 
   // In binary frames, the timestamp must be first, that's what I deduce from
   // frame.addTimestamp
