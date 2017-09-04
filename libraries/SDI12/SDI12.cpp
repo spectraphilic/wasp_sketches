@@ -575,10 +575,10 @@ if(out & mask){
 + 4.2.4 - Send the stop bit. The stop bit is always a '1', so we simply
 write the dataPin LOW for SPACING microseconds.
 
-4.3 - sendCommand(String cmd) is a publicly accessible function that
+4.3 - sendCommand(const char* cmd) is a publicly accessible function that
 sends out a String byte by byte the command line.
 
-4.4 - sendResponse(String resp) is a publicly accessible function that
+4.4 - sendResponse(const char* resp) is a publicly accessible function that
 sends out an 8.33 ms marking and a String byte by byte the command line.
 
 */
@@ -616,30 +616,33 @@ void SDI12::writeChar(uint8_t out)
 }
 
 //  4.3  - this function sends out the characters of the String cmd, one by one
-void SDI12::sendCommand(String cmd){
+void SDI12::sendCommand(const char* cmd){
   wakeSensors();              // wake up sensors
-  for (int i = 0; i < cmd.length(); i++){
-  writeChar(cmd[i]);             // write each characters
+  for (int i = 0; i < strlen(cmd); i++)
+  {
+    writeChar(cmd[i]);             // write each characters
   }
   setState(LISTENING);             // listen for reply
 
-  //New for waspmote
-  if(POLLING){
-  listen(16700);  // 16.7ms is the max time for a response to be received
-          //   after a command is sent
+  // New for waspmote
+  if (POLLING)
+  {
+    listen(16700);  // 16.7ms is the max time for a response to be received
+                    //   after a command is sent
   }
 }
 
 //  4.4 - this function sets up for a response, then sends out the characters
 //      of String resp, one by one (for slave) (JH)
-void SDI12::sendResponse(String resp)
+void SDI12::sendResponse(const char* resp)
 {
   // myDiagPrintLn(String("sendResponse - resp ") + resp);
   setState(TRANSMITTING);          // 8.33 ms marking before response
   digitalWrite(_dataPin, LOW);
   delayMicroseconds(8330);
-  for (int unsigned i = 0; i < resp.length(); i++){
-  writeChar(resp[i]);             // write each characters
+  for (int unsigned i = 0; i < strlen(resp); i++)
+  {
+    writeChar(resp[i]);             // write each characters
   }
   setState(LISTENING);             // return to listening state
 } // (JH)

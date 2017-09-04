@@ -44,7 +44,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <util/parity.h>         // optimized parity bit handling
 #include <inttypes.h>      // integer types library
 #include <WaspClasses.h>            // Waspmote core library
-#include <WString.h>  // TODO Better avoid use of string
 #include <Coroutines.h> // coroutine for millisdiff fucntions
 //=======
 
@@ -79,8 +78,8 @@ public:
   void end();          // disable SDI-12 object
 
   void forceHold();       // sets line state to HOLDING
-  void sendCommand(String cmd);  // sends the string 'cmd' out on the data line
-  void sendResponse(String resp);  // sends the String resp out on the data line (JH)
+  void sendCommand(const char* cmd);   // sends the string 'cmd' out on the data line
+  void sendResponse(const char* resp); // sends the string 'resp' out on the data line (JH)
 
   int listen(unsigned long listenTimeout); // returns 0 if chars received   /* Added for Waspmote: polls for characters */
 
