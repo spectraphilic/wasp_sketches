@@ -813,6 +813,14 @@ const char* WaspUIO::menuFormatSdi(char* dst, size_t size)
   return dst;
 }
 
+const char* WaspUIO::menuFormat1Wire(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (sensors & FLAG_1WIRE_DS1820) strnjoin_F(dst, F("DS1820"), F(", "), size);
+  if (! dst[0])                    strncpy_F(dst, F("(none)"), size);
+  return dst;
+}
+
 
 void WaspUIO::menu()
 {
@@ -845,9 +853,10 @@ void WaspUIO::menu()
     cr.print(F("3. Network  : %s"), menuFormatNetwork(buffer, size));
     cr.print(F("4. Agr board: %s"), menuFormatAgr(buffer, size));
     cr.print(F("5. SDI-12   : %s"), menuFormatSdi(buffer, size));
+    cr.print(F("6. OneWire  : %s"), menuFormat1Wire(buffer, size));
     if (hasSD)
     {
-      cr.print(F("6. Open SD menu"));
+      cr.print(F("7. Open SD menu"));
     }
 
     cr.print(F("9. Exit"));
@@ -871,6 +880,9 @@ void WaspUIO::menu()
         menuSDI12();
         break;
       case '6':
+        menu1Wire();
+        break;
+      case '7':
         if (hasSD)
         {
           SD.menu(30000);
@@ -986,13 +998,13 @@ void WaspUIO::menuAgr()
     switch (str[0])
     {
       case '1':
-        menuAgrSensor(FLAG_AGR_SENSIRION);
+        menuSensor(FLAG_AGR_SENSIRION);
         break;
       case '2':
-        menuAgrSensor(FLAG_AGR_PRESSURE);
+        menuSensor(FLAG_AGR_PRESSURE);
         break;
       case '3':
-        menuAgrSensor(FLAG_AGR_LEAFWETNESS);
+        menuSensor(FLAG_AGR_LEAFWETNESS);
         break;
       case '9':
         cr.print();
@@ -1006,7 +1018,7 @@ const char* WaspUIO::sensorStatus(uint32_t sensor)
   return (sensors & sensor)? "enabled": "disabled";
 }
 
-void WaspUIO::menuAgrSensor(uint32_t sensor)
+void WaspUIO::menuSensor(uint32_t sensor)
 {
   const char *str;
 
@@ -1126,6 +1138,40 @@ void WaspUIO::menuSDI12Sensor(uint32_t sensor)
         cr.print(F("Disabling SDI-12"));
         mySDI12.end();
         PWR.setSensorPower(SENS_5V, SENS_OFF);
+        cr.print();
+        return;
+    }
+  } while (true);
+}
+
+/**
+ * Functions to manage OneWire sensors
+ *
+ * Parameters: void
+ * Returns   : void
+ *
+ */
+
+void WaspUIO::menu1Wire()
+{
+  const char *str;
+
+  do
+  {
+    cr.print();
+    cr.print(F("1. OneWire: DS1820 (%s)"), sensorStatus(FLAG_1WIRE_DS1820));
+    cr.print(F("9. Exit"));
+    cr.print();
+    str = input(F("==> Enter numeric option:"), 0);
+    if (strlen(str) == 0)
+      continue;
+
+    switch (str[0])
+    {
+      case '1':
+        menuSensor(FLAG_1WIRE_DS1820);
+        break;
+      case '9':
         cr.print();
         return;
     }
@@ -1776,7 +1822,8 @@ CR_TASK(taskSensors)
 {
   bool agr = UIO.sensors & (FLAG_AGR_PRESSURE | FLAG_AGR_LEAFWETNESS | FLAG_AGR_SENSIRION);
   bool sdi = UIO.sensors & (FLAG_SDI12_CTD10 | FLAG_SDI12_DS2);
-  static tid_t agr_id, sdi_id;
+  bool onewire = UIO.sensors & (FLAG_1WIRE_DS1820);
+  static tid_t agr_id, sdi_id, onewire_id;
 
   CR_BEGIN;
 
@@ -1786,10 +1833,18 @@ CR_TASK(taskSensors)
     info(F("Agr board ON"));
     SensorAgrv20.ON();
   }
-  else if (sdi)
+  else
   {
-    info(F("5V ON"));
-    PWR.setSensorPower(SENS_5V, SENS_ON);
+    if (sdi)
+    {
+      info(F("5V ON"));
+      PWR.setSensorPower(SENS_5V, SENS_ON);
+    }
+    if (onewire)
+    {
+      info(F("3V3 ON"));
+      PWR.setSensorPower(SENS_3V3, SENS_ON);
+    }
   }
 
   // Wait for power to stabilize
@@ -1804,6 +1859,10 @@ CR_TASK(taskSensors)
   {
     CR_SPAWN2(taskSdi, sdi_id);
   }
+  if (onewire)
+  {
+    //CR_SPAWN2(task1Wire, onewire_id);
+  }
 
   // Wait for tasks to complete
   if (agr)
@@ -1814,6 +1873,10 @@ CR_TASK(taskSensors)
   {
     CR_JOIN(sdi_id);
   }
+  if (onewire)
+  {
+    //CR_JOIN(onewire_id);
+  }
 
   // Power Off
   if (agr)
@@ -1821,10 +1884,18 @@ CR_TASK(taskSensors)
     info(F("Agr board OFF"));
     SensorAgrv20.OFF();
   }
-  else if (sdi)
+  else
   {
-    info(F("5V OFF"));
-    PWR.setSensorPower(SENS_5V, SENS_OFF);
+    if (sdi)
+    {
+      info(F("5V OFF"));
+      PWR.setSensorPower(SENS_5V, SENS_OFF);
+    }
+    if (onewire)
+    {
+      info(F("3V3 OFF"));
+      PWR.setSensorPower(SENS_3V3, SENS_OFF);
+    }
   }
 
   CR_END;

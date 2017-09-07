@@ -35,12 +35,14 @@
 
 // Sensors
 // Agri board (reserve first 8 bits)
-const uint32_t FLAG_AGR_SENSIRION = 1;
-const uint32_t FLAG_AGR_PRESSURE = 2;
-const uint32_t FLAG_AGR_LEAFWETNESS = 4;
-// SDI-10 (next 8 bits)
-const uint32_t FLAG_SDI12_CTD10 = 256;
-const uint32_t FLAG_SDI12_DS2 = 512;
+const uint32_t FLAG_AGR_SENSIRION = 1ul << 0;
+const uint32_t FLAG_AGR_PRESSURE = 1ul << 1;
+const uint32_t FLAG_AGR_LEAFWETNESS = 1ul << 2;
+// SDI-12 (next 8 bits)
+const uint32_t FLAG_SDI12_CTD10 = 1ul << 8;
+const uint32_t FLAG_SDI12_DS2 = 1ul << 9;
+// OneWire
+const uint32_t FLAG_1WIRE_DS1820 = 1ul << 16 ;
 
 #define encryptionKey "1234567890123456"  // General encryption key for UIO networks
 #define key_access (char*) "LIBELIUM"
@@ -101,15 +103,17 @@ void menuLog();
 void menuLog2(uint8_t flag, const char* var);
 void menuLogLevel();
 void menuAgr();
-void menuAgrSensor(uint32_t sensor);
+void menuSensor(uint32_t sensor);
 void menuSDI12();
 void menuSDI12Sensor(uint32_t sensor);
+void menu1Wire();
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint32_t sensor);
 const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);
 const char* menuFormatAgr(char* dst, size_t size);
 const char* menuFormatSdi(char* dst, size_t size);
+const char* menuFormat1Wire(char* dst, size_t size);
 
 /// public methods and attributes ////////////
 public:
