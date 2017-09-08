@@ -1861,7 +1861,7 @@ CR_TASK(taskSensors)
   }
   if (onewire)
   {
-    //CR_SPAWN2(task1Wire, onewire_id);
+    CR_SPAWN2(task1Wire, onewire_id);
   }
 
   // Wait for tasks to complete
@@ -1875,7 +1875,7 @@ CR_TASK(taskSensors)
   }
   if (onewire)
   {
-    //CR_JOIN(onewire_id);
+    CR_JOIN(onewire_id);
   }
 
   // Power Off
@@ -2129,6 +2129,114 @@ CR_TASK(taskSdiDs2)
   b = strtod(next, &next);
   c = strtod(next, &next);
   ADD_SENSOR(SENSOR_SDI12_DS2_2, a, b, c);
+
+  CR_END;
+}
+
+/**
+ * OneWire
+ */
+
+CR_TASK(task1Wire)
+{
+  uint8_t addr[8];
+  uint8_t data[12];
+  uint8_t present, crc, n;
+  int16_t temp;
+  float temp_f;
+  char temp_str[20];
+  WaspOneWire oneWire(DIGITAL8); // pin hardcoded
+
+  CR_BEGIN;
+
+  // For now we only support the DS1820, so here just read that directly
+  // We assume we have a chain of DS1820 sensors, and read all of them.
+
+  present = oneWire.reset();
+  if (! present)
+  {
+    error(F("OneWire no devices attached"));
+    CR_ERROR;
+  }
+
+  // Send conversion command to all sensors
+  oneWire.skip();
+  oneWire.write(0x44, 1); // Keep sensors powered (parasite mode)
+  CR_DELAY(1000);         // 750ms may be enough
+
+  // TODO It may be better to search once in the setup, or in the menu, and
+  // store the addresses in the EEPROM
+  n = 0;
+  oneWire.reset_search();
+  while (oneWire.search(addr))
+  {
+    // Check address CRC
+    crc = oneWire.crc8(addr, 7);
+    if (crc != addr[7])
+    {
+      error(
+        F("OneWire %X%X%X%X%X%X%X%X bad address, CRC failed: %X"),
+        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
+	crc
+      );
+      break;
+    }
+
+    // Check device type
+    if (addr[0] == 0x10) // DS18S20
+    {
+      n++;
+    }
+    else if (addr[0] == 0x28) // DS18B20
+    {
+      n++;
+    }
+    else
+    {
+      warn(
+        F("OneWire %X%X%X%X%X%X%X%X unexpected device type: %X"),
+        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
+	addr[0]
+      );
+      continue;
+    }
+
+    // Read value
+    present = oneWire.reset();
+    oneWire.select(addr);
+    oneWire.write(0xBE); // Read Scratchpad
+    oneWire.read_bytes(data, 9); // We need 9 bytes
+
+    crc = oneWire.crc8(data, 8);
+    if (crc != data[8])
+    {
+      warn(
+        F("OneWire %X%X%X%X%X%X%X%X bad data, CRC failed: %X%X%X%X%X%X%X%X%X %X"),
+        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
+        data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
+	crc
+      );
+    }
+
+    // Convert to float. The formula comes from the Dallas lib.
+    // See as well the DS18S20 datasheet.
+    // TODO Precision is 0.5ºC, check the extended formula in the Dallas lib
+    // (calculateTemperature) for a better precision
+    temp = (((int16_t) data[1]) << 11) | (((int16_t) data[0]) << 3);
+    temp_f = (float) temp / 16;
+    ADD_SENSOR(SENSOR_TCC, temp_f);
+
+    // Debug
+    Utils.float2String(temp_f, temp_str, 2);
+    debug(
+      F("OneWire %X%X%X%X%X%X%X%X : %s"),
+      addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
+      temp_str
+    );
+  }
+
+  debug(F("OneWire %d devices measured"), n);
+  oneWire.depower();
 
   CR_END;
 }

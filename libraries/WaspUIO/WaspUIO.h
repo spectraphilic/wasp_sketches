@@ -276,6 +276,8 @@ CR_TASK(taskAgrSensirionFrame);
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
+// OneWire
+CR_TASK(task1Wire);
 // Network
 CR_TASK(taskNetwork);
 CR_TASK(taskNetworkSend);
