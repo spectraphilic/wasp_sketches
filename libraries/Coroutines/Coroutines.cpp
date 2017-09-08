@@ -12,19 +12,20 @@ int Loop::spawn(tstate_t (*fun)(), unsigned int delay)
 {
   if (delay > CR_MAX_DELAY)
   {
-    trace(F("Cannot spawn, given delay too big"));
+    //trace(F("Cannot spawn, given delay too big"));
     return -1;
   }
 
   if (next - first >= CR_QUEUE_SIZE)
   {
-    trace(F("Cannot spawn, limit reached"));
+    //trace(F("Cannot spawn, limit reached"));
     return -1;
   }
 
   if (next > CR_MAX_TID)
   {
-    trace(F("Cannot spawn, task ids exhausted"));
+    //trace(F("Cannot spawn, task ids exhausted"));
+    return -1;
   }
 
   Task& task = queue[next % CR_QUEUE_SIZE];
@@ -67,7 +68,7 @@ int8_t Loop::join(Task* task, tid_t tid, tid_t target_tid)
   // Simple system to prevent dead locks
   if (tid >= target_tid)
   {
-    trace(F("Cannot join older or same task"));
+    //trace(F("Cannot join older or same task"));
     return -1;
   }
 
@@ -86,7 +87,7 @@ void Loop::resume(Task* task, tid_t tid)
   if (state == CR_TASK_ERROR)
   {
     task->fun = NULL;
-    trace(F("Task %d error"), tid);
+    //trace(F("Task %d error"), tid);
     return;
   }
 
@@ -94,7 +95,7 @@ void Loop::resume(Task* task, tid_t tid)
   if (state == CR_TASK_STOP)
   {
     task->fun = NULL;
-    trace(F("Task %d done"), tid);
+    //trace(F("Task %d done"), tid);
     return;
   }
 
@@ -102,13 +103,13 @@ void Loop::resume(Task* task, tid_t tid)
   if (state >= CR_DELAY_OFFSET)
   {
     task->state = state;
-    trace(F("Task %d suspended (delay = %lu)"), tid, state);
+    //trace(F("Task %d suspended (delay = %lu)"), tid, state);
     return;
   }
 
   // Suspend: join
   join(task, tid, (tid_t) state);
-  trace(F("Task %d suspended (join %lu)"), tid);
+  //trace(F("Task %d suspended (join %lu)"), tid);
   return;
 }
 
@@ -140,7 +141,7 @@ void Loop::run()
         {
           if (state <= time_threshold)
           {
-            trace(F("Task %d time threshold reached: run"), tid);
+            //trace(F("Task %d time threshold reached: run"), tid);
             resume(task, tid);
           }
           continue;
@@ -151,7 +152,7 @@ void Loop::run()
         {
           if (get(state) == NULL)
           {
-            trace(F("Task %d finished: resume task %d"), state, tid);
+            //trace(F("Task %d finished: resume task %d"), state, tid);
             resume(task, tid);
           }
         }
@@ -270,14 +271,6 @@ void Loop::vprint(const char* message, va_list args)
   USB.println(buffer);
 }
 
-void Loop::print(const char* message, ...)
-{
-  va_list args;
-  va_start(args, message);
-  vprint(message, args);
-  va_end(args);
-}
-
 void Loop::print(const __FlashStringHelper * ifsh, ...)
 {
   va_list args;
@@ -306,20 +299,6 @@ void Loop::print()
 void vlog(loglevel_t level, const char* message, va_list args)
 {
   cr.vprint(message, args);
-}
-
-void Loop::log(loglevel_t level, const char* message, ...)
-{
-
-  if (level > loglevel)
-  {
-    return;
-  }
-
-  va_list args;
-  va_start(args, message);
-  vlog(level, message, args);
-  va_end(args);
 }
 
 void Loop::log(loglevel_t level, const __FlashStringHelper * ifsh, ...)

@@ -191,7 +191,7 @@ unsigned long getEpochTime(uint16_t &ms);
 uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 
 // Sleep related
-const char* getNextAlarm(char* alarmTime, const uint8_t minute);
+const char* getNextAlarm(char* alarmTime);
 
 // Other
 uint8_t readMaxbotixSerial(uint8_t samples);
@@ -264,10 +264,6 @@ CR_TASK(taskSensors);
 CR_TASK(taskAgr);
 // Agr: Pressure
 CR_TASK(taskAgrPressure);
-CR_TASK(taskAgrPressureFrame);
-// Agr: Meteo group
-CR_TASK(taskAgrMeteo);
-CR_TASK(taskAgrMeteoFrame);
 // Agr: Low consumption group
 CR_TASK(taskAgrLC);
 CR_TASK(taskAgrLeafwetnessFrame);

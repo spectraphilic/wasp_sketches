@@ -13,30 +13,6 @@
 // 2. Definitions
 
 // 3. Global variables declaration
-const char* alarmTime;
-
-// Sampling period in minutes, keep these two definitions in sync. The value
-// must be a factor of 60 to get equally spaced samples.
-// Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
-// Different values for different battery levels.
-const uint8_t samplings[] PROGMEM = {15, 10, 5};
-
-
-const uint8_t getSampling() {
-  uint8_t i = 2;
-
-  if (UIO.batteryLevel <= 30)
-  {
-    i = 0;
-  }
-  else if (UIO.batteryLevel <= 40)
-  {
-    i = 1;
-  }
-
-  return pgm_read_byte_near(samplings + i);
-}
-
 
 void setup()
 {
@@ -69,7 +45,7 @@ void setup()
 
   // Calculate first alarm (requires batteryLevel)
   char alarmTime[12]; // "00:00:00:00"
-  UIO.getNextAlarm(alarmTime, getSampling());
+  UIO.getNextAlarm(alarmTime);
 
   // Go to sleep
   debug(F("Boot done, go to sleep"));
@@ -141,7 +117,7 @@ void loop()
 sleep:
   // Calculate first alarm (requires batteryLevel)
   char alarmTime[12]; // "00:00:00:00"
-  UIO.getNextAlarm(alarmTime, getSampling());
+  UIO.getNextAlarm(alarmTime);
 
   info(F("Loop done in %lu ms."), cr.millisDiff(UIO.start));
   UIO.closeFiles();

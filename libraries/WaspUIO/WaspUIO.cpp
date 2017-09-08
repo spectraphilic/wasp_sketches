@@ -73,29 +73,30 @@ uint8_t WaspUIO::delFile(const char* filename)
 
 uint8_t WaspUIO::createFile(const char* filename)
 {
-  switch (SD.isFile(filename))
+  int8_t isFile = SD.isFile(filename);
+
+  // Already created
+  if (isFile == 1)
   {
-    case 1:
-      trace(F("Failed to create %s, it already exists"), filename);
-      return 0;
-    case 0:
-      error(F("Exists but not a file %s"), filename);
-      break;
-    case -1:
-      if (SD.create(filename))
-      {
-        info(F("%s created"), filename);
-        return 0;
-      }
-      else
-      {
-        error(F("Failed to create %s, error %d"), filename, SD.flag);
-        return 1;
-      }
+    //trace(F("Failed to create %s, it already exists"), filename);
+    return 0;
   }
 
-  // This should never happen
-  error(F("Unexpected failure creating %s"), filename);
+  // Create
+  if (isFile == -1)
+  {
+    if (SD.create(filename))
+    {
+      info(F("%s created"), filename);
+      return 0;
+    }
+
+    error(F("Failed to create %s, error %d"), filename, SD.flag);
+    return 1;
+  }
+
+  //if (isFile == 0)
+  error(F("Exists but not a file %s"), filename);
   return 1;
 }
 
@@ -154,7 +155,6 @@ uint8_t WaspUIO::initSD()
   // Create files used to send frames
   //createFile(tmpFilename);
 
-  // Create archive directory
   switch (SD.isDir(archive_dir))
   {
     case 1:
@@ -637,41 +637,45 @@ void WaspUIO::showFrame()
      }
      for (j = 0; j < nfields; j++)
      {
-       switch (type)
+       if (type == 0) // uint8_t
        {
-         case 0: // uint8_t
-           cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
-           break;
-         case 1: // int
-           cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
-           p += 2;
-           break;
-         case 2: // double
-           Utils.float2String(*(float *)p, value, decimals);
-           cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
-           p += 4;
-           break;
-         case 3: // char*
-           len = *p++;
-           if (len > sizeof(value) - 1)
-           {
-             cr.print(F("Error reading sensor value, string too long %d"), len);
-             return;
-           }
-           strncpy(value, (char*) p, len);
-           p += len;
-           cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
-           break;
-         case 4: // uint32_t
-           cr.print(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
-           p += 4;
-           break;
-         case 5: // uint8_t*
-           cr.print(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
+         cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
+       }
+       else if (type == 1) // int
+       {
+         cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
+         p += 2;
+       }
+       else if (type == 2) // double
+       {
+         Utils.float2String(*(float *)p, value, decimals);
+         cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+         p += 4;
+       }
+       else if (type == 3) // char*
+       {
+         len = *p++;
+         if (len > sizeof(value) - 1)
+         {
+           cr.print(F("Error reading sensor value, string too long %d"), len);
            return;
-         default:
-           cr.print(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
-           return;
+         }
+         strncpy(value, (char*) p, len);
+         p += len;
+         cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+       }
+       else if (type == 4) // uint32_t
+       {
+         cr.print(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
+         p += 4;
+       }
+       else if (type == 5) // uint8_t*
+       {
+         cr.print(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
+       }
+       else
+       {
+         cr.print(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
        }
      }
    }
@@ -716,18 +720,13 @@ uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour,
  * Returns:    String read from the USB cable, or NULL if timeout.
  */
 
-const char* WaspUIO::input(const __FlashStringHelper * prompt_F, unsigned long timeout)
+const char* WaspUIO::input(const __FlashStringHelper * prompt, unsigned long timeout)
 {
   static char buffer[80];
-  char prompt[100];
   size_t max = sizeof(buffer) - 1;
   int i = 0;
 
-  strncpy_F(prompt, prompt_F, sizeof(prompt));
-  if (strlen(prompt))
-  {
-    cr.print(prompt);
-  }
+  cr.print(prompt);
   USB.flush();
 
   // Wait for available data, or timeout
@@ -825,6 +824,7 @@ const char* WaspUIO::menuFormat1Wire(char* dst, size_t size)
 void WaspUIO::menu()
 {
   const char* str;
+  char c;
   char buffer[100];
   size_t size = sizeof(buffer);
 
@@ -862,36 +862,15 @@ void WaspUIO::menu()
     cr.print(F("9. Exit"));
     cr.print();
     str = input(F("==> Enter numeric option:"), 0);
-    switch (str[0])
-    {
-      case '1':
-        menuTime();
-        break;
-      case '2':
-        menuLog();
-        break;
-      case '3':
-        menuNetwork();
-        break;
-      case '4':
-        menuAgr();
-        break;
-      case '5':
-        menuSDI12();
-        break;
-      case '6':
-        menu1Wire();
-        break;
-      case '7':
-        if (hasSD)
-        {
-          SD.menu(30000);
-          break;
-        }
-      case '9':
-        cr.print();
-        goto exit;
-    }
+    c = str[0];
+    if      (c == '1') { menuTime(); }
+    else if (c == '2') { menuLog(); }
+    else if (c == '3') { menuNetwork(); }
+    else if (c == '4') { menuAgr(); }
+    else if (c == '5') { menuSDI12(); }
+    else if (c == '6') { menu1Wire(); }
+    else if (c == '7') { if (hasSD) SD.menu(30000); }
+    else if (c == '9') { cr.print(); goto exit; }
   } while (true);
 
 exit:
@@ -1380,7 +1359,7 @@ uint8_t WaspUIO::receiveGPSsyncTime()
   debug(F("receiveGPSsyncTime: got frame %s"), buffer);
 
   pch = strstr(buffer,"TST:");
-  trace(F("receiveGPSsyncTime: pch = %s"), pch);
+  //trace(F("receiveGPSsyncTime: pch = %s"), pch);
   memcpy(epochStr, &pch[4],10);
   epoch = atol(epochStr);
   epoch = epoch + 2; // Add some seconds for the delays, Check this!!!
@@ -1671,7 +1650,7 @@ uint8_t WaspUIO::readRSSI2Frame(void)
     rssi = xbeeDM.valueRSSI[0];
     rssi *= -1;
 
-    trace(F("readRSSI2Frame: getRSSI(dBm): %d"), rssi);
+    //trace(F("readRSSI2Frame: getRSSI(dBm): %d"), rssi);
   }
 
   // Create ASCII frame
@@ -1749,12 +1728,31 @@ unsigned long WaspUIO::getEpochTime(uint16_t &ms)
  * Return the string of the next alarm.
  *
  */
-const char* WaspUIO::getNextAlarm(char* alarmTime, const uint8_t minute)
+const char* WaspUIO::getNextAlarm(char* alarmTime)
 {
-  uint8_t alarmMinute;
+  // Sampling period in minutes, keep these two definitions in sync. The value
+  // must be a factor of 60 to get equally spaced samples.
+  // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
+  // Different values for different battery levels.
+  const uint8_t base = 5; // XXX Change this in debugging to 1 or 2
+  uint8_t minutes;
 
-  RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
-  alarmMinute = (UIO.time.minute / minute) * minute + minute;
+  if (batteryLevel <= 30)
+  {
+    minutes = base * 3; // 15 minutes
+  }
+  else if (batteryLevel <= 40)
+  {
+    minutes = base * 2; // 10 minutes
+  }
+  else
+  {
+    minutes = base * 1; // 5 minutes
+  }
+
+  // Format relative time to string, to be passed to deepSleep
+  RTC.breakTimeAbsolute(getEpochTime(), &time);
+  uint8_t alarmMinute = (time.minute / minutes) * minutes + minutes;
   if (alarmMinute >= 60)
     alarmMinute = 0;
   sprintf(alarmTime, "00:00:%02d:00", alarmMinute);
@@ -1977,15 +1975,6 @@ CR_TASK(taskAgrLC)
     ADD_SENSOR(SENSOR_HUMB, humidity); // Add digital humidity
   }
 
-  // Soil temp (XXX Not yet implemented)
-  if (false)
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_TEMP_DS18B20);
-    CR_DELAY(50);
-    temperature = SensorAgrv20.readValue(SENS_AGR_TEMP_DS18B20);
-    ADD_SENSOR(SENSOR_TCC, temperature); // Add DS18B20 temperature
-  }
-
   // OFF
   if (UIO.sensors & FLAG_AGR_LEAFWETNESS)
   {
@@ -1996,37 +1985,6 @@ CR_TASK(taskAgrLC)
   {
     SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
   }
-  if (false) // XXX Not yet implemented
-  {
-    SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_TEMP_DS18B20);
-  }
-
-  CR_END;
-}
-
-/* The Meteorology group. */
-CR_TASK(taskAgrMeteo)
-{
-  float anemometer;
-  uint8_t vane;
-
-  CR_BEGIN;
-
-  // Anemometer
-  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_ANEMOMETER);
-  CR_DELAY(50);
-  anemometer = SensorAgrv20.readValue(SENS_AGR_ANEMOMETER);
-  ADD_SENSOR(SENSOR_ANE, anemometer);  // Add anemometer value
-
-  // Vane
-  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_VANE);
-  CR_DELAY(50);
-  vane = SensorAgrv20.readValue(SENS_AGR_VANE);
-  ADD_SENSOR(SENSOR_WV, vane);  // Add wind vane value
-
-  // Off
-  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_VANE);
-  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_ANEMOMETER);
 
   CR_END;
 }

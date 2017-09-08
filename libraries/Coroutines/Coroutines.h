@@ -164,13 +164,11 @@ class Loop
     // string, either a regular string (char*) or one stored in the program
     // memory (F). It appends a new line.
     void vprint(const char* message, va_list args);
-    void print(const char* message, ...);
     void print(const __FlashStringHelper *, ...);
     void print();
 
     // Logging
     loglevel_t loglevel = DEBUG;
-    void log(loglevel_t level, const char* message, ...);
     void log(loglevel_t level, const __FlashStringHelper *, ...);
     const char* loglevel2str(loglevel_t level);
 };
