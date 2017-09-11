@@ -2176,11 +2176,8 @@ CR_TASK(task1Wire)
       );
     }
 
-    // Convert to float. The formula comes from the Dallas lib.
-    // See as well the DS18S20 datasheet.
-    // TODO Precision is 0.5ºC, check the extended formula in the Dallas lib
-    // (calculateTemperature) for a better precision
-    temp = (((int16_t) data[1]) << 11) | (((int16_t) data[0]) << 3);
+    // Convert to float. Formula for the DS18B20 model.
+    temp = (data[1] << 8) | data[0];
     temp_f = (float) temp / 16;
     ADD_SENSOR(SENSOR_TCC, temp_f);
 
