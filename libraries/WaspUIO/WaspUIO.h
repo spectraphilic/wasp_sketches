@@ -19,8 +19,15 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-#define EEPROM_UIO_SENSORS (EEPROM_START + 3)   // 4 bytes for the sensors
+// 4 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
+// 2 bytes available
+#define EEPROM_SENSOR_SENSIRION (EEPROM_START + 10) // Agr
+#define EEPROM_SENSOR_PRESSURE (EEPROM_START + 11)
+#define EEPROM_SENSOR_LEAFWETNESS (EEPROM_START + 12)
+#define EEPROM_SENSOR_CTD10 (EEPROM_START + 13) // SDI-12
+#define EEPROM_SENSOR_DS2 (EEPROM_START + 14)
+#define EEPROM_SENSOR_DS1820 (EEPROM_START + 15) // OneWire
 
 #define FLAG_LOG_USB 1
 #define FLAG_NETWORK 2
@@ -33,16 +40,6 @@
     frame.addSensor(type, ## __VA_ARGS__);\
   }
 
-// Sensors
-// Agri board (reserve first 8 bits)
-const uint32_t FLAG_AGR_SENSIRION = 1ul << 0;
-const uint32_t FLAG_AGR_PRESSURE = 1ul << 1;
-const uint32_t FLAG_AGR_LEAFWETNESS = 1ul << 2;
-// SDI-12 (next 8 bits)
-const uint32_t FLAG_SDI12_CTD10 = 1ul << 8;
-const uint32_t FLAG_SDI12_DS2 = 1ul << 9;
-// OneWire
-const uint32_t FLAG_1WIRE_DS1820 = 1ul << 16 ;
 
 #define encryptionKey "1234567890123456"  // General encryption key for UIO networks
 #define key_access (char*) "LIBELIUM"
@@ -103,12 +100,11 @@ void menuLog();
 void menuLog2(uint8_t flag, const char* var);
 void menuLogLevel();
 void menuAgr();
-void menuSensor(uint32_t sensor);
 void menuSDI12();
-void menuSDI12Sensor(uint32_t sensor);
 void menu1Wire();
+void menuSensor(uint16_t sensor, uint8_t &value);
 const char* flagStatus(uint8_t flag);
-const char* sensorStatus(uint32_t sensor);
+const char* sensorStatus(uint8_t sensor);
 const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);
 const char* menuFormatAgr(char* dst, size_t size);
@@ -119,11 +115,18 @@ const char* menuFormat1Wire(char* dst, size_t size);
 public:
 
 uint8_t flags;
-uint32_t sensors;
 uint8_t batteryLevel;
 timestamp_t time;        // broken timestamp
 bool hasSD;
 SdFile logFile;
+
+// Sensors
+uint8_t sensor_sensirion;
+uint8_t sensor_pressure;
+uint8_t sensor_leafwetness;
+uint8_t sensor_ctd10;
+uint8_t sensor_ds2;
+uint8_t sensor_ds1820;
 
 // Network related
 Network network;

@@ -121,7 +121,12 @@ bool WaspUIO::initVars()
   initNet((network_t) panid_low);
 
   // Sensors
-  sensors = eeprom_read_dword((const uint32_t *)EEPROM_UIO_SENSORS);
+  sensor_sensirion = Utils.readEEPROM(EEPROM_SENSOR_SENSIRION);
+  sensor_pressure = Utils.readEEPROM(EEPROM_SENSOR_PRESSURE);
+  sensor_leafwetness = Utils.readEEPROM(EEPROM_SENSOR_LEAFWETNESS);
+  sensor_ctd10 = Utils.readEEPROM(EEPROM_SENSOR_CTD10);
+  sensor_ds2 = Utils.readEEPROM(EEPROM_SENSOR_DS2);
+  sensor_ds1820 = Utils.readEEPROM(EEPROM_SENSOR_DS1820);
 
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
@@ -796,27 +801,27 @@ const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
 const char* WaspUIO::menuFormatAgr(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (sensors & FLAG_AGR_SENSIRION)   strnjoin_F(dst, F("Sensirion"), F(", "), size);
-  if (sensors & FLAG_AGR_PRESSURE)    strnjoin_F(dst, F("Pressure"), F(", "), size);
-  if (sensors & FLAG_AGR_LEAFWETNESS) strnjoin_F(dst, F("Leaf Wetness"), F(", "), size);
-  if (! dst[0])                       strncpy_F(dst, F("(none)"), size);
+  if (sensor_sensirion)   strnjoin_F(dst, F("Sensirion"), F(", "), size);
+  if (sensor_pressure)    strnjoin_F(dst, F("Pressure"), F(", "), size);
+  if (sensor_leafwetness) strnjoin_F(dst, F("Leaf Wetness"), F(", "), size);
+  if (! dst[0])           strncpy_F(dst, F("(none)"), size);
   return dst;
 }
 
 const char* WaspUIO::menuFormatSdi(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (sensors & FLAG_SDI12_CTD10) strnjoin_F(dst, F("CTD-10"), F(", "), size);
-  if (sensors & FLAG_SDI12_DS2)   strnjoin_F(dst, F("DS-2"), F(", "), size);
-  if (! dst[0])                   strncpy_F(dst, F("(none)"), size);
+  if (sensor_ctd10) strnjoin_F(dst, F("CTD-10"), F(", "), size);
+  if (sensor_ds2)   strnjoin_F(dst, F("DS-2"), F(", "), size);
+  if (! dst[0])     strncpy_F(dst, F("(none)"), size);
   return dst;
 }
 
 const char* WaspUIO::menuFormat1Wire(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (sensors & FLAG_1WIRE_DS1820) strnjoin_F(dst, F("DS1820"), F(", "), size);
-  if (! dst[0])                    strncpy_F(dst, F("(none)"), size);
+  if (sensor_ds1820) strnjoin_F(dst, F("DS1820"), F(", "), size);
+  if (! dst[0])      strncpy_F(dst, F("(none)"), size);
   return dst;
 }
 
@@ -965,9 +970,9 @@ void WaspUIO::menuAgr()
   do
   {
     cr.print();
-    cr.print(F("1. Agri board: Sensirion (%s)"), sensorStatus(FLAG_AGR_SENSIRION));
-    cr.print(F("2. Agri board: Pressure (%s)"), sensorStatus(FLAG_AGR_PRESSURE));
-    cr.print(F("3. Agri board: Leaf wetness (%s)"), sensorStatus(FLAG_AGR_LEAFWETNESS));
+    cr.print(F("1. Agri board: Sensirion (%s)"), sensorStatus(sensor_sensirion));
+    cr.print(F("2. Agri board: Pressure (%s)"), sensorStatus(sensor_pressure));
+    cr.print(F("3. Agri board: Leaf wetness (%s)"), sensorStatus(sensor_leafwetness));
     cr.print(F("9. Exit"));
     cr.print();
     str = input(F("==> Enter numeric option:"), 0);
@@ -977,13 +982,13 @@ void WaspUIO::menuAgr()
     switch (str[0])
     {
       case '1':
-        menuSensor(FLAG_AGR_SENSIRION);
+        menuSensor(EEPROM_SENSOR_SENSIRION, sensor_sensirion);
         break;
       case '2':
-        menuSensor(FLAG_AGR_PRESSURE);
+        menuSensor(EEPROM_SENSOR_PRESSURE, sensor_pressure);
         break;
       case '3':
-        menuSensor(FLAG_AGR_LEAFWETNESS);
+        menuSensor(EEPROM_SENSOR_LEAFWETNESS, sensor_leafwetness);
         break;
       case '9':
         cr.print();
@@ -992,21 +997,39 @@ void WaspUIO::menuAgr()
   } while (true);
 }
 
-const char* WaspUIO::sensorStatus(uint32_t sensor)
+const char* WaspUIO::sensorStatus(uint8_t sensor)
 {
-  return (sensors & sensor)? "enabled": "disabled";
+  switch (sensor)
+  {
+    case 0:
+      return "disabled";
+    case 1:
+      return "1";
+    case 2:
+      return "2";
+    case 3:
+      return "3";
+    default:
+      return "undefined";
+  }
 }
 
-void WaspUIO::menuSensor(uint32_t sensor)
+void WaspUIO::menuSensor(uint16_t sensor, uint8_t &value)
 {
   const char *str;
 
   do
   {
     cr.print();
-    cr.print(F("Current state is: %s"), sensorStatus(sensor));
-    cr.print(F("1. Enable"));
-    cr.print(F("2. Disable"));
+    cr.print(F("Current state is: %s"), sensorStatus(value));
+    cr.print(F("0. Disable"));
+    cr.print(F("1. One period (eg 5 minutes)"));
+    cr.print(F("2. Two periods (eg 10 minutes)"));
+    cr.print(F("3. Three periods (eg 15 minutes)"));
+    if (sensor == EEPROM_SENSOR_CTD10 || sensor == EEPROM_SENSOR_DS2)
+    {
+      cr.print(F("8. Identification"));
+    }
     cr.print(F("9. Exit"));
     cr.print();
     str = input(F("==> Enter numeric option:"), 0);
@@ -1015,21 +1038,49 @@ void WaspUIO::menuSensor(uint32_t sensor)
 
     switch (str[0])
     {
+      case '0':
+        value = 0;
+        goto update;
       case '1':
-        UIO.sensors |= sensor;
-        updateEEPROM(EEPROM_UIO_SENSORS, UIO.sensors);
-        cr.print();
-        return;
+        value = 1;
+        goto update;
       case '2':
-        UIO.sensors &= ~sensor;
-        updateEEPROM(EEPROM_UIO_SENSORS, UIO.sensors);
-        cr.print();
-        return;
+        value = 2;
+        goto update;
+      case '3':
+        value = 3;
+        goto update;
+      case 8:
+        if (sensor == EEPROM_SENSOR_CTD10 || sensor == EEPROM_SENSOR_DS2)
+        {
+          cr.print(F("Enabling SDI-12"));
+          PWR.setSensorPower(SENS_5V, SENS_ON);
+          mySDI12.begin();
+  
+          if (sensor == EEPROM_SENSOR_CTD10)
+          {
+            mySDI12.identification(0);
+          }
+          else if (sensor == EEPROM_SENSOR_DS2)
+          {
+            mySDI12.identification(1);
+          }
+  
+          cr.print(F("Disabling SDI-12"));
+          mySDI12.end();
+          PWR.setSensorPower(SENS_5V, SENS_OFF);
+        }
+        break;
       case '9':
         cr.print();
         return;
     }
   } while (true);
+
+update:
+  updateEEPROM(sensor, value);
+  cr.print();
+  return;
 }
 
 /**
@@ -1047,8 +1098,8 @@ void WaspUIO::menuSDI12()
   do
   {
     cr.print();
-    cr.print(F("1. SDI-12: CTD-10 (%s)"), sensorStatus(FLAG_SDI12_CTD10));
-    cr.print(F("2. SDI-12: DS-2 (%s)"), sensorStatus(FLAG_SDI12_DS2));
+    cr.print(F("1. SDI-12: CTD-10 (%s)"), sensorStatus(sensor_ctd10));
+    cr.print(F("2. SDI-12: DS-2 (%s)"), sensorStatus(sensor_ds2));
     cr.print(F("9. Exit"));
     cr.print();
     str = input(F("==> Enter numeric option:"), 0);
@@ -1058,10 +1109,10 @@ void WaspUIO::menuSDI12()
     switch (str[0])
     {
       case '1':
-        menuSDI12Sensor(FLAG_SDI12_CTD10);
+        menuSensor(EEPROM_SENSOR_CTD10, sensor_ctd10);
         break;
       case '2':
-        menuSDI12Sensor(FLAG_SDI12_DS2);
+        menuSensor(EEPROM_SENSOR_DS2, sensor_ds2);
         break;
       case '9':
         cr.print();
@@ -1070,58 +1121,6 @@ void WaspUIO::menuSDI12()
   } while (true);
 }
 
-void WaspUIO::menuSDI12Sensor(uint32_t sensor)
-{
-  const char *str;
-
-  cr.print(F("Enabling SDI-12"));
-  PWR.setSensorPower(SENS_5V, SENS_ON);
-  mySDI12.begin();
-
-  do
-  {
-    cr.print();
-    cr.print(F("Current state is: %s"), sensorStatus(sensor));
-    cr.print(F("1. Enable"));
-    cr.print(F("2. Disable"));
-    cr.print(F("3. Identification"));
-    cr.print(F("9. Exit"));
-    cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '1':
-        UIO.sensors |= sensor;
-        updateEEPROM(EEPROM_UIO_SENSORS, UIO.sensors);
-        cr.print();
-        return;
-      case '2':
-        UIO.sensors &= ~sensor;
-        updateEEPROM(EEPROM_UIO_SENSORS, UIO.sensors);
-        cr.print();
-        return;
-      case '3':
-        if (sensor == FLAG_SDI12_CTD10)
-        {
-          mySDI12.identification(0);
-        }
-        else if (sensor == FLAG_SDI12_DS2)
-        {
-          mySDI12.identification(1);
-        }
-        break;
-      case '9':
-        cr.print(F("Disabling SDI-12"));
-        mySDI12.end();
-        PWR.setSensorPower(SENS_5V, SENS_OFF);
-        cr.print();
-        return;
-    }
-  } while (true);
-}
 
 /**
  * Functions to manage OneWire sensors
@@ -1138,7 +1137,7 @@ void WaspUIO::menu1Wire()
   do
   {
     cr.print();
-    cr.print(F("1. OneWire: DS1820 (%s)"), sensorStatus(FLAG_1WIRE_DS1820));
+    cr.print(F("1. OneWire: DS1820 (%s)"), sensorStatus(sensor_ds1820));
     cr.print(F("9. Exit"));
     cr.print();
     str = input(F("==> Enter numeric option:"), 0);
@@ -1148,7 +1147,7 @@ void WaspUIO::menu1Wire()
     switch (str[0])
     {
       case '1':
-        menuSensor(FLAG_1WIRE_DS1820);
+        menuSensor(EEPROM_SENSOR_DS1820, sensor_ds1820);
         break;
       case '9':
         cr.print();
@@ -1820,9 +1819,9 @@ CR_TASK(taskHealthFrame)
 
 CR_TASK(taskSensors)
 {
-  bool agr = UIO.sensors & (FLAG_AGR_PRESSURE | FLAG_AGR_LEAFWETNESS | FLAG_AGR_SENSIRION);
-  bool sdi = UIO.sensors & (FLAG_SDI12_CTD10 | FLAG_SDI12_DS2);
-  bool onewire = UIO.sensors & (FLAG_1WIRE_DS1820);
+  bool agr = UIO.sensor_pressure || UIO.sensor_leafwetness || UIO.sensor_sensirion;
+  bool sdi = UIO.sensor_ctd10 || UIO.sensor_ds2;
+  bool onewire = UIO.sensor_ds1820;
   static tid_t agr_id, sdi_id, onewire_id;
 
   CR_BEGIN;
@@ -1912,21 +1911,21 @@ CR_TASK(taskAgr)
   CR_BEGIN;
 
   // Measure
-  if (UIO.sensors & FLAG_AGR_PRESSURE)
+  if (UIO.sensor_pressure)
   {
     CR_SPAWN2(taskAgrPressure, p_id);
   }
-  if (UIO.sensors & (FLAG_AGR_LEAFWETNESS | FLAG_AGR_SENSIRION))
+  if (UIO.sensor_leafwetness || UIO.sensor_sensirion)
   {
     CR_SPAWN2(taskAgrLC, lc_id);
   }
 
   // Wait
-  if (UIO.sensors & FLAG_AGR_PRESSURE)
+  if (UIO.sensor_pressure)
   {
     CR_JOIN(p_id);
   }
-  if (UIO.sensors & (FLAG_AGR_LEAFWETNESS | FLAG_AGR_SENSIRION))
+  if (UIO.sensor_leafwetness | UIO.sensor_sensirion)
   {
     CR_JOIN(lc_id);
   }
@@ -1957,7 +1956,7 @@ CR_TASK(taskAgrLC)
   CR_BEGIN;
 
   // Leaf wetness
-  if (UIO.sensors & FLAG_AGR_LEAFWETNESS)
+  if (UIO.sensor_leafwetness)
   {
     info(F("Agr Leaf Wetness ON"));
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
@@ -1967,7 +1966,7 @@ CR_TASK(taskAgrLC)
   }
 
   // Sensirion (temperature, humidity)
-  if (UIO.sensors & FLAG_AGR_SENSIRION)
+  if (UIO.sensor_sensirion)
   {
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
     CR_DELAY(50);
@@ -1978,12 +1977,12 @@ CR_TASK(taskAgrLC)
   }
 
   // OFF
-  if (UIO.sensors & FLAG_AGR_LEAFWETNESS)
+  if (UIO.sensor_leafwetness)
   {
     info(F("Agr Leaf Wetness OFF"));
     SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
   }
-  if (UIO.sensors & FLAG_AGR_SENSIRION)
+  if (UIO.sensor_sensirion)
   {
     SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
   }
@@ -2004,21 +2003,21 @@ CR_TASK(taskSdi)
   mySDI12.begin();
 
   // Measure
-  if (UIO.sensors & FLAG_SDI12_CTD10)
+  if (UIO.sensor_ctd10)
   {
     CR_SPAWN2(taskSdiCtd10, ctd_id);
   }
-  if (UIO.sensors & FLAG_SDI12_DS2)
+  if (UIO.sensor_ds2)
   {
     CR_SPAWN2(taskSdiDs2, ds_id);
   }
 
   // Wait
-  if (UIO.sensors & FLAG_SDI12_CTD10)
+  if (UIO.sensor_ctd10)
   {
     CR_JOIN(ctd_id);
   }
-  if (UIO.sensors & FLAG_SDI12_DS2)
+  if (UIO.sensor_ds2)
   {
     CR_JOIN(ds_id);
   }
@@ -2137,7 +2136,7 @@ CR_TASK(task1Wire)
       error(
         F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X bad address, CRC failed: %02X"),
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-	crc
+        crc
       );
       break;
     }
@@ -2152,7 +2151,7 @@ CR_TASK(task1Wire)
       warn(
         F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X unexpected device type: %02X"),
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-	addr[0]
+        addr[0]
       );
       continue;
     }
@@ -2170,7 +2169,7 @@ CR_TASK(task1Wire)
         F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X bad data, CRC failed: %02X%02X%02X%02X%02X%02X%02X%02X%02X %02X"),
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
         data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
-	crc
+        crc
       );
     }
 
