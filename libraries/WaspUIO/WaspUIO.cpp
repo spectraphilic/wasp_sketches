@@ -1750,6 +1750,8 @@ const char* WaspUIO::getNextAlarm(char* alarmTime)
     minutes = base * 1; // 5 minutes
   }
 
+  //minutes = 2; // XXX For local development
+
   // Format relative time to string, to be passed to deepSleep
   RTC.breakTimeAbsolute(getEpochTime(), &time);
   uint8_t alarmMinute = (time.minute / minutes) * minutes + minutes;
@@ -2141,11 +2143,7 @@ CR_TASK(task1Wire)
     }
 
     // Check device type
-    if (addr[0] == 0x10) // DS18S20
-    {
-      n++;
-    }
-    else if (addr[0] == 0x28) // DS18B20
+    if (addr[0] == 0x28) // DS18B20
     {
       n++;
     }

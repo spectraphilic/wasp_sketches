@@ -309,7 +309,7 @@ void Loop::log(loglevel_t level, const __FlashStringHelper * ifsh, ...)
   }
 
   va_list args;
-  char message[100];
+  char message[120];
 
   strncpy_F(message, ifsh, sizeof(message));
 
