@@ -2133,7 +2133,7 @@ CR_TASK(task1Wire)
     if (crc != addr[7])
     {
       error(
-        F("OneWire %X%X%X%X%X%X%X%X bad address, CRC failed: %X"),
+        F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X bad address, CRC failed: %02X"),
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
 	crc
       );
@@ -2152,7 +2152,7 @@ CR_TASK(task1Wire)
     else
     {
       warn(
-        F("OneWire %X%X%X%X%X%X%X%X unexpected device type: %X"),
+        F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X unexpected device type: %02X"),
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
 	addr[0]
       );
@@ -2169,7 +2169,7 @@ CR_TASK(task1Wire)
     if (crc != data[8])
     {
       warn(
-        F("OneWire %X%X%X%X%X%X%X%X bad data, CRC failed: %X%X%X%X%X%X%X%X%X %X"),
+        F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X bad data, CRC failed: %02X%02X%02X%02X%02X%02X%02X%02X%02X %02X"),
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
         data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
 	crc
@@ -2184,7 +2184,7 @@ CR_TASK(task1Wire)
     // Debug
     Utils.float2String(temp_f, temp_str, 2);
     debug(
-      F("OneWire %X%X%X%X%X%X%X%X : %s"),
+      F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X : %s"),
       addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
       temp_str
     );
