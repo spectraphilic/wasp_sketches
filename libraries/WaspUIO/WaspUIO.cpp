@@ -2177,7 +2177,7 @@ CR_TASK(task1Wire)
     // Convert to float. Formula for the DS18B20 model.
     temp = (data[1] << 8) | data[0];
     temp_f = (float) temp / 16;
-    ADD_SENSOR(SENSOR_TCC, temp_f);
+    ADD_SENSOR(SENSOR_DS1820, temp_f);
 
     // Debug
     Utils.float2String(temp_f, temp_str, 2);
