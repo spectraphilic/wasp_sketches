@@ -779,8 +779,8 @@ const char* WaspUIO::input(const __FlashStringHelper * prompt, unsigned long tim
 const char* WaspUIO::menuFormatLog(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (flags & FLAG_LOG_USB) strnjoin_F(dst, F("USB"), F(", "), size);
-  if (flags & FLAG_LOG_SD)  strnjoin_F(dst, F("SD"), F(", "), size);
+  if (flags & FLAG_LOG_USB) strnjoin_F(dst, size, F(", "), F("USB"));
+  if (flags & FLAG_LOG_SD)  strnjoin_F(dst, size, F(", "), F("SD"));
   return dst;
 }
 
@@ -800,10 +800,12 @@ const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
 
 const char* WaspUIO::menuFormatAgr(char* dst, size_t size)
 {
+  char aux[4];
+
   dst[0] = '\0';
-  if (sensor_sensirion)   strnjoin_F(dst, F("Sensirion"), F(", "), size);
-  if (sensor_pressure)    strnjoin_F(dst, F("Pressure"), F(", "), size);
-  if (sensor_leafwetness) strnjoin_F(dst, F("Leaf Wetness"), F(", "), size);
+  if (sensor_sensirion)   strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), sensor_sensirion);
+  if (sensor_pressure)    strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), sensor_pressure);
+  if (sensor_leafwetness) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), sensor_leafwetness);
   if (! dst[0])           strncpy_F(dst, F("(none)"), size);
   return dst;
 }
@@ -811,8 +813,8 @@ const char* WaspUIO::menuFormatAgr(char* dst, size_t size)
 const char* WaspUIO::menuFormatSdi(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (sensor_ctd10) strnjoin_F(dst, F("CTD-10"), F(", "), size);
-  if (sensor_ds2)   strnjoin_F(dst, F("DS-2"), F(", "), size);
+  if (sensor_ctd10) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), sensor_ctd10);
+  if (sensor_ds2)   strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), sensor_ds2);
   if (! dst[0])     strncpy_F(dst, F("(none)"), size);
   return dst;
 }
@@ -820,7 +822,7 @@ const char* WaspUIO::menuFormatSdi(char* dst, size_t size)
 const char* WaspUIO::menuFormat1Wire(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (sensor_ds1820) strnjoin_F(dst, F("DS1820"), F(", "), size);
+  if (sensor_ds1820) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), sensor_ds1820);
   if (! dst[0])      strncpy_F(dst, F("(none)"), size);
   return dst;
 }
@@ -1479,6 +1481,30 @@ uint8_t WaspUIO::readMaxbotixSerial(void)
   return readMaxbotixSerial(5);
 }
 
+/**
+ * Retturn true if the given sensor is to be read now.
+ */
+bool WaspUIO::action(uint8_t n, ...)
+{
+  va_list args;
+  int value;
+  bool yes = false;
+
+  va_start(args, n);
+  for (; n; n--)
+  {
+    value = va_arg(args, int);
+    if ((time.hour * 60 + time.minute) % (period * value) == 0)
+    {
+      yes = true;
+      break;
+    }
+  }
+  va_end(args);
+
+  return yes;
+}
+
 
 /******************************************************************************
  * PRIVATE FUNCTIONS                                                          *
@@ -1696,6 +1722,24 @@ void WaspUIO::initTime()
 
   // Battery
   batteryLevel = PWR.getBatteryLevel();
+
+  // Find out sampling period, in minutes. The value must be a factor of 60*24
+  // (number of minutes in a day).
+  // Different values for different battery levels.
+  const uint8_t base = 5; // XXX Change this in debugging to 1 or 2
+
+  if (batteryLevel <= 30)
+  {
+    period = base * 3; // 15 minutes
+  }
+  else if (batteryLevel <= 40)
+  {
+    period = base * 2; // 10 minutes
+  }
+  else
+  {
+    period = base * 1; // 5 minutes
+  }
 }
 
 /**
@@ -1729,31 +1773,9 @@ unsigned long WaspUIO::getEpochTime(uint16_t &ms)
  */
 const char* WaspUIO::getNextAlarm(char* alarmTime)
 {
-  // Sampling period in minutes, keep these two definitions in sync. The value
-  // must be a factor of 60 to get equally spaced samples.
-  // Possible values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30
-  // Different values for different battery levels.
-  const uint8_t base = 5; // XXX Change this in debugging to 1 or 2
-  uint8_t minutes;
-
-  if (batteryLevel <= 30)
-  {
-    minutes = base * 3; // 15 minutes
-  }
-  else if (batteryLevel <= 40)
-  {
-    minutes = base * 2; // 10 minutes
-  }
-  else
-  {
-    minutes = base * 1; // 5 minutes
-  }
-
-  //minutes = 2; // XXX For local development
-
   // Format relative time to string, to be passed to deepSleep
   RTC.breakTimeAbsolute(getEpochTime(), &time);
-  uint8_t alarmMinute = (time.minute / minutes) * minutes + minutes;
+  uint8_t alarmMinute = (time.minute / period) * period + period;
   if (alarmMinute >= 60)
     alarmMinute = 0;
   sprintf(alarmTime, "00:00:%02d:00", alarmMinute);
@@ -1819,9 +1841,9 @@ CR_TASK(taskHealthFrame)
 
 CR_TASK(taskSensors)
 {
-  bool agr = UIO.sensor_pressure || UIO.sensor_leafwetness || UIO.sensor_sensirion;
-  bool sdi = UIO.sensor_ctd10 || UIO.sensor_ds2;
-  bool onewire = UIO.sensor_ds1820;
+  bool agr = UIO.action(3, UIO.sensor_pressure, UIO.sensor_leafwetness, UIO.sensor_sensirion);
+  bool sdi = UIO.action(2, UIO.sensor_ctd10, UIO.sensor_ds2);
+  bool onewire = UIO.action(1, UIO.sensor_ds1820);
   static tid_t agr_id, sdi_id, onewire_id;
 
   CR_BEGIN;
@@ -1911,21 +1933,21 @@ CR_TASK(taskAgr)
   CR_BEGIN;
 
   // Measure
-  if (UIO.sensor_pressure)
+  if (UIO.action(1, UIO.sensor_pressure))
   {
     CR_SPAWN2(taskAgrPressure, p_id);
   }
-  if (UIO.sensor_leafwetness || UIO.sensor_sensirion)
+  if (UIO.action(2, UIO.sensor_leafwetness, UIO.sensor_sensirion))
   {
     CR_SPAWN2(taskAgrLC, lc_id);
   }
 
   // Wait
-  if (UIO.sensor_pressure)
+  if (UIO.action(1, UIO.sensor_pressure))
   {
     CR_JOIN(p_id);
   }
-  if (UIO.sensor_leafwetness | UIO.sensor_sensirion)
+  if (UIO.action(2, UIO.sensor_leafwetness, UIO.sensor_sensirion))
   {
     CR_JOIN(lc_id);
   }
@@ -1956,7 +1978,7 @@ CR_TASK(taskAgrLC)
   CR_BEGIN;
 
   // Leaf wetness
-  if (UIO.sensor_leafwetness)
+  if (UIO.action(1, UIO.sensor_leafwetness))
   {
     info(F("Agr Leaf Wetness ON"));
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
@@ -1966,7 +1988,7 @@ CR_TASK(taskAgrLC)
   }
 
   // Sensirion (temperature, humidity)
-  if (UIO.sensor_sensirion)
+  if (UIO.action(1, UIO.sensor_sensirion))
   {
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
     CR_DELAY(50);
@@ -1977,12 +1999,12 @@ CR_TASK(taskAgrLC)
   }
 
   // OFF
-  if (UIO.sensor_leafwetness)
+  if (UIO.action(1, UIO.sensor_leafwetness))
   {
     info(F("Agr Leaf Wetness OFF"));
     SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
   }
-  if (UIO.sensor_sensirion)
+  if (UIO.action(1, UIO.sensor_sensirion))
   {
     SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
   }
@@ -2003,21 +2025,21 @@ CR_TASK(taskSdi)
   mySDI12.begin();
 
   // Measure
-  if (UIO.sensor_ctd10)
+  if (UIO.action(1, UIO.sensor_ctd10))
   {
     CR_SPAWN2(taskSdiCtd10, ctd_id);
   }
-  if (UIO.sensor_ds2)
+  if (UIO.action(1, UIO.sensor_ds2))
   {
     CR_SPAWN2(taskSdiDs2, ds_id);
   }
 
   // Wait
-  if (UIO.sensor_ctd10)
+  if (UIO.action(1, UIO.sensor_ctd10))
   {
     CR_JOIN(ctd_id);
   }
-  if (UIO.sensor_ds2)
+  if (UIO.action(1, UIO.sensor_ds2))
   {
     CR_JOIN(ds_id);
   }

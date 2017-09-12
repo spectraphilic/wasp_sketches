@@ -115,10 +115,13 @@ const char* menuFormat1Wire(char* dst, size_t size);
 public:
 
 uint8_t flags;
-uint8_t batteryLevel;
-timestamp_t time;        // broken timestamp
 bool hasSD;
 SdFile logFile;
+
+// Variables updated on every loop (see initTime)
+uint8_t batteryLevel;
+timestamp_t time;        // broken timestamp
+uint8_t period;
 
 // Sensors
 uint8_t sensor_sensirion;
@@ -127,6 +130,7 @@ uint8_t sensor_leafwetness;
 uint8_t sensor_ctd10;
 uint8_t sensor_ds2;
 uint8_t sensor_ds1820;
+bool action(uint8_t n, ...);
 
 // Network related
 Network network;

@@ -214,28 +214,38 @@ char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size)
 }
 
 /**
- * Helper function to implement the equivalent to Python's '..'.join([])
+ * Helper function to implement something like Python's '..'.join([])
  *
- * Concatenates src to dst, prepended with delimiter if dst is not empty.
+ * Concatenates src to dst, prepended with delimiter if dst is not empty; src
+ * may be a formatted string.
+ *
  * Usage example:
  *
  * buffer[0] = '\0';
- * strnjoin_F(buffer, F("A"), F(", "), sizeof(buffer));
- * strnjoin_F(buffer, F("B"), F(", "), sizeof(buffer));
- * strnjoin_F(buffer, F("C"), F(", "), sizeof(buffer));
+ * strnjoin_F(buffer, sizeof(buffer), F(", "), F("A"));
+ * strnjoin_F(buffer, sizeof(buffer), F(", "), F("B"));
+ * strnjoin_F(buffer, sizeof(buffer), F(", "), F("C"));
  *
  * At the end buffer will hold "A, B, C"
  */
-char* strnjoin_F (char* dst, const __FlashStringHelper * src, const __FlashStringHelper * delimiter, size_t size)
+char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, const __FlashStringHelper* src, ...)
 {
+  va_list args;
   const char * __attribute__((progmem)) p = (const char * ) src;
+  char aux[100];
 
   if (dst[0])
   {
     strncat_F(dst, delimiter, size);
   }
 
-  strncat_F(dst, src, size);
+  strncpy_F(aux, src, sizeof(aux));
+
+  size_t len = strlen(dst);
+  va_start(args, src);
+  vsnprintf(dst + len, size - len - 1, aux, args);
+  va_end(args);
+
   return dst;
 }
 

@@ -176,7 +176,7 @@ class Loop
 // Utility functions to work with program memory (flash)
 char* strncpy_F(char* dst, const __FlashStringHelper * src, size_t num);
 char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size);
-char* strnjoin_F(char* dst, const __FlashStringHelper * src, const __FlashStringHelper * delimiter, size_t size);
+char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, const __FlashStringHelper* src, ...);
 
 extern Loop cr;
 

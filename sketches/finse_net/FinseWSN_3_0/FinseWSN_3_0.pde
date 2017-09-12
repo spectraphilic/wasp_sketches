@@ -6,9 +6,7 @@
 
 // 1. Include Libraries
 #include <WaspUIO.h>
-#include <WaspSensorAgr_v20.h>
 #include <WaspFrame.h>
-#include <WaspXBeeDM.h>
 
 // 2. Definitions
 
@@ -85,7 +83,7 @@ void loop()
     cr.spawn(taskHealthFrame);
     cr.spawn(taskSensors);
     // Network (Every 2h)
-    if (UIO.featureNetwork) // && UIO.time.hour % 2 == 0 && UIO.time.minute == 0)
+    if (UIO.featureNetwork && UIO.action(1, 12)) // 12 x 5min = 1hour
     {
       cr.spawn(taskNetwork);
     }
