@@ -122,13 +122,19 @@ bool WaspUIO::initVars()
   initNet((network_t) panid_low);
 
   // Sensors
+#if USE_AGR
   sensor_sensirion = Utils.readEEPROM(EEPROM_SENSOR_SENSIRION);
   sensor_pressure = Utils.readEEPROM(EEPROM_SENSOR_PRESSURE);
   sensor_leafwetness = Utils.readEEPROM(EEPROM_SENSOR_LEAFWETNESS);
+#endif
+#if USE_SDI
   sensor_ctd10 = Utils.readEEPROM(EEPROM_SENSOR_CTD10);
   sensor_ds2 = Utils.readEEPROM(EEPROM_SENSOR_DS2);
+#endif
+#if USE_I2C
   sensor_ds1820 = Utils.readEEPROM(EEPROM_SENSOR_DS1820);
   sensor_bme280 = Utils.readEEPROM(EEPROM_SENSOR_BME280);
+#endif
 
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
@@ -866,10 +872,16 @@ void WaspUIO::menu()
     cr.print(F("1. Time     : %s"), RTC.getTime());
     cr.print(F("2. Log      : level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
     cr.print(F("3. Network  : %s"), menuFormatNetwork(buffer, size));
+#if USE_AGR
     cr.print(F("4. Agr board: %s"), menuFormatAgr(buffer, size));
+#endif
+#if USE_SDI
     cr.print(F("5. SDI-12   : %s"), menuFormatSdi(buffer, size));
+#endif
+#if USE_I2C
     cr.print(F("6. OneWire  : %s"), menuFormat1Wire(buffer, size));
     cr.print(F("7. I2C      : %s"), menuFormatI2C(buffer, size));
+#endif
     if (hasSD)
     {
       cr.print(F("8. Open SD menu"));
@@ -882,10 +894,16 @@ void WaspUIO::menu()
     if      (c == '1') { menuTime(); }
     else if (c == '2') { menuLog(); }
     else if (c == '3') { menuNetwork(); }
+#if USE_AGR
     else if (c == '4') { menuAgr(); }
+#endif
+#if USE_SDI
     else if (c == '5') { menuSDI12(); }
+#endif
+#if USE_I2C
     else if (c == '6') { menu1Wire(); }
     else if (c == '7') { menuI2C(); }
+#endif
     else if (c == '8') { if (hasSD) SD.menu(30000); }
     else if (c == '9') { cr.print(); goto exit; }
   } while (true);
@@ -894,8 +912,16 @@ exit:
   info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
   info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
   info(F("Config Network: %s"), menuFormatNetwork(buffer, size));
+#if USE_AGR
   info(F("Config Agr board: %s"), menuFormatAgr(buffer, size));
+#endif
+#if USE_SDI
   info(F("Config SDI-12: %s"), menuFormatSdi(buffer, size));
+#endif
+#if USE_I2C
+  info(F("Config OneWire: %s"), menuFormat1Wire(buffer, size));
+  info(F("Config I2C: %s"), menuFormatI2C(buffer, size));
+#endif
 
   RTC.OFF();
   if (! featureUSB)
@@ -1888,33 +1914,42 @@ CR_TASK(taskHealthFrame)
 
 CR_TASK(taskSensors)
 {
+#if USE_AGR
   bool agr = UIO.action(3, UIO.sensor_pressure, UIO.sensor_leafwetness, UIO.sensor_sensirion);
+#endif
+#if USE_SDI
   bool sdi = UIO.action(2, UIO.sensor_ctd10, UIO.sensor_ds2);
+#endif
+#if USE_I2C
   bool onewire = UIO.action(1, UIO.sensor_ds1820);
   bool i2c = UIO.action(1, UIO.sensor_bme280);
+#endif
   static tid_t agr_id, sdi_id, onewire_id, i2c_id;
 
   CR_BEGIN;
 
   // Power On
+#if USE_AGR
   if (agr)
   {
     info(F("Agr board ON"));
     SensorAgrv20.ON();
   }
-  else
+#endif
+#if USE_SDI
+  if ((WaspRegister & REG_5V == 0) && sdi)
   {
-    if (sdi)
-    {
-      info(F("5V ON"));
-      PWR.setSensorPower(SENS_5V, SENS_ON);
-    }
-    if (onewire || i2c)
-    {
-      info(F("3V3 ON"));
-      PWR.setSensorPower(SENS_3V3, SENS_ON);
-    }
+    info(F("5V ON"));
+    PWR.setSensorPower(SENS_5V, SENS_ON);
   }
+#endif
+#if USE_I2C
+  if ((WaspRegister & REG_3V3 == 0) && (onewire || i2c))
+  {
+    info(F("3V3 ON"));
+    PWR.setSensorPower(SENS_3V3, SENS_ON);
+  }
+#endif
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
@@ -1933,35 +1968,46 @@ CR_TASK(taskSensors)
   CR_DELAY(500);
 
   // Spawn tasks to take measures
+#if USE_AGR
   if (agr)     { CR_SPAWN2(taskAgr, agr_id); }
+#endif
+#if USE_SDI
   if (sdi)     { CR_SPAWN2(taskSdi, sdi_id); }
+#endif
+#if USE_I2C
   if (onewire) { CR_SPAWN2(task1Wire, onewire_id); }
   if (i2c)     { CR_SPAWN2(taskI2C, i2c_id); }
+#endif
 
   // Wait for tasks to complete
+#if USE_AGR
   if (agr)     { CR_JOIN(agr_id); }
+#endif
+#if USE_SDI
   if (sdi)     { CR_JOIN(sdi_id); }
+#endif
+#if USE_I2C
   if (onewire) { CR_JOIN(onewire_id); }
   if (i2c)     { CR_JOIN(i2c_id); }
+#endif
 
   // Power Off
+#if USE_AGR
   if (agr)
   {
     info(F("Agr board OFF"));
     SensorAgrv20.OFF();
   }
-  else
+#endif
+  if ((WaspRegister & REG_5V))
   {
-    if ((WaspRegister & REG_5V))
-    {
-      info(F("5V OFF"));
-      PWR.setSensorPower(SENS_5V, SENS_OFF);
-    }
-    if ((WaspRegister & REG_3V3))
-    {
-      info(F("3V3 OFF"));
-      PWR.setSensorPower(SENS_3V3, SENS_OFF);
-    }
+    info(F("5V OFF"));
+    PWR.setSensorPower(SENS_5V, SENS_OFF);
+  }
+  if ((WaspRegister & REG_3V3))
+  {
+    info(F("3V3 OFF"));
+    PWR.setSensorPower(SENS_3V3, SENS_OFF);
   }
 
   CR_END;

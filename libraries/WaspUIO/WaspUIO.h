@@ -15,6 +15,11 @@
  * Definitions & Declarations
  ******************************************************************************/
 
+// We cannot enable everything at the same time or we run out of program memory
+#define USE_AGR false
+#define USE_I2C true // I include here OneWire as well
+#define USE_SDI true
+
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
