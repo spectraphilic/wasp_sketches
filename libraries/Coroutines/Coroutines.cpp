@@ -253,16 +253,15 @@ char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, c
 /*
  * Functions to calculate the distance between two calls to millis(), taking
  * into account overflow.
+ *
+ * XXX We could just remove this function and use millis() - t0 everywhere, but
+ * it would use more program memory, which we want to avoid, at least for now.
+ * That's why we declare the function noinline in the header file.
  */
-
-uint32_t Loop::millisDiff(uint32_t t0, uint32_t t1)
-{
-  return (t1 >= t0) ? t1 - t0: (ULONG_MAX - t0) + t1;
-}
 
 uint32_t Loop::millisDiff(uint32_t t0)
 {
-    return millisDiff(t0, millis());
+  return millis() - t0;
 }
 
 /*

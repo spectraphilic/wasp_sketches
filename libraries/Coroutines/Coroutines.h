@@ -157,8 +157,7 @@ class Loop
     // millisDiff is to calculate the difference between two calls to millis(),
     // but taking into account overflow. This is only needed if the device runs
     // without sleep for longer than 49 days.
-    uint32_t millisDiff(uint32_t t0, uint32_t t1);
-    uint32_t millisDiff(uint32_t t0);
+    uint32_t millisDiff(uint32_t t0) __attribute__((noinline));
 
     // Printing to USB done right. The print functions takes a formatted
     // string, either a regular string (char*) or one stored in the program
