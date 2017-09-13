@@ -9,7 +9,6 @@
  ******************************************************************************/
 
 #include <inttypes.h>
-#include <WaspSD.h>
 #include <Coroutines.h>
 
 /******************************************************************************
@@ -28,6 +27,7 @@
 #define EEPROM_SENSOR_CTD10 (EEPROM_START + 13) // SDI-12
 #define EEPROM_SENSOR_DS2 (EEPROM_START + 14)
 #define EEPROM_SENSOR_DS1820 (EEPROM_START + 15) // OneWire
+#define EEPROM_SENSOR_BME280 (EEPROM_START + 16) // I2C
 
 #define FLAG_LOG_USB 1
 #define FLAG_NETWORK 2
@@ -102,6 +102,7 @@ void menuLogLevel();
 void menuAgr();
 void menuSDI12();
 void menu1Wire();
+void menuI2C();
 void menuSensor(uint16_t sensor, uint8_t &value);
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint8_t sensor);
@@ -110,6 +111,7 @@ const char* menuFormatNetwork(char* dst, size_t size);
 const char* menuFormatAgr(char* dst, size_t size);
 const char* menuFormatSdi(char* dst, size_t size);
 const char* menuFormat1Wire(char* dst, size_t size);
+const char* menuFormatI2C(char* dst, size_t size);
 
 /// public methods and attributes ////////////
 public:
@@ -130,6 +132,7 @@ uint8_t sensor_leafwetness;
 uint8_t sensor_ctd10;
 uint8_t sensor_ds2;
 uint8_t sensor_ds1820;
+uint8_t sensor_bme280;
 bool action(uint8_t n, ...);
 
 // Network related
@@ -281,6 +284,8 @@ CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
 // OneWire
 CR_TASK(task1Wire);
+// I2C
+CR_TASK(taskI2C);
 // Network
 CR_TASK(taskNetwork);
 CR_TASK(taskNetworkSend);

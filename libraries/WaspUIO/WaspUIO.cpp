@@ -13,6 +13,7 @@
 #include <WaspSensorAgr_v20.h>
 #include <WaspGPS.h>
 #include <SDI12.h>
+#include <BME280.h>
 
 
 SDI12 mySDI12(6); // DATAPIN = 6
@@ -127,6 +128,7 @@ bool WaspUIO::initVars()
   sensor_ctd10 = Utils.readEEPROM(EEPROM_SENSOR_CTD10);
   sensor_ds2 = Utils.readEEPROM(EEPROM_SENSOR_DS2);
   sensor_ds1820 = Utils.readEEPROM(EEPROM_SENSOR_DS1820);
+  sensor_bme280 = Utils.readEEPROM(EEPROM_SENSOR_BME280);
 
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
@@ -800,8 +802,6 @@ const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
 
 const char* WaspUIO::menuFormatAgr(char* dst, size_t size)
 {
-  char aux[4];
-
   dst[0] = '\0';
   if (sensor_sensirion)   strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), sensor_sensirion);
   if (sensor_pressure)    strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), sensor_pressure);
@@ -823,6 +823,14 @@ const char* WaspUIO::menuFormat1Wire(char* dst, size_t size)
 {
   dst[0] = '\0';
   if (sensor_ds1820) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), sensor_ds1820);
+  if (! dst[0])      strncpy_F(dst, F("(none)"), size);
+  return dst;
+}
+
+const char* WaspUIO::menuFormatI2C(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (sensor_bme280) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), sensor_bme280);
   if (! dst[0])      strncpy_F(dst, F("(none)"), size);
   return dst;
 }
@@ -861,9 +869,10 @@ void WaspUIO::menu()
     cr.print(F("4. Agr board: %s"), menuFormatAgr(buffer, size));
     cr.print(F("5. SDI-12   : %s"), menuFormatSdi(buffer, size));
     cr.print(F("6. OneWire  : %s"), menuFormat1Wire(buffer, size));
+    cr.print(F("7. I2C      : %s"), menuFormatI2C(buffer, size));
     if (hasSD)
     {
-      cr.print(F("7. Open SD menu"));
+      cr.print(F("8. Open SD menu"));
     }
 
     cr.print(F("9. Exit"));
@@ -876,7 +885,8 @@ void WaspUIO::menu()
     else if (c == '4') { menuAgr(); }
     else if (c == '5') { menuSDI12(); }
     else if (c == '6') { menu1Wire(); }
-    else if (c == '7') { if (hasSD) SD.menu(30000); }
+    else if (c == '7') { menuI2C(); }
+    else if (c == '8') { if (hasSD) SD.menu(30000); }
     else if (c == '9') { cr.print(); goto exit; }
   } while (true);
 
@@ -1150,6 +1160,40 @@ void WaspUIO::menu1Wire()
     {
       case '1':
         menuSensor(EEPROM_SENSOR_DS1820, sensor_ds1820);
+        break;
+      case '9':
+        cr.print();
+        return;
+    }
+  } while (true);
+}
+
+/**
+ * Functions to manage OneWire sensors
+ *
+ * Parameters: void
+ * Returns   : void
+ *
+ */
+
+void WaspUIO::menuI2C()
+{
+  const char *str;
+
+  do
+  {
+    cr.print();
+    cr.print(F("1. I2C: BME-280 (%s)"), sensorStatus(sensor_bme280));
+    cr.print(F("9. Exit"));
+    cr.print();
+    str = input(F("==> Enter numeric option:"), 0);
+    if (strlen(str) == 0)
+      continue;
+
+    switch (str[0])
+    {
+      case '1':
+        menuSensor(EEPROM_SENSOR_DS1820, sensor_bme280);
         break;
       case '9':
         cr.print();
@@ -1773,6 +1817,9 @@ unsigned long WaspUIO::getEpochTime(uint16_t &ms)
  */
 const char* WaspUIO::getNextAlarm(char* alarmTime)
 {
+  // TODO Be more clever, check the enabled sensors (and network), and only
+  // wake up when something needs to be done
+
   // Format relative time to string, to be passed to deepSleep
   RTC.breakTimeAbsolute(getEpochTime(), &time);
   uint8_t alarmMinute = (time.minute / period) * period + period;
@@ -1844,7 +1891,8 @@ CR_TASK(taskSensors)
   bool agr = UIO.action(3, UIO.sensor_pressure, UIO.sensor_leafwetness, UIO.sensor_sensirion);
   bool sdi = UIO.action(2, UIO.sensor_ctd10, UIO.sensor_ds2);
   bool onewire = UIO.action(1, UIO.sensor_ds1820);
-  static tid_t agr_id, sdi_id, onewire_id;
+  bool i2c = UIO.action(1, UIO.sensor_bme280);
+  static tid_t agr_id, sdi_id, onewire_id, i2c_id;
 
   CR_BEGIN;
 
@@ -1861,10 +1909,23 @@ CR_TASK(taskSensors)
       info(F("5V ON"));
       PWR.setSensorPower(SENS_5V, SENS_ON);
     }
-    if (onewire)
+    if (onewire || i2c)
     {
       info(F("3V3 ON"));
       PWR.setSensorPower(SENS_3V3, SENS_ON);
+    }
+  }
+
+  // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
+  // TODO Do this once in the setup
+  if (UIO.action(1, UIO.sensor_bme280))
+  {
+    // Check if the sensor is accesible
+    if (BME.checkID() == 1)
+    {
+      // Read the calibration registers
+      BME.readCalibration();
+      return 1;
     }
   }
 
@@ -1872,32 +1933,16 @@ CR_TASK(taskSensors)
   CR_DELAY(500);
 
   // Spawn tasks to take measures
-  if (agr)
-  {
-    CR_SPAWN2(taskAgr, agr_id);
-  }
-  if (sdi)
-  {
-    CR_SPAWN2(taskSdi, sdi_id);
-  }
-  if (onewire)
-  {
-    CR_SPAWN2(task1Wire, onewire_id);
-  }
+  if (agr)     { CR_SPAWN2(taskAgr, agr_id); }
+  if (sdi)     { CR_SPAWN2(taskSdi, sdi_id); }
+  if (onewire) { CR_SPAWN2(task1Wire, onewire_id); }
+  if (i2c)     { CR_SPAWN2(taskI2C, i2c_id); }
 
   // Wait for tasks to complete
-  if (agr)
-  {
-    CR_JOIN(agr_id);
-  }
-  if (sdi)
-  {
-    CR_JOIN(sdi_id);
-  }
-  if (onewire)
-  {
-    CR_JOIN(onewire_id);
-  }
+  if (agr)     { CR_JOIN(agr_id); }
+  if (sdi)     { CR_JOIN(sdi_id); }
+  if (onewire) { CR_JOIN(onewire_id); }
+  if (i2c)     { CR_JOIN(i2c_id); }
 
   // Power Off
   if (agr)
@@ -1907,12 +1952,12 @@ CR_TASK(taskSensors)
   }
   else
   {
-    if (sdi)
+    if ((WaspRegister & REG_5V))
     {
       info(F("5V OFF"));
       PWR.setSensorPower(SENS_5V, SENS_OFF);
     }
-    if (onewire)
+    if ((WaspRegister & REG_3V3))
     {
       info(F("3V3 OFF"));
       PWR.setSensorPower(SENS_3V3, SENS_OFF);
@@ -2213,6 +2258,36 @@ CR_TASK(task1Wire)
   oneWire.depower();
 
   CR_END;
+}
+
+/**
+ * I2C
+ */
+
+CR_TASK(taskI2C)
+{
+  float temperature, humidity, pressure;
+  char aux[20];
+
+  // Read enviromental variables
+  temperature = BME.getTemperature(BME280_OVERSAMP_1X, 0);
+  humidity = BME.getHumidity(BME280_OVERSAMP_1X);
+  pressure = BME.getPressure(BME280_OVERSAMP_1X, 0);
+
+  // Debug
+  Utils.float2String(temperature, aux, 2);
+  debug(F("BME-280 Temperature: %s Celsius Degrees"), aux);
+
+  Utils.float2String(humidity, aux, 2);
+  debug(F("BME-280 Humidity   : %s %%RH"), aux);
+
+  Utils.float2String(pressure, aux, 2);
+  debug(F("BME-280 Pressure   : %s Pa"), aux);
+
+  // Frame
+  ADD_SENSOR(SENSOR_BME_TC, temperature);
+  ADD_SENSOR(SENSOR_BME_HUM, humidity);
+  ADD_SENSOR(SENSOR_BME_PRES, pressure);
 }
 
 
