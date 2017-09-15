@@ -1498,12 +1498,13 @@ void WaspUIO::OTA_communication(int OTA_duration)
 *
 * Wiring: GND -> GND, V+ -> 3V3, pin5 -> AUX SERIAL 1RX
 */
-uint8_t WaspUIO::readMaxbotixSerial(uint8_t samples)
+uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
 {
   const int bytes = 4; // Number of bytes to read
   char data_buffer[bytes]; // Store serial data
   int sample; // Store each sample
-
+  uint16_t samples[nsamples];
+  uint8_t i, j;
 
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
 
@@ -1512,7 +1513,7 @@ uint8_t WaspUIO::readMaxbotixSerial(uint8_t samples)
 
   beginSerial(9600,1); // set boud rate to 9600
 
-  for (int j = 0; j < samples;)
+  for (j = 0; j < nsamples;)
   {
     // flush and wait for a range reading
     serialFlush(1);
@@ -1520,14 +1521,14 @@ uint8_t WaspUIO::readMaxbotixSerial(uint8_t samples)
     while (!serialAvailable(1) || serialRead(1) != 'R');
 
     // read the range
-    for (int i = 0; i < bytes; i++)
+    for (i = 0; i < bytes; i++)
     {
       while (!serialAvailable(1));
 
       data_buffer[i] = serialRead(1);
     }
 
-    sample = (atoi(data_buffer));
+    sample = atoi(data_buffer);
 
     if (sample<=300 || sample>=5000)
     {
@@ -1536,19 +1537,41 @@ uint8_t WaspUIO::readMaxbotixSerial(uint8_t samples)
     }
     else
     {
+      samples[j] = (uint16_t) sample;
       j++;
       debug(F("readMaxbotixSerial: sample = %d"), sample);
       // add a function for median value....  construct an array...
       delay(1000);
     }
   }
-}
 
-/******************************************************************************/
-// Set defult to 5 samples
-uint8_t WaspUIO::readMaxbotixSerial(void)
-{
-  return readMaxbotixSerial(5);
+  // Bubble sort
+  bool done = false;
+  while (done == false)
+  {
+    done = true;
+    for (j = 0; j < nsamples; j++)
+    {
+      // numbers are out of order - swap
+      if (samples[j] > samples[j+1])
+      {
+        uint16_t temp = samples[j+1];
+        samples [j+1] = samples[j];
+        samples [j] = temp;
+        done = false;
+      }
+    }
+  }
+
+  // Median
+  if (nsamples % 2 == 1)
+  {
+    return samples[nsamples/2];
+  }
+  else
+  {
+    return (samples[nsamples/2] + samples[nsamples/2 - 1]) / 2;
+  }
 }
 
 /**
