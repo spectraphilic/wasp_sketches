@@ -5,13 +5,15 @@ Simon Filhol
 '''
 
 from __future__ import print_function, unicode_literals
+import os
+import struct
 
 import numpy as np
 import pandas as pd
 #import matplotlib as mpl
 #mpl.use('PS')
 import matplotlib.pyplot as plt
-import struct
+
 
 USHORT = 0 # uint8_t
 INT    = 1 # int16_t
@@ -20,10 +22,10 @@ STR    = 3 # char*
 ULONG  = 4 # uint32_t
 
 SENSORS = {
-#    15: (b'PA', ),
+     15: (b'PA', FLOAT, 1),
      33: (b'TCB', FLOAT, 1),
      35: (b'HUMB', FLOAT, 1),
-#    38: (b'LW', ),
+     38: (b'LW', FLOAT, 1),
      52: (b'BAT', USHORT, 1),
 #    53: (b'GPS', ),
 #    54: (b'RSSI', ),
@@ -56,16 +58,28 @@ class frameObj(object):
         self.in_temp = np.nan
         self.humb = np.nan
 
-def parse_frame(src):
-    line = src
 
-    # Start delimiter
-    if line[:3] != b'<=>':
-        print("Warning: not a frame")
-        print(src)
+def search_frame(data):
+    """
+    Search the frame start delimiter <=> and return the data just after the
+    delimer.  Anything found before is considered garbage and discarded. If
+    the delimeter is not found return None.
+    """
+    index = data.find(b'<=>')
+    if index == -1:
         return None
-    line = line[3:]
 
+    if index > 0:
+        print('Warning: garbage before frame found and discarded')
+
+    return data[index+3:]
+
+
+def parse_frame(line):
+    """
+    Parse the frame starting at the given byte string. We consider that the
+    frame start delimeter has already been read.
+    """
     # Frame type
     frame_type = struct.unpack_from("B", line)[0]
     line = line[1:]
@@ -77,17 +91,14 @@ def parse_frame(src):
     frame = frameObj()
 
     # ASCII
+    # <=><80>^C#408518488##0#TST:1499340600#BAT:98#IN_TEMP:31.00#
     if frame_type & 0x80:
-        spline = line.split(b'#')
+        spline = line.split(b'#', n + 4)
         serial_id = spline[1]
 #       waspmote_id = spline[2]
         sequence = spline[3]
-        payload = spline[4:-1]
-
-        if len(payload) != n:
-            print("Warning: number of fields does not match %d != %d" % (len(payload), n))
-            print(src)
-            return None
+        payload = spline[4:4+n]
+        rest = spline[4+n]
 
 #       print('Serial ', serial_id)
 #       print('Wasp   ', waspmote_id)
@@ -103,7 +114,6 @@ def parse_frame(src):
             sensor = SENSORS_STR.get(key, ())
             if not sensor:
                 print("Warning: %s sensor type not supported" % key)
-                print(src)
                 return None
 
             key, sensor_type, n = sensor
@@ -124,68 +134,84 @@ def parse_frame(src):
 
     # Binary
     else:
+        rest = line[n:]
+        line = line[:n]
         if frame_type == 0x00:
             v15 = False
         elif frame_type == 0x06:
             v15 = True
         else:
             print("Warning: %d frame type not supported" % frame_type)
-            print(src)
             return None
 
         # Serial id
         if v15:
-            serial_id = struct.unpack_from("Q", line)
+            serial_id = struct.unpack_from("Q", line)[0]
             line = line[8:]
         else:
-            serial_id = struct.unpack_from("L", line)
+            serial_id = struct.unpack_from("I", line)[0]
             line = line[4:]
 
         waspmote_id, line = line.split(b'#', 1)
-        sequence = struct.unpack_from("B", line)
-        payload = line[1:]
+        sequence = struct.unpack_from("B", line)[0]
+        line = line[1:] # Payload
+
+        frame.serialID = serial_id
+        frame.frameID = sequence
 
         while line:
-            sensor_id = struct.unpack_from("B", line)
+            sensor_id = struct.unpack_from("B", line)[0]
             line = line[1:]
             sensor = SENSORS.get(sensor_id, ())
             if not sensor:
                 print("Warning: %d sensor type not supported" % sensor_id)
-                print(src)
                 return None
 
-            key, sensor_type, n = sensor
-            for i in range(0, n):
+            key, sensor_type, nvalues = sensor
+            values = []
+            for i in range(0, nvalues):
                 if sensor_type == USHORT:
-                    value = struct.unpack_from("B", line)
+                    value = struct.unpack_from("B", line)[0]
                     line = line[1:]
                 elif sensor_type == INT:
-                    value = struct.unpack_from("h", line)
+                    value = struct.unpack_from("h", line)[0]
                     line = line[2:]
                 elif sensor_type == FLOAT:
-                    value = struct.unpack_from("f", line)
+                    value = struct.unpack_from("f", line)[0]
                     line = line[4:]
                 elif sensor_type == ULONG:
-                    value = struct.unpack_from("L", line)
+                    value = struct.unpack_from("I", line)[0]
                     line = line[4:]
                 elif sensor_type == STR:
-                    length = struct.unpack_from("B", line)
+                    length = struct.unpack_from("B", line)[0]
                     line = line[1:]
                     value = line[:length]
                     line = line[length:]
 
-    return frame
+                values.append(value)
+
+            if len(values) == 1:
+                values = values[0]
+
+            key = key.decode('ascii').lower()
+            setattr(frame, key, values)
+
+    return frame, rest
 
 
 def read_wasp_data(filename):
-    f = open(filename, 'rb')
-    data = pd.DataFrame()
-    for line in f:
-        frame = parse_frame(line)
-        if frame is not None:
-            data = data.append(frame.__dict__, ignore_index=True)
+    data = open(filename, 'rb').read()
+    data_frame = pd.DataFrame()
+    while data:
+        data = search_frame(data)
+        if data:
+            frame, data = parse_frame(data)
+            if frame is not None:
+                data_frame = data_frame.append(frame.__dict__, ignore_index=True)
 
-    return data
+            data = data[1:] # read end of frame: \n
+
+    return data_frame
 
 def plot(filename):
     data = read_wasp_data(filename)
@@ -198,12 +224,19 @@ def plot(filename):
 
 
 if __name__ == '__main__':
-    filenames = [
+    names = [
 #       '../../data/data_20170710/TMP.TXT',
 #       '../../data/data_20170710/DATA/170706.TXT',
-        'data/170914.TXT'
+        'data/170915/DATA'
     ]
-    datas = [plot(x) for x in filenames]
+
+    datas = []
+    for name in names:
+        if os.path.isdir(name):
+            for filename in os.listdir(name):
+                datas.append(plot(os.path.join(name, filename)))
+        else:
+            datas.append(plot(name))
 
     #plt.ion()
 
