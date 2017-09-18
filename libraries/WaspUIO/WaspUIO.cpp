@@ -1227,7 +1227,7 @@ void WaspUIO::menuI2C()
     switch (str[0])
     {
       case '1':
-        menuSensor(EEPROM_SENSOR_DS1820, sensor_bme280);
+        menuSensor(EEPROM_SENSOR_BME280, sensor_bme280);
         break;
       case '9':
         cr.print();
@@ -1939,14 +1939,14 @@ CR_TASK(taskSensors)
   }
 #endif
 #if USE_SDI
-  if ((WaspRegister & REG_5V == 0) && sdi)
+  if (! (WaspRegister & REG_5V) && sdi)
   {
     info(F("5V ON"));
     PWR.setSensorPower(SENS_5V, SENS_ON);
   }
 #endif
 #if USE_I2C
-  if ((WaspRegister & REG_3V3 == 0) && (onewire || i2c))
+  if (! (WaspRegister & REG_3V3) && (onewire || i2c))
   {
     info(F("3V3 ON"));
     PWR.setSensorPower(SENS_3V3, SENS_ON);
@@ -2001,12 +2001,12 @@ CR_TASK(taskSensors)
     SensorAgrv20.OFF();
   }
 #endif
-  if ((WaspRegister & REG_5V))
+  if (WaspRegister & REG_5V)
   {
     info(F("5V OFF"));
     PWR.setSensorPower(SENS_5V, SENS_OFF);
   }
-  if ((WaspRegister & REG_3V3))
+  if (WaspRegister & REG_3V3)
   {
     info(F("3V3 OFF"));
     PWR.setSensorPower(SENS_3V3, SENS_OFF);
