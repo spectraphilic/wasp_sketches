@@ -199,57 +199,52 @@ def parse_frame(line):
     return frame, rest
 
 
-def read_wasp_data(filename):
-    data = open(filename, 'rb').read()
-    data_frame = pd.DataFrame()
-    while data:
-        data = search_frame(data)
-        if data:
-            frame, data = parse_frame(data)
+def read_wasp_data(filename, data):
+    src = open(filename, 'rb').read()
+    while src:
+        src = search_frame(src)
+        if src:
+            frame, src = parse_frame(src)
             if frame is not None:
-                data_frame = data_frame.append(frame.__dict__, ignore_index=True)
+                data.append(frame.__dict__)
 
-            data = data[1:] # read end of frame: \n
-
-    return data_frame
-
-def plot(filename):
-    data = read_wasp_data(filename)
-    data.sort_values(by='tst', inplace=True)
-    data['timestamp'] = pd.to_datetime(data['tst'], unit='s')
-    data = data.set_index('timestamp')
-    data.bat = data['bat'].astype(float)
-    data.in_temp = data['in_temp'].astype(float)
-    return data
+            # read end of frame: \n
+            if src[0] == '\n':
+                src = src[1:]
 
 
 if __name__ == '__main__':
     names = [
 #       '../../data/data_20170710/TMP.TXT',
 #       '../../data/data_20170710/DATA/170706.TXT',
-        'data/170915/DATA'
+        'data/170918/DATA'
     ]
 
-    datas = []
+    data = []
     for name in names:
         if os.path.isdir(name):
             for filename in os.listdir(name):
-                datas.append(plot(os.path.join(name, filename)))
+                filename = os.path.join(name, filename)
+                read_wasp_data(filename, data)
         else:
-            datas.append(plot(name))
+            read_wasp_data(name, data)
+    data_frame = pd.DataFrame(data)
+
+    data_frame.sort_values(by='tst', inplace=True)
+    data_frame['timestamp'] = pd.to_datetime(data_frame['tst'], unit='s')
+    data_frame = data_frame.set_index('timestamp')
 
     #plt.ion()
 
     # Battery
     plt.subplot(2,1,1)
-    for data in datas:
-        data.bat.dropna().plot()
+    data_frame.bat.dropna().plot()
     plt.ylabel('Battery level (%)')
 
     # Internal Temperture
     plt.subplot(2,1,2)
-    for data in datas:
-        data.in_temp.dropna().plot()
+    data_frame.in_temp.dropna().plot()
+    #data_frame.tcb.dropna().plot()
     plt.ylabel('Internal Temperature (degC)')
 
     # Plot
