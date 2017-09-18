@@ -19,6 +19,7 @@
 #define USE_AGR false
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
+#define FRAME_BINARY false
 
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
@@ -147,10 +148,9 @@ uint8_t receiveGPSsyncTime();
 uint8_t readRSSI2Frame(void);
 
 // Frame files
-const char* tmpFilename = "TMP_2.TXT"; // Change name as format did change
+const char* tmpFilename = "TMP.TXT"; // Change name as format did change
 SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
-int readline(SdFile &file);
 
 // To keep time without calling RCT each time
 unsigned long epochTime; // seconds since the epoch

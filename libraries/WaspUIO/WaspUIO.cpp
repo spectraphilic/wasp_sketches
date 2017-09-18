@@ -457,8 +457,11 @@ void WaspUIO::createFrame(bool discard)
     frame2Sd();
   }
 
+#if FRAME_BINARY
+  frame.createFrame(BINARY);
+#else
   frame.createFrame(ASCII);
-  //frame.createFrame(BINARY);
+#endif
 
   // In binary frames, the timestamp must be first, that's what I deduce from
   // frame.addTimestamp
@@ -493,7 +496,7 @@ void WaspUIO::createFrame(bool discard)
 uint8_t WaspUIO::frame2Sd()
 {
   int32_t size;
-  uint8_t item[7];
+  uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
 
   if (! hasSD)
@@ -522,7 +525,11 @@ uint8_t WaspUIO::frame2Sd()
     return 1;
   }
 
+#if FRAME_BINARY
+  if (SD.append(dataFilename, frame.buffer, frame.length) == 0)
+#else
   if (SD.appendln(dataFilename, frame.buffer, frame.length) == 0)
+#endif
   {
     error(F("frame2Sd: Failed to append frame to %s"), dataFilename);
     return 1;
@@ -530,7 +537,8 @@ uint8_t WaspUIO::frame2Sd()
 
   // (3) Append to queue
   *(uint32_t *)(item + 3) = (uint32_t) size;
-  if (append(tmpFile, item, 7) == -1)
+  item[7] = (uint8_t) frame.length;
+  if (append(tmpFile, item, 8) == -1)
   {
     error(F("frame2Sd: Failed to append to %s"), tmpFilename);
     return 2;
@@ -1639,35 +1647,6 @@ bool WaspUIO::updateEEPROM(int address, uint32_t value)
 }
 
 /**
- * Read a line from the given open file, not including the end-of-line
- * character. Store the read line in SD.buffer.
- *
- * Return the length of the line. Or -1 for EOF. Or -2 if error.
- */
-
-int WaspUIO::readline(SdFile &file)
-{
-  int n;
-
-  n = file.fgets(SD.buffer, sizeof(SD.buffer));
-
-  // Error
-  if (n == -1)
-    return -2;
-
-  // EOF
-  if (n == 0)
-    return -1;
-
-  if (SD.buffer[n - 1] == '\n') {
-    SD.buffer[n - 1] = '\0';
-    return n - 1;
-  }
-
-  return n;
-}
-
-/**
  * Append data to the given file.
  *
  * Return the number of bytes written. Or -1 for error.
@@ -1921,7 +1900,7 @@ CR_TASK(taskAcc)
 CR_TASK(taskHealthFrame)
 {
   // Frame: Device's health (battery, rtc temperature, acc)
-  ADD_SENSOR(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel()); // Battery level (uint8_t)
+  ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel); // Battery level (uint8_t)
   ADD_SENSOR(SENSOR_IN_TEMP, UIO.rtc_temp); // RTC temperature in Celsius (float)
 
   return CR_TASK_STOP;
@@ -2410,9 +2389,10 @@ CR_TASK(taskNetworkSend)
 {
   SdFile archive;
   uint32_t fileSize;
-  uint8_t item[7];
+  uint8_t item[8];
   uint32_t t0;
   char dataFilename[18]; // /data/YYMMDD.txt
+  int size;
 
   CR_BEGIN;
 
@@ -2420,12 +2400,12 @@ CR_TASK(taskNetworkSend)
   // jaming the network.
   CR_DELAY(rand() % 500);
 
-  // Security check, the file size must be a multiple of 7. If it is not we
+  // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
   fileSize = UIO.tmpFile.fileSize();
-  if (fileSize % 7 != 0)
+  if (fileSize % 8 != 0)
   {
-    UIO.tmpFile.truncate(fileSize - fileSize % 7);
+    UIO.tmpFile.truncate(fileSize - fileSize % 8);
     warn(F("sendFrames: wrong file size (%s), truncated"), UIO.tmpFilename);
   }
 
@@ -2435,8 +2415,8 @@ CR_TASK(taskNetworkSend)
     t0 = millis();
 
     // Read the frame length
-    UIO.tmpFile.seekEnd(-7);
-    if (UIO.tmpFile.read(item, 7) != 7)
+    UIO.tmpFile.seekEnd(-8);
+    if (UIO.tmpFile.read(item, 8) != 8)
     {
       error(F("sendFrames (%s): read error"), UIO.tmpFilename);
       CR_ERROR;
@@ -2450,18 +2430,24 @@ CR_TASK(taskNetworkSend)
       CR_ERROR;
     }
     archive.seekSet(*(uint32_t *)(item + 3));
-    UIO.readline(archive);
+    size = archive.read(SD.buffer, (size_t) item[7]);
     archive.close();
 
+    if (size < 0 || size != (int) item[7])
+    {
+      error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
+      CR_ERROR;
+    }
+
     // Send the frame
-    if (xbeeDM.send((char*)UIO.network.rx_address, SD.buffer) == 1)
+    if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
     {
       warn(F("sendFrames: Send failure"));
       CR_ERROR;
     }
 
     // Truncate (pop)
-    if (UIO.tmpFile.truncate(UIO.tmpFile.fileSize() - 7) == false)
+    if (UIO.tmpFile.truncate(UIO.tmpFile.fileSize() - 8) == false)
     {
       error(F("sendFrames: error in tmpFile.truncate"));
       CR_ERROR;
