@@ -1957,9 +1957,11 @@ CR_TASK(taskSensors)
   // TODO Do this once in the setup
   if (UIO.action(1, UIO.sensor_bme280))
   {
+    debug(F("BME-280: Checking..."));
     // Check if the sensor is accesible
     if (BME.checkID() == 1)
     {
+      debug(F("BME-280: Calibration..."));
       // Read the calibration registers
       BME.readCalibration();
       return 1;
@@ -2317,6 +2319,7 @@ CR_TASK(taskI2C)
   float temperature, humidity, pressure;
   char aux[20];
 
+  debug(F("BME-280: Reading..."));
   // Read enviromental variables
   temperature = BME.getTemperature(BME280_OVERSAMP_1X, 0);
   humidity = BME.getHumidity(BME280_OVERSAMP_1X);
