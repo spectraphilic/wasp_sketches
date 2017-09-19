@@ -700,7 +700,7 @@ void WaspUIO::showFrame()
        }
      }
    }
-   cr.print(F("=========================================="), frame.numFields, frame.length);
+   cr.print(F("=========================================="));
 }
 
 
@@ -2335,6 +2335,8 @@ CR_TASK(taskI2C)
   ADD_SENSOR(SENSOR_BME_TC, temperature);
   ADD_SENSOR(SENSOR_BME_HUM, humidity);
   ADD_SENSOR(SENSOR_BME_PRES, pressure);
+
+  return CR_TASK_STOP;
 }
 
 
