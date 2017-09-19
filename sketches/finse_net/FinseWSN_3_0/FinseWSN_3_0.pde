@@ -14,10 +14,9 @@
 
 void setup()
 {
+  UIO.readConfig(); // Read configuration from EEPROM
   UIO.initTime();
-
-  // Initialize variables, from EEPROM (USB print, OTA programming, ..)
-  UIO.initVars();
+  UIO.initNet();
 
   // Interactive mode
   UIO.start_RTC_SD_USB(false);

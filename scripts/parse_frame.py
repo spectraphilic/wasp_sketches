@@ -32,18 +32,18 @@ SENSORS = {
 #    55: (b'MAC', ),
      62: (b'IN_TEMP', FLOAT, 1),
 #    63: (b'ACC', ),
-#    74: (b'BME_TC', ),
-#    76: (b'BME_HUM', ),
-#    77: (b'BME_PRES', ),
+     74: (b'BME_TC', FLOAT, 1),
+     76: (b'BME_HUM', FLOAT, 1),
+     77: (b'BME_PRES', FLOAT, 1),
 #    85: (b'TX_PWR', ),
 #    89: (b'SPEED_OG', ),
 #    90: (b'COURSE_OG', ),
 #    91: (b'ALT', ),
     123: (b'TST', ULONG, 1),
-#   200: (b'SDI12_CTD10', ),
-#   201: (b'SDI12_DS2_1', ),
-#   202: (b'SDI12_DS2_2', ),
-#   203: (b'DS1820', ),
+    200: (b'SDI12_CTD10', FLOAT, 3),
+    201: (b'SDI12_DS2_1', FLOAT, 3),
+    202: (b'SDI12_DS2_2', FLOAT, 3),
+    203: (b'DS1820', FLOAT, 1),
 }
 
 SENSORS_STR = {v[0]: v for k, v in SENSORS.items()}
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     names = [
 #       '../../data/data_20170710/TMP.TXT',
 #       '../../data/data_20170710/DATA/170706.TXT',
-        'data/170918/DATA'
+        'data/170919/DATA',
     ]
 
     data = []

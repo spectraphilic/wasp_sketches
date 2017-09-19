@@ -24,7 +24,8 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-// 4 bytes available
+#define EEPROM_UIO_WAKEUP_PERIOD (EEPROM_START + 3)
+// 3 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 2 bytes available
 #define EEPROM_SENSOR_SENSIRION (EEPROM_START + 10) // Agr
@@ -105,19 +106,14 @@ void menuNetwork();
 void menuLog();
 void menuLog2(uint8_t flag, const char* var);
 void menuLogLevel();
-void menuAgr();
-void menuSDI12();
-void menu1Wire();
-void menuI2C();
+void menuSensors();
+void menuWakeup();
 void menuSensor(uint16_t sensor, uint8_t &value);
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint8_t sensor);
 const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);
-const char* menuFormatAgr(char* dst, size_t size);
-const char* menuFormatSdi(char* dst, size_t size);
-const char* menuFormat1Wire(char* dst, size_t size);
-const char* menuFormatI2C(char* dst, size_t size);
+const char* menuFormatSensors(char* dst, size_t size);
 
 /// public methods and attributes ////////////
 public:
@@ -132,6 +128,7 @@ timestamp_t time;        // broken timestamp
 uint8_t period;
 
 // Sensors
+uint8_t wakeup_period;
 uint8_t sensor_sensirion;
 uint8_t sensor_pressure;
 uint8_t sensor_leafwetness;
@@ -173,9 +170,9 @@ uint8_t delFile(const char* filename);
 uint8_t createFile(const char* filename);
 
 // Init, start and stop methods
-bool initVars();
+bool readConfig();
+void initNet();
 void setNetwork(network_t);
-void initNet(network_t);
 void start_RTC_SD_USB(bool rtc = true);
 void stop_RTC_SD_USB(void);
 
