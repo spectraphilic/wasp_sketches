@@ -2270,7 +2270,7 @@ CR_TASK(taskNetwork)
   info(F("Network started"));
 
   // Spawn first the receive task
-  CR_SPAWN(taskNetworkReceive);
+  //CR_SPAWN(taskNetworkReceive);
 
   // Schedule sending frames
   if (UIO.hasSD)
