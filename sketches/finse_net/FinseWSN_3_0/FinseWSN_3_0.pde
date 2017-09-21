@@ -28,11 +28,13 @@ void setup()
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?
+/*
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
     warn(F("Wrong time detected, updating from GPS"));
-    //actionGps();
+    actionGps();
   }
+*/
 
   // Set random seed, different for every device
   srandom(Utils.readSerialID());
@@ -94,10 +96,12 @@ void loop()
     // As clock sync between the devices is critical for the network to work
     // properly, we update the RTC time from GPS daily. But the GPS draws power,
     // so this may need to be tuned.
+/*
     if (UIO.time.minute == 0 && UIO.time.hour == 0);
     {
-      //cr.spawn(taskGps);
+      cr.spawn(taskGps);
     }
+*/
     cr.run();
 
     // Save the last frame, if there is something to save
