@@ -1548,10 +1548,13 @@ bool WaspUIO::action(uint8_t n, ...)
   for (; n; n--)
   {
     value = va_arg(args, int);
-    if ((time.hour * 60 + time.minute) % (period * value) == 0)
+    if (value > 0)
     {
-      yes = true;
-      break;
+      if ((time.hour * 60 + time.minute) % (period * value) == 0)
+      {
+        yes = true;
+        break;
+      }
     }
   }
   va_end(args);
