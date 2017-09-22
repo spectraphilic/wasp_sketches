@@ -127,6 +127,9 @@ void Loop::run()
 
   while (next - first)
   {
+    uint32_t sleep = 0;
+    bool resumed = false;
+
     //USB.printf((char*)"%d %d\n", first, next);
     uint32_t time_threshold = millisDiff(start) + CR_DELAY_OFFSET;
     for (uint16_t tid=first; tid < next; tid++)
@@ -143,6 +146,11 @@ void Loop::run()
           {
             //trace(F("Task %d time threshold reached: run"), tid);
             resume(task, tid);
+            resumed = true;
+          }
+          else if (sleep == 0 || (state - time_threshold) < sleep)
+          {
+            sleep = (state - time_threshold);
           }
           continue;
         }
@@ -154,9 +162,36 @@ void Loop::run()
           {
             //trace(F("Task %d finished: resume task %d"), state, tid);
             resume(task, tid);
+            resumed = true;
           }
         }
       }
+    }
+
+    // Sleep
+    if (! resumed && sleep > 16)
+    {
+      trace(F("LOOP Sleep for %lu ms"), sleep);
+      cr.print(F("LOOP millis %lu"), millis());
+      if      (sleep > 8000) { PWR.sleep(WTD_8S, ALL_ON); }
+      else if (sleep > 4000) { PWR.sleep(WTD_4S, ALL_ON); }
+      else if (sleep > 2000) { PWR.sleep(WTD_2S, ALL_ON); }
+      else if (sleep > 1000) { PWR.sleep(WTD_1S, ALL_ON); }
+      else if (sleep >  500) { PWR.sleep(WTD_500MS, ALL_ON); }
+      else if (sleep >  250) { PWR.sleep(WTD_250MS, ALL_ON); }
+      else if (sleep >  128) { PWR.sleep(WTD_128MS, ALL_ON); }
+      else if (sleep >   64) { PWR.sleep(WTD_64MS, ALL_ON); }
+      else if (sleep >   32) { PWR.sleep(WTD_32MS, ALL_ON); }
+      else if (sleep >   16) { PWR.sleep(WTD_16MS, ALL_ON); }
+      if (intFlag & WTD_INT)
+      {
+        intFlag &= ~(WTD_INT);
+        intCounter--;
+        intArray[WTD_POS]--;
+        cr.print(F("LOOP millis %lu"), millis());
+        trace(F("LOOP Awake!!"));
+      }
+
     }
   }
 
