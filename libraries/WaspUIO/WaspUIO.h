@@ -186,7 +186,7 @@ void OTA_communication(int OTA_duration);
 const char* readOwnMAC(char* mac);
 
 // Interactive mode
-const char* input(const __FlashStringHelper *, unsigned long timeout);
+const char* input(char* buffer, size_t size, const __FlashStringHelper *, unsigned long timeout);
 void menu();
 const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);

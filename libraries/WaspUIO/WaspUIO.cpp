@@ -673,10 +673,8 @@ uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour,
  * Returns:    String read from the USB cable, or NULL if timeout.
  */
 
-const char* WaspUIO::input(const __FlashStringHelper * prompt, unsigned long timeout)
+const char* WaspUIO::input(char* buffer, size_t size, const __FlashStringHelper * prompt, unsigned long timeout)
 {
-  static char buffer[80];
-  size_t max = sizeof(buffer) - 1;
   int i = 0;
 
   cr.print(prompt);
@@ -700,7 +698,7 @@ const char* WaspUIO::input(const __FlashStringHelper * prompt, unsigned long tim
   }
 
   // Read the data
-  for (i=0; i < max; i++)
+  for (i=0; i < size - 1; i++)
   {
     // Could be optimized to read as many chars as USB.available says in one
     // go. But this is a cold path, do don't bother.
@@ -769,7 +767,6 @@ const char* WaspUIO::menuFormatSensors(char* dst, size_t size)
 
 void WaspUIO::menu()
 {
-  const char* str;
   char c;
   char buffer[150];
   size_t size = sizeof(buffer);
@@ -777,7 +774,7 @@ void WaspUIO::menu()
   RTC.ON();
 
   // Go interactive or not
-  if (input(F("Press Enter to start interactive mode. Wait 2 seconds to skip:"), 2000) == NULL)
+  if (input(buffer, sizeof(buffer), F("Press Enter to start interactive mode. Wait 2 seconds to skip:"), 2000) == NULL)
   {
     goto exit;
   }
@@ -804,8 +801,8 @@ void WaspUIO::menu()
 
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
-    c = str[0];
+    input(buffer, size, F("==> Enter numeric option:"), 0);
+    c = buffer[0];
     if      (c == '1') { menuTime(); }
     else if (c == '2') { menuLog(); }
     else if (c == '3') { menuNetwork(); }
@@ -830,7 +827,7 @@ exit:
 
 void WaspUIO::menuTime()
 {
-  const char *str;
+  char str[80];
 
   do
   {
@@ -839,7 +836,7 @@ void WaspUIO::menuTime()
     cr.print(F("2. Set time from GPS"));
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -862,12 +859,12 @@ void WaspUIO::menuTime()
 
 void WaspUIO::menuTimeManual()
 {
-  const char *str;
   unsigned short year, month, day, hour, minute, second;
+  char str[80];
 
   do
   {
-    str = input(F("Set new time (format is yy:mm:dd:hh:mm:ss). Press Enter to leave it unchanged:"), 0);
+    input(str, sizeof(str), F("Set new time (format is yy:mm:dd:hh:mm:ss). Press Enter to leave it unchanged:"), 0);
     if (strlen(str) == 0)
       return;
 
@@ -910,7 +907,7 @@ const char* WaspUIO::sensorStatus(uint8_t sensor)
 
 void WaspUIO::menuSensor(uint16_t sensor, uint8_t &value)
 {
-  const char *str;
+  char str[80];
 
   do
   {
@@ -926,7 +923,7 @@ void WaspUIO::menuSensor(uint16_t sensor, uint8_t &value)
     }
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -987,7 +984,7 @@ update:
 
 void WaspUIO::menuNetwork()
 {
-  const char *str;
+  char str[80];
 
   do
   {
@@ -1000,7 +997,7 @@ void WaspUIO::menuNetwork()
     cr.print(F("5. Other"));
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -1048,8 +1045,7 @@ const char* WaspUIO::flagStatus(uint8_t flag)
 
 void WaspUIO::menuLog()
 {
-  const char *str;
-
+  char str[80];
   char* level;
 
   do
@@ -1060,7 +1056,7 @@ void WaspUIO::menuLog()
     cr.print(F("3. Choose the log level (%s)"), cr.loglevel2str(cr.loglevel));
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -1084,12 +1080,12 @@ void WaspUIO::menuLog()
 
 void WaspUIO::menuLog2(uint8_t flag, const char* var)
 {
-  const char *str;
+  char str[80];
 
   do
   {
     cr.print(F("Type 1 to enable %s output, 0 to disable, Enter to leave:"), var);
-    str = input(F(""), 0);
+    input(str, sizeof(str), F(""), 0);
     if (strlen(str) == 0)
       return;
 
@@ -1111,7 +1107,7 @@ void WaspUIO::menuLog2(uint8_t flag, const char* var)
 
 void WaspUIO::menuLogLevel()
 {
-  const char *str;
+  char str[80];
 
   do
   {
@@ -1125,7 +1121,7 @@ void WaspUIO::menuLogLevel()
     cr.print(F("6. Trace"));
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -1167,7 +1163,7 @@ void WaspUIO::menuLogLevel()
 
 void WaspUIO::menuSD()
 {
-  const char *str;
+  char str[80];
 
   SD.ON();
 
@@ -1179,7 +1175,7 @@ void WaspUIO::menuSD()
     cr.print(F("3. Format"));
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -1189,7 +1185,7 @@ void WaspUIO::menuSD()
         SD.ls(LS_DATE | LS_SIZE | LS_R);
         break;
       case '2':
-        str = input(F("==> Enter path:"), 0);
+        input(str, sizeof(str), F("==> Enter path:"), 0);
         if (strlen(str) > 0)
         {
           SD.showFile((char*) str);
@@ -1212,7 +1208,7 @@ void WaspUIO::menuSD()
 
 void WaspUIO::menuSensors()
 {
-  const char *str;
+  char str[80];
 
   do
   {
@@ -1232,7 +1228,7 @@ void WaspUIO::menuSensors()
 #endif
     cr.print(F("9. Exit"));
     cr.print();
-    str = input(F("==> Enter numeric option:"), 0);
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
 
@@ -1273,12 +1269,12 @@ void WaspUIO::menuSensors()
 
 void WaspUIO::menuWakeup()
 {
-  const char *str;
+  char str[80];
   int value;
 
   do
   {
-    str = input(F("Enter the wake period in minutes (1-255). Press Enter to leave it unchanged:"), 0);
+    input(str, sizeof(str), F("Enter the wake period in minutes (1-255). Press Enter to leave it unchanged:"), 0);
     if (strlen(str) == 0)
       return;
 
