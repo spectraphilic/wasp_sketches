@@ -22,46 +22,11 @@ SDI12 mySDI12(6); // DATAPIN = 6
 /******************************************************************************
 * Constructors
 ******************************************************************************/
-//UIO::UIO()
-//{
-
-//}
-
-// test!!
 
 
 /******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
-
-/**
- * delFile
- *
- * Deletes the file with the given filename from the SD card. Returns 1 on
- * success, 0 on error.
- *
- * If the file does not exist it is not considered an error.
-*/
-
-uint8_t WaspUIO::delFile(const char* filename)
-{
-  if (SD.isFile(filename) == 1)
-  {
-    if(SD.del(filename))
-    {
-      info(F("%s deleted"), filename);
-      return 1;
-    }
-    else
-    {
-      error(F("Failed to delete %s, error %d"), filename, SD.flag);
-      return 0;
-    }
-  }
-
-  debug(F("Failed to delete %s, it does not exist"), filename);
-  return 1;
-}
 
 /**
  * createFile
@@ -88,7 +53,7 @@ uint8_t WaspUIO::createFile(const char* filename)
   {
     if (SD.create(filename))
     {
-      info(F("%s created"), filename);
+      debug(F("%s created"), filename);
       return 0;
     }
 
@@ -102,10 +67,12 @@ uint8_t WaspUIO::createFile(const char* filename)
 }
 
 /**
- * Read information from EEPRROM and initialize variables.
+ * Function to be called first in setup()
  */
-bool WaspUIO::readConfig()
+void WaspUIO::onSetup()
 {
+  /*** 1. Read configuration from EEPROM ***/
+
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
   featureUSB = flags & FLAG_LOG_USB;
@@ -139,82 +106,34 @@ bool WaspUIO::readConfig()
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
-  return true;
+  /*** 2. Autodetect hardware ** */
+  SD.ON();
+  hasSD = (SD.isSD() == 1);
+  SD.OFF();
+
+/*
+    // USB autodetect
+    debug(F("USB before %d"), serialAvailable(0));
+    USB.ON();
+    uint8_t usb = serialAvailable(0);
+    USB.OFF();
+    debug(F("USB after %d"), usb);
+*/
+
+  /*** 3. Other ** */
+
+  // Set random seed, different for every device, based on the lower 4 bytes of
+  // the serial id
+  // XXX Do this at the beginning of every loop as well?
+  srandom(* (uint32_t *) _serial_id + 4);
 }
 
-/**
- * Function to initialize SD card.
- * 1) check if there is an SD card.
- * 2) create files for program if non existing
- *
- * Returns 0 if success, 1 if error.
- *
- * TODO:
- * - include rules for when new datafiles will be created, eg. monthly files,
- *   max samples per fill etc...
- */
-
-uint8_t WaspUIO::initSD()
+void WaspUIO::onBoot()
 {
-  // Check for SD card
-  if (! hasSD)
-  {
-    return 1;
-  }
-
-  // Create log file first, so logging is available
-  //createFile(logFilename);
-
-  // Create files used to send frames
-  //createFile(tmpFilename);
-
-  switch (SD.isDir(archive_dir))
-  {
-    case 1:
-      break;
-    case 0:
-      SD.del(archive_dir);
-    case -1:
-      SD.mkdir((char*)archive_dir);
-  }
-
-  return 0;
+   initTime();
+   readBattery();
 }
 
-void WaspUIO::openFiles()
-{
-  if (hasSD)
-  {
-    // Open log file
-    if (flags & FLAG_LOG_SD)
-    {
-      if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
-      {
-        cr.print(F("ERROR start_RTC_SD_USB: opening log file failed"));
-      }
-    }
-    // Open tmp file
-    if (!SD.openFile((char*)tmpFilename, &tmpFile, O_CREAT | O_RDWR | O_APPEND | O_SYNC))
-    {
-      cr.print(F("ERROR start_RTC_SD_USB: opening tmp file failed"));
-    }
-  }
-}
-
-void WaspUIO::closeFiles()
-{
-  if (hasSD)
-  {
-    if (tmpFile.isOpen())
-    {
-      tmpFile.close();
-    }
-    if (logFile.isOpen())
-    {
-      logFile.close();
-    }
-  }
-}
 
 /******************************************************************************/
 /* Function to intialize the waspmote and its XBee to a digimesh network setting
@@ -333,50 +252,68 @@ void WaspUIO::initNet()
   xbeeDM.OFF();
 }
 
-/******************************************************************************/
-/* Function to start SD, and USB.
-*/
+/**
+ * Functions to start and stop SD. Open and closes required files.
+ */
 
-void WaspUIO::start_RTC_SD_USB(bool rtc)
+void WaspUIO::startSD()
 {
-  // RTC
-  if (rtc)
-  {
-    RTC.ON();
-  }
-
-  // USB
-  if (featureUSB)
-  {
-    USB.ON();
-  }
-
-  // SD
-  SD.ON();
-  hasSD = (SD.isSD() == 1);
   if (! hasSD)
   {
-    SD.OFF();
     return;
+  }
+
+  SD.ON();
+
+  // Create directories
+  switch (SD.isDir(archive_dir))
+  {
+    case 1:
+      break;
+    case 0:
+      SD.del(archive_dir);
+    case -1:
+      SD.mkdir((char*)archive_dir);
+  }
+
+  // Open log file (TODO Log rotate)
+  if (flags & FLAG_LOG_SD)
+  {
+    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
+    {
+      error(F("openFiles: opening log file failed"));
+    }
+  }
+
+  // Open tmp file
+  if (!SD.openFile((char*)tmpFilename, &tmpFile, O_CREAT | O_RDWR | O_APPEND | O_SYNC))
+  {
+    error(F("openFiles: opening tmp file failed"));
   }
 }
 
-/******************************************************************************/
-/* Function to stop SD, and USB.
-*/
-void WaspUIO::stop_RTC_SD_USB(void)
+void WaspUIO::stopSD()
 {
-  if (RTC.isON)
+  if (! hasSD)
   {
-    RTC.OFF();
+    return;
+  }
+
+  // Close files
+  if (tmpFile.isOpen())
+  {
+    tmpFile.close();
+  }
+
+  if (flags & FLAG_LOG_SD)
+  {
+    if (logFile.isOpen())
+    {
+      logFile.close();
+    }
   }
 
   SD.OFF();
-
-  if (featureUSB)
-  {
-    USB.OFF();
-  }
 }
 
 /**
@@ -419,7 +356,10 @@ void vlog(loglevel_t level, const char* message, va_list args)
   // (2) Print to USB
   if (UIO.featureUSB)
   {
+    USB.ON();
+    USB.flush(); // XXX This fixes a weird bug with XBee
     USB.print(buffer);
+    USB.OFF();
   }
 
   // (3) Print to log file
@@ -430,18 +370,6 @@ void vlog(loglevel_t level, const char* message, va_list args)
     {
       cr.print(F("ERROR vlog: failed writing to SD"));
     }
-  }
-}
-
-/******************************************************************************/
-/* Function to delete logFilename if its size exceeds 50MB
-*/
-void WaspUIO::delLogActivity(void){
-  // delete log file if larger than 50MB
-  if(SD.getFileSize(logFilename) > 50000000)
-  {
-    delFile(logFilename);
-    info(F("INFO New log file"));
   }
 }
 
@@ -548,7 +476,10 @@ uint8_t WaspUIO::frame2Sd()
   // (4) Print frame to USB
   if (featureUSB)
   {
+    USB.ON();
+    USB.flush();
     showFrame();
+    USB.OFF();
   }
 
   return 0;
@@ -843,13 +774,11 @@ void WaspUIO::menu()
   char buffer[150];
   size_t size = sizeof(buffer);
 
-  USB.ON();
   RTC.ON();
 
   // Go interactive or not
   if (input(F("Press Enter to start interactive mode. Wait 2 seconds to skip:"), 2000) == NULL)
   {
-    cr.print();
     goto exit;
   }
 
@@ -883,21 +812,12 @@ void WaspUIO::menu()
     else if (c == '4') { menuWakeup(); }
     else if (c == '5') { menuSensors(); }
     else if (c == '8') { if (hasSD) menuSD(); }
-    else if (c == '9') { cr.print(); goto exit; }
+    else if (c == '9') { goto exit; }
   } while (true);
 
 exit:
-  info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
-  info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
-  info(F("Config Network: %s"), menuFormatNetwork(buffer, size));
-  info(F("Config Wakeup : %d minutes"), wakeup_period);
-  info(F("Config Sensors: %s"), menuFormatSensors(buffer, size));
-
+  cr.print();
   RTC.OFF();
-  if (! featureUSB)
-  {
-    USB.OFF();
-  }
 }
 
 /**
@@ -1249,6 +1169,8 @@ void WaspUIO::menuSD()
 {
   const char *str;
 
+  SD.ON();
+
   do
   {
     cr.print();
@@ -1278,6 +1200,7 @@ void WaspUIO::menuSD()
         break;
       case '9':
         cr.print();
+	SD.OFF();
         return;
     }
   } while (true);
@@ -1748,6 +1671,13 @@ void WaspUIO::initTime()
     RTC.OFF();
   }
 
+  // Update RTC time at least once. Keep minute and hour for later.
+  RTC.breakTimeAbsolute(getEpochTime(), &time);
+}
+
+
+void WaspUIO::readBattery()
+{
   // Battery
   batteryLevel = PWR.getBatteryLevel();
 
@@ -2026,7 +1956,7 @@ CR_TASK(taskAgrLC)
   // Leaf wetness
   if (UIO.action(1, UIO.sensor_leafwetness))
   {
-    info(F("Agr Leaf Wetness ON"));
+    debug(F("Agr Leaf Wetness ON"));
     SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
     CR_DELAY(50);
     wetness = SensorAgrv20.readValue(SENS_AGR_LEAF_WETNESS);
@@ -2047,7 +1977,7 @@ CR_TASK(taskAgrLC)
   // OFF
   if (UIO.action(1, UIO.sensor_leafwetness))
   {
-    info(F("Agr Leaf Wetness OFF"));
+    debug(F("Agr Leaf Wetness OFF"));
     SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
   }
   if (UIO.action(1, UIO.sensor_sensirion))
@@ -2302,6 +2232,12 @@ CR_TASK(taskNetwork)
 {
   static tid_t tid;
 
+  // Send, once every 3 hours if low battery
+  bool send = (
+    UIO.hasSD &&
+    (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0)
+  );
+
   CR_BEGIN;
 
   if (!xbeeDM.XBee_ON)
@@ -2315,20 +2251,20 @@ CR_TASK(taskNetwork)
   info(F("Network started"));
 
   // Spawn first the receive task
-  //CR_SPAWN(taskNetworkReceive);
+  CR_SPAWN(taskNetworkReceive);
 
   // Schedule sending frames
-  if (UIO.hasSD)
+  if (send)
   {
-    // Once every 3 hours if low battery
-    if ((UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0))
-    {
-      CR_SPAWN2(taskNetworkSend, tid);
-    }
+    CR_SPAWN2(taskNetworkSend, tid);
   }
 
   CR_DELAY(8000); // Keep the network open at least for 8s
-  CR_JOIN(tid);
+
+  if (send)
+  {
+    CR_JOIN(tid);
+  }
 
   // Stop network
   if (xbeeDM.XBee_ON)
@@ -2449,24 +2385,22 @@ CR_TASK(taskNetworkReceive)
         }
         else
         {
-          warn(F("receivePacket: unexpected packet %s"), UIO.buffer);
-
+          warn(F("receivePacket: unexpected packet"));
           // Show data stored in '_payload' buffer indicated by '_length'
-          cr.print(F("Data: %s"), UIO.buffer);
+          debug(F("Data: %s"), UIO.buffer);
           // Show data stored in '_payload' buffer indicated by '_length'
-          cr.print(F("Length: %d"), xbeeDM._length);
+          debug(F("Length: %d"), xbeeDM._length);
           // Show data stored in '_payload' buffer indicated by '_length'
-          USB.print(F("Source MAC Address: "));
-          USB.printHex( xbeeDM._srcMAC[0] );
-          USB.printHex( xbeeDM._srcMAC[1] );
-          USB.printHex( xbeeDM._srcMAC[2] );
-          USB.printHex( xbeeDM._srcMAC[3] );
-          USB.printHex( xbeeDM._srcMAC[4] );
-          USB.printHex( xbeeDM._srcMAC[5] );
-          USB.printHex( xbeeDM._srcMAC[6] );
-          USB.printHex( xbeeDM._srcMAC[7] );
-          cr.print();
-          cr.print(F("--------------------------------"));
+          debug(F("Source MAC Address: %02X%02X%02X%02X%02X%02X%02X%02X"),
+                xbeeDM._srcMAC[0],
+                xbeeDM._srcMAC[1],
+                xbeeDM._srcMAC[2],
+                xbeeDM._srcMAC[3],
+                xbeeDM._srcMAC[4],
+                xbeeDM._srcMAC[5],
+                xbeeDM._srcMAC[6],
+                xbeeDM._srcMAC[7]
+		);
         }
       }
     }

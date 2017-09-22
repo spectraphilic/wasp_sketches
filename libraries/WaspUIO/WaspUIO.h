@@ -112,9 +112,7 @@ void menuSensor(uint16_t sensor, uint8_t &value);
 void menuSD();
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint8_t sensor);
-const char* menuFormatLog(char* dst, size_t size);
-const char* menuFormatNetwork(char* dst, size_t size);
-const char* menuFormatSensors(char* dst, size_t size);
+void setNetwork(network_t);
 
 /// public methods and attributes ////////////
 public:
@@ -166,23 +164,17 @@ const char* BROADCAST_ADDRESS = "000000000000FFFF";
 uint8_t featureUSB = 1;
 uint8_t featureNetwork = 1;
 
-// File related methods
-uint8_t delFile(const char* filename);
+// SD related methods
+void startSD();
+void stopSD();
 uint8_t createFile(const char* filename);
 
 // Init, start and stop methods
-bool readConfig();
+void onSetup();
+void onBoot();
+void initTime();
+void readBattery();
 void initNet();
-void setNetwork(network_t);
-void start_RTC_SD_USB(bool rtc = true);
-void stop_RTC_SD_USB(void);
-
-uint8_t initSD();
-void openFiles();
-void closeFiles();
-
-// Function to record waspmote activity in log file
-void delLogActivity(void);
 
 // Frames
 void createFrame(bool discard=false);
@@ -196,9 +188,11 @@ const char* readOwnMAC(char* mac);
 // Interactive mode
 const char* input(const __FlashStringHelper *, unsigned long timeout);
 void menu();
+const char* menuFormatLog(char* dst, size_t size);
+const char* menuFormatNetwork(char* dst, size_t size);
+const char* menuFormatSensors(char* dst, size_t size);
 
 // Time related methods
-void initTime();
 unsigned long getEpochTime();
 unsigned long getEpochTime(uint16_t &ms);
 uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);

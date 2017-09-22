@@ -14,17 +14,26 @@
 
 void setup()
 {
-  UIO.readConfig(); // Read configuration from EEPROM
-  UIO.initTime();
-  UIO.initNet();
+  UIO.onSetup();
+  UIO.onBoot();
 
   // Interactive mode
-  UIO.start_RTC_SD_USB(false);
+  USB.ON();
+  UIO.initNet();
   UIO.menu();
+  USB.OFF();
 
-  // Create/Open files
-  UIO.initSD();
-  UIO.openFiles();
+  // Logging available from here
+  UIO.startSD();
+
+  // Log configuration
+  char buffer[150];
+  size_t size = sizeof(buffer);
+  info(F("Booting... (battery level is %d)"), UIO.batteryLevel);
+  info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
+  info(F("Config Network: %s"), UIO.menuFormatNetwork(buffer, size));
+  info(F("Config Wakeup : %d minutes"), UIO.wakeup_period);
+  info(F("Config Sensors: %s"), UIO.menuFormatSensors(buffer, size));
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?
@@ -36,34 +45,20 @@ void setup()
   }
 */
 
-  // Set random seed, different for every device
-  srandom(Utils.readSerialID());
-
-  //char mac[17];
-  //UIO.readOwnMAC(mac);
-
   // Calculate first alarm (requires batteryLevel)
   char alarmTime[12]; // "00:00:00:00"
   UIO.getNextAlarm(alarmTime);
 
   // Go to sleep
-  debug(F("Boot done, go to sleep"));
-  UIO.closeFiles();
-  UIO.stop_RTC_SD_USB();
+  info(F("Boot done, go to sleep"));
+  UIO.stopSD();
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
 }
 
 void loop()
 {
-  bool run;
-
-  // Time
-  UIO.initTime();
-  UIO.start_RTC_SD_USB(false);
-  UIO.openFiles();
-
-  // Update RTC time at least once. Keep minute and hour for later.
-  RTC.breakTimeAbsolute(UIO.getEpochTime(), &UIO.time);
+  UIO.onBoot();
+  UIO.startSD(); // Logging starts here
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
@@ -83,7 +78,6 @@ void loop()
     cr.reset();
     cr.spawn(taskHealthFrame);
     cr.spawn(taskSensors);
-    // Network (Every 2h)
     if (UIO.featureNetwork && UIO.action(1, 12)) // 12 x 5min = 1hour
     {
       cr.spawn(taskNetwork);
@@ -121,8 +115,7 @@ sleep:
   UIO.getNextAlarm(alarmTime);
 
   info(F("Loop done in %lu ms."), cr.millisDiff(UIO.start));
-  UIO.closeFiles();
-  UIO.stop_RTC_SD_USB();
+  UIO.stopSD(); // Logging ends here
 
   // Clear interruption flag & pin
   clearIntFlag();
