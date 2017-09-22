@@ -870,7 +870,7 @@ void WaspUIO::menu()
     cr.print(F("5. Sensors : %s"), menuFormatSensors(buffer, size));
     if (hasSD)
     {
-      cr.print(F("8. Open SD menu"));
+      cr.print(F("8. SD"));
     }
 
     cr.print(F("9. Exit"));
@@ -882,7 +882,7 @@ void WaspUIO::menu()
     else if (c == '3') { menuNetwork(); }
     else if (c == '4') { menuWakeup(); }
     else if (c == '5') { menuSensors(); }
-    else if (c == '8') { if (hasSD) SD.menu(30000); }
+    else if (c == '8') { if (hasSD) menuSD(); }
     else if (c == '9') { cr.print(); goto exit; }
   } while (true);
 
@@ -1238,6 +1238,48 @@ void WaspUIO::menuLogLevel()
     updateEEPROM(EEPROM_UIO_LOG_LEVEL, (uint8_t) cr.loglevel);
     cr.print();
     return;
+  } while (true);
+}
+
+/**
+ * Function to manage the SD.
+ */
+
+void WaspUIO::menuSD()
+{
+  const char *str;
+
+  do
+  {
+    cr.print();
+    cr.print(F("1. List files"));
+    cr.print(F("2. Show file"));
+    cr.print(F("3. Format"));
+    cr.print(F("9. Exit"));
+    cr.print();
+    str = input(F("==> Enter numeric option:"), 0);
+    if (strlen(str) == 0)
+      continue;
+
+    switch (str[0])
+    {
+      case '1':
+        SD.ls(LS_DATE | LS_SIZE | LS_R);
+        break;
+      case '2':
+        str = input(F("==> Enter path:"), 0);
+        if (strlen(str) > 0)
+        {
+          SD.showFile((char*) str);
+        }
+        break;
+      case '3':
+        SD.format();
+        break;
+      case '9':
+        cr.print();
+        return;
+    }
   } while (true);
 }
 

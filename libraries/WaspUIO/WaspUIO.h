@@ -109,6 +109,7 @@ void menuLogLevel();
 void menuSensors();
 void menuWakeup();
 void menuSensor(uint16_t sensor, uint8_t &value);
+void menuSD();
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint8_t sensor);
 const char* menuFormatLog(char* dst, size_t size);
