@@ -1667,6 +1667,7 @@ void WaspUIO::initTime()
 
   epochTime = RTC.getEpochTime();
   start = millis();
+  cr.sleep = 0;
 
   // Read temperature now that RTC is ON (it takes less than 2ms)
   rtc_temp = RTC.getTemperature();
