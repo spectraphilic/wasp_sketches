@@ -15,7 +15,7 @@
 void setup()
 {
   UIO.onSetup();
-  UIO.onBoot();
+  UIO.onLoop();
 
   // Interactive mode
   USB.ON();
@@ -57,7 +57,7 @@ void setup()
 
 void loop()
 {
-  UIO.onBoot();
+  UIO.onLoop();
   UIO.startSD(); // Logging starts here
 
   // Check RTC interruption
@@ -90,12 +90,11 @@ void loop()
     // As clock sync between the devices is critical for the network to work
     // properly, we update the RTC time from GPS daily. But the GPS draws power,
     // so this may need to be tuned.
-/*
-    if (UIO.time.minute == 0 && UIO.time.hour == 0);
-    {
-      cr.spawn(taskGps);
-    }
-*/
+//  if (UIO.time.minute == 0 && UIO.time.hour == 0);
+//  {
+//    cr.spawn(taskGps);
+//  }
+//  cr.spawn(taskSlow);
     cr.run();
 
     // Save the last frame, if there is something to save
@@ -114,7 +113,8 @@ sleep:
   char alarmTime[12]; // "00:00:00:00"
   UIO.getNextAlarm(alarmTime);
 
-  info(F("Loop done in %lu ms."), cr.millisDiff(UIO.start));
+  uint32_t cpu_time = cr.millisDiff(UIO.start);
+  info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep, cpu_time);
   UIO.stopSD(); // Logging ends here
 
   // Clear interruption flag & pin

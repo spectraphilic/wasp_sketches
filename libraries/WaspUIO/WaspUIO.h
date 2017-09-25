@@ -171,7 +171,7 @@ uint8_t createFile(const char* filename);
 
 // Init, start and stop methods
 void onSetup();
-void onBoot();
+void onLoop();
 void initTime();
 void readBattery();
 void initNet();
@@ -209,6 +209,8 @@ extern WaspUIO UIO;
 
 
 void vlog(loglevel_t level, const char* message, va_list args);
+void beforeSleep();
+void afterSleep();
 
 
 /*
@@ -288,6 +290,8 @@ CR_TASK(taskNetworkSend);
 CR_TASK(taskNetworkReceive);
 // GPS
 CR_TASK(taskGps);
+// For testing purposes
+CR_TASK(taskSlow);
 
 
 #endif

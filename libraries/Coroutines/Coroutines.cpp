@@ -116,8 +116,12 @@ void Loop::resume(Task* task, tid_t tid)
 
 void Loop::run()
 {
-  start = millis();
+  int32_t delay_time;
+  bool resumed;
   Task* task;
+
+  start = millis();
+  sleep = 0;
 
   // Reset if stuck for 4 minutes (v15 only)
   if (_boot_version >= 'H')
@@ -127,11 +131,11 @@ void Loop::run()
 
   while (next - first)
   {
-    uint32_t sleep = 0;
-    bool resumed = false;
+    delay_time = 0;
+    resumed = false;
 
     //USB.printf((char*)"%d %d\n", first, next);
-    uint32_t time_threshold = millisDiff(start) + CR_DELAY_OFFSET;
+    uint32_t time_threshold = millisDiff(start) + sleep + CR_DELAY_OFFSET;
     for (uint16_t tid=first; tid < next; tid++)
     {
       task = get(tid);
@@ -148,9 +152,9 @@ void Loop::run()
             resume(task, tid);
             resumed = true;
           }
-          else if (sleep == 0 || (state - time_threshold) < sleep)
+          else if (delay_time == 0 || (state - time_threshold) < delay_time)
           {
-            sleep = (state - time_threshold);
+            delay_time = (state - time_threshold);
           }
           continue;
         }
@@ -169,29 +173,32 @@ void Loop::run()
     }
 
     // Sleep
-    if (! resumed && sleep > 16)
+    // There is an overhead of about 750-800 ms, most of it turning OFF/ON the
+    // SD. So this only makes sense for long sleep times.
+    delay_time -= 800;
+    if (! resumed && delay_time > 250)
     {
-      trace(F("LOOP Sleep for %lu ms"), sleep);
-      cr.print(F("LOOP millis %lu"), millis());
-      if      (sleep > 8000) { PWR.sleep(WTD_8S, ALL_ON); }
-      else if (sleep > 4000) { PWR.sleep(WTD_4S, ALL_ON); }
-      else if (sleep > 2000) { PWR.sleep(WTD_2S, ALL_ON); }
-      else if (sleep > 1000) { PWR.sleep(WTD_1S, ALL_ON); }
-      else if (sleep >  500) { PWR.sleep(WTD_500MS, ALL_ON); }
-      else if (sleep >  250) { PWR.sleep(WTD_250MS, ALL_ON); }
-      else if (sleep >  128) { PWR.sleep(WTD_128MS, ALL_ON); }
-      else if (sleep >   64) { PWR.sleep(WTD_64MS, ALL_ON); }
-      else if (sleep >   32) { PWR.sleep(WTD_32MS, ALL_ON); }
-      else if (sleep >   16) { PWR.sleep(WTD_16MS, ALL_ON); }
+      //uint32_t overhead_start = millis();
+      debug(F("delay = %lu ms (go to sleep)"), delay_time);
+      beforeSleep();
+      if      (delay_time > 8000) { PWR.sleep(WTD_8S, ALL_ON); sleep += 8000; }
+      else if (delay_time > 4000) { PWR.sleep(WTD_4S, ALL_ON); sleep += 4000; }
+      else if (delay_time > 2000) { PWR.sleep(WTD_2S, ALL_ON); sleep += 2000; }
+      else if (delay_time > 1000) { PWR.sleep(WTD_1S, ALL_ON); sleep += 1000; }
+      else if (delay_time >  500) { PWR.sleep(WTD_500MS, ALL_ON); sleep += 500; }
+      else if (delay_time >  250) { PWR.sleep(WTD_250MS, ALL_ON); sleep += 250; }
       if (intFlag & WTD_INT)
       {
         intFlag &= ~(WTD_INT);
         intCounter--;
         intArray[WTD_POS]--;
-        cr.print(F("LOOP millis %lu"), millis());
-        trace(F("LOOP Awake!!"));
+        afterSleep();
+	//cr.print(F("OVERHEAD %lu"), millis() - overhead_start);
       }
-
+      else
+      {
+        warn(F("Expected watchdog interruption, got %d"), intFlag);
+      }
     }
   }
 
@@ -200,6 +207,16 @@ void Loop::run()
   {
     RTC.unSetWatchdog();
   }
+}
+
+void beforeSleep()
+{
+  //trace(F("beforeSleep"));
+}
+
+void afterSleep()
+{
+  //trace(F("afterSleep"));
 }
 
 

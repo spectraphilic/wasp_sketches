@@ -128,7 +128,7 @@ void WaspUIO::onSetup()
   srandom(* (uint32_t *) _serial_id + 4);
 }
 
-void WaspUIO::onBoot()
+void WaspUIO::onLoop()
 {
    initTime();
    readBattery();
@@ -371,6 +371,16 @@ void vlog(loglevel_t level, const char* message, va_list args)
       cr.print(F("ERROR vlog: failed writing to SD"));
     }
   }
+}
+
+void beforeSleep()
+{
+  UIO.stopSD();
+}
+
+void afterSleep()
+{
+  UIO.startSD();
 }
 
 /**
@@ -947,7 +957,7 @@ void WaspUIO::menuSensor(uint16_t sensor, uint8_t &value)
           cr.print(F("Enabling SDI-12"));
           PWR.setSensorPower(SENS_5V, SENS_ON);
           mySDI12.begin();
-  
+
           if (sensor == EEPROM_SENSOR_CTD10)
           {
             mySDI12.identification(0);
@@ -956,7 +966,7 @@ void WaspUIO::menuSensor(uint16_t sensor, uint8_t &value)
           {
             mySDI12.identification(1);
           }
-  
+
           cr.print(F("Disabling SDI-12"));
           mySDI12.end();
           PWR.setSensorPower(SENS_5V, SENS_OFF);
@@ -1196,7 +1206,7 @@ void WaspUIO::menuSD()
         break;
       case '9':
         cr.print();
-	SD.OFF();
+        SD.OFF();
         return;
     }
   } while (true);
@@ -1705,7 +1715,8 @@ void WaspUIO::readBattery()
 
 unsigned long WaspUIO::getEpochTime()
 {
-  return epochTime + cr.millisDiff(start) / 1000;
+  uint32_t ms = cr.millisDiff(start) + cr.sleep;
+  return epochTime + ms / 1000;
 }
 
 unsigned long WaspUIO::getEpochTime(uint16_t &ms)
@@ -2247,7 +2258,7 @@ CR_TASK(taskNetwork)
   info(F("Network started"));
 
   // Spawn first the receive task
-  CR_SPAWN(taskNetworkReceive);
+  //CR_SPAWN(taskNetworkReceive);
 
   // Schedule sending frames
   if (send)
@@ -2396,7 +2407,7 @@ CR_TASK(taskNetworkReceive)
                 xbeeDM._srcMAC[5],
                 xbeeDM._srcMAC[6],
                 xbeeDM._srcMAC[7]
-		);
+               );
         }
       }
     }
@@ -2452,4 +2463,22 @@ CR_TASK(taskGps)
 
   GPS.OFF();
   return CR_TASK_STOP;
+}
+
+/**
+ * This task is only to test the watchdog reset.
+ */
+
+CR_TASK(taskSlow)
+{
+  CR_BEGIN;
+
+  // Wait a little bit so this is executed last
+  CR_DELAY(12000);
+
+  warn(F("Start slow task"));
+  delay(5 * 60000); // 5 minutes
+  warn(F("End slow task"));
+
+  CR_END;
 }

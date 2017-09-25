@@ -85,7 +85,7 @@ typedef uint32_t tstate_t;
 #define CR_BEGIN     static int _state = 0; switch(_state) { case 0:;
 #define CR_DELAY(delay) \
   do { \
-    _state=__LINE__; return (cr.millisDiff(cr.start) + delay + CR_DELAY_OFFSET); case __LINE__:; \
+    _state=__LINE__; return (cr.millisDiff(cr.start) + cr.sleep + delay + CR_DELAY_OFFSET); case __LINE__:; \
   } while (0)
 
 #define CR_ERROR  do { _state=0; return CR_TASK_ERROR; } while(0)
@@ -128,6 +128,11 @@ enum loglevel_t {OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE};
 /* By default prints to USB. Redefine this function to change behaviour. */
 extern void vlog(loglevel_t level, const char* message, va_list args) __attribute__((weak));
 
+/* These are called before and after sleep within the loop. To be defined
+ * externally. By default do nothing. */
+extern void beforeSleep() __attribute__((weak));
+extern void afterSleep() __attribute__((weak));
+
 
 class Loop
 {
@@ -148,6 +153,9 @@ class Loop
     // Initialized to zero when cr.reset() is called. Means loop not running.
     // Initialized to millis() when cr.run() is called.
     uint32_t start;
+
+    // Amount of time asleep. Initialized to zero when cr.run() is called.
+    uint32_t sleep;
 
     // Main functions
     void reset();
