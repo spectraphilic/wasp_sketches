@@ -28,14 +28,15 @@ SENSORS = {
      38: (b'LW', FLOAT, 1),
      52: (b'BAT', USHORT, 1),
 #    53: (b'GPS', ),
-#    54: (b'RSSI', ),
-#    55: (b'MAC', ),
+     54: (b'RSSI', INT, 1),
+     55: (b'MAC', STR, 1),
      62: (b'IN_TEMP', FLOAT, 1),
 #    63: (b'ACC', ),
+     65: (b'STR', STR, 1),
      74: (b'BME_TC', FLOAT, 1),
      76: (b'BME_HUM', FLOAT, 1),
      77: (b'BME_PRES', FLOAT, 1),
-#    85: (b'TX_PWR', ),
+     85: (b'TX_PWR', USHORT, 1),
 #    89: (b'SPEED_OG', ),
 #    90: (b'COURSE_OG', ),
 #    91: (b'ALT', ),
@@ -209,7 +210,7 @@ def read_wasp_data(filename, data):
                 data.append(frame.__dict__)
 
             # read end of frame: \n
-            if src[0] == '\n':
+            if src and src[0] == '\n':
                 src = src[1:]
 
 
@@ -217,7 +218,11 @@ if __name__ == '__main__':
     names = [
 #       '../../data/data_20170710/TMP.TXT',
 #       '../../data/data_20170710/DATA/170706.TXT',
-        'data/170919/DATA',
+#       'data/170926/DATA',
+        'data/170924-finse/DATA/170921.TXT',
+        'data/170924-finse/DATA/170922.TXT',
+        'data/170924-finse/DATA/170923.TXT',
+        'data/170924-finse/DATA/170924.TXT',
     ]
 
     data = []
