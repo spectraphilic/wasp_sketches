@@ -294,7 +294,7 @@ void WaspUIO::startSD()
 
 void WaspUIO::stopSD()
 {
-  if (! hasSD)
+  if (! SPI.isSD)
   {
     return;
   }
@@ -1667,7 +1667,7 @@ void WaspUIO::initTime()
 
   epochTime = RTC.getEpochTime();
   start = millis();
-  cr.sleep = 0;
+  cr.sleep_time = 0;
 
   // Read temperature now that RTC is ON (it takes less than 2ms)
   rtc_temp = RTC.getTemperature();
@@ -1691,8 +1691,8 @@ void WaspUIO::readBattery()
   batteryLevel = PWR.getBatteryLevel();
 
   // Power logic for lithium battery
-  if (UIO.batteryType == 1){
-
+  if (UIO.batteryType == 1)
+  {
     // Find out sampling period, in minutes. The value must be a factor of 60*24
     // (number of minutes in a day).
     // Different values for different battery levels.
@@ -1711,7 +1711,8 @@ void WaspUIO::readBattery()
   }
 
   // Logic for Lead acid battery
-  else if (UIO.batteryType == 2){
+  else if (UIO.batteryType == 2)
+  {
     period = wakeup_period * 1;
   }
 }
@@ -1727,7 +1728,7 @@ void WaspUIO::readBattery()
 
 unsigned long WaspUIO::getEpochTime()
 {
-  uint32_t ms = cr.millisDiff(start) + cr.sleep;
+  uint32_t ms = cr.millisDiff(start) + cr.sleep_time;
   return epochTime + ms / 1000;
 }
 
@@ -1759,6 +1760,18 @@ const char* WaspUIO::getNextAlarm(char* alarmTime)
   sprintf(alarmTime, "00:00:%02d:00", alarmMinute);
 
   return alarmTime;
+}
+
+void WaspUIO::deepSleep()
+{
+  char alarmTime[12]; // "00:00:00:00"
+
+  // Enable RTC interruption and sleep
+  getNextAlarm(alarmTime);
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+
+  // Awake: disable RTC interruptions
+  RTC.detachInt();
 }
 
 
@@ -2253,16 +2266,18 @@ CR_TASK(taskNetwork)
 
   // Send, once every 3 hours if low battery  and lithium battery
   bool send;
-  if (UIO.batteryType == 1){
-  send = (
-    UIO.hasSD &&
-    (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0)
-  );
-}
+  if (UIO.batteryType == 1)
+  {
+    send = (
+      UIO.hasSD &&
+      (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0)
+    );
+  }
 
   // send period for Lead Acid battery
-  if (UIO.batteryType == 2){
-  send = UIO.hasSD;
+  else if (UIO.batteryType == 2)
+  {
+    send = UIO.hasSD;
   }
 
   CR_BEGIN;

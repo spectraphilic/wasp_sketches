@@ -85,7 +85,7 @@ typedef uint32_t tstate_t;
 #define CR_BEGIN     static int _state = 0; switch(_state) { case 0:;
 #define CR_DELAY(delay) \
   do { \
-    _state=__LINE__; return (cr.millisDiff(cr.start) + cr.sleep + delay + CR_DELAY_OFFSET); case __LINE__:; \
+    _state=__LINE__; return (cr.millisDiff(cr.start) + cr.sleep_time + delay + CR_DELAY_OFFSET); case __LINE__:; \
   } while (0)
 
 #define CR_ERROR  do { _state=0; return CR_TASK_ERROR; } while(0)
@@ -140,10 +140,11 @@ class Loop
     Task queue[CR_QUEUE_SIZE]; // Task queue
     int16_t first, next; // Id of the first and next task id in the queue.
 
-
-    // Private task functions
+    // Private functions
     int8_t join(Task* task, tid_t tid, tid_t target_id);
     void resume(Task* task, tid_t tid);
+    void sleep(uint8_t timer);
+
   public:
     // 'get' is public only because used by the macros. It is not really
     // intended to be used from the outside.
@@ -155,7 +156,7 @@ class Loop
     uint32_t start;
 
     // Amount of time asleep. Initialized to zero when cr.run() is called.
-    uint32_t sleep;
+    uint32_t sleep_time;
 
     // Main functions
     void reset();

@@ -200,6 +200,7 @@ uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t 
 
 // Sleep related
 const char* getNextAlarm(char* alarmTime);
+void deepSleep();
 
 // Other
 uint16_t readMaxbotixSerial(uint8_t samples = 5);

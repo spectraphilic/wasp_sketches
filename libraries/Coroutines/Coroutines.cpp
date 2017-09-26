@@ -121,13 +121,7 @@ void Loop::run()
   Task* task;
 
   start = millis();
-  sleep = 0;
-
-  // Reset if stuck for 4 minutes (v15 only)
-  if (_boot_version >= 'H')
-  {
-    //RTC.setWatchdog(4);
-  }
+  sleep_time = 0;
 
   while (next - first)
   {
@@ -135,7 +129,7 @@ void Loop::run()
     resumed = false;
 
     //USB.printf((char*)"%d %d\n", first, next);
-    uint32_t time_threshold = millisDiff(start) + sleep + CR_DELAY_OFFSET;
+    uint32_t time_threshold = millisDiff(start) + sleep_time + CR_DELAY_OFFSET;
     for (uint16_t tid=first; tid < next; tid++)
     {
       task = get(tid);
@@ -179,44 +173,45 @@ void Loop::run()
     if (! resumed && delay_time > 250)
     {
       //uint32_t overhead_start = millis();
-      debug(F("delay = %lu ms (go to sleep)"), delay_time);
+      debug(F("delay = %lu ms (sleep)"), delay_time);
       beforeSleep();
-      if      (delay_time > 8000) { PWR.sleep(WTD_8S, ALL_ON); sleep += 8000; }
-      else if (delay_time > 4000) { PWR.sleep(WTD_4S, ALL_ON); sleep += 4000; }
-      else if (delay_time > 2000) { PWR.sleep(WTD_2S, ALL_ON); sleep += 2000; }
-      else if (delay_time > 1000) { PWR.sleep(WTD_1S, ALL_ON); sleep += 1000; }
-      else if (delay_time >  500) { PWR.sleep(WTD_500MS, ALL_ON); sleep += 500; }
-      else if (delay_time >  250) { PWR.sleep(WTD_250MS, ALL_ON); sleep += 250; }
+      if      (delay_time > 8000) { sleep(WTD_8S); }
+      else if (delay_time > 4000) { sleep(WTD_4S); }
+      else if (delay_time > 2000) { sleep(WTD_2S); }
+      else if (delay_time > 1000) { sleep(WTD_1S); }
+      else if (delay_time >  500) { sleep(WTD_500MS); }
+      else if (delay_time >  250) { sleep(WTD_250MS); }
       if (intFlag & WTD_INT)
       {
         intFlag &= ~(WTD_INT);
-        intCounter--;
-        intArray[WTD_POS]--;
         afterSleep();
-	//cr.print(F("OVERHEAD %lu"), millis() - overhead_start);
+        //cr.print(F("OVERHEAD %lu"), millis() - overhead_start);
       }
-      else
+      if (intFlag)
       {
-        warn(F("Expected watchdog interruption, got %d"), intFlag);
+        warn(F("Unexpected interruption %d"), intFlag);
+        intFlag = 0;
       }
     }
   }
-
-  // v15 only
-  if (_boot_version >= 'H')
-  {
-    RTC.unSetWatchdog();
-  }
 }
 
-void beforeSleep()
-{
-  //trace(F("beforeSleep"));
-}
 
-void afterSleep()
+void Loop::sleep(uint8_t timer)
 {
-  //trace(F("afterSleep"));
+  // XXX Documentation says 250ms..8s but 256ms..8192ms makes more sense to me
+  if      (timer == WTD_8S) { sleep_time += 8000; }
+  else if (timer == WTD_4S) { sleep_time += 4000; }
+  else if (timer == WTD_2S) { sleep_time += 2000; }
+  else if (timer == WTD_1S) { sleep_time += 1000; }
+  else if (timer == WTD_500MS) { sleep_time += 500; }
+  else if (timer == WTD_250MS) { sleep_time += 250; }
+
+  // Set Watchdog interruption and sleep
+  PWR.sleep(timer, ALL_ON);
+
+  // Awake: disable watchdog
+  PWR.setWatchdog(WTD_OFF, timer);
 }
 
 
@@ -357,11 +352,6 @@ void Loop::print()
  * but vlog can be overriden.
  */
 
-void vlog(loglevel_t level, const char* message, va_list args)
-{
-  cr.vprint(message, args);
-}
-
 void Loop::log(loglevel_t level, const __FlashStringHelper * ifsh, ...)
 {
   if (level > loglevel)
@@ -400,5 +390,19 @@ const char* Loop::loglevel2str(loglevel_t level)
   return "";
 }
 
-// Instance
+/*
+ * Free functions that can be redefined (because declared weak).
+ */
+
+void vlog(loglevel_t level, const char* message, va_list args)
+{
+  cr.vprint(message, args);
+}
+
+void beforeSleep() {}
+void afterSleep() {}
+
+/*
+ * Instance
+ */
 Loop cr = Loop();

@@ -31,7 +31,7 @@ void setup()
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Booting... (battery level is %d)"), UIO.batteryLevel);
+  info(F("Booting... (battery %d %%)"), UIO.batteryLevel);
   info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
   info(F("Config Network: %s"), UIO.menuFormatNetwork(buffer, size));
   info(F("Config Wakeup : %d minutes"), UIO.wakeup_period);
@@ -46,35 +46,42 @@ void setup()
     actionGps();
   }
 */
-
-  // Calculate first alarm (requires batteryLevel)
-  char alarmTime[12]; // "00:00:00:00"
-  UIO.getNextAlarm(alarmTime);
-
-  // Go to sleep
   info(F("Boot done, go to sleep"));
   UIO.stopSD();
-  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+
+  // Deep sleep
+  UIO.deepSleep();
 }
 
 void loop()
 {
+  uint32_t cpu_time;
+
   UIO.onLoop();
-  UIO.startSD(); // Logging starts here
+
+  // Low battery level: do nothing
+  if (UIO.batteryType == 1)
+  {
+    if (UIO.batteryLevel <= 30)
+    {
+      goto deepsleep;
+    }
+  }
+
+  // Reset if stuck for 4 minutes (v15 only)
+  if (_boot_version >= 'H')
+  {
+    RTC.setWatchdog(4);
+  }
+
+  // Logging starts here
+  UIO.startSD();
+  info(F("*** Loop start (battery %d %%)"), UIO.batteryLevel);
 
   // Check RTC interruption
   if (intFlag & RTC_INT)
   {
-    // Battery level, do nothing if too low
-    if (UIO.batteryType == 1){
-      if (UIO.batteryLevel <= 30) {
-        debug(F("RTC interruption, low battery = %d"), UIO.batteryLevel);
-        goto sleep;
-      }
-    }
-
-    info(F("*** RTC interruption, battery level = %d"), UIO.batteryLevel);
-    //Utils.blinkGreenLED(); // blink green once every minute to show it is alive
+    intFlag &= ~(RTC_INT);
 
     // Create the first frame
     UIO.createFrame(true);
@@ -107,24 +114,28 @@ void loop()
       UIO.frame2Sd();
     }
   }
-  else
+
+  if (intFlag)
   {
     warn(F("Unexpected interruption %d"), intFlag);
+    intFlag = 0;
   }
 
-sleep:
-  // Calculate first alarm (requires batteryLevel)
-  char alarmTime[12]; // "00:00:00:00"
-  UIO.getNextAlarm(alarmTime);
-
-  uint32_t cpu_time = cr.millisDiff(UIO.start);
-  info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep, cpu_time);
+  cpu_time = cr.millisDiff(UIO.start);
+  info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep_time, cpu_time);
   UIO.stopSD(); // Logging ends here
 
-  // Clear interruption flag & pin
-  clearIntFlag();
+  // v15 only
+  if (_boot_version >= 'H')
+  {
+    RTC.unSetWatchdog();
+  }
+
+deepsleep:
+  // Clear interruption flag & pin (XXX Do this in deepSleep?)
+  intFlag = 0;
   PWR.clearInterruptionPin();
 
-  // Set whole agri board and waspmote to sleep, until next alarm.
-  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+  // Deep sleep
+  UIO.deepSleep();
 }
