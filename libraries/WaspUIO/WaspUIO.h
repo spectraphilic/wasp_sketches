@@ -123,6 +123,7 @@ SdFile logFile;
 
 // Variables updated on every loop (see initTime)
 uint8_t batteryLevel;
+uint8_t batteryType = 1;   // battery type 1 => lithium battery  |||||| baterry type 2 => Lead acid battery
 timestamp_t time;        // broken timestamp
 uint8_t period;
 

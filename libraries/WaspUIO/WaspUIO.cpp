@@ -1685,23 +1685,34 @@ void WaspUIO::initTime()
 
 void WaspUIO::readBattery()
 {
+
+
   // Battery
   batteryLevel = PWR.getBatteryLevel();
 
-  // Find out sampling period, in minutes. The value must be a factor of 60*24
-  // (number of minutes in a day).
-  // Different values for different battery levels.
-  if (batteryLevel <= 30)
-  {
-    period = wakeup_period * 3; // 15 minutes
+  // Power logic for lithium battery
+  if (UIO.batteryType == 1){
+
+    // Find out sampling period, in minutes. The value must be a factor of 60*24
+    // (number of minutes in a day).
+    // Different values for different battery levels.
+    if (batteryLevel <= 30)
+    {
+      period = wakeup_period * 3; // 15 minutes
+    }
+    else if (batteryLevel <= 40)
+    {
+      period = wakeup_period * 2; // 10 minutes
+    }
+    else
+    {
+      period = wakeup_period * 1; // 5 minutes
+    }
   }
-  else if (batteryLevel <= 40)
-  {
-    period = wakeup_period * 2; // 10 minutes
-  }
-  else
-  {
-    period = wakeup_period * 1; // 5 minutes
+
+  // Logic for Lead acid battery
+  else if (UIO.batteryType == 2){
+    period = wakeup_period * 1;
   }
 }
 
@@ -2240,11 +2251,19 @@ CR_TASK(taskNetwork)
 {
   static tid_t tid;
 
-  // Send, once every 3 hours if low battery
-  bool send = (
+  // Send, once every 3 hours if low battery  and lithium battery
+  bool send;
+  if (UIO.batteryType == 1){
+  send = (
     UIO.hasSD &&
     (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0)
   );
+}
+
+  // send period for Lead Acid battery
+  if (UIO.batteryType == 2){
+  send = UIO.hasSD;
+  }
 
   CR_BEGIN;
 

@@ -126,7 +126,7 @@ void Loop::run()
   // Reset if stuck for 4 minutes (v15 only)
   if (_boot_version >= 'H')
   {
-    RTC.setWatchdog(4);
+    //RTC.setWatchdog(4);
   }
 
   while (next - first)
