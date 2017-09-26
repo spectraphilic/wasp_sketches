@@ -1,10 +1,27 @@
 Waspmote sketches and libraries developed by LATICE group at UiO.
 
 Current developers:
-- John Hulth	([john.hulth@geo.uio.no](john.hulth@geo.uio.no))
+- J. David Ibáñez
 - Simon Filhol 	([simon.filhol@geo.uio.no](simon.filhol@geo.uio.no))
+- John Hulth	([john.hulth@geo.uio.no](john.hulth@geo.uio.no))
 
 # Installation
+
+## Option 1 (Linux only)
+1. Download the bash script installUIOapi.sh
+2. Make sure you have ssh and git installed on your computer
+3. run the bash file in your terminal and follow all instruction with
+
+```bash
+# create a folder github if needed
+mkdir github
+cd github
+
+sh installUIOapi.sh
+```
+
+
+## Option 2
 
 (1) Let's say we have everything in one folder. First clone our projects, our
 fork of waspmoteapi and the sketches:
