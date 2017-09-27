@@ -78,6 +78,13 @@ void WaspUIO::onSetup()
   featureUSB = flags & FLAG_LOG_USB;
   featureNetwork = flags & FLAG_NETWORK;
 
+  wakeup_period = Utils.readEEPROM(EEPROM_UIO_WAKEUP_PERIOD);
+  batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
+  if (batteryType != 1 && batteryType != 2)
+  {
+    batteryType = 1;
+  }
+
   // Network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
   if (panid_low > NETWORK_OTHER)
@@ -88,7 +95,6 @@ void WaspUIO::onSetup()
   memcpy_P(&network, &networks[panid_low], sizeof network);
 
   // Sensors
-  wakeup_period = Utils.readEEPROM(EEPROM_UIO_WAKEUP_PERIOD);
 #if USE_AGR
   sensor_sensirion = Utils.readEEPROM(EEPROM_SENSOR_SENSIRION);
   sensor_pressure = Utils.readEEPROM(EEPROM_SENSOR_PRESSURE);
@@ -737,6 +743,14 @@ const char* WaspUIO::input(char* buffer, size_t size, const __FlashStringHelper 
  *
  */
 
+const char* WaspUIO::menuFormatBattery(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if      (batteryType == 1) strncpy_F(dst, F("Lithium-ion"), size);
+  else if (batteryType == 2) strncpy_F(dst, F("Lead acid"), size);
+  return dst;
+}
+
 const char* WaspUIO::menuFormatLog(char* dst, size_t size)
 {
   dst[0] = '\0';
@@ -795,24 +809,21 @@ void WaspUIO::menu()
   }
 
   do {
-    cr.print();
-    cr.print(F("Battery: %d %%"), batteryLevel);
-    if (! hasSD)
-    {
-      cr.print(F("SD card is missing!"));
-    }
-    cr.print();
-
     // Menu
+    cr.print();
     cr.print(F("1. Time    : %s"), RTC.getTime());
     cr.print(F("2. Log     : level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
     cr.print(F("3. Network : %s"), menuFormatNetwork(buffer, size));
     cr.print(F("4. Wakeup  : %d minutes"), wakeup_period);
     cr.print(F("5. Sensors : %s"), menuFormatSensors(buffer, size));
-    cr.print(F("6. Battery type: %d \t(1=> Lithium-ion; 2=>Lead acid)"), UIO.batteryType);
+    cr.print(F("6. Battery : %s (%d %%)"), menuFormatBattery(buffer, size), batteryLevel);
     if (hasSD)
     {
       cr.print(F("8. SD"));
+    }
+    else
+    {
+      cr.print(F("SD card is missing!"));
     }
 
     cr.print(F("9. Exit"));
@@ -1130,22 +1141,27 @@ void WaspUIO::menuBatteryType()
     cr.print(F("1. Lithium-ion"));
     cr.print(F("2. Lead acid"));
     cr.print(F("9. Exit"));
+    cr.print();
 
     input(str, sizeof(str), F("==> Enter numeric option:"), 0);
     if (strlen(str) == 0)
       continue;
+
     switch (str[0])
     {
       case '1':
-        UIO.batteryType = 1;
+        batteryType = 1;
         break;
       case '2':
-        UIO.batteryType = 2;
+        batteryType = 2;
         break;
       case '9':
-        cr.print();
         return;
+      default:
+        continue;
     }
+    updateEEPROM(EEPROM_UIO_BATTERY_TYPE, batteryType);
+    return;
   } while (true);
 }
 
@@ -1239,7 +1255,6 @@ void WaspUIO::menuSD()
         SD.format();
         break;
       case '9':
-        cr.print();
         SD.OFF();
         return;
     }

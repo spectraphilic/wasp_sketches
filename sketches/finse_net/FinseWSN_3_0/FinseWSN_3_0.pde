@@ -30,7 +30,8 @@ void setup()
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Booting... (battery %d %%)"), UIO.batteryLevel);
+  info(F("Booting..."));
+  info(F("Config Battery: %s (%d %%)"), UIO.menuFormatBattery(buffer, size), UIO.batteryLevel);
   info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
   info(F("Config Network: %s"), UIO.menuFormatNetwork(buffer, size));
   info(F("Config Wakeup : %d minutes"), UIO.wakeup_period);

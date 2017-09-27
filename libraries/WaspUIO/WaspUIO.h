@@ -25,7 +25,8 @@
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
 #define EEPROM_UIO_WAKEUP_PERIOD (EEPROM_START + 3)
-// 3 bytes available
+#define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
+// 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 2 bytes available
 #define EEPROM_SENSOR_SENSIRION (EEPROM_START + 10) // Agr
@@ -124,7 +125,7 @@ SdFile logFile;
 
 // Variables updated on every loop (see initTime)
 uint8_t batteryLevel;
-uint8_t batteryType = 1;   // battery type 1 => lithium battery  |||||| baterry type 2 => Lead acid battery
+uint8_t batteryType;   // battery type 1 => lithium battery  |||||| baterry type 2 => Lead acid battery
 timestamp_t time;        // broken timestamp
 uint8_t period;
 
@@ -190,6 +191,7 @@ const char* readOwnMAC(char* mac);
 // Interactive mode
 const char* input(char* buffer, size_t size, const __FlashStringHelper *, unsigned long timeout);
 void menu();
+const char* menuFormatBattery(char* dst, size_t size);
 const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);
 const char* menuFormatSensors(char* dst, size_t size);
