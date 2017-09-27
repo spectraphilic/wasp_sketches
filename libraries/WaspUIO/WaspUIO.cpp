@@ -125,13 +125,6 @@ void WaspUIO::onSetup()
     USB.OFF();
     debug(F("USB after %d"), usb);
 */
-
-  /*** 3. Other ** */
-
-  // Set random seed, different for every device, based on the lower 4 bytes of
-  // the serial id
-  // XXX Do this at the beginning of every loop as well?
-  srandom(* (uint32_t *) _serial_id + 4);
 }
 
 void WaspUIO::onLoop()
