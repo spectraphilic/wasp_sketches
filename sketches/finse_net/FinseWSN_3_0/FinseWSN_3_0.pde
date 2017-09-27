@@ -24,9 +24,6 @@ void setup()
   UIO.menu();
   USB.OFF();
 
-  // Logging available from here
-  UIO.startSD();
-
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
@@ -75,7 +72,6 @@ void loop()
   }
 
   // Logging starts here
-  UIO.startSD();
   info(F("*** Loop start (battery %d %%)"), UIO.batteryLevel);
 
   // Check RTC interruption

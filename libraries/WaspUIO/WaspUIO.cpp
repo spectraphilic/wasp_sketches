@@ -262,11 +262,19 @@ void WaspUIO::initNet()
 
 void WaspUIO::startSD()
 {
+  // Already ON, do nothing.
+  if (SPI.isSD)
+  {
+    return;
+  }
+
+  // No SD available
   if (! hasSD)
   {
     return;
   }
 
+  // On
   SD.ON();
 
   // Create directories
@@ -285,7 +293,7 @@ void WaspUIO::startSD()
   {
     if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
     {
-      error(F("openFiles: opening log file failed"));
+      cr.print(F("openFiles: opening log file failed"));
     }
   }
 
@@ -367,8 +375,10 @@ void vlog(loglevel_t level, const char* message, va_list args)
   }
 
   // (3) Print to log file
-  if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD) && UIO.logFile.isOpen())
+  if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD)) //&& UIO.logFile.isOpen())
   {
+    UIO.startSD();
+
     // Print to log file
     if (UIO.logFile.write(buffer) == -1)
     {
@@ -382,10 +392,6 @@ void beforeSleep()
   UIO.stopSD();
 }
 
-void afterSleep()
-{
-  UIO.startSD();
-}
 
 /**
  * Wrap the frame.addSensor functions. If there is no place left in the frame,
@@ -442,11 +448,7 @@ uint8_t WaspUIO::frame2Sd()
   uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
 
-  if (! hasSD)
-  {
-    warn(F("frame2Sd: SD card not available"));
-    return 1;
-  }
+  startSD();
 
   // (1) Get the date
   item[0] = RTC.year;
@@ -2370,6 +2372,8 @@ CR_TASK(taskNetworkSend)
   int size;
 
   CR_BEGIN;
+
+  UIO.startSD();
 
   // Delay sending of frame by a random time within 50 to 550 ms to avoid
   // jaming the network.

@@ -167,13 +167,13 @@ void Loop::run()
     }
 
     // Sleep
-    // There is an overhead of about 750-800 ms, most of it turning OFF/ON the
+    // There is an overhead of about 200-450 ms, most of it turning OFF/ON the
     // SD. So this only makes sense for long sleep times.
-    delay_time -= 800;
+    delay_time -= 500;
     if (! resumed && delay_time > 250)
     {
       //uint32_t overhead_start = millis();
-      debug(F("delay = %lu ms (sleep)"), delay_time);
+      //cr.print(F("delay = %lu ms (sleep)"), delay_time);
       beforeSleep();
       if      (delay_time > 8000) { sleep(WTD_8S); }
       else if (delay_time > 4000) { sleep(WTD_4S); }
