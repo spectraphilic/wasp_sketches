@@ -545,15 +545,15 @@ void WaspUIO::showFrame()
    //cr.print(F("BOOT VERSION %c"), _boot_version);
    if (_boot_version >= 'G')
    {
-     // v15
+     cr.print(F("Serial ID (v15): 0x%02X%02X%02X%02X%02X%02X%02X%02X"),
+              *p, *(p+1), *(p+2), *(p+3), *(p+4), *(p+5), *(p+6), *(p+7));
      p += 8;
-     cr.print(F("Serial ID: TODO"));
    }
    else
    {
-     // v12
-     cr.print(F("Serial ID: %lu"), *(uint32_t *)p);
-     p += 4; // v12
+     cr.print(F("Serial ID (v12): 0x%02X%02X%02X%02X"),
+              *p, *(p+1), *(p+2), *(p+3));
+     p += 4;
    }
 
    // Waspmote ID
