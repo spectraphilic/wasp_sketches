@@ -122,6 +122,9 @@ void loop()
 
   cpu_time = cr.millisDiff(UIO.start);
   info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep_time, cpu_time);
+  char alarmTime[12];
+  UIO.getNextAlarm(alarmTime);
+  info(F("NEXT ALARM %s"), alarmTime);
   UIO.stopSD(); // Logging ends here
 
   // v15 only
