@@ -105,6 +105,7 @@ void menuTimeManual();
 void menuNetwork();
 void menuLog();
 void menuLog2(uint8_t flag, const char* var);
+void menuBatteryType();
 void menuLogLevel();
 void menuSensors();
 void menuWakeup();

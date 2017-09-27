@@ -7,14 +7,16 @@
 # WARNING: before running this script make sure to have git setup with ssh cloning capabilities
 
 printf "WARNING: before running this script make sure to have git setup with ssh cloning capabilities"
-printf "Create folder and clone git UIO repositories"
+printf "\n\t Also, make sure your github account is set up with a ssh key! \n"
+printf"\n\n"
+printf "Creating folder and clone git UIO repositories ...\n"
 mkdir waspmote-uio
 cd waspmote-uio
 git clone git@github.com:spectraphilic/waspmoteapi-uio.git
 git clone git@github.com:spectraphilic/wasp_sketches.git
 
 # Download Waspmote IDE, and install it
-printf "Download Waspmote IDE, and installing it ..."
+printf "Downloading Waspmote IDE, and installing it ...\n"
 mkdir waspmote-pro-ide-v06.02
 cd waspmote-pro-ide-v06.02
 wget http://downloads.libelium.com/waspmote-pro-ide-v06.02-linux64.zip
@@ -22,11 +24,15 @@ unzip waspmote-pro-ide-v06.02-linux64.zip
 ./install.sh
 
 # create simulink to our own copy of the librayr API
-printf "create simulink to our own copy of the librayr API"
+printf "creating simulink to our own copy of the librayr API ...\n"
 cd waspmote-pro-ide-v06.02
 mv libraries libraries.bak
 ln -s ../waspmoteapi-uio/libraries
+
+cd ../hardware/waspmote//avr/cores/
+mv waspmote-api waspmote-api.bak
 ln -s ../../../../../waspmoteapi-uio/waspmote-api
+
 
 printf "Installation almost finished... \n\n Go to the Waspmote IDE Preference: \n\t -change the Sketchbook Location to .../wasp_sketches \n\t - accept changes"
 printf "\n"

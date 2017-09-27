@@ -15,7 +15,6 @@
 
 void setup()
 {
-  UIO.batteryType = 1;
   UIO.onSetup();
   UIO.onLoop();
 

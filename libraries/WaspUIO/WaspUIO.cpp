@@ -804,6 +804,7 @@ void WaspUIO::menu()
     cr.print(F("3. Network : %s"), menuFormatNetwork(buffer, size));
     cr.print(F("4. Wakeup  : %d minutes"), wakeup_period);
     cr.print(F("5. Sensors : %s"), menuFormatSensors(buffer, size));
+    cr.print(F("6. Battery type: %d \t(1=> Lithium-ion; 2=>Lead acid)"), UIO.batteryType);
     if (hasSD)
     {
       cr.print(F("8. SD"));
@@ -818,6 +819,7 @@ void WaspUIO::menu()
     else if (c == '3') { menuNetwork(); }
     else if (c == '4') { menuWakeup(); }
     else if (c == '5') { menuSensors(); }
+    else if (c == '6') { menuBatteryType(); }
     else if (c == '8') { if (hasSD) menuSD(); }
     else if (c == '9') { goto exit; }
   } while (true);
@@ -1110,6 +1112,33 @@ void WaspUIO::menuLog2(uint8_t flag, const char* var)
         UIO.flags |= flag;
         updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
         featureUSB = 1;
+        return;
+    }
+  } while (true);
+}
+
+void WaspUIO::menuBatteryType()
+{
+  char str[80];
+  do{
+    cr.print();
+    cr.print(F("1. Lithium-ion"));
+    cr.print(F("2. Lead acid"));
+    cr.print(F("9. Exit"));
+
+    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
+    if (strlen(str) == 0)
+      continue;
+    switch (str[0])
+    {
+      case '1':
+        UIO.batteryType = 1;
+        break;
+      case '2':
+        UIO.batteryType = 2;
+        break;
+      case '9':
+        cr.print();
         return;
     }
   } while (true);

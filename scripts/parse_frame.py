@@ -62,7 +62,7 @@ class frameObj(object):
 def search_frame(data):
     """
     Search the frame start delimiter <=> and return the data just after the
-    delimer.  Anything found before is considered garbage and discarded. If
+    delimter.  Anything found before is considered garbage and discarded. If
     the delimeter is not found return None.
     """
     index = data.find(b'<=>')
