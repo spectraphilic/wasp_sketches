@@ -143,7 +143,7 @@ class Loop
     // Private functions
     int8_t join(Task* task, tid_t tid, tid_t target_id);
     void resume(Task* task, tid_t tid);
-    void sleep(uint8_t timer);
+    void sleep(int32_t delay_time);
 
   public:
     // 'get' is public only because used by the macros. It is not really
