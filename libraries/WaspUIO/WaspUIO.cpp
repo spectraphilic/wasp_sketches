@@ -2050,29 +2050,27 @@ CR_TASK(taskAgrLC)
 
 CR_TASK(taskSdi)
 {
-  static tid_t ctd_id, ds_id;
+  static tid_t tid;
 
   CR_BEGIN;
   mySDI12.begin();
 
-  // Measure
+  // XXX There are 2 incompatible strategies to improve this:
+  // - Use the Concurrent command
+  // - Use service requests
+
+  // CTD-10
   if (UIO.action(1, UIO.sensor_ctd10))
   {
-    CR_SPAWN2(taskSdiCtd10, ctd_id);
-  }
-  if (UIO.action(1, UIO.sensor_ds2))
-  {
-    CR_SPAWN2(taskSdiDs2, ds_id);
+    CR_SPAWN2(taskSdiCtd10, tid);
+    CR_JOIN(tid);
   }
 
-  // Wait
-  if (UIO.action(1, UIO.sensor_ctd10))
-  {
-    CR_JOIN(ctd_id);
-  }
+  // DS-2
   if (UIO.action(1, UIO.sensor_ds2))
   {
-    CR_JOIN(ds_id);
+    CR_SPAWN2(taskSdiDs2, tid);
+    CR_JOIN(tid);
   }
 
   mySDI12.end();
@@ -2081,16 +2079,23 @@ CR_TASK(taskSdi)
 
 CR_TASK(taskSdiCtd10)
 {
+  int ttt;
+
+
   CR_BEGIN;
 
   // Send the measure command
-  if (mySDI12.measure(0))
+  ttt = mySDI12.measure(0);
+  if (ttt < 0)
   {
     CR_ERROR;
   }
 
-  // Wait (FIXME Get the value from the answer to the measure command)
-  CR_DELAY(800);
+  if (ttt > 0)
+  {
+    // TODO We could listen every n ms for a "Service Request" from the sensor
+    CR_DELAY(ttt * 1000);
+  }
 
   // Send the data command
   if (mySDI12.data(0))
@@ -2120,7 +2125,11 @@ CR_TASK(taskSdiDs2)
   {
     CR_ERROR;
   }
-  CR_DELAY(11000); // FIXME Should depend on response from M command
+
+  // XXX In theory we should wait for the time returned by the M command. But
+  // tests show it returns 1, probably because 1s is all it needs to return an
+  // instantaneous value. But we want averages, so we have to wait >10s.
+  CR_DELAY(11000);
 
   // Wind speed&direction, air temp
   if (mySDI12.command2address(1, "D0"))

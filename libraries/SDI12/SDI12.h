@@ -99,7 +99,7 @@ public:
   uint8_t readline();
   uint8_t command2address(uint8_t address, const char* cmd);
   uint8_t identification(uint8_t address);
-  uint8_t measure(uint8_t address);
+  int measure(uint8_t address);
   uint8_t data(uint8_t address);
 
   char read_address();

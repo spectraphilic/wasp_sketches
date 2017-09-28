@@ -994,7 +994,7 @@ exit:
 }
 
 /* Sends the given command to the given address */
-uint8_t  SDI12::command2address(uint8_t address, const char* cmd)
+uint8_t SDI12::command2address(uint8_t address, const char* cmd)
 {
   char aux[5];
   size_t max = sizeof(aux);
@@ -1020,27 +1020,48 @@ uint8_t  SDI12::command2address(uint8_t address, const char* cmd)
     return 1;
   }
 
+  // Check address
+  if (aux[0] != buffer[0])
+  {
+    error(F("command2address(%s): fail, address mismatch '%s'"), aux, buffer);
+    return 1;
+  }
+
   debug(F("command2address(%s): success, read '%s'"), aux, buffer);
   return 0;
 }
 
 
 // -'-'-'-'-'-'-INFO COMMAND-'-'-'-'-'-'-
-uint8_t  SDI12::identification(uint8_t address)
+uint8_t SDI12::identification(uint8_t address)
 {
   return command2address(address, "I");
 }
 
-// -'-'-'-'-MEASUREMENT COMMAND-'-'-'-'-
-uint8_t  SDI12::measure(uint8_t address)
+/*
+ * Send a measure command to the given address. Return the number of seconds to
+ * wait for the data to be available; or -1 if error.
+ */
+int SDI12::measure(uint8_t address)
 {
-  return command2address(address, "M");
+  char aux[4];
+
+  if (command2address(address, "M"))
+  {
+    return -1;
+  }
+
+  memcpy(aux, buffer+1, 3);
+  aux[3] = 0;
+  return atoi(aux);
 }
 
 // -'-'-'-'-'-'-DATA COMMAND-'-'-'-'-'-'-
-uint8_t  SDI12::data(uint8_t address)
+uint8_t SDI12::data(uint8_t address)
 {
-  return command2address(address, "D0"); // FIXME 0 is variable, should be a parameter
+  // FIXME 0 is variable, should be a parameter
+  // TODO error if sensor sends "Aborting a Measurement" (see docs)
+  return command2address(address, "D0");
 }
 
 
