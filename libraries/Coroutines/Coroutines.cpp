@@ -311,6 +311,11 @@ uint32_t Loop::millisDiff(uint32_t t0)
   return millis() - t0;
 }
 
+bool Loop::timeout(uint32_t t0, uint32_t timeout)
+{
+  return (millis() - t0) > timeout;
+}
+
 /*
  * Functions to print formatted strings to usb. Can take regular strings
  * (char*) or those stored in Flash (F).

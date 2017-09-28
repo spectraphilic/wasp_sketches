@@ -68,7 +68,7 @@ void loop()
   // Reset if stuck for 4 minutes (v15 only)
   if (_boot_version >= 'H')
   {
-    RTC.setWatchdog(4);
+    RTC.setWatchdog(UIO.loop_timeout);
   }
 
   // Logging starts here
@@ -85,7 +85,7 @@ void loop()
     cr.reset();
     cr.spawn(taskHealthFrame);
     cr.spawn(taskSensors);
-    if (UIO.featureNetwork && UIO.action(1, 12)) // 12 x 5min = 1hour
+    if ((UIO.flags & FLAG_NETWORK) && UIO.action(1, 12)) // 12 x 5min = 1hour
     {
       cr.spawn(taskNetwork);
     }
@@ -119,9 +119,9 @@ void loop()
 
   cpu_time = cr.millisDiff(UIO.start);
   info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep_time, cpu_time);
-  char alarmTime[12];
-  UIO.getNextAlarm(alarmTime);
-  info(F("NEXT ALARM %s"), alarmTime);
+//char alarmTime[12];
+//UIO.getNextAlarm(alarmTime);
+//info(F("NEXT ALARM %s"), alarmTime);
   UIO.stopSD(); // Logging ends here
 
   // v15 only

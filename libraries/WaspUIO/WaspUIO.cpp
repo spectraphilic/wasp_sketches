@@ -75,8 +75,6 @@ void WaspUIO::onSetup()
 
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
-  featureUSB = flags & FLAG_LOG_USB;
-  featureNetwork = flags & FLAG_NETWORK;
 
   wakeup_period = Utils.readEEPROM(EEPROM_UIO_WAKEUP_PERIOD);
   batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
@@ -182,9 +180,6 @@ void WaspUIO::initNet()
       cr.print(F("ERROR No network configuration"));
       return;
   }
-
-  // First enable network
-  featureNetwork = 1;
 
   // Addressing
   memcpy_P(&network, &networks[value], sizeof network);
@@ -366,7 +361,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
   buffer[len] = '\n';
 
   // (2) Print to USB
-  if (UIO.featureUSB)
+  if (UIO.flags & FLAG_LOG_USB)
   {
     USB.ON();
     USB.flush(); // XXX This fixes a weird bug with XBee
@@ -457,7 +452,7 @@ uint8_t WaspUIO::frame2Sd()
   getDataFilename(dataFilename, item[0], item[1], item[2]);
 
   // (2) Store frame in archive file
-  if (UIO.createFile(dataFilename))
+  if (createFile(dataFilename))
   {
     error(F("frame2Sd: Failed to create %s"), dataFilename);
     return 1;
@@ -490,7 +485,7 @@ uint8_t WaspUIO::frame2Sd()
   }
 
   // (4) Print frame to USB
-  if (featureUSB)
+  if (flags & FLAG_LOG_USB)
   {
     USB.ON();
     USB.flush();
@@ -702,7 +697,7 @@ const char* WaspUIO::input(char* buffer, size_t size, const __FlashStringHelper 
     unsigned long timeStart = millis();
     while (USB.available() == 0)
     {
-      if (cr.millisDiff(timeStart) > timeout)
+      if (cr.timeout(timeStart, timeout))
       {
         return NULL;
       }
@@ -756,15 +751,8 @@ const char* WaspUIO::menuFormatLog(char* dst, size_t size)
 
 const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
 {
-  if (featureNetwork == 0)
-  {
-    strncpy_F(dst, F("Disabled"), size);
-  }
-  else
-  {
-    strncpy(dst, network.name, size);
-  }
-
+  if (flags & FLAG_NETWORK) strncpy(dst, network.name, size);
+  else                      strncpy_F(dst, F("Disabled"), size);
   return dst;
 }
 
@@ -1029,7 +1017,6 @@ void WaspUIO::menuNetwork()
       case '0': // Disable
         UIO.flags &= ~FLAG_NETWORK;
         updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-        featureNetwork = 0;
         return;
       case '1':
         setNetwork(NETWORK_FINSE);
@@ -1117,12 +1104,10 @@ void WaspUIO::menuLog2(uint8_t flag, const char* var)
       case '0':
         UIO.flags &= ~flag;
         updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-        featureUSB = 0;
         return;
       case '1':
         UIO.flags |= flag;
         updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-        featureUSB = 1;
         return;
     }
   } while (true);
@@ -1358,27 +1343,21 @@ void WaspUIO::menuWakeup()
 uint8_t WaspUIO::receiveGPSsyncTime()
 {
   char * pch; // Define pointer for string
-  char epochStr[11];  // Define variable for epoch string
   unsigned long epoch; // Define variable for epoch time
+  timestamp_t time;
 
-  debug(F("receiveGPSsyncTime: got frame %s"), buffer);
+  debug(F("receiveGPSsyncTime: got frame %s"), xbeeDM._payload);
 
-  pch = strstr(buffer,"TST:");
+  pch = strstr((const char*)xbeeDM._payload, "TST:");
   //trace(F("receiveGPSsyncTime: pch = %s"), pch);
-  memcpy(epochStr, &pch[4],10);
-  epoch = atol(epochStr);
-  epoch = epoch + 2; // Add some seconds for the delays, Check this!!!
+  epoch = strtoul(pch+4, NULL, 10);
+  epoch = epoch + 2; // Add some seconds for the delays, FIXME Check this!!!
   // Break Epoch time into UTC time
-  RTC.breakTimeAbsolute(getEpochTime(), &time);
-
-  // clear buffer and ...
-  memset(buffer, 0x00, sizeof(buffer));
-  sprintf(buffer, "%02u:%02u:%02u:%02u:%02u:%02u:%02u",
-    time.year, time.month, time.date, time.day,
-    time.hour, time.minute, time.second );
+  RTC.breakTimeAbsolute(epoch, &time);
 
   // Setting time [yy:mm:dd:dow:hh:mm:ss]
-  if (RTC.setTime(buffer) != 0) // '0' on succes, '1' otherwise
+  // '0' on succes, '1' otherwise
+  if (RTC.setTime(time.year, time.month, time.date, time.day, time.hour, time.minute, time.second) != 0)
   {
     error(F("No RTC update from GPS"));
     return 1;
@@ -1418,7 +1397,7 @@ void WaspUIO::OTA_communication(int OTA_duration)
         }
       }
     }
-  } while (cr.millisDiff(start) < duration_ms);
+  } while (! cr.timeout(start, duration_ms));
 }
 
 
@@ -1778,7 +1757,7 @@ unsigned long WaspUIO::getEpochTime()
 
 unsigned long WaspUIO::getEpochTime(uint16_t &ms)
 {
-  uint32_t diff = cr.millisDiff(start);
+  uint32_t diff = cr.millisDiff(start) + cr.sleep_time;
 
   ms = diff % 1000;
   return epochTime + diff / 1000;
@@ -2376,8 +2355,8 @@ CR_TASK(taskNetworkSend)
   UIO.startSD();
 
   // Delay sending of frame by a random time within 50 to 550 ms to avoid
-  // jaming the network.
-  CR_DELAY(rand() % 500);
+  // jaming the network. XXX
+  // CR_DELAY(rand() % 500);
 
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
@@ -2389,7 +2368,7 @@ CR_TASK(taskNetworkSend)
   }
 
   // Send frames
-  while (UIO.tmpFile.fileSize())
+  while (UIO.tmpFile.fileSize() && (! cr.timeout(UIO.start, UIO.send_timeout * 1000)))
   {
     t0 = millis();
 
@@ -2459,15 +2438,11 @@ CR_TASK(taskNetworkReceive)
       }
       else
       {
-        // Copy payload
-        memset(UIO.buffer, 0x00, sizeof(UIO.buffer));
-        memcpy(UIO.buffer, xbeeDM._payload, xbeeDM._length);
-
         // RSSI
         UIO.readRSSI2Frame();
 
         // Proxy call to appropriate handler
-        if (strstr(UIO.buffer, "GPS_sync") != NULL)
+        if (strstr((const char*)xbeeDM._payload, "GPS_sync") != NULL)
         {
           UIO.receiveGPSsyncTime();
         }
@@ -2475,7 +2450,7 @@ CR_TASK(taskNetworkReceive)
         {
           warn(F("receivePacket: unexpected packet"));
           // Show data stored in '_payload' buffer indicated by '_length'
-          debug(F("Data: %s"), UIO.buffer);
+          debug(F("Data: %s"), xbeeDM._payload);
           // Show data stored in '_payload' buffer indicated by '_length'
           debug(F("Length: %d"), xbeeDM._length);
           // Show data stored in '_payload' buffer indicated by '_length'

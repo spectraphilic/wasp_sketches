@@ -93,14 +93,18 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
-// Helper functions to work with files
-int append(SdFile &file, const void* buf, size_t nbyte);
+// Like Arduino's EEPROM.update, it writes the given value only if different
+// from the value already saved.
+bool updateEEPROM(int address, uint8_t value);
+bool updateEEPROM(int address, uint32_t value);
 
-// Filenames
+// SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
+int append(SdFile &file, const void* buf, size_t nbyte);
+uint8_t createFile(const char* filename);
 
-// Interactive mode
+// Menu
 void menuTime();
 void menuTimeManual();
 void menuNetwork();
@@ -116,20 +120,15 @@ const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint8_t sensor);
 void setNetwork(network_t);
 
+// Variables
+uint8_t period;
+
 /// public methods and attributes ////////////
 public:
 
+// Configuration variables
 uint8_t flags;
-bool hasSD;
-SdFile logFile;
-
-// Variables updated on every loop (see initTime)
-uint8_t batteryLevel;
-uint8_t batteryType;   // battery type 1 => lithium battery  |||||| baterry type 2 => Lead acid battery
-timestamp_t time;        // broken timestamp
-uint8_t period;
-
-// Sensors
+uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
 uint8_t wakeup_period;
 uint8_t sensor_sensirion;
 uint8_t sensor_pressure;
@@ -138,39 +137,31 @@ uint8_t sensor_ctd10;
 uint8_t sensor_ds2;
 uint8_t sensor_ds1820;
 uint8_t sensor_bme280;
-bool action(uint8_t n, ...);
 
-// Network related
-Network network;
-char buffer[100];
-uint8_t receiveGPSsyncTime();
-uint8_t readRSSI2Frame(void);
-
-// Frame files
-const char* tmpFilename = "TMP.TXT"; // Change name as format did change
-SdFile tmpFile;
-void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
-
+// Variables updated on every loop (see onLoop)
+uint8_t batteryLevel;
 // To keep time without calling RCT each time
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
+timestamp_t time;        // broken timestamp
+float rtc_temp;          // internal temperature
 
-// Like Arduino's EEPROM.update, it writes the given value only if different
-// from the value already saved.
-bool updateEEPROM(int address, uint8_t value);
-bool updateEEPROM(int address, uint32_t value);
-
-// Variables: sensors
-float rtc_temp;
-
-const char* BROADCAST_ADDRESS = "000000000000FFFF";
-uint8_t featureUSB = 1;
-uint8_t featureNetwork = 1;
-
-// SD related methods
+// SD
+const char* tmpFilename = "TMP.TXT";
+bool hasSD;
+SdFile logFile;
+SdFile tmpFile;
+void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
-uint8_t createFile(const char* filename);
+
+// Network
+const char* BROADCAST_ADDRESS = "000000000000FFFF";
+Network network;
+uint8_t receiveGPSsyncTime();
+uint8_t readRSSI2Frame(void);
+void OTA_communication(int OTA_duration);
+const char* readOwnMAC(char* mac);
 
 // Init, start and stop methods
 void onSetup();
@@ -178,17 +169,16 @@ void onLoop();
 void initTime();
 void readBattery();
 void initNet();
+bool action(uint8_t n, ...);
+const uint8_t loop_timeout = 4; // minutes
+const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
 void createFrame(bool discard=false);
 uint8_t frame2Sd();
 void showFrame();
 
-// Network related
-void OTA_communication(int OTA_duration);
-const char* readOwnMAC(char* mac);
-
-// Interactive mode
+// Menu
 const char* input(char* buffer, size_t size, const __FlashStringHelper *, unsigned long timeout);
 void menu();
 const char* menuFormatBattery(char* dst, size_t size);
@@ -196,16 +186,16 @@ const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);
 const char* menuFormatSensors(char* dst, size_t size);
 
-// Time related methods
+// Time
 unsigned long getEpochTime();
 unsigned long getEpochTime(uint16_t &ms);
 uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 
-// Sleep related
+// Sleep
 const char* getNextAlarm(char* alarmTime);
 void deepSleep();
 
-// Other
+// Sensors
 uint16_t readMaxbotixSerial(uint8_t samples = 5);
 
 };

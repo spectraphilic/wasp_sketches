@@ -983,7 +983,7 @@ uint8_t SDI12::readline()
       // One more char
       buffer[i++] = c;
     }
-  } while (cr.millisDiff(start) < 2000); // 2s
+  } while (! cr.timeout(start, 2000)); // 2s
 
   // Timeout
   error(F("readline: Timeout"));
