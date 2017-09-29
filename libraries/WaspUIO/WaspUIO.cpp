@@ -129,6 +129,7 @@ void WaspUIO::onLoop()
 {
    initTime();
    readBattery();
+   onRegister = 0;
 }
 
 
@@ -257,20 +258,14 @@ void WaspUIO::initNet()
 
 void WaspUIO::startSD()
 {
-  // Already ON, do nothing.
-  if (SPI.isSD)
-  {
-    return;
-  }
-
-  // No SD available
-  if (! hasSD)
+  // Already ON, or not SD.
+  if (SPI.isSD || !hasSD)
   {
     return;
   }
 
   // On
-  SD.ON();
+  on(UIO_SD);
 
   // Create directories
   switch (SD.isDir(archive_dir))
@@ -320,6 +315,7 @@ void WaspUIO::stopSD()
     }
   }
 
+  // Off
   SD.OFF();
 }
 
@@ -385,6 +381,44 @@ void vlog(loglevel_t level, const char* message, va_list args)
 void beforeSleep()
 {
   UIO.stopSD();
+}
+
+void afterSleep()
+{
+  if (UIO.isOn(UIO_PRESSURE))
+  {
+    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
+  }
+
+  if (UIO.isOn(UIO_LEAFWETNESS))
+  {
+    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
+  }
+
+  if (UIO.isOn(UIO_SENSIRION))
+  {
+    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
+  }
+
+  if (UIO.isOn(UIO_SDI12))
+  {
+    mySDI12.forceHold(); // XXX
+  }
+
+  if (UIO.isOn(UIO_I2C))
+  {
+    // XXX
+  }
+
+  if (UIO.isOn(UIO_1WIRE))
+  {
+    // XXX
+  }
+
+  if (UIO.isOn(UIO_SD))
+  {
+    UIO.startSD();
+  }
 }
 
 
@@ -1519,6 +1553,71 @@ bool WaspUIO::action(uint8_t n, ...)
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
+/*
+ * On/Off devices
+ */
+
+void WaspUIO::on(uint8_t device)
+{
+  switch (device)
+  {
+    case UIO_SD:
+      SD.ON();
+      break;
+    case UIO_PRESSURE:
+      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
+      break;
+    case UIO_SENSIRION:
+      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
+      break;
+    case UIO_LEAFWETNESS:
+      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
+      break;
+    case UIO_I2C:
+      break;
+    case UIO_1WIRE:
+      break;
+    case UIO_SDI12:
+      mySDI12.begin();
+      break;
+  }
+
+  onRegister |= device;
+}
+
+void WaspUIO::off(uint8_t device)
+{
+  onRegister &= ~device;
+
+  switch (device)
+  {
+    case UIO_SD:
+      SD.OFF();
+      break;
+    case UIO_PRESSURE:
+      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);
+      break;
+    case UIO_SENSIRION:
+      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
+      break;
+    case UIO_LEAFWETNESS:
+      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
+      break;
+    case UIO_I2C:
+      break;
+    case UIO_1WIRE:
+      break;
+    case UIO_SDI12:
+      mySDI12.end();
+      break;
+  }
+}
+
+bool WaspUIO::isOn(uint8_t device)
+{
+  return onRegister & device;
+}
+
 /**
  * Write a value to the EEPROM only if different from the value already saved.
  *
@@ -1992,10 +2091,10 @@ CR_TASK(taskAgrPressure)
 
   CR_BEGIN;
 
-  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);   // On
+  UIO.on(UIO_PRESSURE);
   CR_DELAY(50);
   pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE); // Read
-  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);  // Off
+  UIO.off(UIO_PRESSURE);
   ADD_SENSOR(SENSOR_PA, pressure);
 
   CR_END;
@@ -2011,8 +2110,7 @@ CR_TASK(taskAgrLC)
   // Leaf wetness
   if (UIO.action(1, UIO.sensor_leafwetness))
   {
-    debug(F("Agr Leaf Wetness ON"));
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
+    UIO.on(UIO_LEAFWETNESS);
     CR_DELAY(50);
     wetness = SensorAgrv20.readValue(SENS_AGR_LEAF_WETNESS);
     ADD_SENSOR(SENSOR_LW, wetness);
@@ -2021,7 +2119,7 @@ CR_TASK(taskAgrLC)
   // Sensirion (temperature, humidity)
   if (UIO.action(1, UIO.sensor_sensirion))
   {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
+    UIO.on(UIO_SENSIRION);
     CR_DELAY(50);
     temperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
     humidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
@@ -2032,12 +2130,11 @@ CR_TASK(taskAgrLC)
   // OFF
   if (UIO.action(1, UIO.sensor_leafwetness))
   {
-    debug(F("Agr Leaf Wetness OFF"));
-    SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
+    UIO.off(UIO_LEAFWETNESS);
   }
   if (UIO.action(1, UIO.sensor_sensirion))
   {
-    SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
+    UIO.off(UIO_SENSIRION);
   }
 
   CR_END;
@@ -2053,7 +2150,8 @@ CR_TASK(taskSdi)
   static tid_t tid;
 
   CR_BEGIN;
-  mySDI12.begin();
+
+  UIO.on(UIO_SDI12);
 
   // XXX There are 2 incompatible strategies to improve this:
   // - Use the Concurrent command
@@ -2073,14 +2171,14 @@ CR_TASK(taskSdi)
     CR_JOIN(tid);
   }
 
-  mySDI12.end();
+  UIO.off(UIO_SDI12);
+
   CR_END;
 }
 
 CR_TASK(taskSdiCtd10)
 {
   int ttt;
-
 
   CR_BEGIN;
 
@@ -2179,6 +2277,7 @@ CR_TASK(task1Wire)
     error(F("OneWire no devices attached"));
     CR_ERROR;
   }
+  UIO.on(UIO_1WIRE);
 
   // Send conversion command to all sensors
   oneWire.skip();
@@ -2251,6 +2350,7 @@ CR_TASK(task1Wire)
 
   debug(F("OneWire %d devices measured"), n);
   oneWire.depower();
+  UIO.off(UIO_1WIRE);
 
   CR_END;
 }
@@ -2263,6 +2363,8 @@ CR_TASK(taskI2C)
 {
   float temperature, humidity, pressure;
   char aux[20];
+
+  UIO.on(UIO_I2C);
 
   // Read enviromental variables
   temperature = BME.getTemperature(BME280_OVERSAMP_1X, 0);
@@ -2283,6 +2385,8 @@ CR_TASK(taskI2C)
   ADD_SENSOR(SENSOR_BME_TC, temperature);
   ADD_SENSOR(SENSOR_BME_HUM, humidity);
   ADD_SENSOR(SENSOR_BME_PRES, pressure);
+
+  UIO.off(UIO_I2C);
 
   return CR_TASK_STOP;
 }

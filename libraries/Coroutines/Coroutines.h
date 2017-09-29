@@ -85,7 +85,7 @@ typedef uint32_t tstate_t;
 #define CR_BEGIN     static int _state = 0; switch(_state) { case 0:;
 #define CR_DELAY(delay) \
   do { \
-    _state=__LINE__; return (cr.millisDiff(cr.start) + cr.sleep_time + delay + CR_DELAY_OFFSET); case __LINE__:; \
+    _state=__LINE__; return (millis() - cr.start + cr.sleep_time + delay + CR_DELAY_OFFSET); case __LINE__:; \
   } while (0)
 
 #define CR_ERROR  do { _state=0; return CR_TASK_ERROR; } while(0)

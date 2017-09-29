@@ -116,6 +116,8 @@ void Loop::resume(Task* task, tid_t tid)
 
 void Loop::run()
 {
+  uint32_t now; // Relative now (since start), plus offset
+  int32_t task_wait;
   int32_t delay_time;
   bool resumed;
   Task* task;
@@ -129,7 +131,7 @@ void Loop::run()
     resumed = false;
 
     //USB.printf((char*)"%d %d\n", first, next);
-    uint32_t time_threshold = millisDiff(start) + sleep_time + CR_DELAY_OFFSET;
+    now = millis() - start + sleep_time + CR_DELAY_OFFSET;
     for (uint16_t tid=first; tid < next; tid++)
     {
       task = get(tid);
@@ -137,18 +139,22 @@ void Loop::run()
       {
         tstate_t state = task->state;
 
-        // Wait for some time
+        // Waiting for some time to pass
         if (state >= CR_DELAY_OFFSET)
         {
-          if (state <= time_threshold)
+          task_wait = state - now;
+          if (task_wait <= 0)
           {
             //trace(F("Task %d time threshold reached: run"), tid);
             resume(task, tid);
             resumed = true;
           }
-          else if (delay_time == 0 || (state - time_threshold) < delay_time)
+          else
           {
-            delay_time = (state - time_threshold);
+            if (delay_time == 0 || task_wait < delay_time)
+            {
+              delay_time = task_wait;
+            }
           }
           continue;
         }
@@ -177,74 +183,91 @@ void Loop::run()
 
 void Loop::sleep(int32_t delay_time)
 {
+  uint32_t start, sleep, now;
+  int32_t left;
   uint8_t seconds;
   char alarmTime[12]; // "00:00:00:00"
+  uint8_t timer;
 
-  // There is an overhead of about 200-550 ms, most of it turning OFF/ON the
-  // SD. So this only makes sense for long sleep times.
-  delay_time -= 600;
-  if (delay_time <= 250)
+  const uint16_t overhead_head = 200; // mostly turning off the SD
+  const uint16_t overhead_body = 300;
+  const uint16_t overhead_tail = 300; // mostly turning on the SD
+  const uint16_t overhead_min = overhead_head + overhead_body + overhead_tail;
+  const uint16_t min_sleep = 128;
+  uint32_t until = delay_time - overhead_tail - overhead_body;
+
+  if (delay_time < (overhead_min + min_sleep))
   {
     return;
   }
 
-  //uint32_t overhead_start = millis();
-  beforeSleep();
+  start = millis();
+  sleep = 0;
 
-  intFlag = 0;
+  beforeSleep(); // ~ 200 ms
   PWR.clearInterruptionPin();
-
-  // If more than 1s use the RTC
-  if (delay_time > 1000)
+  intFlag = 0;
+  while (true)
   {
-    //cr.print(F("delay = %lu ms (rtc sleep)"), delay_time);
-    seconds = delay_time / 1000;
-    if (seconds > 59)
+    //uint32_t t0 = millis();
+    now = (millis() - start) + sleep;
+    left = until - now;
+
+    // Stop condition
+    if (left < min_sleep)
     {
-      seconds = 59;
+      break;
     }
-    sleep_time += seconds * 1000;
 
-    // Sleep
-    sprintf(alarmTime, "00:00:00:%02d", seconds);
-    PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE5, ALL_ON);
-
-    // Awake
-    RTC.detachInt();       // Disable RTC interruptions XXX
-    if (intFlag & RTC_INT) // Clear flag
+    // If less than 1s, use the internal watchdog (overhead ~247ms)
+    if (left < 1000)
     {
-      intFlag &= ~(RTC_INT);
+      // XXX Documentation says 250ms..8s but 256ms..8192ms makes more sense to me
+      if      (left > 500) { timer = WTD_500MS; sleep += 500; }
+      else if (left > 250) { timer = WTD_250MS; sleep += 250; }
+      else if (left > 128) { timer = WTD_128MS; sleep += 128; }
+
+      // Sleep
+      PWR.sleep(timer, ALL_ON);
+      PWR.setWatchdog(WTD_OFF, timer); // Awake: Disable watchdog
+      if (intFlag & WTD_INT)           // Clear flag
+      {
+        intFlag &= ~(WTD_INT);
+      }
     }
-  }
 
-  // If less than 1s, use the internal watchdog
-  // XXX Documentation says 250ms..8s but 256ms..8192ms makes more sense to me
-  else
-  {
-    //cr.print(F("delay = %lu ms (wd sleep)"), delay_time);
-    uint8_t timer;
-    if      (delay_time >  500) { timer = WTD_500MS; sleep_time += 500; }
-    else if (delay_time >  250) { timer = WTD_250MS; sleep_time += 250; }
-
-    // Sleep
-    PWR.sleep(timer, ALL_ON);
-
-    // Awake
-    PWR.setWatchdog(WTD_OFF, timer); // Disable watchdog
-    if (intFlag & WTD_INT)           // Clear flag
+    // If more than 1s, use the RTC (overhead ~281ms)
+    else
     {
-      intFlag &= ~(WTD_INT);
+      seconds = left / 1000;
+      if (seconds > 59)
+      {
+        seconds = 59;
+      }
+      sleep += (seconds * 1000);
+
+      // Sleep
+      sprintf(alarmTime, "00:00:00:%02d", seconds);
+      PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE5, ALL_ON);
+      //RTC.detachInt();       // Awake: Disable RTC interruptions
+      if (intFlag & RTC_INT) // Clear flag
+      {
+        intFlag &= ~(RTC_INT);
+      }
     }
-  }
 
-  afterSleep();
-  if (intFlag)
-  {
-    warn(F("Unexpected interruption %d"), intFlag);
-    intFlag = 0;
+    // Catch unexpected interruptions
+    if (intFlag)
+    {
+      cr.print(F("Unexpected interruption %d"), intFlag);
+      intFlag = 0;
+    }
+    //cr.print(F("sleep %lu overhead=%lu"), left, millis() - t0);
   }
+  afterSleep(); // ~282ms
+  sleep_time += sleep;
 
-  //cr.print(F("OVERHEAD %lu"), millis() - overhead_start);
+  //cr.print(F("cpu=%lu sleep=%lu delay=%d"), millis() - start, sleep, delay_time);
 }
 
 

@@ -61,6 +61,7 @@ void loop()
   {
     if (UIO.batteryLevel <= 30)
     {
+      debug(F("*** Loop skip (battery %d %%)"), UIO.batteryLevel);
       goto deepsleep;
     }
   }

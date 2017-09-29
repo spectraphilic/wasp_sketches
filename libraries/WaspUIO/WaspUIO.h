@@ -41,6 +41,14 @@
 #define FLAG_NETWORK 2
 #define FLAG_LOG_SD  4
 
+#define UIO_SD 1
+#define UIO_PRESSURE 2
+#define UIO_SENSIRION 4
+#define UIO_LEAFWETNESS 8
+#define UIO_I2C 16
+#define UIO_1WIRE 32
+#define UIO_SDI12 64
+
 #define ADD_SENSOR(type, ...) \
   if (frame.addSensor(type, ## __VA_ARGS__) == -1)\
   {\
@@ -194,6 +202,12 @@ uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t 
 // Sleep
 const char* getNextAlarm(char* alarmTime);
 void deepSleep();
+
+// Register of "devices" that are On
+uint8_t onRegister;
+void on(uint8_t device);
+void off(uint8_t device);
+bool isOn(uint8_t device);
 
 // Sensors
 uint16_t readMaxbotixSerial(uint8_t samples = 5);
