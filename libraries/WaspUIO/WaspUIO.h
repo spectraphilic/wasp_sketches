@@ -9,7 +9,15 @@
  ******************************************************************************/
 
 #include <inttypes.h>
+
+#include <WaspFrame.h>
+#include <WaspGPS.h>
+#include <WaspSensorAgr_v20.h>
+#include <WaspXBeeDM.h>
+#include <BME280.h>
+
 #include <Coroutines.h>
+#include <SDI12.h>
 
 /******************************************************************************
  * Definitions & Declarations
@@ -214,7 +222,9 @@ uint16_t readMaxbotixSerial(uint8_t samples = 5);
 
 };
 
+
 extern WaspUIO UIO;
+extern SDI12 mySDI12;
 
 
 void vlog(loglevel_t level, const char* message, va_list args);
