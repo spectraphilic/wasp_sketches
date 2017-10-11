@@ -8,26 +8,34 @@
  * Includes
  ******************************************************************************/
 
+// We cannot enable everything at the same time or we run out of program memory
+#define USE_AGR false
+#define USE_I2C true // I include here OneWire as well
+#define USE_SDI true
+#define FRAME_BINARY true
+
 #include <inttypes.h>
 
 #include <WaspFrame.h>
 #include <WaspGPS.h>
-#include <WaspSensorAgr_v20.h>
 #include <WaspXBeeDM.h>
 #include <BME280.h>
 
 #include <Coroutines.h>
 #include <SDI12.h>
 
+// RTC uses I2C. If there are other sensors with I2C they must be powered on
+// when using RTC, otherwise it won't work. See TwoWire::secureBegin
+#if USE_AGR
+#include <WaspSensorAgr_v20.h>
+#elif USE_I2C
+#include <WaspSensorAmbient.h> // This is used to enable 3V3
+#endif
+
+
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
-
-// We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
-#define USE_I2C true // I include here OneWire as well
-#define USE_SDI true
-#define FRAME_BINARY true
 
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)

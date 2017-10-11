@@ -184,6 +184,7 @@ CR_TASK(taskAgr)
   CR_END;
 }
 
+#if USE_AGR
 CR_TASK(taskAgrPressure)
 {
   float pressure;
@@ -238,6 +239,7 @@ CR_TASK(taskAgrLC)
 
   CR_END;
 }
+#endif
 
 
 /**
@@ -697,20 +699,20 @@ CR_TASK(taskGps)
 {
   if (GPS.ON() == 0)
   {
-    warn(F("setTimeFromGPS: GPS.ON() failed, probably there is no GPS module"));
+    warn(F("taskGPS: GPS.ON() failed, probably there is no GPS module"));
     return CR_TASK_ERROR;
   }
 
-  if (GPS.waitForSignal() == false)
+  if (GPS.waitForSignal(60) == false)
   {
-    warn(F("setTimeFromGPS: Timeout"));
+    warn(F("taskGPS: Timeout"));
     GPS.OFF();
     return CR_TASK_ERROR;
   }
 
   if (GPS.getPosition() != 1)
   {
-    warn(F("setTimeFromGPS: getPosition failed"));
+    warn(F("taskGPS: getPosition failed"));
     GPS.OFF();
     return CR_TASK_ERROR;
   }
@@ -719,7 +721,7 @@ CR_TASK(taskGps)
   // already done in getPosition above)
   GPS.setTimeFromGPS();
   UIO.initTime();
-  info(F("setTimeFromGPS: Success, time updated"));
+  info(F("taskGPS: Success, time updated"));
 
   // Location
   ADD_SENSOR(SENSOR_GPS,

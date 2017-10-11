@@ -44,6 +44,9 @@ fork of waspmoteapi and the sketches:
     $ cd waspmote-pro-ide-v06.02
     $ mv libraries libraries.bak
     $ ln -s ../waspmoteapi-uio/libraries
+    $ cd hardware/waspmote/avr/cores
+    $ mv waspmote-api waspmote-api.bak
+    $ ln -s ../../../../../waspmoteapi/waspmote-api
 
 (4) Open the Preferences dialog in the IDE and change the "Sketchbook location"
 to point to the sketches project (where the libraries folder is). For example:
