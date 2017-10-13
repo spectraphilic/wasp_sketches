@@ -91,13 +91,9 @@ void loop()
       cr.spawn(taskNetwork);
     }
     // GPS (Once a day)
-    // The RTC is DS3231SN which at -40 C has an accuracy of 3.5ppm, that's
-    // about 0.3s per day, with aging it may be worse.
-    // See https://www.maximintegrated.com/en/app-notes/index.mvp/id/3566
-    //
-    // As clock sync between the devices is critical for the network to work
-    // properly, we update the RTC time from GPS daily. But the GPS draws power,
-    // so this may need to be tuned.
+    // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
+    // for our networking requirements, so we have to sync it once a day. See
+    // http://hycamp.org/private-area/waspmote-rtc/
 //  if (UIO.time.minute == 0 && UIO.time.hour == 0);
 //  {
 //    cr.spawn(taskGps);

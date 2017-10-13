@@ -316,6 +316,11 @@ uint8_t WaspUIO::frame2Sd()
   uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
 
+  if (! hasSD)
+  {
+    return 1;
+  }
+
   startSD();
 
   // (1) Get the date
@@ -923,8 +928,11 @@ void WaspUIO::initTime()
   start = millis();
   cr.sleep_time = 0;
 
-  // Read temperature now that RTC is ON (it takes less than 2ms)
-  rtc_temp = RTC.getTemperature();
+  // Read temperature now that RTC is ON (v12 only), it takes less than 2ms
+  if (_boot_version < 'H')
+  {
+    rtc_temp = RTC.getTemperature();
+  }
 
   // Turn off RTC only if it was off when this method was called
   if (! rtcON)

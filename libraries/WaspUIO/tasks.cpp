@@ -36,9 +36,14 @@ CR_TASK(taskAcc)
 
 CR_TASK(taskHealthFrame)
 {
-  // Frame: Device's health (battery, rtc temperature, acc)
+  // Battery
   ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel); // Battery level (uint8_t)
-  ADD_SENSOR(SENSOR_IN_TEMP, UIO.rtc_temp); // RTC temperature in Celsius (float)
+
+  // RTC temperature (v12 only)
+  if (_boot_version < 'H')
+  {
+    ADD_SENSOR(SENSOR_IN_TEMP, UIO.rtc_temp); // RTC temperature in Celsius (float)
+  }
 
   return CR_TASK_STOP;
 }
