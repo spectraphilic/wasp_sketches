@@ -93,7 +93,6 @@ CR_TASK(taskSensors)
     info(F("3V3 ON"));
     PWR.setSensorPower(SENS_3V3, SENS_ON);
   }
-#endif
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
@@ -106,6 +105,7 @@ CR_TASK(taskSensors)
       BME.readCalibration();
     }
   }
+#endif
 
   // Wait for power to stabilize
   CR_DELAY(500);

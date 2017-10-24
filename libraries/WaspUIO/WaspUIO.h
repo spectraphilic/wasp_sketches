@@ -238,7 +238,7 @@ extern SDI12 mySDI12;
 void vlog(loglevel_t level, const char* message, va_list args);
 void beforeSleep();
 void afterSleep();
-
+void onHAIwakeUP_after(void);
 
 /*
  * Actions. Base components to implement a flexible and efficient main loop.

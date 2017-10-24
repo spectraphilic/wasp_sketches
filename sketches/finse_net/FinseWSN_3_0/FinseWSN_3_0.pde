@@ -45,15 +45,11 @@ void setup()
 */
   info(F("Boot done, go to sleep"));
   UIO.stopSD();
-
-  // Deep sleep
-  UIO.deepSleep();
 }
 
 void loop()
 {
-  uint32_t cpu_time;
-
+  UIO.deepSleep();
   UIO.onLoop();
 
   // Low battery level: do nothing
@@ -62,15 +58,12 @@ void loop()
     if (UIO.batteryLevel <= 30)
     {
       debug(F("*** Loop skip (battery %d %%)"), UIO.batteryLevel);
-      goto deepsleep;
+      return;
     }
   }
 
-  // Reset if stuck for 4 minutes (v15 only)
-  if (_boot_version >= 'H')
-  {
-    RTC.setWatchdog(UIO.loop_timeout);
-  }
+  // Reset if stuck for 4 minutes
+  RTC.setWatchdog(UIO.loop_timeout);
 
   // Logging starts here
   info(F("*** Loop start (battery %d %%)"), UIO.batteryLevel);
@@ -78,7 +71,7 @@ void loop()
   // Check RTC interruption
   if (intFlag & RTC_INT)
   {
-    intFlag &= ~(RTC_INT);
+    intFlag &= ~(RTC_INT); RTC.alarmTriggered = 0;
 
     // Create the first frame
     UIO.createFrame(true);
@@ -114,24 +107,10 @@ void loop()
     intFlag = 0;
   }
 
-  cpu_time = cr.millisDiff(UIO.start);
+  uint32_t cpu_time = cr.millisDiff(UIO.start);
   info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep_time, cpu_time);
 //char alarmTime[12];
 //UIO.getNextAlarm(alarmTime);
 //info(F("NEXT ALARM %s"), alarmTime);
   UIO.stopSD(); // Logging ends here
-
-  // v15 only
-  if (_boot_version >= 'H')
-  {
-    RTC.unSetWatchdog();
-  }
-
-deepsleep:
-  // Clear interruption flag & pin (XXX Do this in deepSleep?)
-  intFlag = 0;
-  PWR.clearInterruptionPin();
-
-  // Deep sleep
-  UIO.deepSleep();
 }

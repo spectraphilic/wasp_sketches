@@ -1026,12 +1026,37 @@ const char* WaspUIO::getNextAlarm(char* alarmTime)
 
 void WaspUIO::deepSleep()
 {
-  char alarmTime[12]; // "00:00:00:00"
+  // Clear interruption flag & pin
+  intFlag = 0;
+  PWR.clearInterruptionPin();
+
+  // Reset watchdog
+  RTC.setWatchdog(period + 1);
 
   // Enable RTC interruption and sleep
+  char alarmTime[12]; // "00:00:00:00"
   getNextAlarm(alarmTime);
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+}
 
-  // Awake: disable RTC interruptions
-  RTC.detachInt();
+
+/**
+ * To reset v12 after a timeout. Requires our waspmoteapi fork.
+ */
+void onHAIwakeUP_after(void)
+{
+  if (_boot_version < 'H')
+  {
+    if (intFlag & RTC_INT)
+    {
+      RTC.ON();
+      if (RTC.alarmTriggered & 2) // Alarm 2
+      {
+        intFlag &= ~(RTC_INT); RTC.alarmTriggered = 0;
+        RTC.disableAlarm2();
+        PWR.reboot();
+      }
+      RTC.OFF();
+    }
+  }
 }

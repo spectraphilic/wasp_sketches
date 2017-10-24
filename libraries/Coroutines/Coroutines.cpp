@@ -249,11 +249,11 @@ void Loop::sleep(int32_t delay_time)
       // Sleep
       sprintf(alarmTime, "00:00:00:%02d", seconds);
       PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE5, ALL_ON);
-      //RTC.detachInt();       // Awake: Disable RTC interruptions
       if (intFlag & RTC_INT) // Clear flag
       {
-        intFlag &= ~(RTC_INT);
+        intFlag &= ~(RTC_INT); RTC.alarmTriggered = 0;
       }
+      RTC.attachInt(); // To keep the reset watchdog (RTC alarm 2)
     }
 
     // Catch unexpected interruptions
