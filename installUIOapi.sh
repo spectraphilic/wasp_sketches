@@ -24,12 +24,11 @@ unzip waspmote-pro-ide-v06.02-linux64.zip
 ./install.sh
 
 # create simulink to our own copy of the librayr API
-printf "creating simulink to our own copy of the librayr API ...\n"
-cd waspmote-pro-ide-v06.02
+printf "creating symlink to our own copy of the librayr API ...\n"
 mv libraries libraries.bak
 ln -s ../waspmoteapi-uio/libraries
 
-cd ../hardware/waspmote//avr/cores/
+cd hardware/waspmote/avr/cores/
 mv waspmote-api waspmote-api.bak
 ln -s ../../../../../waspmoteapi-uio/waspmote-api
 
