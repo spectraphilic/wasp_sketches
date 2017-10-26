@@ -10,6 +10,8 @@ if __name__ == '__main__':
     client = Client()
     client.on_connect = on_connect
     client.connect('localhost')
+    client.loop_start()
+
     with Serial('/dev/serial0', 9600) as serial:
         xbee = XBee(serial)
         while True:
@@ -19,4 +21,6 @@ if __name__ == '__main__':
                 client.publish('frames', frame['rf_data'])
             except KeyboardInterrupt:
                 break
+
+    client.loop_stop()
     client.disconnect()
