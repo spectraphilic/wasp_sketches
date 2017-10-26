@@ -300,7 +300,7 @@ void WaspUIO::menuNetwork()
     cr.print(F("2. Gateway"));
     cr.print(F("3. Broadcast"));
     cr.print(F("4. Finse alt"));
-    cr.print(F("5. Other"));
+    cr.print(F("5. Raspberry Pi"));
     cr.print(F("9. Exit"));
     cr.print();
     input(str, sizeof(str), F("==> Enter numeric option:"), 0);
@@ -326,7 +326,7 @@ void WaspUIO::menuNetwork()
         setNetwork(NETWORK_FINSE_ALT);
         return;
       case '5':
-        setNetwork(NETWORK_OTHER);
+        setNetwork(NETWORK_RASP);
         return;
       case '9':
         cr.print();
@@ -338,7 +338,7 @@ void WaspUIO::menuNetwork()
 void WaspUIO::setNetwork(network_t value)
 {
   // Check input parameter is valid
-  if (value < NETWORK_FINSE || NETWORK_OTHER < value)
+  if (value < NETWORK_FINSE || NETWORK_RASP < value)
   {
       cr.print(F("ERROR No network configuration"));
       return;
@@ -370,13 +370,6 @@ void WaspUIO::initNet()
 {
   uint8_t addressing = UNICAST_64B;
   network_t value = (network_t) network.panid[1]; // panid low byte
-
-  // Check input parameter is valid
-  if (value < NETWORK_FINSE || NETWORK_OTHER < value)
-  {
-      cr.print(F("ERROR No network configuration"));
-      return;
-  }
 
   // Addressing
   memcpy_P(&network, &networks[value], sizeof network);
