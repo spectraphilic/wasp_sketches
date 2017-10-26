@@ -22,29 +22,29 @@ STR    = 3 # char*
 ULONG  = 4 # uint32_t
 
 SENSORS = {
-     15: (b'PA', FLOAT, 1),
-     33: (b'TCB', FLOAT, 1),
-     35: (b'HUMB', FLOAT, 1),
-     38: (b'LW', FLOAT, 1),
-     52: (b'BAT', USHORT, 1),
+     15: (b'PA', FLOAT, ['pa']),
+     33: (b'TCB', FLOAT, ['tcb']),
+     35: (b'HUMB', FLOAT, ['humb']),
+     38: (b'LW', FLOAT, ['lw']),
+     52: (b'BAT', USHORT, ['bat']),
 #    53: (b'GPS', ),
-     54: (b'RSSI', INT, 1),
-     55: (b'MAC', STR, 1),
-     62: (b'IN_TEMP', FLOAT, 1),
+     54: (b'RSSI', INT, ['rssi']),
+     55: (b'MAC', STR, ['mac']),
+     62: (b'IN_TEMP', FLOAT, ['in_temp']),
 #    63: (b'ACC', ),
-     65: (b'STR', STR, 1),
-     74: (b'BME_TC', FLOAT, 1),
-     76: (b'BME_HUM', FLOAT, 1),
-     77: (b'BME_PRES', FLOAT, 1),
-     85: (b'TX_PWR', USHORT, 1),
+     65: (b'STR', STR, ['str']),
+     74: (b'BME_TC', FLOAT, ['bme_tc']),
+     76: (b'BME_HUM', FLOAT, ['bme_hum']),
+     77: (b'BME_PRES', FLOAT, ['bme_pres']),
+     85: (b'TX_PWR', USHORT, ['tx_pwr']),
 #    89: (b'SPEED_OG', ),
 #    90: (b'COURSE_OG', ),
 #    91: (b'ALT', ),
-    123: (b'TST', ULONG, 1),
-    200: (b'SDI12_CTD10', FLOAT, 3),
-    201: (b'SDI12_DS2_1', FLOAT, 3),
-    202: (b'SDI12_DS2_2', FLOAT, 3),
-    203: (b'DS1820', FLOAT, 1),
+    123: (b'TST', ULONG, ['tst']),
+    200: (b'SDI12_CTD10', FLOAT, ['ctd_depth', 'ctd_temp', 'ctd_cond']),
+    201: (b'SDI12_DS2_1', FLOAT, ['ds2_speed', 'ds2_dir', 'ds2_temp']),
+    202: (b'SDI12_DS2_2', FLOAT, ['ds2_meridional', 'ds2_zonal', 'ds2_gust']),
+    203: (b'DS1820', FLOAT, ['ds1820']),
 }
 
 SENSORS_STR = {v[0]: v for k, v in SENSORS.items()}
@@ -58,6 +58,10 @@ class frameObj(object):
         self.tcb = np.nan
         self.in_temp = np.nan
         self.humb = np.nan
+
+    def set(self, key, value):
+        key = key.lower()
+        setattr(self, key, value)
 
 
 def search_frame(data):
@@ -73,7 +77,7 @@ def search_frame(data):
     if index > 0:
         print('Warning: garbage before frame found and discarded')
 
-    return data[index+3:]
+    return data
 
 
 def parse_frame(line):
@@ -81,6 +85,14 @@ def parse_frame(line):
     Parse the frame starting at the given byte string. We consider that the
     frame start delimeter has already been read.
     """
+
+    # Start delimiter
+    if not line.startswith(b'<=>'):
+        print('Warning: expected frame not found')
+        return None
+
+    line = line[3:]
+
     # Frame type
     frame_type = struct.unpack_from("B", line)[0]
     line = line[1:]
@@ -117,21 +129,19 @@ def parse_frame(line):
                 print("Warning: %s sensor type not supported" % key)
                 return None
 
-            key, sensor_type, n = sensor
+            key, sensor_type, names = sensor
             if sensor_type in (USHORT, INT, ULONG):
-                value = [int(x) for x in value.split(b';')]
+                values = [int(x) for x in value.split(b';')]
             elif sensor_type == FLOAT:
-                value = [float(x) for x in value.split(b';')]
+                values = [float(x) for x in value.split(b';')]
             elif sensor_type == STR:
-                assert n == 1
-                value = [value]
+                assert len(names) == 1
+                values = [value]
 
-            assert len(value) == n
-            if len(value) == 1:
-                value = value[0]
+            assert len(values) == len(names)
 
-            key = key.decode('ascii').lower()
-            setattr(frame, key, value)
+            for name, value in zip(names, values):
+                frame.set(name, value)
 
     # Binary
     else:
@@ -168,9 +178,8 @@ def parse_frame(line):
                 print("Warning: %d sensor type not supported" % sensor_id)
                 return None
 
-            key, sensor_type, nvalues = sensor
-            values = []
-            for i in range(0, nvalues):
+            key, sensor_type, names = sensor
+            for name in names:
                 if sensor_type == USHORT:
                     value = struct.unpack_from("B", line)[0]
                     line = line[1:]
@@ -189,13 +198,7 @@ def parse_frame(line):
                     value = line[:length]
                     line = line[length:]
 
-                values.append(value)
-
-            if len(values) == 1:
-                values = values[0]
-
-            key = key.decode('ascii').lower()
-            setattr(frame, key, values)
+                frame.set(name, value)
 
     return frame, rest
 
@@ -240,17 +243,25 @@ if __name__ == '__main__':
     data_frame = data_frame.set_index('timestamp')
 
     #plt.ion()
+    fig, ax = plt.subplots(5, sharex=True)
 
     # Battery
-    plt.subplot(2,1,1)
-    data_frame.bat.dropna().plot()
-    plt.ylabel('Battery level (%)')
+    data_frame.bat.dropna().plot(ax=ax[0])
+    ax[0].set_title('Battery level (%)')
 
-    # Internal Temperture
-    plt.subplot(2,1,2)
-    data_frame.in_temp.dropna().plot()
-    #data_frame.tcb.dropna().plot()
-    plt.ylabel('Internal Temperature (degC)')
+    data_frame.in_temp.dropna().plot(ax=ax[1])
+    #data_frame.tcb.dropna().plot(ax=ax[1])
+    ax[1].set_title('Internal Temperature (degC)')
+
+    # CTD
+    data_frame.ctd_depth.dropna().plot(ax=ax[2])
+    ax[2].set_title('CTD Water depth')
+
+    data_frame.ctd_temp.dropna().plot(ax=ax[3])
+    ax[3].set_title('CTD Water temperature')
+
+    data_frame.ctd_cond.dropna().plot(ax=ax[4])
+    ax[4].set_title('CTD Water conductivity')
 
     # Plot
     plt.plot()
