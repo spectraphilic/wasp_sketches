@@ -708,6 +708,8 @@ CR_TASK(taskGps)
     return CR_TASK_ERROR;
   }
 
+  // XXX We could use GPS.check instead, and give control back with CR_DELAY,
+  // problem is when we sleep (cr) the gps is powered off (to verify).
   if (GPS.waitForSignal(60) == false)
   {
     warn(F("taskGPS: Timeout"));

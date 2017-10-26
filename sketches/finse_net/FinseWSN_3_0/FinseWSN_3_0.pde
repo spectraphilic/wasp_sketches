@@ -28,6 +28,7 @@ void setup()
   char buffer[150];
   size_t size = sizeof(buffer);
   info(F("Booting (%c)..."), _boot_version);
+  info(F("Hardware: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
   info(F("Config Battery: %s (%d %%)"), UIO.menuFormatBattery(buffer, size), UIO.batteryLevel);
   info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
   info(F("Config Network: %s"), UIO.menuFormatNetwork(buffer, size));
@@ -62,9 +63,6 @@ void loop()
     }
   }
 
-  // Reset if stuck for 4 minutes
-  RTC.setWatchdog(UIO.loop_timeout);
-
   // Logging starts here
   info(F("*** Loop start (battery %d %%)"), UIO.batteryLevel);
 
@@ -87,10 +85,10 @@ void loop()
     // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
     // for our networking requirements, so we have to sync it once a day. See
     // http://hycamp.org/private-area/waspmote-rtc/
-//  if (UIO.time.minute == 0 && UIO.time.hour == 0);
-//  {
+    if (UIO.hasGPS && UIO.time.minute == 0 && UIO.time.hour == 0)
+    {
 //    cr.spawn(taskGps);
-//  }
+    }
 //  cr.spawn(taskSlow);
     cr.run();
 

@@ -108,7 +108,10 @@ void WaspUIO::menuTime()
   {
     cr.print();
     cr.print(F("1. Set time manually"));
-    cr.print(F("2. Set time from GPS"));
+    if (hasGPS)
+    {
+      cr.print(F("2. Set time from GPS"));
+    }
     cr.print(F("9. Exit"));
     cr.print();
     input(str, sizeof(str), F("==> Enter numeric option:"), 0);
@@ -121,8 +124,11 @@ void WaspUIO::menuTime()
         menuTimeManual();
         break;
       case '2':
-        cr.print(F("Setting time from GPS, please wait, it may take a few minutes"));
-        taskGps();
+        if (hasGPS)
+        {
+          cr.print(F("Setting time from GPS, please wait, it may take a few minutes"));
+          taskGps();
+        }
         break;
       case '9':
         cr.print();

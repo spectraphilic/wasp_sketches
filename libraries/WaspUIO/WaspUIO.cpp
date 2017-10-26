@@ -64,10 +64,13 @@ void WaspUIO::onSetup()
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
-  /*** 2. Autodetect hardware ** */
-  SD.ON();
-  hasSD = (SD.isSD() == 1);
+  /*** 2. Autodetect hardware ***/
+  cr.print(F("Hardware autodetect in progress"));
+  hasSD = SD.ON();
   SD.OFF();
+  hasGPS = GPS.ON();
+  GPS.OFF();
+  cr.print(F("Hardware autodetect done (SD=%d GPS=%d)"), hasSD, hasGPS);
 
 /*
     // USB autodetect
@@ -1037,6 +1040,7 @@ void WaspUIO::deepSleep()
   char alarmTime[12]; // "00:00:00:00"
   getNextAlarm(alarmTime);
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
+  RTC.setWatchdog(UIO.loop_timeout); // Reset if stuck for 4 minutes
 }
 
 

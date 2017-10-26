@@ -173,6 +173,7 @@ float rtc_temp;          // internal temperature
 // SD
 const char* tmpFilename = "TMP.TXT";
 bool hasSD;
+bool hasGPS;
 SdFile logFile;
 SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
