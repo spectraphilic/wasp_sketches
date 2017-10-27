@@ -9,10 +9,6 @@ import os
 import struct
 
 import numpy as np
-import pandas as pd
-#import matplotlib as mpl
-#mpl.use('PS')
-import matplotlib.pyplot as plt
 
 
 USHORT = 0 # uint8_t
@@ -218,14 +214,26 @@ def read_wasp_data(filename, data):
 
 
 if __name__ == '__main__':
+    import pandas as pd
+    #import matplotlib as mpl
+    #mpl.use('PS')
+    import matplotlib.pyplot as plt
+
     names = [
 #       '../../data/data_20170710/TMP.TXT',
 #       '../../data/data_20170710/DATA/170706.TXT',
-#       'data/170926/DATA',
-        'data/170924-finse/DATA/170921.TXT',
-        'data/170924-finse/DATA/170922.TXT',
-        'data/170924-finse/DATA/170923.TXT',
-        'data/170924-finse/DATA/170924.TXT',
+
+        #'data/170925/DATA',
+        #'data/170926/DATA',
+        #'data/170929/DATA',
+        #'data/171002/DATA',
+
+        "data/middalselvi/20171010/DATA",
+
+#       'data/170924-finse/DATA/170921.TXT',
+#       'data/170924-finse/DATA/170922.TXT',
+#       'data/170924-finse/DATA/170923.TXT',
+#       'data/170924-finse/DATA/170924.TXT',
     ]
 
     data = []
