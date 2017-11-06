@@ -52,6 +52,7 @@
 #define EEPROM_SENSOR_DS2 (EEPROM_START + 14)
 #define EEPROM_SENSOR_DS1820 (EEPROM_START + 15) // OneWire
 #define EEPROM_SENSOR_BME280 (EEPROM_START + 16) // I2C
+#define EEPROM_SENSOR_MB (EEPROM_START + 17) // TTL
 
 #define FLAG_LOG_USB 1
 #define FLAG_NETWORK 2
@@ -117,6 +118,9 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
+void sort_uint16(uint16_t* array, uint8_t size);
+uint16_t median_uint16(uint16_t* array, uint8_t size);
+
 // Like Arduino's EEPROM.update, it writes the given value only if different
 // from the value already saved.
 bool updateEEPROM(int address, uint8_t value);
@@ -161,6 +165,7 @@ uint8_t sensor_ctd10;
 uint8_t sensor_ds2;
 uint8_t sensor_ds1820;
 uint8_t sensor_bme280;
+uint8_t sensor_mb;
 
 // Variables updated on every loop (see onLoop)
 uint8_t batteryLevel;
@@ -308,10 +313,10 @@ CR_TASK(taskAgrSensirionFrame);
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
-// OneWire
+// 3V3
 CR_TASK(task1Wire);
-// I2C
 CR_TASK(taskI2C);
+CR_TASK(taskTTL);
 // Network
 CR_TASK(taskNetwork);
 CR_TASK(taskNetworkSend);

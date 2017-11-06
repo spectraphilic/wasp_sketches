@@ -67,8 +67,9 @@ CR_TASK(taskSensors)
 #if USE_I2C
   bool onewire = UIO.action(1, UIO.sensor_ds1820);
   bool i2c = UIO.action(1, UIO.sensor_bme280);
+  bool ttl = UIO.action(1, UIO.sensor_mb);
 #endif
-  static tid_t agr_id, sdi_id, onewire_id, i2c_id;
+  static tid_t agr_id, sdi_id, onewire_id, i2c_id, ttl_id;
 
   CR_BEGIN;
 
@@ -88,7 +89,7 @@ CR_TASK(taskSensors)
   }
 #endif
 #if USE_I2C
-  if (! (WaspRegister & REG_3V3) && (onewire || i2c))
+  if (! (WaspRegister & REG_3V3) && (onewire || i2c || ttl))
   {
     info(F("3V3 ON"));
     PWR.setSensorPower(SENS_3V3, SENS_ON);
@@ -120,6 +121,7 @@ CR_TASK(taskSensors)
 #if USE_I2C
   if (onewire) { CR_SPAWN2(task1Wire, onewire_id); }
   if (i2c)     { CR_SPAWN2(taskI2C, i2c_id); }
+  if (ttl)     { CR_SPAWN2(taskTTL, ttl_id); }
 #endif
 
   // Wait for tasks to complete
@@ -132,6 +134,7 @@ CR_TASK(taskSensors)
 #if USE_I2C
   if (onewire) { CR_JOIN(onewire_id); }
   if (i2c)     { CR_JOIN(i2c_id); }
+  if (ttl)     { CR_JOIN(ttl_id); }
 #endif
 
   // Power Off
@@ -497,6 +500,49 @@ CR_TASK(taskI2C)
   return CR_TASK_STOP;
 }
 
+/**
+ * TTL Serial.
+ *
+ * Maxbotix MB7389. Wiring: GND -> GND, V+ -> 3V3, pin5 -> AUX SERIAL 1RX
+ */
+
+CR_TASK(taskTTL)
+{
+  const int bytes = 4; // Number of bytes to read
+  char data_buffer[bytes]; // Store serial data
+  int sample; // Store each sample
+  uint8_t i;
+
+  CR_BEGIN;
+
+  Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
+  beginSerial(9600,1); // set boud rate to 9600
+
+  // flush and wait for a range reading
+  serialFlush(1);
+
+  while (!serialAvailable(1) || serialRead(1) != 'R');
+
+  // read the range
+  for (i = 0; i < bytes; i++)
+  {
+    while (!serialAvailable(1));
+    data_buffer[i] = serialRead(1);
+  }
+
+  sample = atoi(data_buffer);
+  if (sample<=300 || sample>=5000)
+  {
+    warn(F("readMaxbotixSerial: NaN"));
+  }
+  else
+  {
+    debug(F("readMaxbotixSerial: sample = %d"), sample);
+    ADD_SENSOR(SENSOR_MB73XX, (uint32_t) sample);
+  }
+
+  CR_END;
+}
 
 /**
  * Network

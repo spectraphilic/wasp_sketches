@@ -58,6 +58,7 @@ void WaspUIO::onSetup()
 #if USE_I2C
   sensor_ds1820 = Utils.readEEPROM(EEPROM_SENSOR_DS1820);
   sensor_bme280 = Utils.readEEPROM(EEPROM_SENSOR_BME280);
+  sensor_mb =  Utils.readEEPROM(EEPROM_SENSOR_MB);
 #endif
 
   // Log level
@@ -624,13 +625,14 @@ void WaspUIO::OTA_communication(int OTA_duration)
 
 
 /******************************************************************************/
-/* Function to read the Maxbotix (MB7389) sensor
+/* Function to read the Maxbotix (MB7389) sensor.
 *
 * Parameters: uint8_t samples  - Number of readings to sample
 *                              - Defult is set to 5
 *
 * Returns: uint8_t             - median value of samples
 *
+* TTL Serial.
 * Wiring: GND -> GND, V+ -> 3V3, pin5 -> AUX SERIAL 1RX
 */
 uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
@@ -641,11 +643,10 @@ uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
   uint16_t samples[nsamples];
   uint8_t i, j;
 
-  Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
-
   PWR.setSensorPower(SENS_3V3,SENS_ON); //  sensor needs 3.3 voltage
   delay(1000);
 
+  Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
   beginSerial(9600,1); // set boud rate to 9600
 
   for (j = 0; j < nsamples;)
@@ -659,15 +660,13 @@ uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
     for (i = 0; i < bytes; i++)
     {
       while (!serialAvailable(1));
-
       data_buffer[i] = serialRead(1);
     }
 
     sample = atoi(data_buffer);
-
     if (sample<=300 || sample>=5000)
     {
-      debug(F("readMaxbotixSerial: NaN"));
+      warn(F("readMaxbotixSerial: NaN"));
       delay(10);
     }
     else
@@ -675,38 +674,12 @@ uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
       samples[j] = (uint16_t) sample;
       j++;
       debug(F("readMaxbotixSerial: sample = %d"), sample);
-      // add a function for median value....  construct an array...
       delay(1000);
     }
   }
 
   // Bubble sort
-  bool done = false;
-  while (done == false)
-  {
-    done = true;
-    for (j = 0; j < nsamples; j++)
-    {
-      // numbers are out of order - swap
-      if (samples[j] > samples[j+1])
-      {
-        uint16_t temp = samples[j+1];
-        samples [j+1] = samples[j];
-        samples [j] = temp;
-        done = false;
-      }
-    }
-  }
-
-  // Median
-  if (nsamples % 2 == 1)
-  {
-    return samples[nsamples/2];
-  }
-  else
-  {
-    return (samples[nsamples/2] + samples[nsamples/2 - 1]) / 2;
-  }
+  return median_uint16(samples, nsamples);
 }
 
 /**

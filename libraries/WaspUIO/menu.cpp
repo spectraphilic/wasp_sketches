@@ -90,6 +90,7 @@ const char* WaspUIO::menuFormatSensors(char* dst, size_t size)
 #ifdef USE_I2C
   if (sensor_ds1820)      strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), sensor_ds1820);
   if (sensor_bme280)      strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), sensor_bme280);
+  if (sensor_mb)          strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), sensor_mb);
 #endif
   if (! dst[0])           strncpy_F(dst, F("(none)"), size);
   return dst;
@@ -491,10 +492,11 @@ void WaspUIO::menuSensors()
 #if USE_I2C
     cr.print(F("4. I2C: BME-280 (%s)"), sensorStatus(sensor_bme280));
     cr.print(F("5. OneWire: DS1820 (%s)"), sensorStatus(sensor_ds1820));
+    cr.print(F("6. TTL: MB7389 (%s)"), sensorStatus(sensor_mb));
 #endif
 #if USE_SDI
-    cr.print(F("6. SDI-12: CTD-10 (%s)"), sensorStatus(sensor_ctd10));
-    cr.print(F("7. SDI-12: DS-2 (%s)"), sensorStatus(sensor_ds2));
+    cr.print(F("7. SDI-12: CTD-10 (%s)"), sensorStatus(sensor_ctd10));
+    cr.print(F("8. SDI-12: DS-2 (%s)"), sensorStatus(sensor_ds2));
 #endif
     cr.print(F("9. Exit"));
     cr.print();
@@ -504,27 +506,28 @@ void WaspUIO::menuSensors()
 
     switch (str[0])
     {
+#if USE_AGR
       case '1':
-        menuSensor(EEPROM_SENSOR_SENSIRION, sensor_sensirion);
-        break;
+        menuSensor(EEPROM_SENSOR_SENSIRION, sensor_sensirion); break;
       case '2':
-        menuSensor(EEPROM_SENSOR_PRESSURE, sensor_pressure);
-        break;
+        menuSensor(EEPROM_SENSOR_PRESSURE, sensor_pressure); break;
       case '3':
-        menuSensor(EEPROM_SENSOR_LEAFWETNESS, sensor_leafwetness);
-        break;
+        menuSensor(EEPROM_SENSOR_LEAFWETNESS, sensor_leafwetness); break;
+#endif
+#if USE_I2C
       case '4':
-        menuSensor(EEPROM_SENSOR_BME280, sensor_bme280);
-        break;
+        menuSensor(EEPROM_SENSOR_BME280, sensor_bme280); break;
       case '5':
-        menuSensor(EEPROM_SENSOR_DS1820, sensor_ds1820);
-        break;
+        menuSensor(EEPROM_SENSOR_DS1820, sensor_ds1820); break;
       case '6':
-        menuSensor(EEPROM_SENSOR_CTD10, sensor_ctd10);
-        break;
+        menuSensor(EEPROM_SENSOR_MB, sensor_mb); break;
+#endif
+#if USE_SDI
       case '7':
-        menuSensor(EEPROM_SENSOR_DS2, sensor_ds2);
-        break;
+        menuSensor(EEPROM_SENSOR_CTD10, sensor_ctd10); break;
+      case '8':
+        menuSensor(EEPROM_SENSOR_DS2, sensor_ds2); break;
+#endif
       case '9':
         cr.print();
         return;
