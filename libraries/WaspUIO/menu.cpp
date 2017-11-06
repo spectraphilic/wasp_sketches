@@ -146,15 +146,14 @@ void WaspUIO::menuTimeManual()
 
   do
   {
-    input(str, sizeof(str), F("Set new time (format is yy:mm:dd:hh:mm:ss). Press Enter to leave it unchanged:"), 0);
+    input(str, sizeof(str), F("Set UTC time (format is yy:mm:dd:hh:mm:ss). Press Enter to leave it unchanged:"), 0);
     if (strlen(str) == 0)
       return;
 
     // Set new time
     if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
     {
-      setTime(year, month, day, hour, minute, second);
-      initTime();
+      saveTime(year, month, day, hour, minute, second);
       cr.print(F("Current time is %s"), RTC.getTime());
       return;
     }
@@ -465,7 +464,7 @@ void WaspUIO::menuWakeup()
       {
         wakeup_period = (uint8_t) value;
         updateEEPROM(EEPROM_UIO_WAKEUP_PERIOD, wakeup_period);
-        initTime();
+        readBattery(); // updates 'period', which depends on wakeup_period
         return;
       }
     }

@@ -37,13 +37,11 @@ void setup()
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?
-/*
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
     warn(F("Wrong time detected, updating from GPS"));
-    actionGps();
+    taskGps();
   }
-*/
   info(F("Boot done, go to sleep"));
   UIO.stopSD();
 }
@@ -71,32 +69,9 @@ void loop()
   {
     intFlag &= ~(RTC_INT); RTC.alarmTriggered = 0;
 
-    // Create the first frame
-    UIO.createFrame(true);
-
     cr.reset();
-    cr.spawn(taskHealthFrame);
-    cr.spawn(taskSensors);
-    if ((UIO.flags & FLAG_NETWORK) && UIO.action(1, 12)) // 12 x 5min = 1hour
-    {
-      cr.spawn(taskNetwork);
-    }
-    // GPS (Once a day)
-    // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
-    // for our networking requirements, so we have to sync it once a day. See
-    // http://hycamp.org/private-area/waspmote-rtc/
-    if (UIO.hasGPS && UIO.time.minute == 0 && UIO.time.hour == 0)
-    {
-//    cr.spawn(taskGps);
-    }
-//  cr.spawn(taskSlow);
+    cr.spawn(taskMain);
     cr.run();
-
-    // Save the last frame, if there is something to save
-    if (frame.numFields > 1)
-    {
-      UIO.frame2Sd();
-    }
   }
 
   if (intFlag)

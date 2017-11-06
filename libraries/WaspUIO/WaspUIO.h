@@ -9,9 +9,9 @@
  ******************************************************************************/
 
 // We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
-#define USE_I2C true // I include here OneWire as well
-#define USE_SDI true
+#define USE_AGR true
+#define USE_I2C false // I include here OneWire as well
+#define USE_SDI false
 #define FRAME_BINARY true
 
 #include <inttypes.h>
@@ -196,7 +196,6 @@ const char* readOwnMAC(char* mac);
 // Init, start and stop methods
 void onSetup();
 void onLoop();
-void initTime();
 void readBattery();
 void initNet();
 bool action(uint8_t n, ...);
@@ -219,7 +218,8 @@ const char* menuFormatSensors(char* dst, size_t size);
 // Time
 unsigned long getEpochTime();
 unsigned long getEpochTime(uint16_t &ms);
-uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+void loadTime(bool temp=false);
 
 // Sleep
 const char* getNextAlarm(char* alarmTime);
@@ -296,6 +296,7 @@ void onHAIwakeUP_after(void);
  *
  */
 
+CR_TASK(taskMain);
 // Sensors: internal
 CR_TASK(taskAcc);
 CR_TASK(taskHealthFrame);

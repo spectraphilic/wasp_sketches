@@ -1,5 +1,55 @@
 #include "WaspUIO.h"
 
+
+/**
+ * Main task
+ */
+
+CR_TASK(taskMain)
+{
+  static tid_t health_id, sensors_id, network_id, gps_id;
+
+  CR_BEGIN;
+
+  // Create the first frame
+  UIO.createFrame(true);
+
+  // Sensors
+  CR_SPAWN2(taskHealthFrame, health_id);
+  CR_SPAWN2(taskSensors, sensors_id);
+
+  // Network
+  if ((UIO.flags & FLAG_NETWORK) && UIO.action(1, 12)) // 12 x 5min = 1hour
+  {
+    CR_SPAWN2(taskNetwork, network_id);
+    CR_JOIN(network_id);
+  }
+
+  CR_JOIN(health_id);
+  CR_JOIN(sensors_id);
+
+  // GPS (Once a day)
+  // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
+  // for our networking requirements, so we have to sync it once a day. See
+  // http://hycamp.org/private-area/waspmote-rtc/
+  if (UIO.hasGPS && UIO.time.minute == 0 && UIO.time.hour == 0)
+  {
+    CR_SPAWN2(taskGps, gps_id);
+    CR_JOIN(gps_id);
+  }
+
+  // Save the last frame, if there is something to save
+  if (frame.numFields > 1)
+  {
+    UIO.frame2Sd();
+  }
+
+  //CR_SPAWN(taskSlow);
+
+  CR_END;
+}
+
+
 /**
  * Internal sensors
  *
@@ -748,6 +798,8 @@ CR_TASK(taskNetworkReceive)
 
 CR_TASK(taskGps)
 {
+  uint32_t before, after;
+
   if (GPS.ON() == 0)
   {
     warn(F("taskGPS: GPS.ON() failed, probably there is no GPS module"));
@@ -756,7 +808,7 @@ CR_TASK(taskGps)
 
   // XXX We could use GPS.check instead, and give control back with CR_DELAY,
   // problem is when we sleep (cr) the gps is powered off (to verify).
-  if (GPS.waitForSignal(60) == false)
+  if (GPS.waitForSignal(150) == false) // 2m30s
   {
     warn(F("taskGPS: Timeout"));
     GPS.OFF();
@@ -772,9 +824,13 @@ CR_TASK(taskGps)
 
   // Set time (XXX could optimize, as part of the work in setTimeFromGPS is
   // already done in getPosition above)
-  GPS.setTimeFromGPS();
-  UIO.initTime();
-  info(F("taskGPS: Success, time updated"));
+  before = UIO.getEpochTime();
+  GPS.setTimeFromGPS(); // Save time to RTC
+  UIO.loadTime(); // Set system time
+  after = UIO.getEpochTime();
+  uint32_t skew = (after > before) ? (after - before): (before - after);
+  info(F("taskGPS: Success, time updated (skew=%lu)"), skew);
+  //ADD_SENSOR(SENSOR_TIME_SKEW, skew);
 
   // Location
   ADD_SENSOR(SENSOR_GPS,

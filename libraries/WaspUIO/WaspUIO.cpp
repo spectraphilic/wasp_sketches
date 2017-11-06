@@ -84,11 +84,13 @@ void WaspUIO::onSetup()
 
 void WaspUIO::onLoop()
 {
-   initTime();
-   readBattery();
-   onRegister = 0;
-}
+  cr.sleep_time = 0;
+  onRegister = 0;
 
+  loadTime(true); // Read temperature as well
+  RTC.breakTimeAbsolute(getEpochTime(), &time); // Keep minute & hour for later
+  readBattery();
+}
 
 
 /**
@@ -528,33 +530,6 @@ void WaspUIO::showFrame()
 }
 
 
-uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
-  uint8_t error;
-  uint8_t rtcON = RTC.isON;
-
-  // Turn on RTC if required
-  if (! rtcON)
-  {
-    RTC.ON();
-  }
-
-  // Set time
-  uint8_t dow = RTC.dow(year, month, day);
-  error = RTC.setTime(year, month, day, dow, hour, minute, second);
-  if (error)
-  {
-    error(F("setTime: RTC.setTime failed (please double check the syntax)"));
-  }
-
-  // Turn off RTC only if it was off when this method was called
-  if (! rtcON)
-  {
-    RTC.OFF();
-  }
-
-  return error;
-}
-
 /**
  * Function to receive, parse and update RTC from GPS_sync frame
  *
@@ -580,7 +555,7 @@ uint8_t WaspUIO::receiveGPSsyncTime()
 
   // Setting time [yy:mm:dd:dow:hh:mm:ss]
   // '0' on succes, '1' otherwise
-  if (RTC.setTime(time.year, time.month, time.date, time.day, time.hour, time.minute, time.second) != 0)
+  if (saveTime(time.year, time.month, time.date, time.hour, time.minute, time.second) != 0)
   {
     error(F("No RTC update from GPS"));
     return 1;
@@ -882,48 +857,8 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 }
 
 
-/**
- * initTime
- *
- * Initialize the epochTime and start variables.
- * (and rtc_temp and batteryLevel, TODO Change function name)
- */
-
-void WaspUIO::initTime()
-{
-  uint8_t rtcON = RTC.isON;
-
-  // Turn on RTC if required
-  if (! rtcON)
-  {
-    RTC.ON();
-  }
-
-  epochTime = RTC.getEpochTime();
-  start = millis();
-  cr.sleep_time = 0;
-
-  // Read temperature now that RTC is ON (v12 only), it takes less than 2ms
-  if (_boot_version < 'H')
-  {
-    rtc_temp = RTC.getTemperature();
-  }
-
-  // Turn off RTC only if it was off when this method was called
-  if (! rtcON)
-  {
-    RTC.OFF();
-  }
-
-  // Update RTC time at least once. Keep minute and hour for later.
-  RTC.breakTimeAbsolute(getEpochTime(), &time);
-}
-
-
 void WaspUIO::readBattery()
 {
-
-
   // Battery
   batteryLevel = PWR.getBatteryLevel();
 
@@ -952,29 +887,6 @@ void WaspUIO::readBattery()
   {
     period = wakeup_period * 1;
   }
-}
-
-/**
- * getEpochTime
- *
- * Return the current time (seconds since the epoch), from epochTime and start
- * (without calling the RTC).
- *
- * Optionally with milliseconds precision.
- */
-
-unsigned long WaspUIO::getEpochTime()
-{
-  uint32_t ms = cr.millisDiff(start) + cr.sleep_time;
-  return epochTime + ms / 1000;
-}
-
-unsigned long WaspUIO::getEpochTime(uint16_t &ms)
-{
-  uint32_t diff = cr.millisDiff(start) + cr.sleep_time;
-
-  ms = diff % 1000;
-  return epochTime + diff / 1000;
 }
 
 
