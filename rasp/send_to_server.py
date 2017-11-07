@@ -10,13 +10,13 @@ import requests
 logger = logging.getLogger('send_to_server')
 
 def on_connect(client, userdata, flags, rc):
-    print('Connected %s' % rc)
+    logger.info('Connected to MQTT server')
     client.subscribe('frames', qos=2)
 
 def on_message(client, userdata, msg):
     cursor = userdata
     frame = json.loads(msg.payload)
-    print(frame)
+    logger.debug('FRAME %s', frame)
 
     # Archive to SQL
     cursor.execute(
