@@ -227,8 +227,9 @@ if __name__ == '__main__':
         #'data/170926/DATA',
         #'data/170929/DATA',
         #'data/171002/DATA',
+        'data/171107/DATA',
 
-        "data/middalselvi/20171010/DATA",
+        #'data/middalselvi/20171010/DATA',
 
 #       'data/170924-finse/DATA/170921.TXT',
 #       'data/170924-finse/DATA/170922.TXT',
@@ -251,25 +252,19 @@ if __name__ == '__main__':
     data_frame = data_frame.set_index('timestamp')
 
     #plt.ion()
-    fig, ax = plt.subplots(5, sharex=True)
-
-    # Battery
-    data_frame.bat.dropna().plot(ax=ax[0])
-    ax[0].set_title('Battery level (%)')
-
-    data_frame.in_temp.dropna().plot(ax=ax[1])
-    #data_frame.tcb.dropna().plot(ax=ax[1])
-    ax[1].set_title('Internal Temperature (degC)')
 
     # CTD
-    data_frame.ctd_depth.dropna().plot(ax=ax[2])
-    ax[2].set_title('CTD Water depth')
-
-    data_frame.ctd_temp.dropna().plot(ax=ax[3])
-    ax[3].set_title('CTD Water temperature')
-
-    data_frame.ctd_cond.dropna().plot(ax=ax[4])
-    ax[4].set_title('CTD Water conductivity')
+    graphs = [
+        ('bat', 'Battery level (%)'),
+        ('in_temp', 'Internal Temperature (degC)'), # tcb
+        #('ctd_depth', 'CTD Water depth'),
+        #('ctd_temp', 'CTD Water temperature'),
+        #('ctd_cond', 'CTD Water conductivity')
+    ]
+    fig, ax = plt.subplots(len(graphs), sharex=True)
+    for i, (name, title) in enumerate(graphs):
+        getattr(data_frame, name).dropna().plot(ax=ax[i])
+        ax[i].set_title(i)
 
     # Plot
     plt.plot()
