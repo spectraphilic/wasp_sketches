@@ -814,14 +814,14 @@ CR_TASK(taskGps)
   // Ephemerides
   if (UIO.hasSD)
   {
-    if (GPS.loadEphems() == 1)
-    {
-      debug(F("GPS: Ephemerides loaded"));
-    }
-    else
-    {
-      warn(F("GPS: Ephemerides loading failed"));
-    }
+//  if (GPS.loadEphems() == 1)
+//  {
+//    debug(F("GPS: Ephemerides loaded"));
+//  }
+//  else
+//  {
+//    warn(F("GPS: Ephemerides loading failed"));
+//  }
   }
 
   // XXX We could use GPS.check instead, and give control back with CR_DELAY,
@@ -869,7 +869,6 @@ CR_TASK(taskGps)
   info(F("GPS: Success, time updated (time=%lu skew=%lu)"), time, skew);
   debug(F("GPS: Position latitude=%s %c"), GPS.latitude, GPS.NS_indicator);
   debug(F("GPS: Position longitude=%s %c"), GPS.longitude, GPS.EW_indicator);
-  debug(F("GPS: Position altitude=%s"), GPS.altitude);
   debug(F("GPS: Position altitude=%s course=%s speed=%s"), GPS.altitude, GPS.course, GPS.speed);
   //ADD_SENSOR(SENSOR_GPS_STATS, time, skew);
   ADD_SENSOR(SENSOR_GPS, GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator),
