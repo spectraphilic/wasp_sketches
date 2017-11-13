@@ -814,14 +814,14 @@ CR_TASK(taskGps)
   // Ephemerides
   if (UIO.hasSD)
   {
-//  if (GPS.loadEphems() == 1)
-//  {
-//    debug(F("GPS: Ephemerides loaded"));
-//  }
-//  else
-//  {
-//    warn(F("GPS: Ephemerides loading failed"));
-//  }
+    if (GPS.loadEphems() == 1)
+    {
+      debug(F("GPS: Ephemerides loaded"));
+    }
+    else
+    {
+      warn(F("GPS: Ephemerides loading failed"));
+    }
   }
 
   // XXX We could use GPS.check instead, and give control back with CR_DELAY,
