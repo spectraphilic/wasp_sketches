@@ -9,9 +9,9 @@
  ******************************************************************************/
 
 // We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR true
-#define USE_I2C false // I include here OneWire as well
-#define USE_SDI false
+#define USE_AGR false
+#define USE_I2C true // I include here OneWire as well
+#define USE_SDI true
 #define FRAME_BINARY true
 
 #include <inttypes.h>
