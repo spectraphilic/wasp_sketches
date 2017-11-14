@@ -234,6 +234,7 @@ uint16_t readMaxbotixSerial(uint8_t samples = 5);
 // Utils
 void sort_uint16(uint16_t* array, uint8_t size);
 uint16_t median_uint16(uint16_t* array, uint8_t size);
+uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 };
 

@@ -41,6 +41,22 @@ uint16_t median_uint16(uint16_t* array, uint8_t size)
   }
 }
 
+/* Return standard deviation of the given array to the given value. */
+uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
+{
+  uint16_t value;
+  uint32_t sd = 0;
+
+  for (uint8_t i=0; i<size; i++)
+  {
+    value = array[i];
+    value = (value > mean) ? (value - mean) : (mean - value);
+    sd += (value * value);
+  }
+
+  return (uint16_t) sqrt(sd / size);
+}
+
 
 /**
  * Ask the user for input through the USB cable

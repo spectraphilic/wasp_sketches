@@ -563,7 +563,7 @@ CR_TASK(taskTTL)
   char data_buffer[bytes]; // Store serial data
   int sample; // Store each sample
   uint16_t samples[nsamples];
-  uint16_t value;
+  uint16_t value, sd;
   uint8_t i, j;
 
   CR_BEGIN;
@@ -600,8 +600,9 @@ CR_TASK(taskTTL)
   }
 
   value = UIO.median_uint16(samples, nsamples);
-  info(F("readMaxbotixSerial: median value = %d"), value);
-  ADD_SENSOR(SENSOR_MB73XX, (uint32_t) value);
+  sd = UIO.sd_uint16(samples, nsamples, value);
+  info(F("readMaxbotixSerial: median value=%d sd=%d"), value, sd);
+  ADD_SENSOR(SENSOR_MB73XX, (uint32_t) value, (uint32_t) sd);
 
   CR_END;
 }
