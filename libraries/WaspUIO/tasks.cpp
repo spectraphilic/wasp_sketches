@@ -558,38 +558,50 @@ CR_TASK(taskI2C)
 
 CR_TASK(taskTTL)
 {
-  const int bytes = 4; // Number of bytes to read
+  const uint8_t nsamples = 5;
+  const uint8_t bytes = 4; // Number of bytes to read
   char data_buffer[bytes]; // Store serial data
   int sample; // Store each sample
-  uint8_t i;
+  uint16_t samples[nsamples];
+  uint16_t value;
+  uint8_t i, j;
 
   CR_BEGIN;
 
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
-  beginSerial(9600,1); // set boud rate to 9600
+  beginSerial(9600, 1); // set boud rate to 9600
 
-  // flush and wait for a range reading
-  serialFlush(1);
-
-  while (!serialAvailable(1) || serialRead(1) != 'R');
-
-  // read the range
-  for (i = 0; i < bytes; i++)
+  for (j = 0; j < nsamples;)
   {
-    while (!serialAvailable(1));
-    data_buffer[i] = serialRead(1);
+    // flush and wait for a range reading
+    serialFlush(1);
+    while (!serialAvailable(1) || serialRead(1) != 'R');
+
+    // read the range
+    for (i = 0; i < bytes; i++)
+    {
+      while (!serialAvailable(1));
+      data_buffer[i] = serialRead(1);
+    }
+
+    sample = atoi(data_buffer);
+    if (sample<=300 || sample>=5000)
+    {
+      info(F("readMaxbotixSerial: %d out of range (300-5000)"), sample);
+      delay(10);
+    }
+    else
+    {
+      debug(F("readMaxbotixSerial: sample = %d"), sample);
+      samples[j] = (uint16_t) sample;
+      j++;
+      CR_DELAY(1000);
+    }
   }
 
-  sample = atoi(data_buffer);
-  if (sample<=300 || sample>=5000)
-  {
-    warn(F("readMaxbotixSerial: NaN"));
-  }
-  else
-  {
-    debug(F("readMaxbotixSerial: sample = %d"), sample);
-    ADD_SENSOR(SENSOR_MB73XX, (uint32_t) sample);
-  }
+  value = UIO.median_uint16(samples, nsamples);
+  info(F("readMaxbotixSerial: median value = %d"), value);
+  ADD_SENSOR(SENSOR_MB73XX, (uint32_t) value);
 
   CR_END;
 }

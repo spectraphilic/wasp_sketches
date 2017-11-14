@@ -118,9 +118,6 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
-void sort_uint16(uint16_t* array, uint8_t size);
-uint16_t median_uint16(uint16_t* array, uint8_t size);
-
 // Like Arduino's EEPROM.update, it writes the given value only if different
 // from the value already saved.
 bool updateEEPROM(int address, uint8_t value);
@@ -233,6 +230,10 @@ bool isOn(uint8_t device);
 
 // Sensors
 uint16_t readMaxbotixSerial(uint8_t samples = 5);
+
+// Utils
+void sort_uint16(uint16_t* array, uint8_t size);
+uint16_t median_uint16(uint16_t* array, uint8_t size);
 
 };
 
