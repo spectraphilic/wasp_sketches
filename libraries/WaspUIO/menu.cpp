@@ -373,7 +373,7 @@ void WaspUIO::initNet()
 
   // Addressing
   memcpy_P(&network, &networks[value], sizeof network);
-  cr.print(F("INFO Configure network: %s"), network.name);
+  //cr.print(F("INFO Configure network: %s"), network.name);
   if (strcmp(network.rx_address, "000000000000FFFF") == 0)
   {
     addressing = BROADCAST_MODE;
@@ -387,7 +387,7 @@ void WaspUIO::initNet()
   // linkEncryption = DISABLED (not supported by DIGIMESH, apparently)
   // AESEncryption = DISABLED
   frame.setFrameSize(DIGIMESH, addressing, DISABLED, DISABLED);
-  cr.print(F("DEBUG Frame size is %d"), frame.getFrameSize());
+  //cr.print(F("DEBUG Frame size is %d"), frame.getFrameSize());
 
   // init XBee
   xbeeDM.ON();
@@ -401,42 +401,42 @@ void WaspUIO::initNet()
   // Set channel, check AT commmand execution flag
   xbeeDM.setChannel(network.channel);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("DEBUG Channel set OK")); // Implement string in print function
+    //cr.print(F("DEBUG Channel set OK")); // Implement string in print function
   } else {
-    cr.print(F("ERORR with setChannel()"));
+    //cr.print(F("ERORR with setChannel()"));
   }
 
   // set PANID, check AT commmand execution flag
   xbeeDM.setPAN(network.panid);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("DEBUG PAN ID set OK"));
+    //cr.print(F("DEBUG PAN ID set OK"));
   } else {
-    cr.print(F("ERROR calling 'setPAN()'"));
+    //cr.print(F("ERROR calling 'setPAN()'"));
   }
 
   // set encryption mode (1:enable; 0:disable), check AT commmand execution flag
   // XXX Should we use encryption
   xbeeDM.setEncryptionMode(0);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("DEBUG AES encryption Mode OK"));
+    //cr.print(F("DEBUG AES encryption Mode OK"));
   } else {
-    cr.print(F("ERROR no setEncryptionMode()"));
+    //cr.print(F("ERROR no setEncryptionMode()"));
   }
 
   // set encryption key, check AT commmand execution flag
   xbeeDM.setLinkKey(encryptionKey);
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("DEBUG AES encryption key set OK"));
+    //cr.print(F("DEBUG AES encryption key set OK"));
   } else {
-    cr.print(F("ERROR with setLinkKey()"));
+    //cr.print(F("ERROR with setLinkKey()"));
   }
 
   // write values to XBee module memory, check AT commmand execution flag
   xbeeDM.writeValues();
   if( xbeeDM.error_AT == 0 ) {
-    cr.print(F("DEBUG Changes stored OK"));
+    //cr.print(F("DEBUG Changes stored OK"));
   } else {
-    cr.print(F("ERROR with writeValues()"));
+    //cr.print(F("ERROR with writeValues()"));
   }
   xbeeDM.OFF();
 }
