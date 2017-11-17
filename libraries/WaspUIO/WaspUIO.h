@@ -13,6 +13,7 @@
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
 #define FRAME_BINARY true
+#define SDI_PIN 6
 
 #include <inttypes.h>
 
