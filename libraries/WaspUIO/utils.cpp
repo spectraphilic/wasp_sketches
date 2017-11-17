@@ -209,3 +209,14 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t nbyte)
 
   return n;
 }
+
+/* Print Serial id to string */
+char* WaspUIO::sprintSerial(char* str)
+{
+  uint8_t serial[8];
+
+  for (uint8_t i=0; i<8; i++) { serial[i] = _serial_id[i]; }
+  Utils.hex2str(serial, str, 8);
+
+  return str;
+}

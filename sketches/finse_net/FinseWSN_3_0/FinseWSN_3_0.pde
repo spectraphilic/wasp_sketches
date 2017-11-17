@@ -27,7 +27,7 @@ void setup()
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Booting (%c)..."), _boot_version);
+  info(F("Booting Version=%c Mote=%s"), _boot_version, UIO.sprintSerial(buffer));
   info(F("Hardware: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
   info(F("Config Battery: %s (%d %%)"), UIO.menuFormatBattery(buffer, size), UIO.batteryLevel);
   info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));

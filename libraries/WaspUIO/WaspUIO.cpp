@@ -388,7 +388,7 @@ void WaspUIO::showFrame()
 {
    uint8_t *p;
    uint8_t nbytes;
-   char waspmote_id[17];
+   char buffer[17];
    uint8_t i, j;
    char c;
 
@@ -425,35 +425,33 @@ void WaspUIO::showFrame()
    //cr.print(F("BOOT VERSION %c"), _boot_version);
    if (_boot_version >= 'G')
    {
-     cr.print(F("Serial ID (v15): 0x%02X%02X%02X%02X%02X%02X%02X%02X"),
-              *p, *(p+1), *(p+2), *(p+3), *(p+4), *(p+5), *(p+6), *(p+7));
+     Utils.hex2str(p, buffer, 8);
      p += 8;
    }
    else
    {
-     cr.print(F("Serial ID (v12): 0x%02X%02X%02X%02X"),
-              *p, *(p+1), *(p+2), *(p+3));
+     Utils.hex2str(p, buffer, 4);
      p += 4;
    }
+   cr.print(F("Serial ID: 0x%s"), buffer);
 
    // Waspmote ID
-   //memset(waspmote_id, 0x00, sizeof(waspmote_id));
    for (i = 0; i < 17 ; i++)
    {
      c = (char) *p++;
      if (c == '#')
      {
-       waspmote_id[i] = '\0';
+       buffer[i] = '\0';
        break;
      }
-     waspmote_id[i] = c;
+     buffer[i] = c;
    }
    if (c != '#')
    {
      cr.print(F("Error reading Waspmote ID"));
      return;
    }
-   cr.print(F("Waspmote ID: %s"), waspmote_id);
+   cr.print(F("Waspmote ID: %s"), buffer);
 
    // Sequence
    cr.print(F("Sequence: %d"), *p++);
