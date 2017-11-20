@@ -136,4 +136,3 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t nsample
 
   return 0;
 }
-

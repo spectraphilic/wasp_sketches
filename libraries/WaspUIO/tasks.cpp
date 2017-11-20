@@ -419,6 +419,8 @@ CR_TASK(task1Wire)
 {
   uint8_t addr[8];
   uint8_t data[12];
+  char addr_str[17];
+  char data_str[17];
   uint8_t present, crc, n;
   int16_t temp;
   float temp_f;
@@ -449,15 +451,12 @@ CR_TASK(task1Wire)
   oneWire.reset_search();
   while (oneWire.search(addr))
   {
+    Utils.hex2str(addr, addr_str, 8);
     // Check address CRC
     crc = oneWire.crc8(addr, 7);
     if (crc != addr[7])
     {
-      error(
-        F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X bad address, CRC failed: %02X"),
-        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-        crc
-      );
+      error(F("OneWire %s bad address, CRC failed: %02X"), addr_str, crc);
       break;
     }
 
@@ -468,11 +467,7 @@ CR_TASK(task1Wire)
     }
     else
     {
-      warn(
-        F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X unexpected device type: %02X"),
-        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-        addr[0]
-      );
+      warn(F("OneWire %0s unexpected device type: %02X"), addr_str, addr[0]);
       continue;
     }
 
@@ -485,12 +480,8 @@ CR_TASK(task1Wire)
     crc = oneWire.crc8(data, 8);
     if (crc != data[8])
     {
-      warn(
-        F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X bad data, CRC failed: %02X%02X%02X%02X%02X%02X%02X%02X%02X %02X"),
-        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-        data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8],
-        crc
-      );
+      Utils.hex2str(data, data_str, 8);
+      warn(F("OneWire %s bad data, CRC failed: %s %02X"), addr_str, data_str, crc);
     }
 
     // Convert to float. Formula for the DS18B20 model.
@@ -500,11 +491,7 @@ CR_TASK(task1Wire)
 
     // Debug
     Utils.float2String(temp_f, temp_str, 2);
-    debug(
-      F("OneWire %02X%02X%02X%02X%02X%02X%02X%02X : %s"),
-      addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-      temp_str
-    );
+    debug(F("OneWire %s : %s"), addr_str, temp_str);
   }
 
   debug(F("OneWire %d devices measured"), n);
@@ -712,6 +699,8 @@ CR_TASK(taskNetworkSend)
 
 CR_TASK(taskNetworkReceive)
 {
+  char sourceMAC[17];
+
   CR_BEGIN;
 
   while (xbeeDM.XBee_ON)
@@ -744,16 +733,8 @@ CR_TASK(taskNetworkReceive)
           // Show data stored in '_payload' buffer indicated by '_length'
           debug(F("Length: %d"), xbeeDM._length);
           // Show data stored in '_payload' buffer indicated by '_length'
-          debug(F("Source MAC Address: %02X%02X%02X%02X%02X%02X%02X%02X"),
-                xbeeDM._srcMAC[0],
-                xbeeDM._srcMAC[1],
-                xbeeDM._srcMAC[2],
-                xbeeDM._srcMAC[3],
-                xbeeDM._srcMAC[4],
-                xbeeDM._srcMAC[5],
-                xbeeDM._srcMAC[6],
-                xbeeDM._srcMAC[7]
-               );
+          Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
+          debug(F("Source MAC Address: %s"), sourceMAC);
         }
       }
     }
