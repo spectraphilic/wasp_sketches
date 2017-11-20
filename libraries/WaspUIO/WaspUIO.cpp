@@ -608,13 +608,62 @@ void WaspUIO::OTA_communication(int OTA_duration)
 * TTL Serial.
 * Wiring: GND -> GND, V+ -> 3V3, pin5 -> AUX SERIAL 1RX
 */
-uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
+
+int WaspUIO::getMaxbotixSample()
 {
-  const int bytes = 4; // Number of bytes to read
-  char data_buffer[bytes]; // Store serial data
+  const uint16_t timeout = 5000; // 5s
+  const uint8_t port = 1; // Aux1
+  const uint8_t bytes = 4; // Number of bytes to read
+  char buffer[bytes]; // Store serial data
+  int8_t i = -1;
+  int sample;
+  uint32_t t0 = millis();
+
+  //return rand() % 5000;
+
+  // Implement an automata, so we only have one loop for the timeout
+  serialFlush(port);
+  do
+  {
+    if (i == -1)
+    {
+      if (serialAvailable(port) && serialRead(port) == 'R')
+      {
+        i = 0;
+      }
+    }
+    else if (i < bytes)
+    {
+      if (serialAvailable(port))
+      {
+        buffer[i] = serialRead(port);
+        i++;
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+  while ((millis() - t0) < timeout);
+
+  if (i == 4)
+  {
+    sample = atoi(buffer);
+    return (sample > 300 && sample < 5000)? sample: -1;
+  }
+
+  return -1;
+}
+
+int WaspUIO::readMaxbotixSerial(uint8_t nsamples)
+{
+  const uint8_t port = 1;
+  uint8_t max = nsamples * 2; // max number of readings, to avoid infinite loop
   int sample; // Store each sample
   uint16_t samples[nsamples];
   uint8_t i, j;
+  uint16_t median, sd;
 
   // Sensor needs 3.3 voltage
   if ((WaspRegister & REG_3V3) == 0)
@@ -624,38 +673,37 @@ uint16_t WaspUIO::readMaxbotixSerial(uint8_t nsamples)
   }
 
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
-  beginSerial(9600,1); // set boud rate to 9600
+  beginSerial(9600, port); // set baud rate to 9600
 
-  for (j = 0; j < nsamples;)
+  for (i=0, j=0; (i < max) && (j < nsamples); i++)
   {
-    // flush and wait for a range reading
-    serialFlush(1);
-    while (!serialAvailable(1) || serialRead(1) != 'R');
-
-    // read the range
-    for (i = 0; i < bytes; i++)
+    sample = getMaxbotixSample();
+    if (sample < 0)
     {
-      while (!serialAvailable(1));
-      data_buffer[i] = serialRead(1);
-    }
-
-    sample = atoi(data_buffer);
-    if (sample<=300 || sample>=5000)
-    {
-      warn(F("readMaxbotixSerial: NaN"));
       delay(10);
     }
     else
     {
       samples[j] = (uint16_t) sample;
       j++;
-      debug(F("readMaxbotixSerial: sample = %d"), sample);
       delay(1000);
     }
   }
 
-  // Bubble sort
-  return median_uint16(samples, nsamples);
+  closeSerial(port);
+  Utils.muxOFF1();
+
+  if (j < nsamples)
+  {
+    warn(F("readMaxbotixSerial: fail to read MB7389"));
+    return -1;
+  }
+
+  median = median_uint16(samples, nsamples);
+  sd = sd_uint16(samples, nsamples, median);
+  info(F("readMaxbotixSerial: median value=%d sd=%d"), median, sd);
+
+  return median;
 }
 
 /**
