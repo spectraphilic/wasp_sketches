@@ -558,44 +558,12 @@ CR_TASK(taskI2C)
 
 CR_TASK(taskTTL)
 {
-  const uint8_t port = 1;
-  const uint8_t nsamples = 5;
-  uint8_t max = nsamples * 2; // max number of readings, to avoid infinite loop
-  int sample; // Store each sample
-  uint16_t samples[nsamples];
-  uint8_t i, j;
   uint16_t median, sd;
 
-  Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
-  beginSerial(9600, port); // set boud rate to 9600
-
-  for (i=0, j=0; (i < max) && (j < nsamples); i++)
+  if (UIO.readMaxbotixSerial(median, sd, 5))
   {
-    sample = UIO.getMaxbotixSample();
-    if (sample < 0)
-    {
-      delay(10);
-    }
-    else
-    {
-      samples[j] = (uint16_t) sample;
-      j++;
-      delay(1000);
-    }
-  }
-
-  closeSerial(port);
-  Utils.muxOFF1();
-
-  if (j < nsamples)
-  {
-    warn(F("readMaxbotixSerial: fail to read MB7389"));
     return CR_TASK_ERROR;
   }
-
-  median = UIO.median_uint16(samples, nsamples);
-  sd = UIO.sd_uint16(samples, nsamples, median);
-  info(F("readMaxbotixSerial: median value=%d sd=%d"), median, sd);
   ADD_SENSOR(SENSOR_MB73XX, (uint32_t) median, (uint32_t) sd);
 
   return CR_TASK_STOP;

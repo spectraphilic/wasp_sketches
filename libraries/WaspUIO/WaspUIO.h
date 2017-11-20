@@ -231,7 +231,7 @@ bool isOn(uint8_t device);
 
 // Sensors
 int getMaxbotixSample();
-int readMaxbotixSerial(uint8_t samples=5);
+bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 
 // Utils
 void sort_uint16(uint16_t* array, uint8_t size);
