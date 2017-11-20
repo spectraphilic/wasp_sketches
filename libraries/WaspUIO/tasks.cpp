@@ -595,7 +595,7 @@ CR_TASK(taskTTL)
       debug(F("readMaxbotixSerial: sample = %d"), sample);
       samples[j] = (uint16_t) sample;
       j++;
-      CR_DELAY(1000);
+      delay(1000);
     }
   }
 

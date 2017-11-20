@@ -2,7 +2,7 @@
 
 
 /* Sort in place integer array. Bubble sort. */
-void sort_uint16(uint16_t* array, uint8_t size)
+void WaspUIO::sort_uint16(uint16_t* array, uint8_t size)
 {
   bool done;
   uint16_t temp;
@@ -27,7 +27,7 @@ void sort_uint16(uint16_t* array, uint8_t size)
 }
 
 /* Return median value of the given array. Modifies (sorts) the array. */
-uint16_t median_uint16(uint16_t* array, uint8_t size)
+uint16_t WaspUIO::median_uint16(uint16_t* array, uint8_t size)
 {
   sort_uint16(array, size);
 
@@ -42,7 +42,7 @@ uint16_t median_uint16(uint16_t* array, uint8_t size)
 }
 
 /* Return standard deviation of the given array to the given value. */
-uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
+uint16_t WaspUIO::sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
 {
   uint16_t value;
   uint32_t sd = 0;
