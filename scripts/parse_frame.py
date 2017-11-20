@@ -153,10 +153,10 @@ def parse_frame(line):
 
         # Serial id
         if v15:
-            serial_id = struct.unpack_from("Q", line)[0]
+            serial_id = struct.unpack_from(">Q", line)[0]
             line = line[8:]
         else:
-            serial_id = struct.unpack_from("I", line)[0]
+            serial_id = struct.unpack_from(">I", line)[0]
             line = line[4:]
 
         waspmote_id, line = line.split(b'#', 1)
