@@ -184,12 +184,13 @@ void startSD();
 void stopSD();
 
 // Network
+char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 Network network;
 uint8_t receiveGPSsyncTime();
 uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
-const char* readOwnMAC(char* mac);
+const char* readOwnMAC();
 
 // Init, start and stop methods
 void onSetup();

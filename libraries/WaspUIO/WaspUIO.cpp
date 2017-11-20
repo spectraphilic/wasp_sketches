@@ -724,7 +724,7 @@ WaspUIO UIO = WaspUIO();
 /******************************************************************************/
 /* Function to read Mac Address
 */
-const char* WaspUIO::readOwnMAC(char* mac)
+const char* WaspUIO::readOwnMAC()
 {
   bool on;
 
@@ -738,8 +738,8 @@ const char* WaspUIO::readOwnMAC(char* mac)
 
   // Convert mac address from array to string
   xbeeDM.getOwnMac();
-  Utils.hex2str(xbeeDM.sourceMacHigh, mac, 4);
-  Utils.hex2str(xbeeDM.sourceMacLow, mac + 8, 4);
+  Utils.hex2str(xbeeDM.sourceMacHigh, myMac, 4);
+  Utils.hex2str(xbeeDM.sourceMacLow, myMac + 8, 4);
 
   // Off
   if (! on)
@@ -747,10 +747,7 @@ const char* WaspUIO::readOwnMAC(char* mac)
     xbeeDM.OFF();
   }
 
-  // Log
-  debug(F("readOwnMAC: My MAC address is %s"), mac);
-
-  return mac;
+  return myMac;
 }
 
 
@@ -760,14 +757,10 @@ const char* WaspUIO::readOwnMAC(char* mac)
 
 uint8_t WaspUIO::readRSSI2Frame(void)
 {
-  char ownMAC[17];
   char sourceMAC[17];
   uint8_t sourcePower;
   int rssi;
   uint8_t error;
-
-  // 1. read own MAC address
-  readOwnMAC(ownMAC);
 
   xbeeDM.getRSSI();
   //sprintf(archiveFile,"%02u%02u%02u.TXT",RTC.year, RTC.month, RTC.date);
@@ -786,7 +779,7 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 
   // Create ASCII frame
   createFrame();
-  ADD_SENSOR(SENSOR_MAC, (char*) ownMAC);
+  ADD_SENSOR(SENSOR_MAC, (char*) myMac);
   ADD_SENSOR(SENSOR_RSSI, (int) rssi);
   ADD_SENSOR(SENSOR_MAC, sourceMAC);
   ADD_SENSOR(SENSOR_TX_PWR, (uint8_t) sourcePower);
