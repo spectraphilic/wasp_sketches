@@ -1,17 +1,28 @@
 import base64
 import json
 import logging
+import signal
 import sqlite3
 import sys
 
-from paho.mqtt.client import Client
+import paho.mqtt.client as mqtt
 import requests
 
 logger = logging.getLogger('send_to_server')
 
 def on_connect(client, userdata, flags, rc):
     logger.info('Connected to MQTT server')
-    client.subscribe('frames', qos=2)
+    # Subscribe
+    topic = 'frames'
+    result, mid = client.subscribe(topic, qos=2)
+    if result == mqtt.MQTT_ERR_SUCCESS:
+        logger.debug('Subscribe to "%s", mid=%s', topic, mid)
+    else:
+        error = mqtt.error_string(result)
+        logger.error('Subscribe to "%s", mid=%s: %s', topic, mid, error)
+
+def on_subscribe(client, userdata, mid, granted_qos):
+    logger.info('Subscription %s qos=%s', mid, granted_qos)
 
 def on_message(client, userdata, msg):
     cursor = userdata
@@ -59,11 +70,12 @@ if __name__ == '__main__':
         conn.commit()
 
         # Connect to MQTT server
-        client = Client(
+        client = mqtt.Client(
             client_id='send_to_server', clean_session=False,
             userdata=cursor
         )
         client.on_connect = on_connect
+        client.on_subscribe = on_subscribe
         client.on_message = on_message
         client.connect('localhost')
         client.loop_forever()

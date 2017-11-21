@@ -4,7 +4,7 @@ Install
 Install system wide requirements:
 
     $ sudo apt-get install python-virtualenv
-    $ sudo apt-get install mosquitto
+    $ sudo apt-get install mosquitto mosquitto-clients
     $ sudo apt-get install supervisor
 
 Build:

@@ -5,9 +5,9 @@ import signal
 import sys
 import time
 
+import paho.mqtt.client as mqtt
 from serial import Serial
 from xbee import XBee
-from paho.mqtt.client import Client
 
 
 logger = logging.getLogger('read_from_xbee')
@@ -19,6 +19,10 @@ def on_connect(client, userdata, flags, rc):
 
 def on_disconnect(client, userdata, rc):
     logger.info('Disconnected from MQTT server')
+
+def on_publish(client, userdata, mid):
+    logger.info('Message %s published', mid)
+
 
 def sigterm(signum, frame):
     logger.info('SIGTERM received')
@@ -36,8 +40,16 @@ def callback(frame):
         if k != 'id':
             v = frame[k]
             frame[k] = base64.b64encode(v)
-    client.publish('frames', json.dumps(frame), qos=2)
-    logger.debug('FRAME sent in %f seconds', (time.time() - t0))
+
+    # Publish
+    topic = 'frames'
+    result, mid = client.publish(topic, json.dumps(frame), qos=2)
+    if result == mqtt.MQTT_ERR_SUCCESS:
+        t = time.time() - t0
+        logger.debug('Publish to "%s", mid=%s time=%f', topic, mid, t)
+    else:
+        error = mqtt.error_string(result)
+        logger.error('Publish to "%s", mid=%s: %s', topic, mid, error)
 
 if __name__ == '__main__':
     # Configure logger
@@ -49,7 +61,7 @@ if __name__ == '__main__':
     logger.addHandler(ch)
 
     # Connect to MQTT server
-    client = Client()
+    client = mqtt.Client(client_id='read_from_xbee')
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.connect('localhost')
