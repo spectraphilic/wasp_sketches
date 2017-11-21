@@ -16,18 +16,18 @@ def on_connect(client, userdata, flags, rc):
     topic = 'frames'
     result, mid = client.subscribe(topic, qos=2)
     if result == mqtt.MQTT_ERR_SUCCESS:
-        logger.debug('Subscribe to "%s", mid=%s', topic, mid)
+        logger.info('Subscribe to "%s", mid=%s', topic, mid)
     else:
         error = mqtt.error_string(result)
         logger.error('Subscribe to "%s", mid=%s: %s', topic, mid, error)
 
 def on_subscribe(client, userdata, mid, granted_qos):
-    logger.info('Subscription %s qos=%s', mid, granted_qos)
+    logger.info('Subscription mid=%s qos=%s', mid, granted_qos)
 
 def on_message(client, userdata, msg):
     cursor = userdata
     frame = json.loads(msg.payload)
-    logger.debug('FRAME %s', frame)
+    logger.info('FRAME %s', frame)
 
     # Archive to SQL
     cursor.execute(
@@ -49,12 +49,30 @@ def on_message(client, userdata, msg):
         'http://hycamp.org/wsn/api/create/', json=frame, headers=headers,
     )
 
+def sigterm(signum, frame):
+    logger.info('SIGTERM received')
+    client.disconnect()
+
+def on_log(client, userdata, level, buf):
+    f = {
+        mqtt.MQTT_LOG_INFO: logger.info,
+        mqtt.MQTT_LOG_NOTICE: logger.info, # XXX
+        mqtt.MQTT_LOG_WARNING: logger.warning,
+        mqtt.MQTT_LOG_ERR: logger.error,
+        mqtt.MQTT_LOG_DEBUG: logger.debug,
+    }.get(level)
+    if f is None:
+        logger.error('on_log unexepected log level %s', level)
+        f = logger.info
+    f(buf)
+
 
 if __name__ == '__main__':
     # Configure logger
-    logger.setLevel(logging.DEBUG)
+    level = logging.INFO
+    logger.setLevel(level)
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(level)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
@@ -77,5 +95,10 @@ if __name__ == '__main__':
         client.on_connect = on_connect
         client.on_subscribe = on_subscribe
         client.on_message = on_message
+        client.on_log = on_log
         client.connect('localhost')
+
+        # Stop gracefully
+        signal.signal(signal.SIGTERM, sigterm)
+
         client.loop_forever()
