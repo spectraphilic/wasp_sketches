@@ -16,7 +16,6 @@ Started Nov. 2017 by S. Filhol
 - Sensors: DS-2. Sampling interval: 3m. Moved on the same pole as the drift lower lidar, right next to the radar. 
 
 
-
 ------
 
 ## Applesinhytta (6715977.25, 416970.35)	
@@ -29,7 +28,6 @@ Deployement of a waspmote v15 at appelsinhytta with the following config:
 - DS 2 sensor, 5min sampling
 - Script commit [ceb90f9](https://github.com/spectraphilic/wasp_sketches/commit/ceb90f985209c339bfe596dd1aee61f71033df72)
 - Lead acid battery with 10W solar panel
-
 
 
 ------
@@ -49,17 +47,31 @@ Deployement of a waspmote v15 with the following config:
 
 ## Middalselvi (6716590.57, 417951.37)
 
-2017-11-20
+### 2017-11-20
 
 Collect of the data from SD card. battery at 94%. Sven try pushing new script with no success. needs maintenance. Waspmote v12 with Libelium box and solar panel. Lithium battery. CTD-10 sensor.
 
+### 2017-11-20
 
+Swithced the v12 waspmote for a v15 (serial ID: 3F7C67057C105419) 
 
 ------
 
-## Finselvi (6721025.8, 418116.92)
+## Finselvi discharge (6721025.8, 418116.92)
 
-Waspmote v15, Lead Acid battery, 10W solar panel, CTD 10 sensor.
+Waspmote v15, Lead Acid battery, 10W solar panel, CTD 10 sensor. GPS
+
+### 2017-11-21
+
+Pushed latest script but SD card would not be accessible byt the waspmote. Sd card read fine on the laptop. 
+
+------
+
+## Finselvi Dam ()
+
+### 2017-11-21
+
+Switched waspmote v12 for a v15. No sensor, lithium battery with solar panel (libelium box). Script [dad3fb4](https://github.com/spectraphilic/wasp_sketches/commit/dad3fb407ec0cb60f96c1c493ae6eb938b39006b) pushed to it.
 
 
 
