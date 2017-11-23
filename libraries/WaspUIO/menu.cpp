@@ -387,7 +387,8 @@ void WaspUIO::initNet()
   // Set Frame size. Will be 73 bytes for XBeeDM-pro S1
   // linkEncryption = DISABLED (not supported by DIGIMESH, apparently)
   // AESEncryption = DISABLED
-  frame.setFrameSize(DIGIMESH, addressing, DISABLED, DISABLED);
+  uint16_t size = frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, DISABLED);
+  frame.setFrameSize(size);
   cr.print(F("Frame size is %d"), frame.getFrameSize());
 
   // init XBee
