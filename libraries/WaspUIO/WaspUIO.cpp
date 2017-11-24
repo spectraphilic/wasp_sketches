@@ -39,7 +39,7 @@ void WaspUIO::onSetup()
 
   // Network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
-  if (panid_low > NETWORK_RASP)
+  if (panid_low > NETWORK_PI_CS)
   {
     panid_low = NETWORK_BROADCAST; // Default
   }

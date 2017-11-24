@@ -83,7 +83,8 @@ enum network_t {
   NETWORK_GATEWAY,
   NETWORK_BROADCAST,
   NETWORK_FINSE_ALT,
-  NETWORK_RASP
+  NETWORK_PI_FINSE,
+  NETWORK_PI_CS
 };
 
 struct Network {
@@ -102,7 +103,8 @@ const Network networks[] PROGMEM = {
   {"Gateway"  , {0x12, 0x01}, 0x0F, "0013A20040DB6048"},
   {"Broadcast", {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default
   {"Finse_alt", {0x12, 0x03}, 0x0F, "13A200416A072300"}, // XXX Looks wrong
-  {"Raspberry", {0x12, 0x04}, 0x0F, "0013A200416A0724"},
+  {"Pi Finse",  {0x12, 0x04}, 0x0F, "0013A200416A0724"},
+  {"Pi CS",     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
 };
 
 /******************************************************************************
