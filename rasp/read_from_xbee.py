@@ -1,3 +1,5 @@
+# Standard Library
+import argparse
 import base64
 import json
 import logging
@@ -9,7 +11,7 @@ import paho.mqtt.client as mqtt
 from serial import Serial
 from xbee import XBee
 
-from .common import MQ
+from common import MQ
 
 
 stop = False
@@ -45,6 +47,11 @@ class Publisher(MQ):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('bauds', nargs='?', type=int, default=9600)
+    args = parser.parse_args()
+    bauds = args.bauds
+
     # Configure logger
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     log_level = logging.INFO
@@ -56,7 +63,7 @@ if __name__ == '__main__':
     publisher.start() # Start MQTT thread
 
     # {'source_addr_long': '\x00\x13\xa2\x00Aj\x07#', 'rf_data': "<=>\x06\x1eb'g\x05|\x10T\x13#\xc3{\xa8\n\xf3Y4b\xc8\x00\x00PA33\xabA\x00\x00\x00\x00", 'source_addr': '\xff\xfe', 'id': 'rx', 'options': '\xc2'}
-    with Serial('/dev/serial0', 9600) as serial:
+    with Serial('/dev/serial0', bauds) as serial:
         xbee = XBee(serial, callback=publisher.callback) # Start XBee thread
         signal.signal(signal.SIGTERM, sigterm) # Stop gracefully
         while not stop:

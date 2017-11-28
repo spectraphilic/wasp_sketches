@@ -7,7 +7,7 @@ import sys
 import paho.mqtt.client as mqtt
 import requests
 
-from .common import MQ
+from common import MQ
 
 class Consumer(MQ):
 
