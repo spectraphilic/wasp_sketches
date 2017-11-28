@@ -14,8 +14,6 @@ from common import MQ
 
 class Publisher(MQ):
     name = 'read_from_xbee'
-    topic = 'frames'
-    threaded = True
 
     def pub_frame(self, frame):
         t0 = time.time()
@@ -53,7 +51,7 @@ if __name__ == '__main__':
     # Connect to broker
     publisher = Publisher()
     publisher.connect()
-    publisher.start() # Start MQTT thread
+    #publisher.start()
 
     # {'source_addr_long': '\x00\x13\xa2\x00Aj\x07#', 'rf_data': "<=>\x06\x1eb'g\x05|\x10T\x13#\xc3{\xa8\n\xf3Y4b\xc8\x00\x00PA33\xabA\x00\x00\x00\x00", 'source_addr': '\xff\xfe', 'id': 'rx', 'options': '\xc2'}
     with Serial('/dev/serial0', bauds) as serial:
@@ -68,5 +66,5 @@ if __name__ == '__main__':
         xbee.halt() # Stop XBee thread
 
     # End
-    publisher.stop() # Stop MQTT thread
+    publisher.stop()
     logging.shutdown()

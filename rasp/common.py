@@ -1,4 +1,7 @@
+# Standard Library
+import json
 import logging
+
 import paho.mqtt.client as mqtt
 
 
@@ -7,6 +10,7 @@ class MQ(object):
     name = ''
     host = 'localhost'
     threaded = False
+    topic = ''
 
     def __init__(self):
         self.client = None
@@ -61,6 +65,18 @@ class MQ(object):
         if self.threaded:
             self.client.loop_stop() # Stop MQTT thread
         self.client.disconnect()
+
+    #
+    # Publisher
+    #
+    def publish(self, body):
+        body = json.dumps(body)
+        result, mid = self.client.publish(self.topic, body, qos=2)
+        if result == mqtt.MQTT_ERR_SUCCESS:
+            self.info('Publish to "%s", mid=%s', self.topic, mid)
+        else:
+            error = mqtt.error_string(result)
+            self.error('Publish to "%s", mid=%s: %s', self.topic, mid, error)
 
     #
     # Logging helpers
