@@ -50,7 +50,7 @@ class MQ(object):
         )
 
     def on_exchange_declare(self):
-        self.debug('Exchange declared.')
+        self.debug('Exchange declared')
         if self.queue is not None:
             self.debug('Declaring queue "%s"...', self.queue)
             self.channel.queue_declare(
@@ -68,7 +68,7 @@ class MQ(object):
         self.channel.queue_bind(self.on_queue_bind, self.queue, self.exchange)#, self.routing_key)
 
     def on_queue_bind(self, frame):
-        self.debug('Queue bound to exchange.')
+        self.debug('Queue bound to exchange')
         self.channel.basic_consume(self.on_message, queue=self.queue)
 
     #
@@ -91,10 +91,19 @@ class MQ(object):
     # Consumer
     #
     def on_message(self, channel, method, header, body):
-        self.debug('Message received.')
-        self.debug('%s %s %s %s', type(channel), type(method), type(header), type(body))
-        self.debug(body)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+        self.info('Message received')
+        try:
+            body = json.loads(body)
+            self._on_message(body)
+        except Exception:
+            self.exception('Message handling failed')
+            #channel.basic_reject(delivery_tag=method.delivery_tag)
+        else:
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+            self.info('Message done')
+
+    def _on_message(self, body):
+        pass
 
     #
     # Logging helpers

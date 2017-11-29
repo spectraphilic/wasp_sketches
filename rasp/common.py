@@ -10,7 +10,8 @@ class MQ(object):
     name = ''
     host = 'localhost'
     threaded = False
-    topic = ''
+    sub_to = ''
+    pub_to = ''
 
     def __init__(self):
         self.client = None
@@ -18,6 +19,15 @@ class MQ(object):
 
     def on_connect(self, client, userdata, flags, rc):
         self.info('Connected to MQTT server')
+        # Subscribe
+        topic = self.sub_to
+        if topic:
+            result, mid = client.subscribe(topic, qos=2)
+            if result == mqtt.MQTT_ERR_SUCCESS:
+                self.info('Subscribe to "%s", mid=%s', topic, mid)
+            else:
+                error = mqtt.error_string(result)
+                self.error('Subscribe to "%s", mid=%s: %s', topic, mid, error)
 
     def on_disconnect(self, client, userdata, rc):
         self.info('Disconnected from MQTT server')
@@ -29,7 +39,17 @@ class MQ(object):
         self.info('Subscription mid=%s qos=%s', mid, granted_qos)
 
     def on_message(self, client, userdata, msg):
-        self.info('Messaage received')
+        self.info('Message received')
+        try:
+            body = json.loads(msg.payload)
+            self._on_message(body)
+        except Exception:
+            self.exception('Message handling failed')
+        else:
+            self.info('Message done')
+
+    def _on_message(self, body):
+        pass
 
     def on_log(self, client, userdata, level, buf):
         f = {
@@ -71,12 +91,14 @@ class MQ(object):
     #
     def publish(self, body):
         body = json.dumps(body)
-        result, mid = self.client.publish(self.topic, body, qos=2)
-        if result == mqtt.MQTT_ERR_SUCCESS:
-            self.info('Publish to "%s", mid=%s', self.topic, mid)
-        else:
-            error = mqtt.error_string(result)
-            self.error('Publish to "%s", mid=%s: %s', self.topic, mid, error)
+        topic = self.pub_to
+        if topic:
+            result, mid = self.client.publish(topic, body, qos=2)
+            if result == mqtt.MQTT_ERR_SUCCESS:
+                self.info('Publish to "%s", mid=%s', topic, mid)
+            else:
+                error = mqtt.error_string(result)
+                self.error('Publish to "%s", mid=%s: %s', topic, mid, error)
 
     #
     # Logging helpers

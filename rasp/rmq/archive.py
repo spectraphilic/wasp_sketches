@@ -1,59 +1,53 @@
 # Standard Library
-import json
+import base64
+from datetime import date
 import logging
+import os
 import signal
-import sqlite3
+import struct
 import sys
 
 from common import MQ
 
 class Consumer(MQ):
 
-    name = 'archive_frames'
+    name = 'archive'
     queue = 'motes_archive'
 
-    def on_message(self, channel, method, header, body):
-        frame = json.loads(body)
-        self.info('FRAME %s', frame)
+    def _on_message(self, body):
+        # Create parent directory
+        mac = base64.b64decode(body['source_addr_long'])
+        mac = '%016X' % struct.unpack(">Q", mac)
+        dirpath = os.join(datadir, mac)
+        try:
+            os.makedirs(dirpath) # XXX Use exist_ok with Python 3
+        except OSError:
+            pass
 
-        # Archive to SQL
-        cursor.execute(
-            """INSERT INTO frames VALUES (?, ?, ?, ?, ?, ?)""",
-            (
-                0,
-                unicode(frame['id']),
-                sqlite3.Binary(frame['rf_data']),
-                sqlite3.Binary(frame['source_addr']),
-                sqlite3.Binary(frame['source_addr_long']),
-                sqlite3.Binary(frame['options']),
-            )
-        )
-        conn.commit()
+        # Append frame to archive file
+        received = date.fromtimestamp(body['received']).strftime('%Y%m%d')
+        filepath = os.join(dirpath, received)
+        with open(filepath, 'a+') as f:
+            f.write(body + '\n')
+
 
 if __name__ == '__main__':
-    # Logging
+    # Configure logger
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     log_level = logging.INFO
     logging.basicConfig(format=log_format, level=log_level, stream=sys.stdout)
 
-    conn = sqlite3.connect('frames.db')
-    with conn:
-        cursor = conn.cursor()
-        # Create table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS frames
-            (sent integer, id text, rf_data blob, source_addr blob, source_addr_long blob, options blob)
-            """)
-        conn.commit()
+    # Data dir
+    datadir = os.path.join(os.getcwd(), 'data')
 
-        # Run
-        consumer = Consumer()
-        consumer.connect()
-        signal.signal(signal.SIGTERM, consumer.stop)
-        try:
-            consumer.start()
-        except KeyboardInterrupt:
-            consumer.stop()
+    # Main
+    consumer = Consumer()
+    consumer.connect()
+    signal.signal(signal.SIGTERM, consumer.stop)
+    try:
+        consumer.start()
+    except KeyboardInterrupt:
+        consumer.stop()
 
     # End
     logging.shutdown()

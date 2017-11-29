@@ -14,10 +14,11 @@ from common import MQ
 
 class Publisher(MQ):
     name = 'read_from_xbee'
-    topic = 'frames'
     threaded = True
+    pub_to = 'frames'
 
     def pub_frame(self, frame):
+        # {'source_addr_long': '\x00\x13\xa2\x00Aj\x07#', 'rf_data': "<=>\x06\x1eb'g\x05|\x10T\x13#\xc3{\xa8\n\xf3Y4b\xc8\x00\x00PA33\xabA\x00\x00\x00\x00", 'source_addr': '\xff\xfe', 'id': 'rx', 'options': '\xc2'}
         t0 = time.time()
         self.info('FRAME %s', frame)
         if frame['id'] != 'rx':
@@ -28,6 +29,9 @@ class Publisher(MQ):
             if k != 'id':
                 v = frame[k]
                 frame[k] = base64.b64encode(v)
+
+        # Add timestamp
+        frame['received'] = int(t0)
 
         # Publish
         self.publish(frame)
@@ -55,7 +59,6 @@ if __name__ == '__main__':
     publisher.connect()
     publisher.start() # Start MQTT thread
 
-    # {'source_addr_long': '\x00\x13\xa2\x00Aj\x07#', 'rf_data': "<=>\x06\x1eb'g\x05|\x10T\x13#\xc3{\xa8\n\xf3Y4b\xc8\x00\x00PA33\xabA\x00\x00\x00\x00", 'source_addr': '\xff\xfe', 'id': 'rx', 'options': '\xc2'}
     with Serial('/dev/serial0', bauds) as serial:
         xbee = XBee(serial, callback=publisher.pub_frame) # Start XBee thread
         signal.signal(signal.SIGTERM, sigterm) # Signal sent by Supervisor

@@ -8,12 +8,21 @@ stdout_logfile=$PWD/log/read_from_xbee.out.log
 autostart=true
 autorestart=true
 
-[program:send_to_server]
+[program:archive]
 directory=$PWD
 user=$USER
-command=$PWD/venv27/bin/python send_to_server.py
-stderr_logfile=$PWD/log/send_to_server.err.log
-stdout_logfile=$PWD/log/send_to_server.out.log
+command=$PWD/venv27/bin/python archive.py
+stderr_logfile=$PWD/log/archive.err.log
+stdout_logfile=$PWD/log/archive.out.log
 autostart=true
 autorestart=true
+
+; [program:send_to_server]
+; directory=$PWD
+; user=$USER
+; command=$PWD/venv27/bin/python send_to_server.py
+; stderr_logfile=$PWD/log/send_to_server.err.log
+; stdout_logfile=$PWD/log/send_to_server.out.log
+; autostart=true
+; autorestart=true
 EOF
