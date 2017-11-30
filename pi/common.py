@@ -18,7 +18,7 @@ class MQ(object):
         self.logger = logging.getLogger(self.name)
         self.started = False
 
-    def connect(self, parameters):
+    def connect(self):
         self.debug('Connecting to broker at "%s" ...', self.host)
         parameters = pika.ConnectionParameters(host=self.host)
         self.connection = pika.SelectConnection(parameters, self.on_connected)
