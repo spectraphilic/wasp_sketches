@@ -3,7 +3,7 @@ Install
 
 Install system wide requirements::
 
-  $ sudo apt-get install python-virtualenv
+  $ sudo apt-get install python3-venv
   $ sudo apt-get install rabbitmq-server
   $ sudo apt-get install supervisor
 

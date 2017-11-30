@@ -1,5 +1,5 @@
 # Standard Library
-from ConfigParser import RawConfigParser as ConfigParser
+from configparser import RawConfigParser as ConfigParser
 import json
 import logging
 import sys
