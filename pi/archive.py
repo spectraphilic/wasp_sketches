@@ -1,11 +1,9 @@
 # Standard Library
 import base64
 from datetime import date
-import logging
 import os
 import signal
 import struct
-import sys
 
 from common import MQ
 
@@ -32,22 +30,7 @@ class Consumer(MQ):
 
 
 if __name__ == '__main__':
-    # Configure logger
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    log_level = logging.INFO
-    logging.basicConfig(format=log_format, level=log_level, stream=sys.stdout)
-
-    # Data dir
     datadir = os.path.join(os.getcwd(), 'data')
-
-    # Main
-    consumer = Consumer()
-    consumer.connect()
-    signal.signal(signal.SIGTERM, consumer.stop)
-    try:
+    with Consumer() as consumer:
+        signal.signal(signal.SIGTERM, consumer.stop)
         consumer.start()
-    except KeyboardInterrupt:
-        consumer.stop()
-
-    # End
-    logging.shutdown()

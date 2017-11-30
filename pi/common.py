@@ -1,11 +1,26 @@
 # Standard Library
+from ConfigParser import RawConfigParser as ConfigParser
 import json
 import logging
+import sys
 
 import pika
 
 
 class MQ(object):
+    """
+    This class is to be used as a base class. Its main purpose is to provide
+    access to the message broker, either as publisher or consumer.
+    Additionnaly, it wraps config and logging.
+
+    It is meant to be used as a context manager:
+
+        class Publisher(MQ):
+            name = 'xxx'
+
+        with Publisher() as publisher:
+            ...
+    """
 
     name = ''
     host = 'localhost'
@@ -17,6 +32,10 @@ class MQ(object):
         self.channel = None
         self.logger = logging.getLogger(self.name)
         self.started = False
+        # Read configuration
+        config = ConfigParser()
+        config.read('config.ini')
+        self.config = config[self.name]
 
     def connect(self):
         self.debug('Connecting to broker at "%s" ...', self.host)
@@ -49,7 +68,7 @@ class MQ(object):
             durable=True,
         )
 
-    def on_exchange_declare(self):
+    def on_exchange_declare(self, unused_frame):
         self.debug('Exchange declared')
         if self.queue is not None:
             self.debug('Declaring queue "%s"...', self.queue)
@@ -108,6 +127,13 @@ class MQ(object):
     #
     # Logging helpers
     #
+    def init_logging(self):
+        # Logging
+        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        log_level = self.config.get('log_level', 'info').upper()
+        log_level = logging.getLevelName(log_level)
+        logging.basicConfig(format=log_format, level=log_level, stream=sys.stdout)
+
     def debug(self, *args):
         self.logger.debug(*args)
 
@@ -122,3 +148,16 @@ class MQ(object):
 
     def critical(self, *args):
         self.logger.critical(*args)
+
+
+    #
+    # Context manager
+    #
+    def __enter__(self):
+        self.init_logging()
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
+        logging.shutdown()

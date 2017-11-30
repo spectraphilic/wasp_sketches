@@ -1,9 +1,6 @@
 # Standard Library
-import argparse
 import base64
-import logging
 import signal
-import sys
 import time
 
 from serial import Serial
@@ -42,32 +39,17 @@ def sigterm(signum, frame):
     stop = True
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('bauds', nargs='?', type=int, default=9600)
-    args = parser.parse_args()
-    bauds = args.bauds
-
-    # Configure logger
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    log_level = logging.INFO
-    logging.basicConfig(format=log_format, level=log_level, stream=sys.stdout)
-
-    # Connect to broker
-    publisher = Publisher()
-    publisher.connect()
-    #publisher.start()
-
-    with Serial('/dev/serial0', bauds) as serial:
-        xbee = XBee(serial, callback=publisher.pub_frame) # Start XBee thread
+    with Publisher() as publisher:
         signal.signal(signal.SIGTERM, sigterm) # Signal sent by Supervisor
-        while not stop:
-            try:
-                time.sleep(0.01)
-            except KeyboardInterrupt:
-                break
+        #publisher.start()
 
-        xbee.halt() # Stop XBee thread
+        bauds = publisher.config.getint('bauds', 9600)
+        with Serial('/dev/serial0', bauds) as serial:
+            xbee = XBee(serial, callback=publisher.pub_frame) # Start XBee thread
+            while not stop:
+                try:
+                    time.sleep(0.01)
+                except KeyboardInterrupt:
+                    break
 
-    # End
-    publisher.stop()
-    logging.shutdown()
+            xbee.halt() # Stop XBee thread
