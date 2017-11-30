@@ -25,7 +25,8 @@ class MQ(object):
     name = ''
     host = 'localhost'
     exchange = 'motes'
-    queue = None
+    sub_to = None
+    bg_task = None # Background task
 
     def __init__(self):
         self.connection = None
@@ -37,29 +38,41 @@ class MQ(object):
         config.read('config.ini')
         self.config = config[self.name]
 
-    def connect(self):
-        self.debug('Connecting to broker at "%s" ...', self.host)
-        parameters = pika.ConnectionParameters(host=self.host)
-        self.connection = pika.SelectConnection(parameters, self.on_connected)
-
     def start(self):
         self.info('Loop starting... To exit press CTRL+C')
         self.started = True
         self.connection.ioloop.start()
 
     def stop(self):
-        self.info('Loop stopping...')
+        if self.channel:
+            self.channel.close()
+            self.channel = None
+
         self.connection.close()
         if self.started:
             self.connection.ioloop.start() # Graceful stop
-        self.info('Loop stopped.')
 
-    def on_connected(self, connection):
-        self.debug('Connected to broker. Opening channel...')
+    def connect(self):
+        parameters = pika.ConnectionParameters(host=self.host)
+        self.connection = pika.SelectConnection(
+            parameters,
+            self.on_connect_open,
+            self.on_connect_error,
+            self.on_connect_close,
+        )
+
+    def on_connect_open(self, connection):
+        self.info('Connection open')
         connection.channel(self.on_channel_open)
 
+    def on_connect_error(self, connection):
+        self.error('Connection error')
+
+    def on_connect_close(self, connection, reply_code, reply_text):
+        self.info('Connection closed')
+
     def on_channel_open(self, channel):
-        self.debug('Channel open. Declaring exchange "%s" ...', self.exchange)
+        self.info('Channel open')
         self.channel = channel
         channel.exchange_declare(
             self.on_exchange_declare,
@@ -69,49 +82,50 @@ class MQ(object):
         )
 
     def on_exchange_declare(self, unused_frame):
-        self.debug('Exchange declared')
-        if self.queue is not None:
-            self.debug('Declaring queue "%s"...', self.queue)
+        self.info('Exchange declared "%s"', self.exchange)
+        if self.sub_to is not None:
             self.channel.queue_declare(
                 self.on_queue_declare,
-                self.queue,
+                self.sub_to,
                 durable=True,
             )
+        if self.bg_task:
+            self.connection.add_timeout(1, self.background_task)
+
+    def background_task(self):
+        self.bg_task()
+        self.connection.add_timeout(1, self.background_task)
 
     def on_queue_declare(self, frame):
-        self.debug(
-            'Queue declared. Binding queue "%s" to exchange "%s" ...',
-            self.queue,
-            self.exchange
-        )
-        self.channel.queue_bind(self.on_queue_bind, self.queue, self.exchange)#, self.routing_key)
+        self.info('Queue declared "%s"', self.sub_to)
+        self.channel.queue_bind(self.on_queue_bind, self.sub_to, self.exchange)#, self.routing_key)
 
     def on_queue_bind(self, frame):
-        self.debug('Queue bound to exchange')
-        self.channel.basic_consume(self.on_message, queue=self.queue)
+        self.info('Queue bound to exchange')
+        self.channel.basic_consume(self.on_message, queue=self.sub_to)
 
     #
     # Publisher
     #
     def publish(self, body):
-        self.debug('Publishing...')
         body = json.dumps(body)
         properties = pika.BasicProperties(
             delivery_mode=2, # persistent message
             content_type='application/json',
         )
         self.channel.basic_publish(
-            exchange=self.exchange, #routing_key=queue,
+            exchange=self.exchange, routing_key='',
             properties=properties,
             body=body,
         )
+        self.debug('Message published')
 
     #
     # Consumer
     #
     def on_message(self, channel, method, header, body):
-        self.info('Message received')
         try:
+            body = body.decode()
             body = json.loads(body)
             self._on_message(body)
         except Exception:
@@ -119,7 +133,7 @@ class MQ(object):
             #channel.basic_reject(delivery_tag=method.delivery_tag)
         else:
             channel.basic_ack(delivery_tag=method.delivery_tag)
-            self.info('Message done')
+            self.debug('Message received and handled')
 
     def _on_message(self, body):
         pass
@@ -129,7 +143,7 @@ class MQ(object):
     #
     def init_logging(self):
         # Logging
-        log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        log_format = '%(asctime)s - %(name)s - %(threadName)s - %(levelname)s - %(message)s'
         log_level = self.config.get('log_level', 'info').upper()
         log_level = logging.getLevelName(log_level)
         logging.basicConfig(format=log_format, level=log_level, stream=sys.stdout)
@@ -149,6 +163,8 @@ class MQ(object):
     def critical(self, *args):
         self.logger.critical(*args)
 
+    def exception(self, *args):
+        self.logger.exception(*args)
 
     #
     # Context manager
