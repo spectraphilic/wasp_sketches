@@ -24,7 +24,7 @@ class MQ(object):
 
     name = ''
     host = 'localhost'
-    exchange = 'motes'
+    exchange = 'wsn'
     sub_to = None
     bg_task = None # Background task
 
@@ -65,8 +65,8 @@ class MQ(object):
         self.info('Connection open')
         connection.channel(self.on_channel_open)
 
-    def on_connect_error(self, connection):
-        self.error('Connection error')
+    def on_connect_error(self, connection, exc):
+        self.exception('Connection error')
 
     def on_connect_close(self, connection, reply_code, reply_text):
         self.info('Connection closed')
