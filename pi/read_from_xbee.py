@@ -8,7 +8,7 @@ import time
 from serial import Serial
 from xbee import XBee
 
-from common import MQ
+from mq import MQ
 
 class Publisher(MQ):
     name = 'read_from_xbee'

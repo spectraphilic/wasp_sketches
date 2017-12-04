@@ -6,7 +6,7 @@ import os
 import signal
 import struct
 
-from common import MQ
+from mq import MQ
 
 class Consumer(MQ):
 
