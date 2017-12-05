@@ -8,8 +8,6 @@ from __future__ import print_function, unicode_literals
 import os
 import struct
 
-import numpy as np
-
 
 USHORT = 0 # uint8_t
 INT    = 1 # int16_t
@@ -46,18 +44,17 @@ SENSORS = {
 SENSORS_STR = {v[0]: v for k, v in SENSORS.items()}
 
 class frameObj(object):
-    def __init__(self):
-        self.serialID = np.nan
-        self.frameID = np.nan
+    def __init__(self, kw):
+        # Set defaults (XXX Do we need this?)
+        import numpy as np
         self.tst = np.nan
         self.bat = np.nan
         self.tcb = np.nan
         self.in_temp = np.nan
         self.humb = np.nan
-
-    def set(self, key, value):
-        key = key.lower()
-        setattr(self, key, value)
+        
+        for key, value in kw.items():
+            setattr(self, key, value)
 
 
 def search_frame(data):
@@ -97,7 +94,7 @@ def parse_frame(line):
     n = struct.unpack_from("B", line)[0]
     line = line[1:]
 
-    frame = frameObj()
+    frame = {}
 
     # ASCII
     # <=><80>^C#408518488##0#TST:1499340600#BAT:98#IN_TEMP:31.00#
@@ -114,8 +111,8 @@ def parse_frame(line):
 #       print('Seq    ', sequence)
 #       print('Payload', payload)
 
-        frame.serialID = int(serial_id)
-        frame.frameID = int(sequence)
+        frame['serial'] = int(serial_id)
+        frame['frame'] = int(sequence) # Frame sequence
 
         # Payload
         for field in payload:
@@ -137,7 +134,7 @@ def parse_frame(line):
             assert len(values) == len(names)
 
             for name, value in zip(names, values):
-                frame.set(name, value)
+                frame[name.lower()] = value
 
     # Binary
     else:
@@ -163,8 +160,8 @@ def parse_frame(line):
         sequence = struct.unpack_from("B", line)[0]
         line = line[1:] # Payload
 
-        frame.serialID = serial_id
-        frame.frameID = sequence
+        frame['serial'] = serial_id
+        frame['frame'] = sequence # Frame sequence
 
         while line:
             sensor_id = struct.unpack_from("B", line)[0]
@@ -194,7 +191,7 @@ def parse_frame(line):
                     value = line[:length]
                     line = line[length:]
 
-                frame.set(name, value)
+                frame[name.lower()] = value
 
     return frame, rest
 
@@ -206,6 +203,7 @@ def read_wasp_data(filename, data):
         if src:
             frame, src = parse_frame(src)
             if frame is not None:
+                frame = FrameObj(frame)
                 data.append(frame.__dict__)
 
             # read end of frame: \n

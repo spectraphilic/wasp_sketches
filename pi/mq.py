@@ -20,12 +20,14 @@ class MQ(object):
 
         with Publisher() as publisher:
             ...
+
+    Only direct and fanout exchanges are supported.
     """
 
     name = ''
     host = 'localhost'
-    exchange = 'wsn'
     sub_to = None
+    pub_to = None
     bg_task = None # Background task
 
     def __init__(self):
@@ -36,12 +38,21 @@ class MQ(object):
         # Read configuration
         config = ConfigParser()
         config.read('config.ini')
-        self.config = config[self.name]
+        try:
+            self.config = config[self.name]
+        except KeyError:
+            self.config = {}
+
+        # Used to know when the setup process is done
+        self.todo = set()
 
     def start(self):
-        self.info('Loop starting... To exit press CTRL+C')
+        self.info('Start. To exit press CTRL+C')
         self.started = True
-        self.connection.ioloop.start()
+        try:
+            self.connection.ioloop.start()
+        except KeyboardInterrupt:
+            pass
 
     def stop(self):
         if self.channel:
@@ -60,10 +71,15 @@ class MQ(object):
             self.on_connect_error,
             self.on_connect_close,
         )
+        # Update todo
+        self.todo.add('open_connection')
 
     def on_connect_open(self, connection):
         self.info('Connection open')
         connection.channel(self.on_channel_open)
+        # Update todo
+        self.todo.add('open_channel')
+        self.todo.remove('open_connection')
 
     def on_connect_error(self, connection, exc):
         self.exception('Connection error')
@@ -74,69 +90,106 @@ class MQ(object):
     def on_channel_open(self, channel):
         self.info('Channel open')
         self.channel = channel
-        channel.exchange_declare(
-            self.on_exchange_declare,
-            exchange=self.exchange,
-            exchange_type='fanout',
-            durable=True,
-        )
 
-    def on_exchange_declare(self, unused_frame):
-        self.info('Exchange declared "%s"', self.exchange)
-        if self.sub_to is not None:
-            self.channel.queue_declare(
-                self.on_queue_declare,
-                self.sub_to,
-                durable=True,
-            )
+        # Subscription
+        if self.sub_to:
+            exchange, exchange_type, queue, consumer = self.sub_to()
+            cb = self.on_exchange_declare(exchange, queue, consumer)
+            channel.exchange_declare(cb, exchange, exchange_type, durable=True)
+            self.todo.add('declare_exchange_%s' % exchange)
+
+        # Publication
+        if self.pub_to:
+            exchange, exchange_type, queue = self.pub_to()
+            cb = self.on_exchange_declare(exchange, queue)
+            channel.exchange_declare(cb, exchange, exchange_type, durable=True)
+            self.todo.add('declare_exchange_%s' % exchange)
+
+        # Update todo
+        self.todo.remove('open_channel')
+
+    def on_exchange_declare(self, exchange, queue, consumer=None):
+        def callback(frame):
+            self.info('Exchange declared name=%s', exchange)
+            if queue or consumer:
+                cb = self.on_queue_declare(exchange, queue, consumer)
+                self.channel.queue_declare(cb, queue, durable=True)
+                self.todo.add('declare_queue_%s' % queue)
+
+            # Update todo
+            self.todo.remove('declare_exchange_%s' % exchange)
+            if not self.todo:
+                self.done()
+
+        return callback
+
+    def on_queue_declare(self, exchange, queue, consumer):
+        def callback(frame):
+            self.info('Queue declared name=%s', queue)
+            cb = self.on_queue_bind(exchange, queue, consumer)
+            self.channel.queue_bind(cb, queue, exchange)
+            # Update todo
+            self.todo.add('bind_queue_%s' % queue)
+            self.todo.remove('declare_queue_%s' % queue)
+
+        return callback
+
+    def on_queue_bind(self, exchange, queue, consumer):
+        def callback(frame):
+            self.info('Bound exchange=%s queue=%s', exchange, queue)
+            if consumer:
+                cb = self.on_message(consumer)
+                self.channel.basic_consume(cb, queue=queue)
+
+            # Update todo
+            self.todo.remove('bind_queue_%s' % queue)
+            if not self.todo:
+                self.done()
+
+        return callback
+
+    def on_message(self, consumer):
+        def callback(channel, method, header, body):
+            try:
+                body = body.decode()
+                body = json.loads(body)
+                consumer(body)
+            except Exception:
+                self.exception('Message handling failed')
+                #channel.basic_reject(delivery_tag=method.delivery_tag)
+            else:
+                channel.basic_ack(delivery_tag=method.delivery_tag)
+                self.debug('Message received and handled')
+
+        return callback
+
+    def done(self):
+        self.info('Setup done.')
+        # Background task
         if self.bg_task:
-            self.connection.add_timeout(1, self.background_task)
+            self.connection.add_timeout(1, self.bg_task_wrapper)
 
-    def background_task(self):
+    def bg_task_wrapper(self):
         self.bg_task()
-        self.connection.add_timeout(1, self.background_task)
-
-    def on_queue_declare(self, frame):
-        self.info('Queue declared "%s"', self.sub_to)
-        self.channel.queue_bind(self.on_queue_bind, self.sub_to, self.exchange)#, self.routing_key)
-
-    def on_queue_bind(self, frame):
-        self.info('Queue bound to exchange')
-        self.channel.basic_consume(self.on_message, queue=self.sub_to)
+        self.connection.add_timeout(1, self.bg_task_wrapper)
 
     #
     # Publisher
     #
     def publish(self, body):
+        exchange, exchange_type, queue = self.pub_to()
         body = json.dumps(body)
         properties = pika.BasicProperties(
             delivery_mode=2, # persistent message
             content_type='application/json',
         )
         self.channel.basic_publish(
-            exchange=self.exchange, routing_key='',
+            exchange=exchange,
+            routing_key=queue,
             properties=properties,
             body=body,
         )
         self.debug('Message published')
-
-    #
-    # Consumer
-    #
-    def on_message(self, channel, method, header, body):
-        try:
-            body = body.decode()
-            body = json.loads(body)
-            self._on_message(body)
-        except Exception:
-            self.exception('Message handling failed')
-            #channel.basic_reject(delivery_tag=method.delivery_tag)
-        else:
-            channel.basic_ack(delivery_tag=method.delivery_tag)
-            self.debug('Message received and handled')
-
-    def _on_message(self, body):
-        pass
 
     #
     # Logging helpers

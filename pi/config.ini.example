@@ -1,6 +1,6 @@
-[read_from_xbee]
+[wsn_xbee]
 log_level = debug
 bauds = 115200
 
-[archive]
+[wsn_archive_raw]
 log_level = debug

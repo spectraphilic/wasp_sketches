@@ -11,15 +11,11 @@ from xbee import XBee
 from mq import MQ
 
 class Publisher(MQ):
-    name = 'read_from_xbee'
 
-    def xbee_cb(self, frame):
-        t0 = time.time()
-        queue.put(frame)
-        self.debug('Frame pushed in %f seconds', time.time() - t0)
+    name = 'wsn_xbee'
 
-    def xbee_cb_error(self, exc):
-        self.exception('Publication failed')
+    def pub_to(self):
+        return ('wsn_raw', 'fanout', '')
 
     def bg_task(self):
         # {'source_addr_long': '\x00\x13\xa2\x00Aj\x07#', 'rf_data': "<=>\x06\x1eb'g\x05|\x10T\x13#\xc3{\xa8\n\xf3Y4b\xc8\x00\x00PA33\xabA\x00\x00\x00\x00", 'source_addr': '\xff\xfe', 'id': 'rx', 'options': '\xc2'}
@@ -47,6 +43,18 @@ class Publisher(MQ):
             queue.task_done()
             self.info('Message sent in %f seconds', time.time() - t0)
 
+    #
+    # XBee callbaks, defined here to use the logging helpers
+    #
+    def xbee_cb(self, frame):
+        t0 = time.time()
+        queue.put(frame)
+        self.debug('Frame pushed in %f seconds', time.time() - t0)
+
+    def xbee_cb_error(self, exc):
+        self.exception('Publication failed')
+
+
 def sigterm(signum, frame):
     publisher.stop()
 
@@ -66,7 +74,4 @@ if __name__ == '__main__':
         with Serial('/dev/serial0', bauds) as serial:
             with xbee_manager(serial, publisher.xbee_cb, publisher.xbee_cb_error):
                 signal.signal(signal.SIGTERM, sigterm) # Signal sent by Supervisor
-                try:
-                    publisher.start()
-                except KeyboardInterrupt:
-                    pass
+                publisher.start()
