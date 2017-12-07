@@ -1,4 +1,0 @@
-pyserial
--e git+https://github.com/niolabs/python-xbee.git#egg=xbee
-paho-mqtt
-requests
