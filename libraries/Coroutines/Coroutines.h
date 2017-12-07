@@ -116,14 +116,14 @@ typedef struct Task
  * Types and macros related to the logging system
  */
 
-enum loglevel_t {OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE};
+enum loglevel_t {LOG_OFF, LOG_FATAL, LOG_ERROR, LOG_WARN, LOG_INFO, LOG_DEBUG, LOG_TRACE};
 
-#define fatal(fmt, ...) cr.log(FATAL, fmt, ## __VA_ARGS__)
-#define error(fmt, ...) cr.log(ERROR, fmt, ## __VA_ARGS__)
-#define warn(fmt, ...) cr.log(WARN, fmt, ## __VA_ARGS__)
-#define info(fmt, ...) cr.log(INFO, fmt, ## __VA_ARGS__)
-#define debug(fmt, ...) cr.log(DEBUG, fmt, ## __VA_ARGS__)
-#define trace(fmt, ...) cr.log(TRACE, fmt, ## __VA_ARGS__)
+#define fatal(fmt, ...) cr.log(LOG_FATAL, fmt, ## __VA_ARGS__)
+#define error(fmt, ...) cr.log(LOG_ERROR, fmt, ## __VA_ARGS__)
+#define warn(fmt, ...) cr.log(LOG_WARN, fmt, ## __VA_ARGS__)
+#define info(fmt, ...) cr.log(LOG_INFO, fmt, ## __VA_ARGS__)
+#define debug(fmt, ...) cr.log(LOG_DEBUG, fmt, ## __VA_ARGS__)
+#define trace(fmt, ...) cr.log(LOG_TRACE, fmt, ## __VA_ARGS__)
 
 /* By default prints to USB. Redefine this function to change behaviour. */
 extern void vlog(loglevel_t level, const char* message, va_list args) __attribute__((weak));
@@ -177,7 +177,7 @@ class Loop
     void print();
 
     // Logging
-    loglevel_t loglevel = DEBUG;
+    loglevel_t loglevel = LOG_DEBUG;
     void log(loglevel_t level, const __FlashStringHelper *, ...);
     const char* loglevel2str(loglevel_t level);
 };

@@ -434,17 +434,17 @@ const char* Loop::loglevel2str(loglevel_t level)
 {
   switch (level)
   {
-    case FATAL:
+    case LOG_FATAL:
       return "FATAL";
-    case ERROR:
+    case LOG_ERROR:
       return "ERROR";
-    case WARN:
+    case LOG_WARN:
       return "WARN";
-    case INFO:
+    case LOG_INFO:
       return "INFO";
-    case DEBUG:
+    case LOG_DEBUG:
       return "DEBUG";
-    case TRACE:
+    case LOG_TRACE:
       return "TRACE";
   }
 
