@@ -425,12 +425,14 @@ CR_TASK(task1Wire)
   int16_t temp;
   float temp_f;
   char temp_str[20];
-  WaspOneWire oneWire(DIGITAL8); // pin hardcoded
+  WaspOneWire oneWire(PIN_1WIRE);
 
   CR_BEGIN;
 
   // For now we only support the DS1820, so here just read that directly
   // We assume we have a chain of DS1820 sensors, and read all of them.
+
+  CR_DELAY(750); // delay needed for DS18B20 to response
 
   present = oneWire.reset();
   if (! present)
