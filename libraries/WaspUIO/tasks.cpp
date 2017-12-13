@@ -432,8 +432,10 @@ CR_TASK(task1Wire)
   // For now we only support the DS1820, so here just read that directly
   // We assume we have a chain of DS1820 sensors, and read all of them.
 
-  CR_DELAY(750); // delay needed for DS18B20 to response
-
+  // delay needed for DS18B20 to response
+  // CR_DELAY(750); // This dosn't work... it only read sensor when it tries to send frames
+  delay(750);       // ...but this does! Check this???
+  
   present = oneWire.reset();
   if (! present)
   {
