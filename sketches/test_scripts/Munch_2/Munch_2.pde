@@ -136,7 +136,7 @@ void loop()
   SD.ON();
 
   // Reading the DS1820 temperature sensors chain connected to DIGITAL8
-  temp = readTempDS1820chain(DIGITAL8,  true);
+  temp = readTempDS1820chain(DIGITAL6,  true);
 
 }
 
