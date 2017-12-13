@@ -1,12 +1,12 @@
 
 #include <SDI12.h>
 
-#define DATAPIN DIGITAL6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
+#define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
 char sdiResponse[30];
 char cmd[10];
 
-char sdi_adress[] = "abc"; // SDI-Adresses for the sensors in use, ex. "abc", "12345", "ABCD" or "aB1bC2"
+char sdi_adress[] = "abc?"; // SDI-Adresses for the sensors in use, ex. "abc", "12345", "ABCD" or "aB1bC2"
 
 /*
   '?' is a wildcard character which asks any and all sensors to respond
@@ -59,7 +59,7 @@ void loop()
     SDIdata(cmd);
   }
 
-  // USB.println("- - - - - - - - - - - - - - - -");
+   USB.println("- - - - - - - - - - - - - - - -");
 
   delay(10000); // Must be grater then 10sec if using continuous measurments (?R6!)
                 // Do not de-power the sensor
