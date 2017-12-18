@@ -13,7 +13,8 @@
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
 #define FRAME_BINARY true
-#define SDI_PIN DIGITAL7
+#define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
+#define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
 #include <inttypes.h>
 

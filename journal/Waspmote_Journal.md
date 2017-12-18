@@ -43,6 +43,23 @@ Deployement of a waspmote v15 with the following config:
 - Script commit [ceb90f9](https://github.com/spectraphilic/wasp_sketches/commit/ceb90f985209c339bfe596dd1aee61f71033df72)
 - Lead acid battery with 10W solar panel
 
+### 2017-12-14
+
+This staion stopped nov 24. 
+ - Battery voltage: 12.4
+ - Station was totaly covered in ice
+ - Waspmote box full of snow, my theory is that the lid was installed 90 deg of
+ - Copied log-file and data from SD
+ - Connecting with serial monitor gave no thing
+ - Tried to upload a new program but that didn't work
+ - Changed to a new waspmote
+ - Changed to a longer antenna (8 dbi)
+ - Broke the GPS antenna when i changed waspmote, so now there are no GPS installed
+ - I have tried the unit i changed, and now when it's dry it works fine
+ - ...but with the GPS it keeps bugging for me. Might be that the GPS is more sensitive to humidity???
+ - I have nice pictures showing riming on the wind sensor.
+
+
 ------
 
 ## Middalselvi (6716590.57, 417951.37)

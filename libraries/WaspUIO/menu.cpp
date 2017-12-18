@@ -255,25 +255,25 @@ void WaspUIO::menuLogLevel()
     switch (str[0])
     {
       case '0':
-        cr.loglevel = OFF;
+        cr.loglevel = LOG_OFF;
         break;
       case '1':
-        cr.loglevel = FATAL;
+        cr.loglevel = LOG_FATAL;
         break;
       case '2':
-        cr.loglevel = ERROR;
+        cr.loglevel = LOG_ERROR;
         break;
       case '3':
-        cr.loglevel = WARN;
+        cr.loglevel = LOG_WARN;
         break;
       case '4':
-        cr.loglevel = INFO;
+        cr.loglevel = LOG_INFO;
         break;
       case '5':
-        cr.loglevel = DEBUG;
+        cr.loglevel = LOG_DEBUG;
         break;
       case '6':
-        cr.loglevel = TRACE;
+        cr.loglevel = LOG_TRACE;
         break;
       case '9':
         break;

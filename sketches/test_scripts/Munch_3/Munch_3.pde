@@ -77,14 +77,6 @@ float gps_latitude;
 float gps_longitude;
 bool gps_autonomous_needed = true;
 
-//DS-2
-#define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
-SDI12 mySDI12(DATAPIN);
-char sdiResponse[30];
-char cmd[10];
-
-char sdi_adress[] = "abc?"; // SDI-Adresses for the sensors in use, ex. "abc","?", "12345", "ABCD" or "aB1bC2"
-
 // DS18B20
 float temp = 0;
 float temp_air = 0;
@@ -99,23 +91,6 @@ void setup()
   // Setup DS-2
 
   USB.ON();
-  // PWR.setSensorPower(SENS_5V, SENS_ON); // (JH)
-  delay(500); // Sensor exitation delay
-
-  //  mySDI12.begin();
-  //
-  //  // -'-'-'-'-'-'-INFO COMMAND-'-'-'-'-'-'-
-  //  for (int i = 0; i < (sizeof(sdi_adress) - 1) ; i++)
-  //  {
-  //    snprintf( cmd, sizeof(cmd), "%cI!", sdi_adress[i] ); // Info command (?I!)
-  //    SDIdata(cmd);
-  //
-  //    snprintf(cmd, sizeof(cmd), "%cM6!", sdi_adress[i]); // Start measurments command (?M6!) DS-2
-  //    SDIdata(cmd);
-  //  }
-  //  USB.println("- - - - - - - - - - - - - - - -");
-
-
 }
 
 
@@ -165,24 +140,9 @@ void loop()
 
   SD.ON();
 
-  //  // Reading DS-2 wind sensor
-  //  for (int i = 0; i < (sizeof(sdi_adress) - 1) ; i++)
-  //  {
-  //    snprintf(cmd, sizeof(cmd), "%cR6!", sdi_adress[i]); // Continuous measurments command (?R6!) DS-2
-  //    SDIdata(cmd);
-  //    USB.println(sdi_adress[i]);
-  //  }
-
-  // Reading the DS1820 temperature sensors chain connected to DIGITAL8
-  // PWR.setSensorPower(SENS_3V3, SENS_ON);
-  // delay(1000);
-
-  temp = readTempDS1820chain(DIGITAL8,  true);
-
-  PWR.setSensorPower(SENS_3V3, SENS_OFF);
-
-  // Power off SD card
-  // SD.OFF();
+  PWR.setSensorPower(SENS_3V3, SENS_ON);
+  delay(10);
+  temp = readTempDS1820chain(DIGITAL6);
 }
 
 
@@ -197,15 +157,15 @@ void loop()
 /* readTempDS1820() - reads the DS1820 temperature sensor
 
 */
-float readTempDS1820chain(uint8_t pin, bool is3v3 )
+float readTempDS1820chain(uint8_t pin)
 {
-  // check if it is necessary to turn on
-  // the generic 3v3 power supply
-  if ( is3v3 == true )
-  {
-    PWR.setSensorPower(SENS_3V3, SENS_ON);
-    delay(10);
-  }
+//  // check if it is necessary to turn on
+//  // the generic 3v3 power supply
+//  if ( is3v3 == true )
+//  {
+//    PWR.setSensorPower(SENS_3V3, SENS_ON);
+//    delay(10);
+//  }
 
   WaspOneWire OneWireTemp(pin);
   byte i;  // JH !!!
@@ -292,45 +252,6 @@ float readTempDS1820chain(uint8_t pin, bool is3v3 )
   delay(250);
   // OneWireTemp.reset_search();
   return temp;
-}
-
-
-// Function to read data from SDI-12 sensor
-void SDIdata(char* cmd)
-{
-  char sample_txt[100];
-
-  mySDI12.sendCommand(cmd);
-
-  int i = 0;
-  while (mySDI12.available())  // write the response to the screen
-  {
-    char c = mySDI12.read();
-    if ((c != '\n') && (c != '\r'))
-    {
-      sdiResponse[i] = c;
-      i++;
-    }
-    delay(5);
-  }
-
-  // USB.println(sdiResponse); //write the response to the screen
-  // SD.appendln(filename, sdiResponse); //write the response to SD-card
-
-  // Print time
-  RTC.getTime();
-  // USB.print(RTC.getTime());
-
-  memset(sample_txt, 0, sizeof(sample_txt));
-  snprintf(sample_txt, sizeof(sample_txt), "20%02u-%02u-%02u %02u:%02u:%02u, %s", RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second, sdiResponse);
-
-  USB.println(sample_txt);
-
-  SD.appendln(filename, sample_txt);
-
-  delay(1000); // Needed for CTD10 pressure sensor
-  mySDI12.flush();
-  memset (sdiResponse, 0, sizeof(sdiResponse));
 }
 
 
@@ -642,8 +563,8 @@ void Send_etc(void)
     }
   }
 
-  // Power off the 3G module
-  _3G.OFF();
+  //  // Power off the 3G module
+  //  _3G.OFF();
 }
 
 

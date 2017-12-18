@@ -1,6 +1,0 @@
-[read_from_xbee]
-log_level = debug
-bauds = 115200
-
-[archive]
-log_level = debug
