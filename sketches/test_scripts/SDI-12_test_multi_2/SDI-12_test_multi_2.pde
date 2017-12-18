@@ -1,7 +1,7 @@
 
 #include <SDI12.h>
 
-#define DATAPIN DIGITAL6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
+#define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
 char sdiResponse[30];
 char cmd[10];
