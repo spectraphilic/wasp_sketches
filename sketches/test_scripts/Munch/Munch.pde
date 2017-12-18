@@ -80,12 +80,12 @@ float gps_longitude;
 bool gps_autonomous_needed = true;
 
 //DS-2
-#define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
+//#define DATAPIN DIGITAL6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
 char sdiResponse[30];
 char cmd[10];
 
-char sdi_adress[] = "abc?"; // SDI-Adresses for the sensors in use, ex. "abc","?", "12345", "ABCD" or "aB1bC2"
+char sdi_adress[] = "abc"; // SDI-Adresses for the sensors in use, ex. "abc", "12345", "ABCD" or "aB1bC2"
 
 // DS18B20
 float temp = 0;
@@ -129,7 +129,7 @@ void loop()
   // Waspmote wakes up thanks to the RTC Alarm every minute (MODE5)
 
   RTC.setWatchdog(10); // Re-boot after 10 min
-  PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_ON); // Wake-up every 1 min
+  PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF); // Wake-up every 1 min
 
   USB.ON();
   RTC.ON();
@@ -163,6 +163,8 @@ void loop()
   // Take sample every wake-up (minute?)
 
   USB.println("-------------------------------------");
+  PWR.setSensorPower(SENS_3V3, SENS_ON);
+  delay(100);
 
   SD.ON();
 
@@ -173,13 +175,9 @@ void loop()
     SDIdata(cmd);
   }
 
-  PWR.setSensorPower(SENS_3V3, SENS_ON);
-  delay(100);
-
   // Reading the DS1820 temperature sensors chain connected to DIGITAL8
-  temp = readTempDS1820chain(DIGITAL6,  true);
+  temp = readTempDS1820chain(DIGITAL8,  true);
 
-  PWR.setSensorPower(SENS_3V3, SENS_OFF);
 }
 
 
@@ -314,10 +312,6 @@ void SDIdata(char* cmd)
   // USB.println(sdiResponse); //write the response to the screen
   // SD.appendln(filename, sdiResponse); //write the response to SD-card
 
-  // Print time
-  RTC.getTime();
-  // USB.print(RTC.getTime());
-  
   memset(sample_txt, 0, sizeof(sample_txt));
   snprintf(sample_txt, sizeof(sample_txt), "20%02u-%02u-%02u %02u:%02u:%02u, %s", RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second, sdiResponse);
 
