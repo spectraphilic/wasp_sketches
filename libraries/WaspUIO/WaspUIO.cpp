@@ -30,7 +30,8 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
-  wakeup_period = Utils.readEEPROM(EEPROM_UIO_WAKEUP_PERIOD);
+  wakeup_sensors = Utils.readEEPROM(EEPROM_WAKEUP_SENSORS);
+  wakeup_network = Utils.readEEPROM(EEPROM_WAKEUP_NETWORK);
   batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
   if (batteryType != 1 && batteryType != 2)
   {
@@ -600,7 +601,7 @@ void WaspUIO::OTA_communication(int OTA_duration)
 /**
  * Retturn true if the given sensor is to be read now.
  */
-bool WaspUIO::action(uint8_t n, ...)
+bool WaspUIO::action(uint8_t base, uint8_t n, ...)
 {
   va_list args;
   int value;
@@ -612,7 +613,7 @@ bool WaspUIO::action(uint8_t n, ...)
     value = va_arg(args, int);
     if (value > 0)
     {
-      if ((time.hour * 60 + time.minute) % (period * value) == 0)
+      if ((time.hour * 60 + time.minute) % (base * value) == 0)
       {
         yes = true;
         break;
@@ -792,8 +793,14 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 
 void WaspUIO::readBattery()
 {
-  // Battery
   batteryLevel = PWR.getBatteryLevel();
+  fixWakeup();
+}
+
+void WaspUIO::fixWakeup()
+{
+  wakeup_sensors_fixed = wakeup_sensors;
+  wakeup_network_fixed = wakeup_network;
 
   // Power logic for lithium battery
   if (UIO.batteryType == 1)
@@ -803,22 +810,21 @@ void WaspUIO::readBattery()
     // Different values for different battery levels.
     if (batteryLevel <= 30)
     {
-      period = wakeup_period * 3; // 15 minutes
+      if (wakeup_sensors_fixed > 85) { wakeup_sensors_fixed = 255; } // max
+      else                           { wakeup_sensors_fixed *= 3; }
+      wakeup_network_fixed = 0; // No network
     }
     else if (batteryLevel <= 40)
     {
-      period = wakeup_period * 2; // 10 minutes
-    }
-    else
-    {
-      period = wakeup_period * 1; // 5 minutes
+      if (wakeup_sensors_fixed > 127) { wakeup_sensors_fixed = 255; } // max
+      else                            { wakeup_sensors_fixed *= 2; }
+      wakeup_network_fixed = 0; // No network
     }
   }
 
   // Logic for Lead acid battery
   else if (UIO.batteryType == 2)
   {
-    period = wakeup_period * 1;
   }
 }
 
@@ -831,16 +837,19 @@ void WaspUIO::readBattery()
  */
 const char* WaspUIO::getNextAlarm(char* alarmTime)
 {
-  // TODO Be more clever, check the enabled sensors (and network), and only
-  // wake up when something needs to be done
+  // TODO Be more clever, check the enabled sensors, and only wake up when
+  // something needs to be done
+
+  RTC.breakTimeAbsolute(getEpochTime(), &time);
+  uint16_t minute = (time.hour * 60 + time.minute);
+  uint16_t nextSensors = (minute / wakeup_sensors) * wakeup_sensors + wakeup_sensors;
+  uint16_t nextNetwork = (minute / wakeup_network) * wakeup_network + wakeup_network;
+  uint16_t next = (nextSensors < nextNetwork)? nextSensors: nextNetwork;
+  if (next >= (24 * 60))
+    next = 0;
 
   // Format relative time to string, to be passed to deepSleep
-  RTC.breakTimeAbsolute(getEpochTime(), &time);
-  uint8_t alarmMinute = (time.minute / period) * period + period;
-  if (alarmMinute >= 60)
-    alarmMinute = 0;
-  sprintf(alarmTime, "00:00:%02d:00", alarmMinute);
-
+  sprintf(alarmTime, "00:%02d:%02d:00", next / 60, next % 60);
   return alarmTime;
 }
 
@@ -851,13 +860,19 @@ void WaspUIO::deepSleep()
   PWR.clearInterruptionPin();
 
   // Reset watchdog
-  RTC.setWatchdog(period + 1);
+  uint8_t wakeup = (wakeup_sensors_fixed < wakeup_network_fixed)? wakeup_sensors_fixed: wakeup_network_fixed;
+  if (wakeup < 59) // XXX Max watchdog is 59
+  {
+    RTC.setWatchdog(wakeup + 1);
+  }
 
   // Enable RTC interruption and sleep
   char alarmTime[12]; // "00:00:00:00"
   getNextAlarm(alarmTime);
-  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
-  RTC.setWatchdog(UIO.loop_timeout); // Reset if stuck for 4 minutes
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
+
+  // Awake: Reset if stuck for 4 minutes
+  RTC.setWatchdog(UIO.loop_timeout);
 }
 
 

@@ -20,8 +20,8 @@ void WaspUIO::menu()
     cr.print();
     cr.print(F("1. Time    : %s"), RTC.getTime());
     cr.print(F("2. Log     : level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
-    cr.print(F("3. Network : %s"), menuFormatNetwork(buffer, size));
-    cr.print(F("4. Wakeup  : %d minutes"), wakeup_period);
+    cr.print(F("3. Programs: sensors (%d min) network (%d min)"), wakeup_sensors, wakeup_network);
+    cr.print(F("4. Network : %s"), menuFormatNetwork(buffer, size));
     cr.print(F("5. Sensors : %s"), menuFormatSensors(buffer, size));
     cr.print(F("6. Battery : %s (%d %%)"), menuFormatBattery(buffer, size), batteryLevel);
     if (hasSD)
@@ -39,8 +39,8 @@ void WaspUIO::menu()
     c = buffer[0];
     if      (c == '1') { menuTime(); }
     else if (c == '2') { menuLog(); }
-    else if (c == '3') { menuNetwork(); }
-    else if (c == '4') { menuWakeup(); }
+    else if (c == '3') { menuPrograms(); }
+    else if (c == '4') { menuNetwork(); }
     else if (c == '5') { menuSensors(); }
     else if (c == '6') { menuBatteryType(); }
     else if (c == '8') { if (hasSD) menuSD(); }
@@ -453,36 +453,6 @@ exit:
   {
     cr.print(error, xbeeDM.error_AT);
   }
-}
-
-
-/*
- * Menu: wake-up frequency
- */
-
-void WaspUIO::menuWakeup()
-{
-  char str[80];
-  int value;
-
-  do
-  {
-    input(str, sizeof(str), F("Enter the wake period in minutes (1-255). Press Enter to leave it unchanged:"), 0);
-    if (strlen(str) == 0)
-      return;
-
-    // Set new time
-    if (sscanf(str, "%d", &value) == 1)
-    {
-      if (value >= 1 && value <= 255)
-      {
-        wakeup_period = (uint8_t) value;
-        updateEEPROM(EEPROM_UIO_WAKEUP_PERIOD, wakeup_period);
-        readBattery(); // updates 'period', which depends on wakeup_period
-        return;
-      }
-    }
-  } while (true);
 }
 
 

@@ -42,9 +42,10 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-#define EEPROM_UIO_WAKEUP_PERIOD (EEPROM_START + 3)
+#define EEPROM_WAKEUP_SENSORS (EEPROM_START + 3)
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
-// 2 bytes available
+#define EEPROM_WAKEUP_NETWORK (EEPROM_START + 5)
+// 1 byte available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 2 bytes available
 #define EEPROM_SENSOR_SENSIRION (EEPROM_START + 10) // Agr
@@ -142,15 +143,13 @@ void menuLog2(uint8_t flag, const char* var);
 void menuBatteryType();
 void menuLogLevel();
 void menuSensors();
-void menuWakeup();
+void menuPrograms();
+void menuProgramWakeup(uint16_t address, uint8_t &wakeup);
 void menuSensor(uint16_t sensor, uint8_t &value);
 void menuSD();
 const char* flagStatus(uint8_t flag);
 const char* sensorStatus(uint8_t sensor);
 void setNetwork(network_t);
-
-// Variables
-uint8_t period;
 
 /// public methods and attributes ////////////
 public:
@@ -158,7 +157,8 @@ public:
 // Configuration variables
 uint8_t flags;
 uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
-uint8_t wakeup_period;
+uint8_t wakeup_sensors;
+uint8_t wakeup_network;
 uint8_t sensor_sensirion;
 uint8_t sensor_pressure;
 uint8_t sensor_leafwetness;
@@ -170,6 +170,8 @@ uint8_t sensor_mb;
 
 // Variables updated on every loop (see onLoop)
 uint8_t batteryLevel;
+uint8_t wakeup_sensors_fixed; // Fixed depending on battery level
+uint8_t wakeup_network_fixed;
 // To keep time without calling RCT each time
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
@@ -199,8 +201,9 @@ const char* readOwnMAC();
 void onSetup();
 void onLoop();
 void readBattery();
+void fixWakeup();
 void initNet();
-bool action(uint8_t n, ...);
+bool action(uint8_t base, uint8_t n, ...);
 const uint8_t loop_timeout = 4; // minutes
 const uint32_t send_timeout = 3 * 60; // seconds
 
