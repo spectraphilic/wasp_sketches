@@ -37,8 +37,11 @@ CR_TASK(taskAcc)
 
 CR_TASK(taskHealthFrame)
 {
-  // Battery
-  ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel); // Battery level (uint8_t)
+  // Battery level (not for lead acid)
+  if (UIO.batteryType != 2)
+  {
+    ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel);
+  }
 
   // RTC temperature (v12 only)
   if (_boot_version < 'H')
@@ -60,15 +63,15 @@ CR_TASK(taskHealthFrame)
 CR_TASK(taskSensors)
 {
 #if USE_AGR
-  bool agr = UIO.action(UIO.wakeup_sensors_fixed, 3, UIO.sensor_pressure, UIO.sensor_leafwetness, UIO.sensor_sensirion);
+  bool agr = UIO.action(3, UIO.action_pressure, UIO.action_leafwetness, UIO.action_sensirion);
 #endif
 #if USE_SDI
-  bool sdi = UIO.action(UIO.wakeup_sensors_fixed, 2, UIO.sensor_ctd10, UIO.sensor_ds2);
+  bool sdi = UIO.action(UIO.action_ctd10, UIO.action_ds2);
 #endif
 #if USE_I2C
-  bool onewire = UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_ds1820);
-  bool i2c = UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_bme280);
-  bool ttl = UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_mb);
+  bool onewire = UIO.action(1, UIO.action_ds1820);
+  bool i2c = UIO.action(1, UIO.action_bme280);
+  bool ttl = UIO.action(1, UIO.action_mb);
 #endif
   static tid_t agr_id, sdi_id, onewire_id, i2c_id, ttl_id;
 
@@ -98,7 +101,7 @@ CR_TASK(taskSensors)
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_bme280))
+  if (UIO.action(1, UIO.action_bme280))
   {
     // Check if the sensor is accesible
     if (BME.checkID() == 1)
@@ -171,21 +174,21 @@ CR_TASK(taskAgr)
   CR_BEGIN;
 
   // Measure
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_pressure))
+  if (UIO.action(1, UIO.action_pressure))
   {
     CR_SPAWN2(taskAgrPressure, p_id);
   }
-  if (UIO.action(UIO.wakeup_sensors_fixed, 2, UIO.sensor_leafwetness, UIO.sensor_sensirion))
+  if (UIO.action(2, UIO.action_leafwetness, UIO.action_sensirion))
   {
     CR_SPAWN2(taskAgrLC, lc_id);
   }
 
   // Wait
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_pressure))
+  if (UIO.action(1, UIO.action_pressure))
   {
     CR_JOIN(p_id);
   }
-  if (UIO.action(UIO.wakeup_sensors_fixed, 2, UIO.sensor_leafwetness, UIO.sensor_sensirion))
+  if (UIO.action(2, UIO.action_leafwetness, UIO.action_sensirion))
   {
     CR_JOIN(lc_id);
   }
@@ -217,7 +220,7 @@ CR_TASK(taskAgrLC)
   CR_BEGIN;
 
   // Leaf wetness
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_leafwetness))
+  if (UIO.action(1, UIO.action_leafwetness))
   {
     UIO.on(UIO_LEAFWETNESS);
     CR_DELAY(50);
@@ -226,7 +229,7 @@ CR_TASK(taskAgrLC)
   }
 
   // Sensirion (temperature, humidity)
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_sensirion))
+  if (UIO.action(1, UIO.action_sensirion))
   {
     UIO.on(UIO_SENSIRION);
     CR_DELAY(50);
@@ -237,11 +240,11 @@ CR_TASK(taskAgrLC)
   }
 
   // OFF
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_leafwetness))
+  if (UIO.action(1, UIO.action_leafwetness))
   {
     UIO.off(UIO_LEAFWETNESS);
   }
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_sensirion))
+  if (UIO.action(1, UIO.action_sensirion))
   {
     UIO.off(UIO_SENSIRION);
   }
@@ -268,14 +271,14 @@ CR_TASK(taskSdi)
   // - Use service requests
 
   // CTD-10
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_ctd10))
+  if (UIO.action(1, UIO.action_ctd10))
   {
     CR_SPAWN2(taskSdiCtd10, tid);
     CR_JOIN(tid);
   }
 
   // DS-2
-  if (UIO.action(UIO.wakeup_sensors_fixed, 1, UIO.sensor_ds2))
+  if (UIO.action(1, UIO.action_ds2))
   {
     CR_SPAWN2(taskSdiDs2, tid);
     CR_JOIN(tid);

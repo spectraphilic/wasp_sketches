@@ -32,8 +32,7 @@ void setup()
   info(F("Config Battery: %s (%d %%)"), UIO.menuFormatBattery(buffer, size), UIO.batteryLevel);
   info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
   info(F("Config Network: %s"), UIO.menuFormatNetwork(buffer, size));
-  info(F("Config Wakeup : sensors=%d network=%d"), UIO.wakeup_sensors, UIO.wakeup_network);
-  info(F("Config Sensors: %s"), UIO.menuFormatSensors(buffer, size));
+  info(F("Config Actions: %s"), UIO.menuFormatActions(buffer, size));
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?

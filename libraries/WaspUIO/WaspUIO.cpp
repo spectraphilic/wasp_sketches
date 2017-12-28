@@ -30,8 +30,6 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
-  wakeup_sensors = Utils.readEEPROM(EEPROM_WAKEUP_SENSORS);
-  wakeup_network = Utils.readEEPROM(EEPROM_WAKEUP_NETWORK);
   batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
   if (batteryType != 1 && batteryType != 2)
   {
@@ -46,20 +44,21 @@ void WaspUIO::onSetup()
   }
   memcpy_P(&network, &networks[panid_low], sizeof network);
 
-  // Sensors
+  // Actions
+  action_network = Utils.readEEPROM(EEPROM_ACTION_NETWORK);
 #if USE_AGR
-  sensor_sensirion = Utils.readEEPROM(EEPROM_SENSOR_SENSIRION);
-  sensor_pressure = Utils.readEEPROM(EEPROM_SENSOR_PRESSURE);
-  sensor_leafwetness = Utils.readEEPROM(EEPROM_SENSOR_LEAFWETNESS);
+  action_sensirion = Utils.readEEPROM(EEPROM_ACTION_SENSIRION);
+  action_pressure = Utils.readEEPROM(EEPROM_ACTION_PRESSURE);
+  action_leafwetness = Utils.readEEPROM(EEPROM_ACTION_LEAFWETNESS);
 #endif
 #if USE_SDI
-  sensor_ctd10 = Utils.readEEPROM(EEPROM_SENSOR_CTD10);
-  sensor_ds2 = Utils.readEEPROM(EEPROM_SENSOR_DS2);
+  action_ctd10 = Utils.readEEPROM(EEPROM_ACTION_CTD10);
+  action_ds2 = Utils.readEEPROM(EEPROM_ACTION_DS2);
 #endif
 #if USE_I2C
-  sensor_ds1820 = Utils.readEEPROM(EEPROM_SENSOR_DS1820);
-  sensor_bme280 = Utils.readEEPROM(EEPROM_SENSOR_BME280);
-  sensor_mb =  Utils.readEEPROM(EEPROM_SENSOR_MB);
+  action_ds1820 = Utils.readEEPROM(EEPROM_ACTION_DS1820);
+  action_bme280 = Utils.readEEPROM(EEPROM_ACTION_BME280);
+  action_mb =  Utils.readEEPROM(EEPROM_ACTION_MB);
 #endif
 
   // Log level
@@ -90,6 +89,7 @@ void WaspUIO::onLoop()
 
   loadTime(true); // Read temperature as well
   RTC.breakTimeAbsolute(getEpochTime(), &time); // Keep minute & hour for later
+  minute = (time.hour * 60 + time.minute);
   readBattery();
 }
 
@@ -601,7 +601,7 @@ void WaspUIO::OTA_communication(int OTA_duration)
 /**
  * Retturn true if the given sensor is to be read now.
  */
-bool WaspUIO::action(uint8_t base, uint8_t n, ...)
+bool WaspUIO::action(uint8_t n, ...)
 {
   va_list args;
   int value;
@@ -613,7 +613,7 @@ bool WaspUIO::action(uint8_t base, uint8_t n, ...)
     value = va_arg(args, int);
     if (value > 0)
     {
-      if ((time.hour * 60 + time.minute) % (base * value) == 0)
+      if (minute % (cooldown * value) == 0)
       {
         yes = true;
         break;
@@ -793,36 +793,25 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 
 void WaspUIO::readBattery()
 {
-  batteryLevel = PWR.getBatteryLevel();
-  fixWakeup();
-}
+  // Lead acid battery does not support reading voltage, yet
+  if (UIO.batteryType == 2)
+  {
+    batteryLevel = 100;
+  }
+  else
+  {
+    batteryLevel = PWR.getBatteryLevel();
+  }
 
-void WaspUIO::fixWakeup()
-{
-  wakeup_sensors_fixed = wakeup_sensors;
-  wakeup_network_fixed = wakeup_network;
-
+  // Calculate the cooldown factor, depends on battery level
+  cooldown = 1;
   // Power logic for lithium battery
   if (UIO.batteryType == 1)
   {
-    // Find out sampling period, in minutes. The value must be a factor of 60*24
-    // (number of minutes in a day).
-    // Different values for different battery levels.
-    if (batteryLevel <= 30)
-    {
-      if (wakeup_sensors_fixed > 85) { wakeup_sensors_fixed = 255; } // max
-      else                           { wakeup_sensors_fixed *= 3; }
-      wakeup_network_fixed = 0; // No network
-    }
-    else if (batteryLevel <= 40)
-    {
-      if (wakeup_sensors_fixed > 127) { wakeup_sensors_fixed = 255; } // max
-      else                            { wakeup_sensors_fixed *= 2; }
-      wakeup_network_fixed = 0; // No network
-    }
+    if      (batteryLevel <= 30) { cooldown = 3; }
+    else if (batteryLevel <= 40) { cooldown = 2; }
   }
-
-  // Logic for Lead acid battery
+  // TODO Logic for Lead acid battery
   else if (UIO.batteryType == 2)
   {
   }
@@ -835,21 +824,45 @@ void WaspUIO::fixWakeup()
  * Return the string of the next alarm.
  *
  */
-const char* WaspUIO::getNextAlarm(char* alarmTime)
+void WaspUIO::nextAlarm(uint8_t n, ...)
 {
-  // TODO Be more clever, check the enabled sensors, and only wake up when
-  // something needs to be done
+  va_list args;
+  int value;
+  bool yes = false;
+  int next = INT_MAX;
 
-  RTC.breakTimeAbsolute(getEpochTime(), &time);
-  uint16_t minute = (time.hour * 60 + time.minute);
-  uint16_t nextSensors = (minute / wakeup_sensors) * wakeup_sensors + wakeup_sensors;
-  uint16_t nextNetwork = (minute / wakeup_network) * wakeup_network + wakeup_network;
-  uint16_t next = (nextSensors < nextNetwork)? nextSensors: nextNetwork;
+  va_start(args, n);
+  for (; n; n--)
+  {
+    value = va_arg(args, int);
+    if (value > 0)
+    {
+      value *= cooldown;
+      value = (minute / value) * value + value;
+      if (value < next)
+      {
+        next = value;
+      }
+    }
+  }
+  va_end(args);
+
   if (next >= (24 * 60))
     next = 0;
 
+  next_minute = next;
+}
+
+const char* WaspUIO::nextAlarm(char* alarmTime)
+{
+  RTC.breakTimeAbsolute(getEpochTime(), &time);
+  minute = (time.hour * 60 + time.minute);
+  nextAlarm(9, action_network, action_sensirion, action_pressure,
+            action_leafwetness, action_ctd10, action_ds2, action_ds1820,
+            action_bme280, action_mb);
+
   // Format relative time to string, to be passed to deepSleep
-  sprintf(alarmTime, "00:%02d:%02d:00", next / 60, next % 60);
+  sprintf(alarmTime, "00:%02d:%02d:00", next_minute / 60, next_minute % 60);
   return alarmTime;
 }
 
@@ -859,16 +872,18 @@ void WaspUIO::deepSleep()
   intFlag = 0;
   PWR.clearInterruptionPin();
 
+  // Get next alarm time
+  char alarmTime[12]; // "00:00:00:00"
+  nextAlarm(alarmTime);
+
   // Reset watchdog
-  uint8_t wakeup = (wakeup_sensors_fixed < wakeup_network_fixed)? wakeup_sensors_fixed: wakeup_network_fixed;
-  if (wakeup < 59) // XXX Max watchdog is 59
+  int left = (next_minute == 0)? 1440 - minute: next_minute - minute;
+  if (left < 59) // XXX Maximum is 59
   {
-    RTC.setWatchdog(wakeup + 1);
+    RTC.setWatchdog(left + 1);
   }
 
   // Enable RTC interruption and sleep
-  char alarmTime[12]; // "00:00:00:00"
-  getNextAlarm(alarmTime);
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
 
   // Awake: Reset if stuck for 4 minutes

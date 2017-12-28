@@ -9,9 +9,9 @@
  ******************************************************************************/
 
 // We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
-#define USE_I2C true // I include here OneWire as well
-#define USE_SDI true
+#define USE_AGR true
+#define USE_I2C false // I include here OneWire as well
+#define USE_SDI false
 #define FRAME_BINARY true
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
@@ -42,20 +42,20 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-#define EEPROM_WAKEUP_SENSORS (EEPROM_START + 3)
-#define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
-#define EEPROM_WAKEUP_NETWORK (EEPROM_START + 5)
 // 1 byte available
-#define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
+#define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
 // 2 bytes available
-#define EEPROM_SENSOR_SENSIRION (EEPROM_START + 10) // Agr
-#define EEPROM_SENSOR_PRESSURE (EEPROM_START + 11)
-#define EEPROM_SENSOR_LEAFWETNESS (EEPROM_START + 12)
-#define EEPROM_SENSOR_CTD10 (EEPROM_START + 13) // SDI-12
-#define EEPROM_SENSOR_DS2 (EEPROM_START + 14)
-#define EEPROM_SENSOR_DS1820 (EEPROM_START + 15) // OneWire
-#define EEPROM_SENSOR_BME280 (EEPROM_START + 16) // I2C
-#define EEPROM_SENSOR_MB (EEPROM_START + 17) // TTL
+#define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
+// 1 bytes available
+#define EEPROM_ACTION_NETWORK (EEPROM_START + 9)
+#define EEPROM_ACTION_SENSIRION (EEPROM_START + 10) // Agr
+#define EEPROM_ACTION_PRESSURE (EEPROM_START + 11)
+#define EEPROM_ACTION_LEAFWETNESS (EEPROM_START + 12)
+#define EEPROM_ACTION_CTD10 (EEPROM_START + 13) // SDI-12
+#define EEPROM_ACTION_DS2 (EEPROM_START + 14)
+#define EEPROM_ACTION_DS1820 (EEPROM_START + 15) // OneWire
+#define EEPROM_ACTION_BME280 (EEPROM_START + 16) // I2C
+#define EEPROM_ACTION_MB (EEPROM_START + 17) // TTL
 
 #define FLAG_LOG_USB 1
 #define FLAG_NETWORK 2
@@ -142,9 +142,9 @@ void menuLog();
 void menuLog2(uint8_t flag, const char* var);
 void menuBatteryType();
 void menuLogLevel();
-void menuSensors();
-void menuPrograms();
-void menuProgramWakeup(uint16_t address, uint8_t &wakeup);
+void menuSDI12();
+void menuActions();
+void menuAction(uint16_t address, uint8_t &wakeup);
 void menuSensor(uint16_t sensor, uint8_t &value);
 void menuSD();
 const char* flagStatus(uint8_t flag);
@@ -157,26 +157,26 @@ public:
 // Configuration variables
 uint8_t flags;
 uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
-uint8_t wakeup_sensors;
-uint8_t wakeup_network;
-uint8_t sensor_sensirion;
-uint8_t sensor_pressure;
-uint8_t sensor_leafwetness;
-uint8_t sensor_ctd10;
-uint8_t sensor_ds2;
-uint8_t sensor_ds1820;
-uint8_t sensor_bme280;
-uint8_t sensor_mb;
+uint8_t action_network;
+uint8_t action_sensirion; // Sensors
+uint8_t action_pressure;
+uint8_t action_leafwetness;
+uint8_t action_ctd10;
+uint8_t action_ds2;
+uint8_t action_ds1820;
+uint8_t action_bme280;
+uint8_t action_mb;
 
 // Variables updated on every loop (see onLoop)
 uint8_t batteryLevel;
-uint8_t wakeup_sensors_fixed; // Fixed depending on battery level
-uint8_t wakeup_network_fixed;
+uint8_t cooldown; // Reduces frequency of action, depends on batteryLevel
 // To keep time without calling RCT each time
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
 timestamp_t time;        // broken timestamp
+int minute;              // minute of the day, from 0 to 1439
 float rtc_temp;          // internal temperature
+int next_minute;         // minute of the next alarm
 
 // SD
 const char* tmpFilename = "TMP.TXT";
@@ -201,9 +201,8 @@ const char* readOwnMAC();
 void onSetup();
 void onLoop();
 void readBattery();
-void fixWakeup();
 void initNet();
-bool action(uint8_t base, uint8_t n, ...);
+bool action(uint8_t n, ...);
 const uint8_t loop_timeout = 4; // minutes
 const uint32_t send_timeout = 3 * 60; // seconds
 
@@ -218,7 +217,7 @@ void menu();
 const char* menuFormatBattery(char* dst, size_t size);
 const char* menuFormatLog(char* dst, size_t size);
 const char* menuFormatNetwork(char* dst, size_t size);
-const char* menuFormatSensors(char* dst, size_t size);
+const char* menuFormatActions(char* dst, size_t size);
 
 // Time
 unsigned long getEpochTime();
@@ -227,7 +226,8 @@ uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t
 void loadTime(bool temp=false);
 
 // Sleep
-const char* getNextAlarm(char* alarmTime);
+void nextAlarm(uint8_t n, ...);
+const char* nextAlarm(char* alarmTime);
 void deepSleep();
 
 // Register of "devices" that are On

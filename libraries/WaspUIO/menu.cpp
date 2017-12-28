@@ -20,13 +20,15 @@ void WaspUIO::menu()
     cr.print();
     cr.print(F("1. Time    : %s"), RTC.getTime());
     cr.print(F("2. Log     : level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
-    cr.print(F("3. Programs: sensors (%d min) network (%d min)"), wakeup_sensors, wakeup_network);
+    cr.print(F("3. Battery : %s (%d %%)"), menuFormatBattery(buffer, size), batteryLevel);
     cr.print(F("4. Network : %s"), menuFormatNetwork(buffer, size));
-    cr.print(F("5. Sensors : %s"), menuFormatSensors(buffer, size));
-    cr.print(F("6. Battery : %s (%d %%)"), menuFormatBattery(buffer, size), batteryLevel);
+    cr.print(F("5. Actions : %s"), menuFormatActions(buffer, size));
+#if USE_SDI
+    cr.print(F("6. SDI-12"));
+#endif
     if (hasSD)
     {
-      cr.print(F("8. SD"));
+      cr.print(F("7. SD"));
     }
     else
     {
@@ -39,11 +41,13 @@ void WaspUIO::menu()
     c = buffer[0];
     if      (c == '1') { menuTime(); }
     else if (c == '2') { menuLog(); }
-    else if (c == '3') { menuPrograms(); }
+    else if (c == '3') { menuBatteryType(); }
     else if (c == '4') { menuNetwork(); }
-    else if (c == '5') { menuSensors(); }
-    else if (c == '6') { menuBatteryType(); }
-    else if (c == '8') { if (hasSD) menuSD(); }
+    else if (c == '5') { menuActions(); }
+#if USE_SDI
+    else if (c == '6') { menuSDI12(); }
+#endif
+    else if (c == '7') { if (hasSD) menuSD(); }
     else if (c == '9') { goto exit; }
   } while (true);
 
@@ -75,22 +79,23 @@ const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
   return dst;
 }
 
-const char* WaspUIO::menuFormatSensors(char* dst, size_t size)
+const char* WaspUIO::menuFormatActions(char* dst, size_t size)
 {
   dst[0] = '\0';
+  if (action_network)     strnjoin_F(dst, size, F(", "), F("Network (%d)"), action_network);
 #ifdef USE_AGR
-  if (sensor_sensirion)   strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), sensor_sensirion);
-  if (sensor_pressure)    strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), sensor_pressure);
-  if (sensor_leafwetness) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), sensor_leafwetness);
+  if (action_sensirion)   strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), action_sensirion);
+  if (action_pressure)    strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), action_pressure);
+  if (action_leafwetness) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), action_leafwetness);
 #endif
 #ifdef USE_SDI
-  if (sensor_ctd10)       strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), sensor_ctd10);
-  if (sensor_ds2)         strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), sensor_ds2);
+  if (action_ctd10)       strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), action_ctd10);
+  if (action_ds2)         strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), action_ds2);
 #endif
 #ifdef USE_I2C
-  if (sensor_ds1820)      strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), sensor_ds1820);
-  if (sensor_bme280)      strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), sensor_bme280);
-  if (sensor_mb)          strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), sensor_mb);
+  if (action_ds1820)      strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), action_ds1820);
+  if (action_bme280)      strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), action_bme280);
+  if (action_mb)          strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), action_mb);
 #endif
   if (! dst[0])           strncpy_F(dst, F("(none)"), size);
   return dst;
@@ -460,27 +465,15 @@ exit:
  * Menu: sensors
  */
 
-void WaspUIO::menuSensors()
+void WaspUIO::menuSDI12()
 {
   char str[80];
 
   do
   {
     cr.print();
-#if USE_AGR
-    cr.print(F("1. Agr board: Sensirion (%s)"), sensorStatus(sensor_sensirion));
-    cr.print(F("2. Agr board: Pressure (%s)"), sensorStatus(sensor_pressure));
-    cr.print(F("3. Agr board: Leaf wetness (%s)"), sensorStatus(sensor_leafwetness));
-#endif
-#if USE_I2C
-    cr.print(F("4. I2C: BME-280 (%s)"), sensorStatus(sensor_bme280));
-    cr.print(F("5. OneWire: DS1820 (%s)"), sensorStatus(sensor_ds1820));
-    cr.print(F("6. TTL: MB7389 (%s)"), sensorStatus(sensor_mb));
-#endif
-#if USE_SDI
-    cr.print(F("7. SDI-12: CTD-10 (%s)"), sensorStatus(sensor_ctd10));
-    cr.print(F("8. SDI-12: DS-2 (%s)"), sensorStatus(sensor_ds2));
-#endif
+    cr.print(F("SDI-12 bus, identify sensors:"));
+    cr.print(F("1. Identify sensors in addresses 0 and 1"));
     cr.print(F("9. Exit"));
     cr.print();
     input(str, sizeof(str), F("==> Enter numeric option:"), 0);
@@ -489,105 +482,21 @@ void WaspUIO::menuSensors()
 
     switch (str[0])
     {
-#if USE_AGR
       case '1':
-        menuSensor(EEPROM_SENSOR_SENSIRION, sensor_sensirion); break;
-      case '2':
-        menuSensor(EEPROM_SENSOR_PRESSURE, sensor_pressure); break;
-      case '3':
-        menuSensor(EEPROM_SENSOR_LEAFWETNESS, sensor_leafwetness); break;
-#endif
-#if USE_I2C
-      case '4':
-        menuSensor(EEPROM_SENSOR_BME280, sensor_bme280); break;
-      case '5':
-        menuSensor(EEPROM_SENSOR_DS1820, sensor_ds1820); break;
-      case '6':
-        menuSensor(EEPROM_SENSOR_MB, sensor_mb); break;
-#endif
-#if USE_SDI
-      case '7':
-        menuSensor(EEPROM_SENSOR_CTD10, sensor_ctd10); break;
-      case '8':
-        menuSensor(EEPROM_SENSOR_DS2, sensor_ds2); break;
-#endif
+        cr.print(F("Enabling SDI-12"));
+        PWR.setSensorPower(SENS_5V, SENS_ON);
+        mySDI12.begin();
+        mySDI12.identification(0);
+        mySDI12.identification(1);
+        mySDI12.end();
+        PWR.setSensorPower(SENS_5V, SENS_OFF);
+        cr.print(F("Disabling SDI-12"));
       case '9':
         cr.print();
         return;
     }
   } while (true);
 }
-
-
-void WaspUIO::menuSensor(uint16_t sensor, uint8_t &value)
-{
-  char str[80];
-
-  do
-  {
-    cr.print();
-    cr.print(F("Current state is: %s"), sensorStatus(value));
-    cr.print(F("0. Disable"));
-    cr.print(F("1. One period (eg 5 minutes)"));
-    cr.print(F("2. Two periods (eg 10 minutes)"));
-    cr.print(F("3. Three periods (eg 15 minutes)"));
-    if (sensor == EEPROM_SENSOR_CTD10 || sensor == EEPROM_SENSOR_DS2)
-    {
-      cr.print(F("8. Identification"));
-    }
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '0':
-        value = 0;
-        goto update;
-      case '1':
-        value = 1;
-        goto update;
-      case '2':
-        value = 2;
-        goto update;
-      case '3':
-        value = 3;
-        goto update;
-      case 8:
-        if (sensor == EEPROM_SENSOR_CTD10 || sensor == EEPROM_SENSOR_DS2)
-        {
-          cr.print(F("Enabling SDI-12"));
-          PWR.setSensorPower(SENS_5V, SENS_ON);
-          mySDI12.begin();
-
-          if (sensor == EEPROM_SENSOR_CTD10)
-          {
-            mySDI12.identification(0);
-          }
-          else if (sensor == EEPROM_SENSOR_DS2)
-          {
-            mySDI12.identification(1);
-          }
-
-          cr.print(F("Disabling SDI-12"));
-          mySDI12.end();
-          PWR.setSensorPower(SENS_5V, SENS_OFF);
-        }
-        break;
-      case '9':
-        cr.print();
-        return;
-    }
-  } while (true);
-
-update:
-  updateEEPROM(sensor, value);
-  cr.print();
-  return;
-}
-
 
 const char* WaspUIO::sensorStatus(uint8_t sensor)
 {

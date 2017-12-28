@@ -19,7 +19,7 @@ CR_TASK(taskMain)
   CR_SPAWN2(taskSensors, sensors_id);
 
   // Network
-  if ((UIO.flags & FLAG_NETWORK) && UIO.action(UIO.wakeup_network_fixed, 1, 1))
+  if ((UIO.batteryLevel > 30) && (UIO.flags & FLAG_NETWORK) && UIO.action(1, UIO.action_network))
   {
     CR_SPAWN2(taskNetwork, network_id);
     CR_JOIN(network_id);
