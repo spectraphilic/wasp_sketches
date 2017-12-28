@@ -32,7 +32,7 @@ CR_TASK(taskMain)
   // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
   // for our networking requirements, so we have to sync it once a day. See
   // http://hycamp.org/private-area/waspmote-rtc/
-  if (UIO.hasGPS && UIO.time.minute == 0 && UIO.time.hour == 0)
+  if (UIO.hasGPS && UIO.minute == 0)
   {
     CR_SPAWN2(taskGps, gps_id);
     CR_JOIN(gps_id);

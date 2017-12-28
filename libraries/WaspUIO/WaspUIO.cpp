@@ -88,8 +88,8 @@ void WaspUIO::onLoop()
   onRegister = 0;
 
   loadTime(true); // Read temperature as well
-  RTC.breakTimeAbsolute(getEpochTime(), &time); // Keep minute & hour for later
-  minute = (time.hour * 60 + time.minute);
+  uint32_t epoch = getEpochTime();
+  minute = (epoch / 60) % 1440;
   readBattery();
 }
 
@@ -855,8 +855,8 @@ void WaspUIO::nextAlarm(uint8_t n, ...)
 
 const char* WaspUIO::nextAlarm(char* alarmTime)
 {
-  RTC.breakTimeAbsolute(getEpochTime(), &time);
-  minute = (time.hour * 60 + time.minute);
+  uint32_t epoch = getEpochTime();
+  minute = (epoch / 60) % 1440;
   nextAlarm(9, action_network, action_sensirion, action_pressure,
             action_leafwetness, action_ctd10, action_ds2, action_ds1820,
             action_bme280, action_mb);

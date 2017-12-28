@@ -10,7 +10,7 @@ CR_TASK(taskNetwork)
   {
     send = (
       UIO.hasSD &&
-      (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0)
+      (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.minute % 180 == 0)
     );
   }
 

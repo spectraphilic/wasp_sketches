@@ -171,11 +171,10 @@ uint8_t action_mb;
 uint8_t batteryLevel;
 uint8_t cooldown; // Reduces frequency of action, depends on batteryLevel
 // To keep time without calling RCT each time
+float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
-timestamp_t time;        // broken timestamp
 int minute;              // minute of the day, from 0 to 1439
-float rtc_temp;          // internal temperature
 int next_minute;         // minute of the next alarm
 
 // SD
