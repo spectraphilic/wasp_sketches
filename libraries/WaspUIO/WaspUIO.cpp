@@ -280,11 +280,7 @@ void WaspUIO::createFrame(bool discard)
     frame2Sd();
   }
 
-#if FRAME_BINARY
   frame.createFrame(BINARY);
-#else
-  frame.createFrame(ASCII);
-#endif
 
   // In binary frames, the timestamp must be first, that's what I deduce from
   // frame.addTimestamp
@@ -349,11 +345,7 @@ uint8_t WaspUIO::frame2Sd()
     return 1;
   }
 
-#if FRAME_BINARY
   if (SD.append(dataFilename, frame.buffer, frame.length) == 0)
-#else
-  if (SD.appendln(dataFilename, frame.buffer, frame.length) == 0)
-#endif
   {
     error(F("frame2Sd: Failed to append frame to %s"), dataFilename);
     return 1;
@@ -373,7 +365,7 @@ uint8_t WaspUIO::frame2Sd()
   {
     USB.ON();
     USB.flush();
-    showFrame();
+    showBinaryFrame();
     USB.OFF();
   }
 
@@ -381,26 +373,16 @@ uint8_t WaspUIO::frame2Sd()
 }
 
 /**
- * Print the frame to USB. If it's ASCII just call frame.showFrame; if it's
- * binary decode and print it.
+ * Print the binary frame to USB.
  */
 
-void WaspUIO::showFrame()
+void WaspUIO::showBinaryFrame()
 {
    uint8_t *p;
    uint8_t nbytes;
    char buffer[17];
    uint8_t i, j;
    char c;
-
-   // ASCII Frame
-   if (frame.buffer[3] & 128)
-   {
-     frame.showFrame();
-     return;
-   }
-
-   //frame.showFrame();
 
    // Binary Frame
    cr.print(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);

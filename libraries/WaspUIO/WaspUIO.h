@@ -12,7 +12,6 @@
 #define USE_AGR false
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
-#define FRAME_BINARY true
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
@@ -208,7 +207,7 @@ const uint32_t send_timeout = 3 * 60; // seconds
 // Frames
 void createFrame(bool discard=false);
 uint8_t frame2Sd();
-void showFrame();
+void showBinaryFrame();
 
 // Menu
 const char* input(char* buffer, size_t size, const __FlashStringHelper *, unsigned long timeout);
