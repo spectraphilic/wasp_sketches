@@ -12,6 +12,8 @@
 #define USE_AGR false
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
+
+// Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
@@ -69,10 +71,10 @@
 #define UIO_SDI12 64
 
 #define ADD_SENSOR(type, ...) \
-  if (frame.addSensor(type, ## __VA_ARGS__) == -1)\
+  if (frame.addSensorBin(type, ## __VA_ARGS__) == -1)\
   {\
     UIO.createFrame();\
-    frame.addSensor(type, ## __VA_ARGS__);\
+    frame.addSensorBin(type, ## __VA_ARGS__);\
   }
 
 

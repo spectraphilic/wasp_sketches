@@ -2,10 +2,6 @@
  * Includes
  ******************************************************************************/
 
-#ifndef __WPROGRAM_H__
-#include <WaspClasses.h>
-#endif
-
 #include "WaspUIO.h"
 
 
@@ -280,11 +276,11 @@ void WaspUIO::createFrame(bool discard)
     frame2Sd();
   }
 
-  frame.createFrame(BINARY);
+  frame.createFrameBin(BINARY);
 
   // In binary frames, the timestamp must be first, that's what I deduce from
   // frame.addTimestamp
-  frame.addSensor(SENSOR_TST, epochTime);
+  frame.addSensorBin(SENSOR_TST, epochTime);
 }
 
 
@@ -762,7 +758,7 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 
   // Create ASCII frame
   createFrame();
-  ADD_SENSOR(SENSOR_MAC, (char*) myMac);
+  ADD_SENSOR(SENSOR_MAC, (char*) myMac); // Add 2 unsigned longs
   ADD_SENSOR(SENSOR_RSSI, (int) rssi);
   ADD_SENSOR(SENSOR_MAC, sourceMAC);
   ADD_SENSOR(SENSOR_TX_PWR, (uint8_t) sourcePower);

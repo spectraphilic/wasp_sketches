@@ -6,7 +6,6 @@
 
 // 1. Include Libraries
 #include <WaspUIO.h>
-#include <WaspFrame.h>
 
 // 2. Definitions
 
