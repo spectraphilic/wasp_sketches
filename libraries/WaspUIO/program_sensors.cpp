@@ -38,6 +38,7 @@ CR_TASK(taskAcc)
 CR_TASK(taskHealthFrame)
 {
   // Battery level (not for lead acid)
+  // TODO Define how often in the menu with action_battery
   if (UIO.batteryType != 2)
   {
     ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel);

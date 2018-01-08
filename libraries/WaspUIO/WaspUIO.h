@@ -124,11 +124,6 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
-// Like Arduino's EEPROM.update, it writes the given value only if different
-// from the value already saved.
-bool updateEEPROM(int address, uint8_t value);
-bool updateEEPROM(int address, uint32_t value);
-
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
@@ -136,13 +131,8 @@ int append(SdFile &file, const void* buf, size_t nbyte);
 uint8_t createFile(const char* filename);
 
 // Menu
-void menuTime();
-void menuTimeManual();
 void menuNetwork();
-void menuLog();
-void menuLog2(uint8_t flag, const char* var);
 void menuBatteryType();
-void menuLogLevel();
 void menuSDI12();
 void menuActions();
 void menuAction(uint16_t address, uint8_t &wakeup);
@@ -154,6 +144,11 @@ void setNetwork(network_t);
 
 /// public methods and attributes ////////////
 public:
+
+// Like Arduino's EEPROM.update, it writes the given value only if different
+// from the value already saved.
+bool updateEEPROM(int address, uint8_t value);
+bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
 uint8_t flags;
@@ -262,7 +257,13 @@ void onHAIwakeUP_after(void);
  * Commands
  */
 int8_t exeCommand(const char* command);
-int8_t cmdTime(const char* command);
+int8_t cmdHelp(const char* command);
+int8_t cmdPrint(const char* command);
+int8_t cmdSetLogLevel(const char* command);
+int8_t cmdSetLogSD(const char* command);
+int8_t cmdSetLogUSB(const char* command);
+int8_t cmdSetTime(const char* command);
+int8_t cmdSetTimeGPS(const char* command);
 
 
 /*

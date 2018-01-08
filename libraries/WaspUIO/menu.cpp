@@ -18,8 +18,6 @@ void WaspUIO::menu()
   do {
     // Menu
     cr.print();
-    cr.print(F("1. Time    : %s"), RTC.getTime());
-    cr.print(F("2. Log     : level=%s output=%s"), cr.loglevel2str(cr.loglevel), menuFormatLog(buffer, size));
     cr.print(F("3. Battery : %s (%d %%)"), menuFormatBattery(buffer, size), batteryLevel);
     cr.print(F("4. Network : %s"), menuFormatNetwork(buffer, size));
     cr.print(F("5. Actions : %s"), menuFormatActions(buffer, size));
@@ -39,9 +37,7 @@ void WaspUIO::menu()
     cr.print();
     input(buffer, size, F("==> Enter numeric option:"), 0);
     c = buffer[0];
-    if      (c == '1') { menuTime(); }
-    else if (c == '2') { menuLog(); }
-    else if (c == '3') { menuBatteryType(); }
+    if (c == '3') { menuBatteryType(); }
     else if (c == '4') { menuNetwork(); }
     else if (c == '5') { menuActions(); }
 #if USE_SDI
@@ -102,71 +98,6 @@ const char* WaspUIO::menuFormatActions(char* dst, size_t size)
   return dst;
 }
 
-
-/*
- * Menu: time
- */
-
-void WaspUIO::menuTime()
-{
-  char str[80];
-
-  do
-  {
-    cr.print();
-    cr.print(F("1. Set time manually"));
-    if (hasGPS)
-    {
-      cr.print(F("2. Set time from GPS"));
-    }
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '1':
-        menuTimeManual();
-        break;
-      case '2':
-        if (hasGPS)
-        {
-          cr.print(F("Setting time from GPS, please wait, it may take a few minutes"));
-          taskGps();
-        }
-        break;
-      case '9':
-        cr.print();
-        return;
-    }
-  } while (true);
-}
-
-
-void WaspUIO::menuTimeManual()
-{
-  unsigned short year, month, day, hour, minute, second;
-  char str[80];
-
-  do
-  {
-    input(str, sizeof(str), F("Set UTC time (format is yy:mm:dd:hh:mm:ss). Press Enter to leave it unchanged:"), 0);
-    if (strlen(str) == 0)
-      return;
-
-    // Set new time
-    if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
-    {
-      saveTime(year, month, day, hour, minute, second);
-      cr.print(F("Current time is %s"), RTC.getTime());
-      return;
-    }
-  } while (true);
-}
-
-
 /*
  * Menu: log
  */
@@ -174,120 +105,6 @@ void WaspUIO::menuTimeManual()
 const char* WaspUIO::flagStatus(uint8_t flag)
 {
   return (flags & flag)? "enabled": "disabled";
-}
-
-void WaspUIO::menuLog()
-{
-  char str[80];
-  char* level;
-
-  do
-  {
-    cr.print();
-    cr.print(F("1. Log to SD (%s)"), flagStatus(FLAG_LOG_SD));
-    cr.print(F("2. Log to USB (%s)"), flagStatus(FLAG_LOG_USB));
-    cr.print(F("3. Choose the log level (%s)"), cr.loglevel2str(cr.loglevel));
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '1':
-        menuLog2(FLAG_LOG_SD, "SD");
-        break;
-      case '2':
-        menuLog2(FLAG_LOG_USB, "USB");
-        break;
-      case '3':
-        menuLogLevel();
-        break;
-      case '9':
-        cr.print();
-        return;
-    }
-  } while (true);
-}
-
-
-void WaspUIO::menuLog2(uint8_t flag, const char* var)
-{
-  char str[80];
-
-  do
-  {
-    cr.print(F("Type 1 to enable %s output, 0 to disable, Enter to leave:"), var);
-    input(str, sizeof(str), F(""), 0);
-    if (strlen(str) == 0)
-      return;
-
-    switch (str[0])
-    {
-      case '0':
-        UIO.flags &= ~flag;
-        updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-        return;
-      case '1':
-        UIO.flags |= flag;
-        updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-        return;
-    }
-  } while (true);
-}
-
-
-void WaspUIO::menuLogLevel()
-{
-  char str[80];
-
-  do
-  {
-    cr.print();
-    cr.print(F("0. Off"));
-    cr.print(F("1. Fatal"));
-    cr.print(F("2. Error"));
-    cr.print(F("3. Warning"));
-    cr.print(F("4. Info"));
-    cr.print(F("5. Debug"));
-    cr.print(F("6. Trace"));
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '0':
-        cr.loglevel = LOG_OFF;
-        break;
-      case '1':
-        cr.loglevel = LOG_FATAL;
-        break;
-      case '2':
-        cr.loglevel = LOG_ERROR;
-        break;
-      case '3':
-        cr.loglevel = LOG_WARN;
-        break;
-      case '4':
-        cr.loglevel = LOG_INFO;
-        break;
-      case '5':
-        cr.loglevel = LOG_DEBUG;
-        break;
-      case '6':
-        cr.loglevel = LOG_TRACE;
-        break;
-      case '9':
-        break;
-    }
-    updateEEPROM(EEPROM_UIO_LOG_LEVEL, (uint8_t) cr.loglevel);
-    cr.print();
-    return;
-  } while (true);
 }
 
 /*
