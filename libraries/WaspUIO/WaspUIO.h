@@ -192,7 +192,6 @@ void stopSD();
 char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 Network network;
-uint8_t receiveGPSsyncTime();
 uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
@@ -257,6 +256,14 @@ void vlog(loglevel_t level, const char* message, va_list args);
 void beforeSleep();
 void afterSleep();
 void onHAIwakeUP_after(void);
+
+
+/*
+ * Commands
+ */
+int8_t exeCommand(const char* command);
+int8_t cmdTime(const char* command);
+
 
 /*
  * Actions. Base components to implement a flexible and efficient main loop.

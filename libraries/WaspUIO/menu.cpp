@@ -49,6 +49,7 @@ void WaspUIO::menu()
 #endif
     else if (c == '7') { if (hasSD) menuSD(); }
     else if (c == '9') { goto exit; }
+    else               { exeCommand(buffer); }
   } while (true);
 
 exit:

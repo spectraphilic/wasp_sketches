@@ -507,43 +507,6 @@ void WaspUIO::showBinaryFrame()
 }
 
 
-/**
- * Function to receive, parse and update RTC from GPS_sync frame
- *
- * Parameters: void
- *
- * Returns: uint8_t (0 on success, 1 on error)
- */
-
-uint8_t WaspUIO::receiveGPSsyncTime()
-{
-  char * pch; // Define pointer for string
-  unsigned long epoch; // Define variable for epoch time
-  timestamp_t time;
-
-  debug(F("receiveGPSsyncTime: got frame %s"), xbeeDM._payload);
-
-  pch = strstr((const char*)xbeeDM._payload, "TST:");
-  //trace(F("receiveGPSsyncTime: pch = %s"), pch);
-  epoch = strtoul(pch+4, NULL, 10);
-  epoch = epoch + 2; // Add some seconds for the delays, FIXME Check this!!!
-  // Break Epoch time into UTC time
-  RTC.breakTimeAbsolute(epoch, &time);
-
-  // Setting time [yy:mm:dd:dow:hh:mm:ss]
-  // '0' on succes, '1' otherwise
-  if (saveTime(time.year, time.month, time.date, time.hour, time.minute, time.second) != 0)
-  {
-    error(F("No RTC update from GPS"));
-    return 1;
-  }
-
-  // Success!!
-  info(F("Got GPStime, RTC updated"));
-  return 0;
-}
-
-
 /******************************************************************************/
 /* Function to communicate through OTA with remote unit
 *

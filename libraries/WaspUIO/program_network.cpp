@@ -33,7 +33,7 @@ CR_TASK(taskNetwork)
   info(F("Network started"));
 
   // Spawn first the receive task
-  //CR_SPAWN(taskNetworkReceive);
+  CR_SPAWN(taskNetworkReceive);
 
   // Schedule sending frames
   if (send)
@@ -147,35 +147,22 @@ CR_TASK(taskNetworkReceive)
   {
     if (xbeeDM.available())
     {
-      debug(F("receivePacket: data available"));
+
       // Data is expected to be available before calling this method, that's
       // why we only timout for 50ms, much less should be enough (to be
       // tested).
-      if (xbeeDM.receivePacketTimeout(100))
+      if (xbeeDM.receivePacketTimeout(50))
       {
         warn(F("receivePacket: timeout (we will retry)"));
       }
       else
       {
         // RSSI
-        UIO.readRSSI2Frame();
+        //UIO.readRSSI2Frame();
 
-        // Proxy call to appropriate handler
-        if (strstr((const char*)xbeeDM._payload, "GPS_sync") != NULL)
-        {
-          UIO.receiveGPSsyncTime();
-        }
-        else
-        {
-          warn(F("receivePacket: unexpected packet"));
-          // Show data stored in '_payload' buffer indicated by '_length'
-          debug(F("Data: %s"), xbeeDM._payload);
-          // Show data stored in '_payload' buffer indicated by '_length'
-          debug(F("Length: %d"), xbeeDM._length);
-          // Show data stored in '_payload' buffer indicated by '_length'
-          Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
-          debug(F("Source MAC Address: %s"), sourceMAC);
-        }
+        Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
+        debug(F("frame received from %s"), sourceMAC);
+        exeCommand((const char*)xbeeDM._payload);
       }
     }
 
