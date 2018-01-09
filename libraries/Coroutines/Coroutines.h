@@ -116,7 +116,16 @@ typedef struct Task
  * Types and macros related to the logging system
  */
 
-enum loglevel_t {LOG_OFF, LOG_FATAL, LOG_ERROR, LOG_WARN, LOG_INFO, LOG_DEBUG, LOG_TRACE};
+enum loglevel_t {
+  LOG_OFF,
+  LOG_FATAL,
+  LOG_ERROR,
+  LOG_WARN,
+  LOG_INFO,
+  LOG_DEBUG,
+  LOG_TRACE,
+  LOG_LEN // Special value
+};
 
 #define fatal(fmt, ...) cr.log(LOG_FATAL, fmt, ## __VA_ARGS__)
 #define error(fmt, ...) cr.log(LOG_ERROR, fmt, ## __VA_ARGS__)

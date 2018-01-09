@@ -9,7 +9,7 @@
  ******************************************************************************/
 
 // We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
+#define USE_AGR true
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
 
@@ -48,15 +48,19 @@
 // 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 1 bytes available
-#define EEPROM_ACTION_NETWORK (EEPROM_START + 9)
-#define EEPROM_ACTION_SENSIRION (EEPROM_START + 10) // Agr
-#define EEPROM_ACTION_PRESSURE (EEPROM_START + 11)
-#define EEPROM_ACTION_LEAFWETNESS (EEPROM_START + 12)
-#define EEPROM_ACTION_CTD10 (EEPROM_START + 13) // SDI-12
-#define EEPROM_ACTION_DS2 (EEPROM_START + 14)
-#define EEPROM_ACTION_DS1820 (EEPROM_START + 15) // OneWire
-#define EEPROM_ACTION_BME280 (EEPROM_START + 16) // I2C
-#define EEPROM_ACTION_MB (EEPROM_START + 17) // TTL
+#define EEPROM_RUN (EEPROM_START + 9)
+enum run_t {
+  RUN_NETWORK,
+  RUN_SENSIRION, // Agr
+  RUN_PRESSURE,
+  RUN_LEAFWETNESS,
+  RUN_CTD10, // SDI-12
+  RUN_DS2,
+  RUN_DS1820, // OneWire
+  RUN_BME280, // I2C
+  RUN_MB, // TTL
+  RUN_LEN // Special value
+};
 
 #define FLAG_LOG_USB 1
 #define FLAG_NETWORK 2
@@ -87,7 +91,8 @@ enum network_t {
   NETWORK_BROADCAST,
   NETWORK_FINSE_ALT,
   NETWORK_PI_FINSE,
-  NETWORK_PI_CS
+  NETWORK_PI_CS,
+  NETWORK_LEN // Special value
 };
 
 struct Network {
@@ -130,18 +135,6 @@ const char* logFilename = "LOG.TXT";
 int append(SdFile &file, const void* buf, size_t nbyte);
 uint8_t createFile(const char* filename);
 
-// Menu
-void menuNetwork();
-void menuBatteryType();
-void menuSDI12();
-void menuActions();
-void menuAction(uint16_t address, uint8_t &wakeup);
-void menuSensor(uint16_t sensor, uint8_t &value);
-void menuSD();
-const char* flagStatus(uint8_t flag);
-const char* sensorStatus(uint8_t sensor);
-void setNetwork(network_t);
-
 /// public methods and attributes ////////////
 public:
 
@@ -153,15 +146,7 @@ bool updateEEPROM(int address, uint32_t value);
 // Configuration variables
 uint8_t flags;
 uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
-uint8_t action_network;
-uint8_t action_sensirion; // Sensors
-uint8_t action_pressure;
-uint8_t action_leafwetness;
-uint8_t action_ctd10;
-uint8_t action_ds2;
-uint8_t action_ds1820;
-uint8_t action_bme280;
-uint8_t action_mb;
+uint8_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)
 uint8_t batteryLevel;
@@ -190,6 +175,7 @@ Network network;
 uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
+void setNetwork(network_t);
 
 // Init, start and stop methods
 void onSetup();
@@ -220,7 +206,7 @@ uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t
 void loadTime(bool temp=false);
 
 // Sleep
-void nextAlarm(uint8_t n, ...);
+void nextAlarm();
 const char* nextAlarm(char* alarmTime);
 void deepSleep();
 
@@ -256,14 +242,24 @@ void onHAIwakeUP_after(void);
 /*
  * Commands
  */
+uint8_t _getFlag(const char* value);
+
 int8_t exeCommand(const char* command);
+int8_t cmdBattery(const char* command);
+int8_t cmdCat(const char* command);
+int8_t cmdDisable(const char* command);
+int8_t cmdEnable(const char* command);
+int8_t cmdExit(const char* command);
+int8_t cmdFormat(const char* command);
 int8_t cmdHelp(const char* command);
+int8_t cmdLs(const char* command);
+int8_t cmdNetwork(const char* command);
 int8_t cmdPrint(const char* command);
-int8_t cmdSetLogLevel(const char* command);
-int8_t cmdSetLogSD(const char* command);
-int8_t cmdSetLogUSB(const char* command);
-int8_t cmdSetTime(const char* command);
-int8_t cmdSetTimeGPS(const char* command);
+int8_t cmdRun(const char* command);
+int8_t cmdLogLevel(const char* command);
+int8_t cmdSDI12(const char* command);
+int8_t cmdTime(const char* command);
+int8_t cmdTimeGPS(const char* command);
 
 
 /*

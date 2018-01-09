@@ -3,6 +3,7 @@
  ******************************************************************************/
 
 #include "WaspUIO.h"
+#include <assert.h>
 
 
 /******************************************************************************
@@ -40,22 +41,11 @@ void WaspUIO::onSetup()
   }
   memcpy_P(&network, &networks[panid_low], sizeof network);
 
-  // Actions
-  action_network = Utils.readEEPROM(EEPROM_ACTION_NETWORK);
-#if USE_AGR
-  action_sensirion = Utils.readEEPROM(EEPROM_ACTION_SENSIRION);
-  action_pressure = Utils.readEEPROM(EEPROM_ACTION_PRESSURE);
-  action_leafwetness = Utils.readEEPROM(EEPROM_ACTION_LEAFWETNESS);
-#endif
-#if USE_SDI
-  action_ctd10 = Utils.readEEPROM(EEPROM_ACTION_CTD10);
-  action_ds2 = Utils.readEEPROM(EEPROM_ACTION_DS2);
-#endif
-#if USE_I2C
-  action_ds1820 = Utils.readEEPROM(EEPROM_ACTION_DS1820);
-  action_bme280 = Utils.readEEPROM(EEPROM_ACTION_BME280);
-  action_mb =  Utils.readEEPROM(EEPROM_ACTION_MB);
-#endif
+  // Read run table
+  for (uint8_t i=0; i < RUN_LEN; i++)
+  {
+    actions[i] = Utils.readEEPROM(EEPROM_RUN + i);
+  }
 
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
@@ -545,13 +535,16 @@ void WaspUIO::OTA_communication(int OTA_duration)
 bool WaspUIO::action(uint8_t n, ...)
 {
   va_list args;
+  int idx;
   int value;
   bool yes = false;
 
   va_start(args, n);
   for (; n; n--)
   {
-    value = va_arg(args, int);
+    idx = va_arg(args, int);
+    assert(idx < RUN_LEN); // TODO Define __assert
+    value = (int) actions[idx];
     if (value > 0)
     {
       if (minute % (cooldown * value) == 0)
@@ -765,17 +758,14 @@ void WaspUIO::readBattery()
  * Return the string of the next alarm.
  *
  */
-void WaspUIO::nextAlarm(uint8_t n, ...)
+void WaspUIO::nextAlarm()
 {
-  va_list args;
   int value;
-  bool yes = false;
   int next = INT_MAX;
 
-  va_start(args, n);
-  for (; n; n--)
+  for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    value = va_arg(args, int);
+    value = (int) actions[i];
     if (value > 0)
     {
       value *= cooldown;
@@ -786,7 +776,6 @@ void WaspUIO::nextAlarm(uint8_t n, ...)
       }
     }
   }
-  va_end(args);
 
   if (next >= (24 * 60))
     next = 0;
@@ -798,9 +787,7 @@ const char* WaspUIO::nextAlarm(char* alarmTime)
 {
   uint32_t epoch = getEpochTime();
   minute = (epoch / 60) % 1440;
-  nextAlarm(9, action_network, action_sensirion, action_pressure,
-            action_leafwetness, action_ctd10, action_ds2, action_ds1820,
-            action_bme280, action_mb);
+  nextAlarm();
 
   // Format relative time to string, to be passed to deepSleep
   sprintf(alarmTime, "00:%02d:%02d:00", next_minute / 60, next_minute % 60);

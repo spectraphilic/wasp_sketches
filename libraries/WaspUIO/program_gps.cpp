@@ -9,7 +9,7 @@
 
 CR_TASK(taskGps)
 {
-  if (cmdSetTimeGPS(NULL) == 1)
+  if (cmdTimeGPS(NULL) == 1)
   {
     return CR_TASK_ERROR;
   }

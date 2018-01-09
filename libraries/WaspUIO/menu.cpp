@@ -3,7 +3,6 @@
 
 void WaspUIO::menu()
 {
-  char c;
   char buffer[150];
   size_t size = sizeof(buffer);
 
@@ -17,35 +16,13 @@ void WaspUIO::menu()
 
   do {
     // Menu
-    cr.print();
-    cr.print(F("3. Battery : %s (%d %%)"), menuFormatBattery(buffer, size), batteryLevel);
-    cr.print(F("4. Network : %s"), menuFormatNetwork(buffer, size));
-    cr.print(F("5. Actions : %s"), menuFormatActions(buffer, size));
-#if USE_SDI
-    cr.print(F("6. SDI-12"));
-#endif
-    if (hasSD)
+    input(buffer, size, F("==> Type 'help' to see the list of commands, 'exit' to leave"), 0);
+    int8_t value = exeCommand(buffer);
+    if (value == -1)
     {
-      cr.print(F("7. SD"));
+      cr.print(F("Exit"));
+      goto exit;
     }
-    else
-    {
-      cr.print(F("SD card is missing!"));
-    }
-
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(buffer, size, F("==> Enter numeric option:"), 0);
-    c = buffer[0];
-    if (c == '3') { menuBatteryType(); }
-    else if (c == '4') { menuNetwork(); }
-    else if (c == '5') { menuActions(); }
-#if USE_SDI
-    else if (c == '6') { menuSDI12(); }
-#endif
-    else if (c == '7') { if (hasSD) menuSD(); }
-    else if (c == '9') { goto exit; }
-    else               { exeCommand(buffer); }
   } while (true);
 
 exit:
@@ -79,88 +56,39 @@ const char* WaspUIO::menuFormatNetwork(char* dst, size_t size)
 const char* WaspUIO::menuFormatActions(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (action_network)     strnjoin_F(dst, size, F(", "), F("Network (%d)"), action_network);
+  uint8_t value;
+
+  value = actions[RUN_NETWORK];
+  if (value) strnjoin_F(dst, size, F(", "), F("Network (%d)"), value);
 #ifdef USE_AGR
-  if (action_sensirion)   strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), action_sensirion);
-  if (action_pressure)    strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), action_pressure);
-  if (action_leafwetness) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), action_leafwetness);
+  value = actions[RUN_SENSIRION];
+  if (value) strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), value);
+  value = actions[RUN_PRESSURE];
+  if (value) strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), value);
+  value = actions[RUN_LEAFWETNESS];
+  if (value) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), value);
 #endif
 #ifdef USE_SDI
-  if (action_ctd10)       strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), action_ctd10);
-  if (action_ds2)         strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), action_ds2);
+  value = actions[RUN_CTD10];
+  if (value) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), value);
+  value = actions[RUN_DS2];
+  if (value) strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), value);
 #endif
 #ifdef USE_I2C
-  if (action_ds1820)      strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), action_ds1820);
-  if (action_bme280)      strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), action_bme280);
-  if (action_mb)          strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), action_mb);
+  value = actions[RUN_DS1820];
+  if (value) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), value);
+  value = actions[RUN_BME280];
+  if (value) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), value);
+  value = actions[RUN_MB];
+  if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
 #endif
-  if (! dst[0])           strncpy_F(dst, F("(none)"), size);
+  if (! dst[0]) strncpy_F(dst, F("(none)"), size);
   return dst;
-}
-
-/*
- * Menu: log
- */
-
-const char* WaspUIO::flagStatus(uint8_t flag)
-{
-  return (flags & flag)? "enabled": "disabled";
 }
 
 /*
  * Menu: network
  */
-
-void WaspUIO::menuNetwork()
-{
-  char str[80];
-
-  do
-  {
-    cr.print();
-    cr.print(F("0. Disable"));
-    cr.print(F("1. Finse"));
-    cr.print(F("2. Gateway"));
-    cr.print(F("3. Broadcast"));
-    cr.print(F("4. Finse alt"));
-    cr.print(F("5. Pi Finse"));
-    cr.print(F("6. Pi CS (Spain)"));
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '0': // Disable
-        UIO.flags &= ~FLAG_NETWORK;
-        updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-        return;
-      case '1':
-        setNetwork(NETWORK_FINSE);
-        return;
-      case '2':
-        setNetwork(NETWORK_GATEWAY);
-        return;
-      case '3':
-        setNetwork(NETWORK_BROADCAST);
-        return;
-      case '4':
-        setNetwork(NETWORK_FINSE_ALT);
-        return;
-      case '5':
-        setNetwork(NETWORK_PI_FINSE);
-        return;
-      case '6':
-        setNetwork(NETWORK_PI_CS);
-        return;
-      case '9':
-        cr.print();
-        return;
-    }
-  } while (true);
-}
 
 void WaspUIO::setNetwork(network_t value)
 {
@@ -276,141 +204,4 @@ exit:
   {
     cr.print(error, xbeeDM.error_AT);
   }
-}
-
-
-/*
- * Menu: sensors
- */
-
-void WaspUIO::menuSDI12()
-{
-  char str[80];
-
-  do
-  {
-    cr.print();
-    cr.print(F("SDI-12 bus, identify sensors:"));
-    cr.print(F("1. Identify sensors in addresses 0 and 1"));
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '1':
-        cr.print(F("Enabling SDI-12"));
-        PWR.setSensorPower(SENS_5V, SENS_ON);
-        mySDI12.begin();
-        mySDI12.identification(0);
-        mySDI12.identification(1);
-        mySDI12.end();
-        PWR.setSensorPower(SENS_5V, SENS_OFF);
-        cr.print(F("Disabling SDI-12"));
-      case '9':
-        cr.print();
-        return;
-    }
-  } while (true);
-}
-
-const char* WaspUIO::sensorStatus(uint8_t sensor)
-{
-  switch (sensor)
-  {
-    case 0:
-      return "disabled";
-    case 1:
-      return "1";
-    case 2:
-      return "2";
-    case 3:
-      return "3";
-    default:
-      return "undefined";
-  }
-}
-
-
-/*
- * Menu: battery
- */
-
-void WaspUIO::menuBatteryType()
-{
-  char str[80];
-  do{
-    cr.print();
-    cr.print(F("1. Lithium-ion"));
-    cr.print(F("2. Lead acid"));
-    cr.print(F("9. Exit"));
-    cr.print();
-
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '1':
-        batteryType = 1;
-        break;
-      case '2':
-        batteryType = 2;
-        break;
-      case '9':
-        return;
-      default:
-        continue;
-    }
-    updateEEPROM(EEPROM_UIO_BATTERY_TYPE, batteryType);
-    return;
-  } while (true);
-}
-
-
-/*
- * Menu: SD
- */
-
-void WaspUIO::menuSD()
-{
-  char str[80];
-
-  SD.ON();
-
-  do
-  {
-    cr.print();
-    cr.print(F("1. List files"));
-    cr.print(F("2. Show file"));
-    cr.print(F("3. Format"));
-    cr.print(F("9. Exit"));
-    cr.print();
-    input(str, sizeof(str), F("==> Enter numeric option:"), 0);
-    if (strlen(str) == 0)
-      continue;
-
-    switch (str[0])
-    {
-      case '1':
-        SD.ls(LS_DATE | LS_SIZE | LS_R);
-        break;
-      case '2':
-        input(str, sizeof(str), F("==> Enter path:"), 0);
-        if (strlen(str) > 0)
-        {
-          SD.showFile((char*) str);
-        }
-        break;
-      case '3':
-        SD.format();
-        break;
-      case '9':
-        SD.OFF();
-        return;
-    }
-  } while (true);
 }

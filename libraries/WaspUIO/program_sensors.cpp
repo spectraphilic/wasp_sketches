@@ -64,15 +64,15 @@ CR_TASK(taskHealthFrame)
 CR_TASK(taskSensors)
 {
 #if USE_AGR
-  bool agr = UIO.action(3, UIO.action_pressure, UIO.action_leafwetness, UIO.action_sensirion);
+  bool agr = UIO.action(3, RUN_PRESSURE, RUN_LEAFWETNESS, RUN_SENSIRION);
 #endif
 #if USE_SDI
-  bool sdi = UIO.action(UIO.action_ctd10, UIO.action_ds2);
+  bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
 #endif
 #if USE_I2C
-  bool onewire = UIO.action(1, UIO.action_ds1820);
-  bool i2c = UIO.action(1, UIO.action_bme280);
-  bool ttl = UIO.action(1, UIO.action_mb);
+  bool onewire = UIO.action(1, RUN_DS1820);
+  bool i2c = UIO.action(1, RUN_BME280);
+  bool ttl = UIO.action(1, RUN_MB);
 #endif
   static tid_t agr_id, sdi_id, onewire_id, i2c_id, ttl_id;
 
@@ -102,7 +102,7 @@ CR_TASK(taskSensors)
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
-  if (UIO.action(1, UIO.action_bme280))
+  if (UIO.action(1, RUN_BME280))
   {
     // Check if the sensor is accesible
     if (BME.checkID() == 1)
@@ -175,21 +175,21 @@ CR_TASK(taskAgr)
   CR_BEGIN;
 
   // Measure
-  if (UIO.action(1, UIO.action_pressure))
+  if (UIO.action(1, RUN_PRESSURE))
   {
     CR_SPAWN2(taskAgrPressure, p_id);
   }
-  if (UIO.action(2, UIO.action_leafwetness, UIO.action_sensirion))
+  if (UIO.action(2, RUN_LEAFWETNESS, RUN_SENSIRION))
   {
     CR_SPAWN2(taskAgrLC, lc_id);
   }
 
   // Wait
-  if (UIO.action(1, UIO.action_pressure))
+  if (UIO.action(1, RUN_PRESSURE))
   {
     CR_JOIN(p_id);
   }
-  if (UIO.action(2, UIO.action_leafwetness, UIO.action_sensirion))
+  if (UIO.action(2, RUN_LEAFWETNESS, RUN_SENSIRION))
   {
     CR_JOIN(lc_id);
   }
@@ -221,7 +221,7 @@ CR_TASK(taskAgrLC)
   CR_BEGIN;
 
   // Leaf wetness
-  if (UIO.action(1, UIO.action_leafwetness))
+  if (UIO.action(1, RUN_LEAFWETNESS))
   {
     UIO.on(UIO_LEAFWETNESS);
     CR_DELAY(50);
@@ -230,7 +230,7 @@ CR_TASK(taskAgrLC)
   }
 
   // Sensirion (temperature, humidity)
-  if (UIO.action(1, UIO.action_sensirion))
+  if (UIO.action(1, RUN_SENSIRION))
   {
     UIO.on(UIO_SENSIRION);
     CR_DELAY(50);
@@ -241,11 +241,11 @@ CR_TASK(taskAgrLC)
   }
 
   // OFF
-  if (UIO.action(1, UIO.action_leafwetness))
+  if (UIO.action(1, RUN_LEAFWETNESS))
   {
     UIO.off(UIO_LEAFWETNESS);
   }
-  if (UIO.action(1, UIO.action_sensirion))
+  if (UIO.action(1, RUN_SENSIRION))
   {
     UIO.off(UIO_SENSIRION);
   }
@@ -272,14 +272,14 @@ CR_TASK(taskSdi)
   // - Use service requests
 
   // CTD-10
-  if (UIO.action(1, UIO.action_ctd10))
+  if (UIO.action(1, RUN_CTD10))
   {
     CR_SPAWN2(taskSdiCtd10, tid);
     CR_JOIN(tid);
   }
 
   // DS-2
-  if (UIO.action(1, UIO.action_ds2))
+  if (UIO.action(1, RUN_DS2))
   {
     CR_SPAWN2(taskSdiDs2, tid);
     CR_JOIN(tid);
