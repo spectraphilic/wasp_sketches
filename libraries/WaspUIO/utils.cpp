@@ -57,59 +57,6 @@ uint16_t WaspUIO::sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
   return (uint16_t) sqrt(sd / size);
 }
 
-
-/**
- * Ask the user for input through the USB cable
- *
- * Parameters:
- * - prompt    String printed to USB.
- * - timeout   Number of seconds to wait for input, or 0 to wait forever (max 255).
- *
- * Returns:    String read from the USB cable, or NULL if timeout.
- */
-
-const char* WaspUIO::input(char* buffer, size_t size, const __FlashStringHelper * prompt, unsigned long timeout)
-{
-  int i = 0;
-
-  cr.print(prompt);
-  USB.flush();
-
-  // Wait for available data, or timeout
-  if (timeout > 0)
-  {
-    unsigned long timeStart = millis();
-    while (USB.available() == 0)
-    {
-      if (cr.timeout(timeStart, timeout))
-      {
-        return NULL;
-      }
-    }
-  }
-  else
-  {
-    while (USB.available() == 0);
-  }
-
-  // Read the data
-  for (i=0; i < size - 1; i++)
-  {
-    // Could be optimized to read as many chars as USB.available says in one
-    // go. But this is a cold path, do don't bother.
-    if (USB.available() == 0)
-      break;
-
-    buffer[i] = (char) USB.read();
-    if ((buffer[i] == '\r') || (buffer[i] == '\n'))
-      break;
-  }
-
-  buffer[i] = '\0';
-  return buffer;
-}
-
-
 /**
  * Write a value to the EEPROM only if different from the value already saved.
  *
@@ -208,15 +155,4 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t nbyte)
   }
 
   return n;
-}
-
-/* Print Serial id to string */
-char* WaspUIO::sprintSerial(char* str)
-{
-  uint8_t serial[8];
-
-  for (uint8_t i=0; i<8; i++) { serial[i] = _serial_id[i]; }
-  Utils.hex2str(serial, str, 8);
-
-  return str;
 }

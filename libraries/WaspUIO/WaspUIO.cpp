@@ -51,12 +51,10 @@ void WaspUIO::onSetup()
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
   /*** 2. Autodetect hardware ***/
-  cr.print(F("Hardware autodetect in progress"));
   hasSD = SD.ON();
   SD.OFF();
   hasGPS = GPS.ON();
   GPS.OFF();
-  cr.print(F("Hardware autodetect done (SD=%d GPS=%d)"), hasSD, hasGPS);
 
 /*
     // USB autodetect
@@ -111,7 +109,7 @@ void WaspUIO::startSD()
   {
     if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
     {
-      cr.print(F("openFiles: opening log file failed"));
+      cr.println(F("openFiles: opening log file failed"));
     }
   }
 
@@ -201,7 +199,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
     // Print to log file
     if (UIO.logFile.write(buffer) == -1)
     {
-      cr.print(F("ERROR vlog: failed writing to SD"));
+      cr.println(F("ERROR vlog: failed writing to SD"));
     }
   }
 }
@@ -371,27 +369,27 @@ void WaspUIO::showBinaryFrame()
    char c;
 
    // Binary Frame
-   cr.print(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
+   cr.println(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
    p = frame.buffer;
 
    // Start delimiter
    if (strncmp((const char*) p, "<=>", 3) != 0)
    {
-     cr.print(F("Error reading Start delimiter <=>"));
+     cr.println(F("Error reading Start delimiter <=>"));
      return;
    }
    p += 3;
 
    // Frame type (TODO Print text identifier: Information, TimeOut, ...)
    // Don't clear the most significant bit, we already know it's zero
-   cr.print(F("Frame type: %d"), *p++);
+   cr.println(F("Frame type: %d"), *p++);
 
    // Number of bytes
    nbytes = *p++;
-   //cr.print(F("Number of bytes left: %d"), nbytes);
+   //cr.println(F("Number of bytes left: %d"), nbytes);
 
    // Serial ID
-   //cr.print(F("BOOT VERSION %c"), _boot_version);
+   //cr.println(F("BOOT VERSION %c"), _boot_version);
    if (_boot_version >= 'G')
    {
      Utils.hex2str(p, buffer, 8);
@@ -402,7 +400,7 @@ void WaspUIO::showBinaryFrame()
      Utils.hex2str(p, buffer, 4);
      p += 4;
    }
-   cr.print(F("Serial ID: 0x%s"), buffer);
+   cr.println(F("Serial ID: 0x%s"), buffer);
 
    // Waspmote ID
    for (i = 0; i < 17 ; i++)
@@ -417,13 +415,13 @@ void WaspUIO::showBinaryFrame()
    }
    if (c != '#')
    {
-     cr.print(F("Error reading Waspmote ID"));
+     cr.println(F("Error reading Waspmote ID"));
      return;
    }
-   cr.print(F("Waspmote ID: %s"), buffer);
+   cr.println(F("Waspmote ID: %s"), buffer);
 
    // Sequence
-   cr.print(F("Sequence: %d"), *p++);
+   cr.println(F("Sequence: %d"), *p++);
 
    // Payload
    uint8_t sensor_id, nfields, type, decimals;
@@ -453,17 +451,17 @@ void WaspUIO::showBinaryFrame()
      {
        if (type == 0) // uint8_t
        {
-         cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
+         cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
        }
        else if (type == 1) // int
        {
-         cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
+         cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
          p += 2;
        }
        else if (type == 2) // double
        {
          Utils.float2String(*(float *)p, value, decimals);
-         cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+         cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value);
          p += 4;
        }
        else if (type == 3) // char*
@@ -471,29 +469,29 @@ void WaspUIO::showBinaryFrame()
          len = *p++;
          if (len > sizeof(value) - 1)
          {
-           cr.print(F("Error reading sensor value, string too long %d"), len);
+           cr.println(F("Error reading sensor value, string too long %d"), len);
            return;
          }
          strncpy(value, (char*) p, len);
          p += len;
-         cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+         cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value);
        }
        else if (type == 4) // uint32_t
        {
-         cr.print(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
+         cr.println(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
          p += 4;
        }
        else if (type == 5) // uint8_t*
        {
-         cr.print(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
+         cr.println(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
        }
        else
        {
-         cr.print(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
+         cr.println(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
        }
      }
    }
-   cr.print(F("=========================================="));
+   cr.println(F("=========================================="));
 }
 
 

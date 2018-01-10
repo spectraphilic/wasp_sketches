@@ -62,8 +62,8 @@ enum run_t {
   RUN_LEN // Special value
 };
 
+// Flags available: 2 8 16 32 64 128
 #define FLAG_LOG_USB 1
-#define FLAG_NETWORK 2
 #define FLAG_LOG_SD  4
 
 #define UIO_SD 1
@@ -175,7 +175,6 @@ Network network;
 uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
-void setNetwork(network_t);
 
 // Init, start and stop methods
 void onSetup();
@@ -192,12 +191,12 @@ uint8_t frame2Sd();
 void showBinaryFrame();
 
 // Menu
-const char* input(char* buffer, size_t size, const __FlashStringHelper *, unsigned long timeout);
-void menu();
-const char* menuFormatBattery(char* dst, size_t size);
-const char* menuFormatLog(char* dst, size_t size);
-const char* menuFormatNetwork(char* dst, size_t size);
-const char* menuFormatActions(char* dst, size_t size);
+void clint();
+const char* pprintSerial(char* str, size_t size);
+const char* pprintBattery(char* dst, size_t size);
+const char* pprintLog(char* dst, size_t size);
+const char* pprintNetwork(char* dst, size_t size);
+const char* pprintActions(char* dst, size_t size);
 
 // Time
 unsigned long getEpochTime();
@@ -224,7 +223,6 @@ bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 void sort_uint16(uint16_t* array, uint8_t size);
 uint16_t median_uint16(uint16_t* array, uint8_t size);
 uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
-char* sprintSerial(char* str);
 
 };
 
@@ -242,24 +240,24 @@ void onHAIwakeUP_after(void);
 /*
  * Commands
  */
-uint8_t _getFlag(const char* value);
+uint8_t _getFlag(const char*);
 
-int8_t exeCommand(const char* command);
-int8_t cmdBattery(const char* command);
-int8_t cmdCat(const char* command);
-int8_t cmdDisable(const char* command);
-int8_t cmdEnable(const char* command);
-int8_t cmdExit(const char* command);
-int8_t cmdFormat(const char* command);
-int8_t cmdHelp(const char* command);
-int8_t cmdLs(const char* command);
-int8_t cmdNetwork(const char* command);
-int8_t cmdPrint(const char* command);
-int8_t cmdRun(const char* command);
-int8_t cmdLogLevel(const char* command);
-int8_t cmdSDI12(const char* command);
-int8_t cmdTime(const char* command);
-int8_t cmdTimeGPS(const char* command);
+int8_t exeCommand(const char*);
+int8_t cmdBattery(const char*);
+int8_t cmdCat(const char*);
+int8_t cmdDisable(const char*);
+int8_t cmdEnable(const char*);
+int8_t cmdExit(const char*);
+int8_t cmdFormat(const char*);
+int8_t cmdHelp(const char*);
+int8_t cmdLs(const char*);
+int8_t cmdNetwork(const char*);
+int8_t cmdPrint(const char*);
+int8_t cmdRun(const char*);
+int8_t cmdLogLevel(const char*);
+int8_t cmdSDI12(const char*);
+int8_t cmdTime(const char*);
+int8_t cmdTimeGPS(const char*);
 
 
 /*

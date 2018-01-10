@@ -14,24 +14,27 @@
 
 void setup()
 {
-  UIO.onSetup();
-  UIO.onLoop();
-
-  // Interactive mode
+  // Boot process
   USB.ON();
-  UIO.initNet();
-  UIO.menu();
+  cr.print(F("."));
+  UIO.onSetup();
+  cr.print(F("."));
+  UIO.onLoop();
+  cr.print(F("."));
+  UIO.initNet(); // Network
+  UIO.clint();   // Command line interface
   USB.OFF();
 
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Booting Version=%c Mote=%s MAC=%s"), _boot_version, UIO.sprintSerial(buffer), UIO.myMac);
-  info(F("Hardware: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  info(F("Config Battery: %s (%d %%)"), UIO.menuFormatBattery(buffer, size), UIO.batteryLevel);
-  info(F("Config Logging: level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
-  info(F("Config Network: %s"), UIO.menuFormatNetwork(buffer, size));
-  info(F("Config Actions: %s"), UIO.menuFormatActions(buffer, size));
+  info(F("Hardware  : Version=%c Mote=%s MAC=%s"), _boot_version,
+       UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
+  info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
+  info(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
+  info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+  info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
+  info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?

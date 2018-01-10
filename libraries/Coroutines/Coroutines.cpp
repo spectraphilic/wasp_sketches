@@ -259,15 +259,15 @@ void Loop::sleep(int32_t delay_time)
     // Catch unexpected interruptions
     if (intFlag)
     {
-      cr.print(F("Unexpected interruption %d"), intFlag);
+      println(F("Unexpected interruption %d"), intFlag);
       intFlag = 0;
     }
-    //cr.print(F("sleep %lu overhead=%lu"), left, millis() - t0);
+    //println(F("sleep %lu overhead=%lu"), left, millis() - t0);
   }
   afterSleep(); // ~282ms
   sleep_time += sleep;
 
-  //cr.print(F("cpu=%lu sleep=%lu delay=%d"), millis() - start, sleep, delay_time);
+  //println(F("cpu=%lu sleep=%lu delay=%d"), millis() - start, sleep, delay_time);
 }
 
 
@@ -373,39 +373,6 @@ bool Loop::timeout(uint32_t t0, uint32_t timeout)
 }
 
 /*
- * Functions to print formatted strings to usb. Can take regular strings
- * (char*) or those stored in Flash (F).
- */
-
-void Loop::vprint(const char* message, va_list args)
-{
-  char buffer[128];
-  size_t len, max;
-  uint32_t seconds;
-  uint16_t ms;
-
-  vsnprintf(buffer, sizeof(buffer), message, args);
-  USB.println(buffer);
-}
-
-void Loop::print(const __FlashStringHelper * ifsh, ...)
-{
-  va_list args;
-  char message[100];
-
-  strncpy_F(message, ifsh, sizeof(message));
-
-  va_start(args, ifsh);
-  vprint(message, args);
-  va_end(args);
-}
-
-void Loop::print()
-{
-  USB.println();
-}
-
-/*
  * Logging functions. Very much like the print functions, they take formatted
  * strings, either as regular strings (char*) or stored in Flash (F).
  *
@@ -458,6 +425,7 @@ const char* Loop::loglevel2str(loglevel_t level)
 void vlog(loglevel_t level, const char* message, va_list args)
 {
   cr.vprint(message, args);
+  USB.println();
 }
 
 void beforeSleep() {}

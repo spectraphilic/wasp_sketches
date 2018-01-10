@@ -22,8 +22,8 @@ typedef struct {
 
 const char CMD_BATTERY  [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
 const char CMD_CAT      [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
-const char CMD_DISABLE  [] PROGMEM = "disable FLAG   - Disables a feature";
-const char CMD_ENABLE   [] PROGMEM = "enable FLAG    - Enables a feature";
+const char CMD_DISABLE  [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
+const char CMD_ENABLE   [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT     [] PROGMEM = "exit           - Exit the command line interface";
 const char CMD_FORMAT   [] PROGMEM = "format         - Format SD card";
 const char CMD_HELP     [] PROGMEM = "help           - Prints the list of commands";
@@ -31,25 +31,25 @@ const char CMD_LOG_LEVEL[] PROGMEM = "loglevel VALUE - Sets the log level: 0=off
 const char CMD_LS       [] PROGMEM = "ls             - List files in SD card";
 const char CMD_NETWORK  [] PROGMEM = "network VALUE  - Choose network: 0=Finse 1=Gateway 2=Broadcast 3=Finse-alt 4=Pi@Finse 5=Pi@Spain";
 const char CMD_PRINT    [] PROGMEM = "print          - Print configuration and other information";
-const char CMD_RUN      [] PROGMEM = "run WHAT MIN   - Run every 0-255 minutes: 0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
-const char CMD_SDI12    [] PROGMEM = "sdi            - Identify sensors in addresses 0 and 1";
+const char CMD_RUN      [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: 0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
+const char CMD_SDI12    [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
 const char CMD_TIME_GPS [] PROGMEM = "time gps       - Sets time from GPS";
 const char CMD_TIME     [] PROGMEM = "time VALUE     - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
 
 const Command commands[] PROGMEM = {
-  {"bat",       &cmdBattery,  CMD_BATTERY},
+  {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"cat ",      &cmdCat,      CMD_CAT},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
-  {"format ",   &cmdFormat,   CMD_FORMAT},
+  {"format",    &cmdFormat,   CMD_FORMAT},
   {"help",      &cmdHelp,     CMD_HELP},
   {"loglevel ", &cmdLogLevel, CMD_LOG_LEVEL},
-  {"ls ",       &cmdLs,       CMD_LS},
+  {"ls",        &cmdLs,       CMD_LS},
   {"network ",  &cmdNetwork,  CMD_NETWORK},
   {"print",     &cmdPrint,    CMD_PRINT},
   {"run ",      &cmdRun,      CMD_RUN},
-  {"sdi ",      &cmdSDI12,    CMD_SDI12},
+  {"sdi",       &cmdSDI12,    CMD_SDI12},
   {"time gps",  &cmdTimeGPS,  CMD_TIME_GPS},
   {"time ",     &cmdTime,     CMD_TIME},
 };
@@ -57,68 +57,111 @@ const Command commands[] PROGMEM = {
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
 
 
-int8_t exeCommand(const char* value)
+/*
+ * Command Line Interpreter (cli)
+ */
+
+void WaspUIO::clint()
+{
+  char buffer[150];
+  size_t size = sizeof(buffer);
+  int8_t error;
+
+  // Turn ON
+  RTC.ON();
+  UIO.startSD();
+
+  // Print info
+  cr.println();
+  cmdPrint(NULL);
+  cr.println();
+
+  // Go interactive or not
+  cr.println(F("Press Enter to start interactive mode. Wait 2 seconds to skip."));
+  if (cr.input(buffer, sizeof(buffer), 2000) != NULL)
+  {
+    cr.println(F("Type 'help' to see the list of commands, 'exit' to leave."));
+    do {
+      cr.print(F("> "));
+      cr.input(buffer, size, 0);
+      cr.println(F("%s"), buffer);
+      error = exeCommand(buffer);
+      if      (error == -1) { cr.println(F("Good bye!")); break; }      // Exit
+      else if (error ==  0) { cr.println(); }                           // Success
+      else if (error ==  1) { cr.println(F("I don't understand")); }    // Bad input
+      else if (error ==  2) { cr.println(F("Feature not available")); }
+      else                  { }                                         // Error
+    } while (true);
+  }
+  else
+  {
+    cr.println(F("Timeout."));
+  }
+
+  cr.println();
+
+  // Turn OFF
+  UIO.stopSD();
+  RTC.OFF();
+}
+
+
+/*
+ * Call command
+ */
+
+int8_t exeCommand(const char* str)
 {
   Command cmd;
-  int8_t error;
   size_t len;
 
   for (uint8_t i=0; i < nCommands; i++)
   {
     memcpy_P(&cmd, &commands[i], sizeof cmd);
     len = strlen(cmd.prefix);
-    if (strncmp(cmd.prefix, value, len) == 0)
+    if (strncmp(cmd.prefix, str, len) == 0)
     {
-      debug(F("command %s"), value);
-      error = cmd.function(&(value[len]));
-      if (error == 1)
-      {
-        warn(F("Bad input %s"), value);
-      }
-      return error;
+      debug(F("command %s"), str);
+      return cmd.function(&(str[len]));
     }
   }
 
-  warn(F("Unexpected command %s"), value);
   return 1;
 }
 
 /**
  * Choose battery type.
  */
-int8_t cmdBattery(const char* value)
+int8_t cmdBattery(const char* str)
 {
-  int value_int;
+  int value;
 
   // Check input
-  if (sscanf(value, "%d", &value_int) != 1) { return 1; }
-  if (value_int != 1 && value_int != 2) { return 1; }
+  if (sscanf(str, "%d", &value) != 1) { return 1; }
+  if (value != 1 && value != 2) { return 1; }
 
-  // Action
-  UIO.batteryType = (uint8_t) value_int;
+  // Do
+  UIO.batteryType = (uint8_t) value;
   UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, UIO.batteryType);
-  debug(F("New battery type: %hu"), UIO.batteryType);
+  cr.println(F("Done"));
   return 0;
 }
 
 /**
  * Choose battery type.
  */
-int8_t cmdCat(const char* value)
+int8_t cmdCat(const char* str)
 {
   char filename[80];
 
   // Check input
-  if (sscanf(value, "%s", filename) != 1) { return 1; }
+  if (sscanf(str, "%s", filename) != 1) { return 1; }
   if (strlen(filename) == 0) { return 1; }
 
-  if (! UIO.hasSD)
-  {
-    cr.print(F("SD card not available"));
-    return 2;
-  }
+  // Check feature availability
+  if (! UIO.hasSD) { return 2; }
 
-  // Action
+  // Do
   SD.showFile((char*) filename);
   return 0;
 }
@@ -127,40 +170,44 @@ int8_t cmdCat(const char* value)
  * Enable/Disable features (flags).
  */
 
-uint8_t _getFlag(const char* value)
+uint8_t _getFlag(const char* str)
 {
-  if (strncmp(value, "log_sd",  strlen("log_sd")) == 0)  return FLAG_LOG_SD;
-  if (strncmp(value, "log_usb", strlen("log_usb")) == 0) return FLAG_LOG_USB;
-  if (strncmp(value, "network", strlen("network")) == 0) return FLAG_NETWORK;
+  unsigned int flag;
+
+  if (sscanf(str, "%u", &flag) != 1) { return 1; }
+  if (flag == 0) return FLAG_LOG_SD;
+  if (flag == 1) return FLAG_LOG_USB;
 
   return 0; // Not found
 }
 
-int8_t cmdDisable(const char* value)
+int8_t cmdDisable(const char* str)
 {
   uint8_t flag;
 
   // Check input
-  flag = _getFlag(value);
+  flag = _getFlag(str);
   if (flag == 0) { return 1; }
 
-  // Action
+  // Do
   UIO.flags &= ~flag;
   UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
+  cr.println(F("Done"));
   return 0;
 }
 
-int8_t cmdEnable(const char* value)
+int8_t cmdEnable(const char* str)
 {
   uint8_t flag;
 
   // Check input
-  flag = _getFlag(value);
+  flag = _getFlag(str);
   if (flag == 0) { return 1; }
 
-  // Action
+  // Do
   UIO.flags |= flag;
   UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
+  cr.println(F("Done"));
   return 0;
 }
 
@@ -168,7 +215,7 @@ int8_t cmdEnable(const char* value)
  * Exit the command line interface
  */
 
-int8_t cmdExit(const char* value)
+int8_t cmdExit(const char* str)
 {
   return -1;
 }
@@ -177,9 +224,14 @@ int8_t cmdExit(const char* value)
  * Format SD card.
  */
 
-int8_t cmdFormat(const char* value)
+int8_t cmdFormat(const char* str)
 {
+  // Check feature availability
+  if (! UIO.hasSD) { return 2; }
+
+  // Do
   SD.format();
+  cr.println(F("Done"));
   return 0;
 }
 
@@ -187,7 +239,7 @@ int8_t cmdFormat(const char* value)
  * Help: Prints the list of commands
  */
 
-int8_t cmdHelp(const char* value)
+int8_t cmdHelp(const char* str)
 {
   Command cmd;
   char help[120];
@@ -196,7 +248,7 @@ int8_t cmdHelp(const char* value)
   {
     memcpy_P(&cmd, &commands[i], sizeof cmd);
     strncpy_P(help, cmd.help, sizeof help);
-    cr.print(F("%s"), help);
+    cr.println(F("%s"), help);
   }
 
   return 0;
@@ -206,18 +258,18 @@ int8_t cmdHelp(const char* value)
  * Sets log level.
  */
 
-int8_t cmdLogLevel(const char* value)
+int8_t cmdLogLevel(const char* str)
 {
-  unsigned int loglevel;
+  unsigned int value;
 
   // Check input
-  if (sscanf(value, "%u", &loglevel) != 1) { return 1; }
-  if (loglevel >= LOG_LEN) { return 1; }
+  if (sscanf(str, "%u", &value) != 1) { return 1; }
+  if (value >= LOG_LEN) { return 1; }
 
-  // Action
-  cr.loglevel = (loglevel_t) loglevel;
+  // Do
+  cr.loglevel = (loglevel_t) value;
   UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, (uint8_t) cr.loglevel);
-  debug(F("New log level: %hu"), cr.loglevel);
+  cr.println(F("Done"));
   return 0;
 }
 
@@ -225,8 +277,12 @@ int8_t cmdLogLevel(const char* value)
  * List files in SD.
  */
 
-int8_t cmdLs(const char* value)
+int8_t cmdLs(const char* str)
 {
+  // Check feature availability
+  if (! UIO.hasSD) { return 2; }
+
+  // Do
   SD.ls(LS_DATE | LS_SIZE | LS_R);
   return 0;
 }
@@ -235,24 +291,25 @@ int8_t cmdLs(const char* value)
  * Print configuration and other information
  */
 
-int8_t cmdNetwork(const char* value)
+int8_t cmdNetwork(const char* str)
 {
-  unsigned int network;
+  unsigned int value;
 
   // Check input
-  if (sscanf(value, "%d", &network) != 1) { return 1; }
-  if (network >= NETWORK_LEN) { return 1; }
+  if (sscanf(str, "%d", &value) != 1) { return 1; }
+  if (value >= NETWORK_LEN) { return 1; }
 
-  // Check availability
-  if ((UIO.flags & FLAG_NETWORK) == 0)
+  // Do
+  memcpy_P(&UIO.network, &networks[(network_t) value], sizeof UIO.network);
+  if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK, UIO.network.panid[0]) ||
+      ! UIO.updateEEPROM(EEPROM_UIO_NETWORK+1, UIO.network.panid[1]))
   {
-    warn(F("Network not available. First enable it with 'enable network'"));
-    return 2;
+    cr.println(F("ERROR Saving network id to EEPROM failed"));
+    return 3;
   }
+  UIO.initNet();
 
-  // Action
-  UIO.setNetwork((network_t) network);
-  debug(F("New network: %d"), network);
+  cr.println(F("Done"));
   return 0;
 }
 
@@ -260,16 +317,19 @@ int8_t cmdNetwork(const char* value)
  * Print configuration and other information
  */
 
-int8_t cmdPrint(const char* value)
+int8_t cmdPrint(const char* str)
 {
   char buffer[150];
   size_t size = sizeof(buffer);
 
-  cr.print(F("Time    : %s"), RTC.getTime());
-  cr.print(F("Battery : %s (%d %%)"), UIO.menuFormatBattery(buffer, size), UIO.batteryLevel);
-  cr.print(F("Log     : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.menuFormatLog(buffer, size));
-  cr.print(F("Network : %s"), UIO.menuFormatNetwork(buffer, size));
-  cr.print(F("Actions : %s"), UIO.menuFormatActions(buffer, size));
+  cr.println(F("Time      : %s"), RTC.getTime());
+  cr.println(F("Hardware  : Version=%c Mote=%s MAC=%s"), _boot_version,
+             UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
+  cr.println(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
+  cr.println(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
+  cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+  cr.println(F("Network   : %s (frame size is %d)"), UIO.pprintNetwork(buffer, size), frame.getFrameSize());
+  cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
   return 0;
 }
@@ -278,20 +338,20 @@ int8_t cmdPrint(const char* value)
  * Running things at time intervals.
  */
 
-int8_t cmdRun(const char* value)
+int8_t cmdRun(const char* str)
 {
   unsigned int what;
   unsigned int minutes;
 
   // Check input
-  if (sscanf(value, "%u %u", &what, &minutes) != 2) { return 1; }
+  if (sscanf(str, "%u %u", &what, &minutes) != 2) { return 1; }
   if (what >= RUN_LEN) { return 1; }
   if (minutes > 255) { return 1; }
 
-  // Action
+  // Do
   UIO.actions[what] = (uint8_t) minutes;
   UIO.updateEEPROM(EEPROM_RUN + what, UIO.actions[what]);
-  debug(F("Run %u every %u minutes"), what, UIO.actions[what]);
+  cr.println(F("Done"));
   return 0;
 }
 
@@ -299,17 +359,15 @@ int8_t cmdRun(const char* value)
  * SDI-12
  */
 
-int8_t cmdSDI12(const char* value)
+int8_t cmdSDI12(const char* str)
 {
-  // Action
-  cr.print(F("Enabling SDI-12"));
+  // Do
   PWR.setSensorPower(SENS_5V, SENS_ON);
   mySDI12.begin();
   mySDI12.identification(0);
   mySDI12.identification(1);
   mySDI12.end();
   PWR.setSensorPower(SENS_5V, SENS_OFF);
-  cr.print(F("Disabling SDI-12"));
   return 0;
 }
 
@@ -321,17 +379,17 @@ int8_t cmdSDI12(const char* value)
  *
  */
 
-int8_t cmdTime(const char* value)
+int8_t cmdTime(const char* str)
 {
   unsigned short year, month, day, hour, minute, second;
   unsigned long epoch;
   timestamp_t time;
 
-  if (sscanf(value, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
+  if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
   {
     // time=yy:mm:dd:hh:mm:ss
   }
-  else if (sscanf(value, "%lu", &epoch) == 1)
+  else if (sscanf(str, "%lu", &epoch) == 1)
   {
     // time=epoch
     //epoch = epoch + xxx; // TODO Add half the round trup time
@@ -348,15 +406,13 @@ int8_t cmdTime(const char* value)
     return 1;
   }
 
-  // Save
+  // Do
   if (UIO.saveTime(year, month, day, hour, minute, second) != 0)
   {
     error(F("Failed to save time %lu"), epoch);
-    return 2;
+    return 3;
   }
-
-  // Success!!
-  debug(F("New time: %s"), RTC.getTime());
+  cr.println(F("Done"));
   return 0;
 }
 
@@ -368,22 +424,19 @@ int8_t cmdTime(const char* value)
  *
  */
 
-int8_t cmdTimeGPS(const char* value)
+int8_t cmdTimeGPS(const char* str)
 {
   uint32_t before, after;
   uint32_t start, time;
 
-  if (! UIO.hasGPS)
-  {
-    warn(F("GPS not available"));
-    return 2;
-  }
+  // Check feature availability
+  if (! UIO.hasGPS) { return 2; }
 
   // On
   if (GPS.ON() == 0)
   {
     warn(F("GPS: GPS.ON() failed"));
-    return 2;
+    return 3;
   }
 
   debug(F("GPS: Start"));
@@ -408,7 +461,7 @@ int8_t cmdTimeGPS(const char* value)
   {
     warn(F("GPS: Timeout"));
     GPS.OFF();
-    return 2;
+    return 3;
   }
 
   // Ephemerides
@@ -430,7 +483,7 @@ int8_t cmdTimeGPS(const char* value)
   {
     warn(F("GPS: getPosition failed"));
     GPS.OFF();
-    return 2;
+    return 3;
   }
 
   // Time
@@ -456,5 +509,6 @@ int8_t cmdTimeGPS(const char* value)
   //ADD_SENSOR(SENSOR_COURSE, GPS.course);
 
   // Off
+  cr.println(F("Done"));
   return 0;
 }

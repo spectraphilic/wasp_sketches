@@ -183,7 +183,9 @@ class Loop
     // memory (F). It appends a new line.
     void vprint(const char* message, va_list args);
     void print(const __FlashStringHelper *, ...);
-    void print();
+    void println(const __FlashStringHelper *, ...);
+    void println();
+    const char* input(char* buffer, size_t size, unsigned long timeout);
 
     // Logging
     loglevel_t loglevel = LOG_DEBUG;
