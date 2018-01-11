@@ -1,5 +1,5 @@
 /*
-  Munch Temperature, wind and 3G
+  Munch Temperature and 3G, testing this program 2017-12-20
   2017-08-29 (C) john.hulth@geo.uio.no
 */
 
@@ -135,7 +135,7 @@ void loop()
 
   SD.ON();
 
-  // Reading the DS1820 temperature sensors chain connected to DIGITAL8
+  // Reading the DS1820 temperature sensors chain connected to DIGITAL6
   temp = readTempDS1820chain(DIGITAL6,  true);
 
 }
