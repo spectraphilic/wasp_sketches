@@ -6,7 +6,7 @@ SDI12 mySDI12(DATAPIN);
 char sdiResponse[30];
 char cmd[10];
 
-char sdi_adress[] = "abc?"; // SDI-Adresses for the sensors in use, ex. "abc", "12345", "ABCD" or "aB1bC2"
+char sdi_adress[] = "abc"; // SDI-Adresses for the sensors in use, ex. "abc", "12345", "ABCD" or "aB1bC2"
 
 /*
   '?' is a wildcard character which asks any and all sensors to respond
@@ -18,7 +18,7 @@ void setup()
 {
   USB.ON();
   PWR.setSensorPower(SENS_5V, SENS_ON); // (JH)
-  delay(500); // Sensor exitation delay
+  delay(5000); // Sensor exitation delay
 
   mySDI12.begin();
 

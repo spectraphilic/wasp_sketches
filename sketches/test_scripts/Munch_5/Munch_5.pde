@@ -1,10 +1,13 @@
 /*
   Munch Temperature, wind and 3G
-  2017-08-29 (C) john.hulth@geo.uio.no
+  2018-01-08 (C) john.hulth@geo.uio.no
+  Everything works today!!! :)
 */
 
 
 #include <Wasp3G.h>
+#include <SDI12.h>
+
 // APN settings
 ///////////////////////////////////////
 char apn[] = "telenor";
@@ -76,6 +79,17 @@ float gps_latitude;
 float gps_longitude;
 bool gps_autonomous_needed = true;
 
+char sample_txt[100]; // text string to append to SD-card
+
+// SDI-12 constants and variables
+#define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
+SDI12 mySDI12(DATAPIN);
+char sdiResponse[30];
+char cmd[10];
+
+char sdi_adress[] = "abc"; // SDI-Adresses for the sensors in use, ex. "abc", "12345", "ABCD" or "aB1bC2"
+
+// One-Wire constants and variables
 float temp = 0;
 float temp_air = 0;
 char temp_air_str[10];
@@ -85,61 +99,95 @@ void setup()
 {
   // Create file, update time, setup 3G, GPS and FTP, send data,
   Send_etc();
+
+  USB.ON();
+  PWR.setSensorPower(SENS_5V, SENS_ON); // (JH)
+  delay(5000); // Sensor exitation delay
+
+  // -'-'-'-'-'-'-INFO and START COMMAND-'-'-'-'-'-'-
+  mySDI12.begin();
+  for (int i = 0; i < (sizeof(sdi_adress) - 1) ; i++)
+  {
+    snprintf( cmd, sizeof(cmd), "%cI!", sdi_adress[i] ); // Info command (?I!)
+    SDIdata(cmd);
+
+    snprintf(cmd, sizeof(cmd), "%cM6!", sdi_adress[i]); // Start measurments command (?M6!) DS-2
+    SDIdata(cmd);
+  }
+  USB.println("- - - - Setup done! - - - -");
 }
 
 
 void loop()
 {
-  USB.println(F("enter deep sleep"));
+  USB.println(F("Start loop"));
+  RTC.setWatchdog(10); // Re-boot after 10 min
+
+  // USB.println(F("enter deep sleep"));
   // Go to sleep disconnecting all switches and modules
   // Waspmote wakes up thanks to the RTC Alarm every hour (MODE4)
   // Waspmote wakes up thanks to the RTC Alarm every minute (MODE5)
 
-  RTC.setWatchdog(10); // Re-boot after 10 min
-  PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF); // Wake-up every 1 min
+  // Meassure continuous!!!
+  // PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_ON); // Wake-up every 1 min
 
   USB.ON();
   RTC.ON();
 
-  USB.println(F("\nwake up"));
-
+  //  USB.println(F("\nwake up"));
   USB.println(RTC.getTime());
 
-  // After wake up check interruption source
-  if ( intFlag & RTC_INT )
-  {
-    // clear interruption flag
-    intFlag &= ~(RTC_INT);
+  //  // After wake up check interruption source
+  //  if ( intFlag & RTC_INT )
+  //  {
+  //    // clear interruption flag
+  //    intFlag &= ~(RTC_INT);
+  //
+  //    USB.println(F("---------------------"));
+  //    USB.println(F("RTC INT captured"));
+  //    USB.println(F("---------------------"));
+  //  }
 
-    USB.println(F("---------------------"));
-    USB.println(F("RTC INT captured"));
-    USB.println(F("---------------------"));
-  }
-
-  //  make a new filename and send data once a day ('old file')
-  //  if (RTC.hour == 0 && RTC.minute == 0)
 
   //  make a new filename and send data once an hour ('old file')
   if (RTC.minute == 0)
-
   {
     // Create new file, update time, setup 3G, GPS and FTP, send data,
+
     Send_etc();
+
+    // Quick fix !!! Add a delay to avoid getting stuck !!!!
+    while (RTC.minute == 0);
+    {
+      delay(1000);
+    }
   }
 
-  // Take sample every wake-up (minute?)
-
-  USB.println("-------------------------------------");
+  // Take samples
+  USB.println("- - - Sample - - -");
   PWR.setSensorPower(SENS_3V3, SENS_ON);
   delay(100);
 
   SD.ON(); // SD MUST be on to append data
   USB.println("SD on");
-  
-  // Reading the DS1820 temperature sensors chain connected to DIGITAL8
+
+
+  // Reading wind sensors on DIGITAL8
+  for (int i = 0; i < (sizeof(sdi_adress) - 1) ; i++)
+  {
+    snprintf(cmd, sizeof(cmd), "%cR6!", sdi_adress[i]); // Continuous measurments command (?R6!) DS-2
+    SDIdata(cmd);
+  }
+
+  // Reading the DS1820 temperature sensors chain connected to DIGITAL6
   temp = readTempDS1820chain(DIGITAL6,  true);
 
+  SD.OFF(); // Just in case...
+
+  PWR.setSensorPower(SENS_3V3, SENS_ON); // Depowoer temp sensors to avoid heating
+  delay(8000); // Delay to not oversample wind sensors (~20 sec)
 }
+
 
 
 
@@ -148,6 +196,41 @@ void loop()
 
 
 // - - - - - FUNCTION - - - - -
+
+// Function to read data from SDI-12 sensor
+void SDIdata(char* cmd)
+{
+  // Get time
+  RTC.getTime();
+
+  mySDI12.sendCommand(cmd); // Send meassurment command
+
+  int i = 0;
+  while (mySDI12.available())  // write the response to the screen
+  {
+    char c = mySDI12.read();
+    if ((c != '\n') && (c != '\r'))
+    {
+      sdiResponse[i] = c;
+      i++;
+    }
+    delay(5);
+  }
+
+  // Add timestamp and append sample to file
+  memset(sample_txt, 0, sizeof(sample_txt));
+  snprintf(sample_txt, sizeof(sample_txt), "20%02u-%02u-%02u %02u:%02u:%02u, %s", RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second, sdiResponse);
+
+  USB.println(sample_txt);
+  SD.appendln(filename, sample_txt);
+
+  delay(1000); // Needed for CTD10 pressure sensor
+  mySDI12.flush();
+  memset (sdiResponse, 0, sizeof(sdiResponse));
+}
+
+
+
 
 
 /* readTempDS1820() - reads the DS1820 temperature sensor
@@ -172,13 +255,12 @@ float readTempDS1820chain(uint8_t pin, bool is3v3 )
   char serial[18];
   //byte maxsensors = 0;
   //uint32_t R_bin;
-  char sample_txt[100];
   char temp_str[7];
 
   USB.println("WHY DOES THIS WORK???");
   while (OneWireTemp.search(addr))
   {
-    // Print time
+    // Get time
     RTC.getTime();
     // USB.print(RTC.getTime());
 
