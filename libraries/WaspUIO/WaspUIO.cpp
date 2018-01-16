@@ -74,7 +74,7 @@ void WaspUIO::onLoop()
   loadTime(true); // Read temperature as well
   uint32_t epoch = getEpochTime();
   // Split the epoch time in 2: days since the epoch, and minute of the day
-  day = epoch / (24 * 60 * 60);
+  day = epoch / (24L * 60L * 60L);
   minute = (epoch / 60) % (60 * 24); // mins since the epoch modulus mins in a day
 
   readBattery();
