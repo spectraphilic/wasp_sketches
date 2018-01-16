@@ -156,6 +156,7 @@ float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
 int minute;              // minute of the day, from 0 to 1439
+int day;                 // days since the epoch
 int next_minute;         // minute of the next alarm
 
 // SD

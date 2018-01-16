@@ -73,7 +73,10 @@ void WaspUIO::onLoop()
 
   loadTime(true); // Read temperature as well
   uint32_t epoch = getEpochTime();
-  minute = (epoch / 60) % 1440;
+  // Split the epoch time in 2: days since the epoch, and minute of the day
+  day = epoch / (24 * 60 * 60);
+  minute = (epoch / 60) % (60 * 24); // mins since the epoch modulus mins in a day
+
   readBattery();
 }
 
@@ -784,7 +787,7 @@ void WaspUIO::nextAlarm()
 const char* WaspUIO::nextAlarm(char* alarmTime)
 {
   uint32_t epoch = getEpochTime();
-  minute = (epoch / 60) % 1440;
+  minute = (epoch / 60) % (60 * 24); // minute of the day
   nextAlarm();
 
   // Format relative time to string, to be passed to deepSleep

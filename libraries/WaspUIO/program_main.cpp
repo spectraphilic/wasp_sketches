@@ -28,11 +28,11 @@ CR_TASK(taskMain)
   CR_JOIN(health_id);
   CR_JOIN(sensors_id);
 
-  // GPS (Once a day)
+  // GPS (Once every 3 days)
   // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
   // for our networking requirements, so we have to sync it once a day. See
   // http://hycamp.org/private-area/waspmote-rtc/
-  if (UIO.hasGPS && UIO.minute == 0)
+  if (UIO.hasGPS && UIO.minute == 0 && (UIO.day % 3 == 0))
   {
     CR_SPAWN2(taskGps, gps_id);
     CR_JOIN(gps_id);
