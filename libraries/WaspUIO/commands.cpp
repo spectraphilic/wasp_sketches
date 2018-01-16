@@ -16,7 +16,7 @@
 
 typedef struct {
   char prefix[12];
-  int8_t (*function)(const char* command);
+  cmd_status_t (*function)(const char* command);
   const char* help;
 } Command;
 
@@ -64,8 +64,9 @@ const uint8_t nCommands = sizeof commands / sizeof commands[0];
 void WaspUIO::clint()
 {
   char buffer[150];
+  //char out[150];
   size_t size = sizeof(buffer);
-  int8_t error;
+  int8_t status;
 
   // Turn ON
   RTC.ON();
@@ -85,12 +86,13 @@ void WaspUIO::clint()
       cr.print(F("> "));
       cr.input(buffer, size, 0);
       cr.println(F("%s"), buffer);
-      error = exeCommand(buffer);
-      if      (error == -1) { cr.println(F("Good bye!")); break; }      // Exit
-      else if (error ==  0) { cr.println(); }                           // Success
-      else if (error ==  1) { cr.println(F("I don't understand")); }    // Bad input
-      else if (error ==  2) { cr.println(F("Feature not available")); }
-      else                  { }                                         // Error
+      status = exeCommand(buffer);
+      if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
+      else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
+      else if (status == cmd_error)       { cr.println(F("Error")); }
+      else if (status == cmd_ok)          { cr.println(F("OK")); }
+      else if (status == cmd_quiet)       { }
+      else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
     } while (true);
   }
   else
@@ -110,7 +112,7 @@ void WaspUIO::clint()
  * Call command
  */
 
-int8_t exeCommand(const char* str)
+COMMAND(exeCommand)
 {
   Command cmd;
   size_t len;
@@ -126,44 +128,43 @@ int8_t exeCommand(const char* str)
     }
   }
 
-  return 1;
+  return cmd_bad_input;
 }
 
 /**
  * Choose battery type.
  */
-int8_t cmdBattery(const char* str)
+COMMAND(cmdBattery)
 {
   int value;
 
   // Check input
-  if (sscanf(str, "%d", &value) != 1) { return 1; }
-  if (value != 1 && value != 2) { return 1; }
+  if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
+  if (value != 1 && value != 2) { return cmd_bad_input; }
 
   // Do
   UIO.batteryType = (uint8_t) value;
   UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, UIO.batteryType);
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
  * Choose battery type.
  */
-int8_t cmdCat(const char* str)
+COMMAND(cmdCat)
 {
   char filename[80];
 
   // Check input
-  if (sscanf(str, "%s", filename) != 1) { return 1; }
-  if (strlen(filename) == 0) { return 1; }
+  if (sscanf(str, "%s", filename) != 1) { return cmd_bad_input; }
+  if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Check feature availability
-  if (! UIO.hasSD) { return 2; }
+  if (! UIO.hasSD) { return cmd_unavailable; }
 
   // Do
   SD.showFile((char*) filename);
-  return 0;
+  return cmd_quiet;
 }
 
 /**
@@ -174,72 +175,69 @@ uint8_t _getFlag(const char* str)
 {
   unsigned int flag;
 
-  if (sscanf(str, "%u", &flag) != 1) { return 1; }
+  if (sscanf(str, "%u", &flag) != 1) { return cmd_bad_input; }
   if (flag == 0) return FLAG_LOG_SD;
   if (flag == 1) return FLAG_LOG_USB;
 
   return 0; // Not found
 }
 
-int8_t cmdDisable(const char* str)
+COMMAND(cmdDisable)
 {
   uint8_t flag;
 
   // Check input
   flag = _getFlag(str);
-  if (flag == 0) { return 1; }
+  if (flag == 0) { return cmd_bad_input; }
 
   // Do
   UIO.flags &= ~flag;
   UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
-int8_t cmdEnable(const char* str)
+COMMAND(cmdEnable)
 {
   uint8_t flag;
 
   // Check input
   flag = _getFlag(str);
-  if (flag == 0) { return 1; }
+  if (flag == 0) { return cmd_bad_input; }
 
   // Do
   UIO.flags |= flag;
   UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
  * Exit the command line interface
  */
 
-int8_t cmdExit(const char* str)
+COMMAND(cmdExit)
 {
-  return -1;
+  return cmd_exit;
 }
 
 /**
  * Format SD card.
  */
 
-int8_t cmdFormat(const char* str)
+COMMAND(cmdFormat)
 {
   // Check feature availability
-  if (! UIO.hasSD) { return 2; }
+  if (! UIO.hasSD) { return cmd_unavailable; }
 
   // Do
   SD.format();
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
  * Help: Prints the list of commands
  */
 
-int8_t cmdHelp(const char* str)
+COMMAND(cmdHelp)
 {
   Command cmd;
   char help[120];
@@ -251,73 +249,71 @@ int8_t cmdHelp(const char* str)
     cr.println(F("%s"), help);
   }
 
-  return 0;
+  return cmd_quiet;
 }
 
 /**
  * Sets log level.
  */
 
-int8_t cmdLogLevel(const char* str)
+COMMAND(cmdLogLevel)
 {
   unsigned int value;
 
   // Check input
-  if (sscanf(str, "%u", &value) != 1) { return 1; }
-  if (value >= LOG_LEN) { return 1; }
+  if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
+  if (value >= LOG_LEN) { return cmd_bad_input; }
 
   // Do
   cr.loglevel = (loglevel_t) value;
   UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, (uint8_t) cr.loglevel);
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
  * List files in SD.
  */
 
-int8_t cmdLs(const char* str)
+COMMAND(cmdLs)
 {
   // Check feature availability
-  if (! UIO.hasSD) { return 2; }
+  if (! UIO.hasSD) { return cmd_unavailable; }
 
   // Do
   SD.ls(LS_DATE | LS_SIZE | LS_R);
-  return 0;
+  return cmd_quiet;
 }
 
 /**
  * Print configuration and other information
  */
 
-int8_t cmdNetwork(const char* str)
+COMMAND(cmdNetwork)
 {
   unsigned int value;
 
   // Check input
-  if (sscanf(str, "%d", &value) != 1) { return 1; }
-  if (value >= NETWORK_LEN) { return 1; }
+  if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
+  if (value >= NETWORK_LEN) { return cmd_bad_input; }
 
   // Do
   memcpy_P(&UIO.network, &networks[(network_t) value], sizeof UIO.network);
   if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK, UIO.network.panid[0]) ||
       ! UIO.updateEEPROM(EEPROM_UIO_NETWORK+1, UIO.network.panid[1]))
   {
-    cr.println(F("ERROR Saving network id to EEPROM failed"));
-    return 3;
+    error(F("ERROR Saving network id to EEPROM failed"));
+    return cmd_error;
   }
   UIO.initNet();
 
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
  * Print configuration and other information
  */
 
-int8_t cmdPrint(const char* str)
+COMMAND(cmdPrint)
 {
   char buffer[150];
   size_t size = sizeof(buffer);
@@ -331,35 +327,34 @@ int8_t cmdPrint(const char* str)
   cr.println(F("Network   : %s (frame size is %d)"), UIO.pprintNetwork(buffer, size), frame.getFrameSize());
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
-  return 0;
+  return cmd_quiet;
 }
 
 /**
  * Running things at time intervals.
  */
 
-int8_t cmdRun(const char* str)
+COMMAND(cmdRun)
 {
   unsigned int what;
   unsigned int minutes;
 
   // Check input
-  if (sscanf(str, "%u %u", &what, &minutes) != 2) { return 1; }
-  if (what >= RUN_LEN) { return 1; }
-  if (minutes > 255) { return 1; }
+  if (sscanf(str, "%u %u", &what, &minutes) != 2) { return cmd_bad_input; }
+  if (what >= RUN_LEN) { return cmd_bad_input; }
+  if (minutes > 255) { return cmd_bad_input; }
 
   // Do
   UIO.actions[what] = (uint8_t) minutes;
   UIO.updateEEPROM(EEPROM_RUN + what, UIO.actions[what]);
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
  * SDI-12
  */
 
-int8_t cmdSDI12(const char* str)
+COMMAND(cmdSDI12)
 {
   // Do
   PWR.setSensorPower(SENS_5V, SENS_ON);
@@ -368,7 +363,7 @@ int8_t cmdSDI12(const char* str)
   mySDI12.identification(1);
   mySDI12.end();
   PWR.setSensorPower(SENS_5V, SENS_OFF);
-  return 0;
+  return cmd_quiet;
 }
 
 /**
@@ -379,7 +374,7 @@ int8_t cmdSDI12(const char* str)
  *
  */
 
-int8_t cmdTime(const char* str)
+COMMAND(cmdTime)
 {
   unsigned short year, month, day, hour, minute, second;
   unsigned long epoch;
@@ -403,17 +398,16 @@ int8_t cmdTime(const char* str)
   }
   else
   {
-    return 1;
+    return cmd_bad_input;
   }
 
   // Do
   if (UIO.saveTime(year, month, day, hour, minute, second) != 0)
   {
     error(F("Failed to save time %lu"), epoch);
-    return 3;
+    return cmd_error;
   }
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }
 
 /**
@@ -424,19 +418,19 @@ int8_t cmdTime(const char* str)
  *
  */
 
-int8_t cmdTimeGPS(const char* str)
+COMMAND(cmdTimeGPS)
 {
   uint32_t before, after;
   uint32_t start, time;
 
   // Check feature availability
-  if (! UIO.hasGPS) { return 2; }
+  if (! UIO.hasGPS) { return cmd_unavailable; }
 
   // On
   if (GPS.ON() == 0)
   {
     warn(F("GPS: GPS.ON() failed"));
-    return 3;
+    return cmd_error;
   }
 
   debug(F("GPS: Start"));
@@ -461,7 +455,7 @@ int8_t cmdTimeGPS(const char* str)
   {
     warn(F("GPS: Timeout"));
     GPS.OFF();
-    return 3;
+    return cmd_error;
   }
 
   // Ephemerides
@@ -483,7 +477,7 @@ int8_t cmdTimeGPS(const char* str)
   {
     warn(F("GPS: getPosition failed"));
     GPS.OFF();
-    return 3;
+    return cmd_error;
   }
 
   // Time
@@ -509,6 +503,5 @@ int8_t cmdTimeGPS(const char* str)
   //ADD_SENSOR(SENSOR_COURSE, GPS.course);
 
   // Off
-  cr.println(F("Done"));
-  return 0;
+  return cmd_ok;
 }

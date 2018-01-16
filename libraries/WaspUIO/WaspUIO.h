@@ -241,24 +241,34 @@ void onHAIwakeUP_after(void);
 /*
  * Commands
  */
+enum cmd_status_t {
+  cmd_exit,
+  cmd_ok,
+  cmd_quiet,
+  cmd_bad_input,
+  cmd_unavailable,
+  cmd_error,
+};
+
 uint8_t _getFlag(const char*);
 
-int8_t exeCommand(const char*);
-int8_t cmdBattery(const char*);
-int8_t cmdCat(const char*);
-int8_t cmdDisable(const char*);
-int8_t cmdEnable(const char*);
-int8_t cmdExit(const char*);
-int8_t cmdFormat(const char*);
-int8_t cmdHelp(const char*);
-int8_t cmdLs(const char*);
-int8_t cmdNetwork(const char*);
-int8_t cmdPrint(const char*);
-int8_t cmdRun(const char*);
-int8_t cmdLogLevel(const char*);
-int8_t cmdSDI12(const char*);
-int8_t cmdTime(const char*);
-int8_t cmdTimeGPS(const char*);
+#define COMMAND(name) cmd_status_t name(const char* str)
+COMMAND(exeCommand);
+COMMAND(cmdBattery);
+COMMAND(cmdCat);
+COMMAND(cmdDisable);
+COMMAND(cmdEnable);
+COMMAND(cmdExit);
+COMMAND(cmdFormat);
+COMMAND(cmdHelp);
+COMMAND(cmdLs);
+COMMAND(cmdNetwork);
+COMMAND(cmdPrint);
+COMMAND(cmdRun);
+COMMAND(cmdLogLevel);
+COMMAND(cmdSDI12);
+COMMAND(cmdTime);
+COMMAND(cmdTimeGPS);
 
 
 /*
