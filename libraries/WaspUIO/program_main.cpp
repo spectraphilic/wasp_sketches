@@ -14,17 +14,19 @@ CR_TASK(taskMain)
   // Create the first frame
   UIO.createFrame(true);
 
-  // Sensors
-  CR_SPAWN2(taskHealthFrame, health_id);
-  CR_SPAWN2(taskSensors, sensors_id);
-
   // Network
+  // First the network, then the sensors. This is to avoid interferences as I
+  // have found between receiving frames and the SDI-12 bus.  We do first the
+  // network because we need it to be run in a predictable time.
   if ((UIO.batteryLevel > 30) && UIO.action(1, RUN_NETWORK))
   {
     CR_SPAWN2(taskNetwork, network_id);
     CR_JOIN(network_id);
   }
 
+  // Sensors
+  CR_SPAWN2(taskHealthFrame, health_id);
+  CR_SPAWN2(taskSensors, sensors_id);
   CR_JOIN(health_id);
   CR_JOIN(sensors_id);
 

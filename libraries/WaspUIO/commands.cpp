@@ -145,6 +145,7 @@ COMMAND(cmdBattery)
   // Do
   UIO.batteryType = (uint8_t) value;
   UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, UIO.batteryType);
+  UIO.readBattery();
   return cmd_ok;
 }
 
@@ -319,7 +320,7 @@ COMMAND(cmdPrint)
   size_t size = sizeof(buffer);
 
   cr.println(F("Time      : %s"), RTC.getTime());
-  cr.println(F("Hardware  : Version=%c Mote=%s MAC=%s"), _boot_version,
+  cr.println(F("Hardware  : Version=%c Mote=%s XBee=%s"), _boot_version,
              UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
   cr.println(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
   cr.println(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
