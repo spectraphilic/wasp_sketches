@@ -9,10 +9,11 @@
  ******************************************************************************/
 
 // We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
+#define USE_AGR true
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
-#define FRAME_BINARY true
+
+// Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
@@ -42,22 +43,27 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-#define EEPROM_UIO_WAKEUP_PERIOD (EEPROM_START + 3)
+// 1 byte available
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
 // 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
-// 2 bytes available
-#define EEPROM_SENSOR_SENSIRION (EEPROM_START + 10) // Agr
-#define EEPROM_SENSOR_PRESSURE (EEPROM_START + 11)
-#define EEPROM_SENSOR_LEAFWETNESS (EEPROM_START + 12)
-#define EEPROM_SENSOR_CTD10 (EEPROM_START + 13) // SDI-12
-#define EEPROM_SENSOR_DS2 (EEPROM_START + 14)
-#define EEPROM_SENSOR_DS1820 (EEPROM_START + 15) // OneWire
-#define EEPROM_SENSOR_BME280 (EEPROM_START + 16) // I2C
-#define EEPROM_SENSOR_MB (EEPROM_START + 17) // TTL
+// 1 bytes available
+#define EEPROM_RUN (EEPROM_START + 9)
+enum run_t {
+  RUN_NETWORK,
+  RUN_SENSIRION, // Agr
+  RUN_PRESSURE,
+  RUN_LEAFWETNESS,
+  RUN_CTD10, // SDI-12
+  RUN_DS2,
+  RUN_DS1820, // OneWire
+  RUN_BME280, // I2C
+  RUN_MB, // TTL
+  RUN_LEN // Special value
+};
 
+// Flags available: 2 8 16 32 64 128
 #define FLAG_LOG_USB 1
-#define FLAG_NETWORK 2
 #define FLAG_LOG_SD  4
 
 #define UIO_SD 1
@@ -69,10 +75,10 @@
 #define UIO_SDI12 64
 
 #define ADD_SENSOR(type, ...) \
-  if (frame.addSensor(type, ## __VA_ARGS__) == -1)\
+  if (frame.addSensorBin(type, ## __VA_ARGS__) == -1)\
   {\
     UIO.createFrame();\
-    frame.addSensor(type, ## __VA_ARGS__);\
+    frame.addSensorBin(type, ## __VA_ARGS__);\
   }
 
 
@@ -85,7 +91,8 @@ enum network_t {
   NETWORK_BROADCAST,
   NETWORK_FINSE_ALT,
   NETWORK_PI_FINSE,
-  NETWORK_PI_CS
+  NETWORK_PI_CS,
+  NETWORK_LEN // Special value
 };
 
 struct Network {
@@ -122,59 +129,34 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
-// Like Arduino's EEPROM.update, it writes the given value only if different
-// from the value already saved.
-bool updateEEPROM(int address, uint8_t value);
-bool updateEEPROM(int address, uint32_t value);
-
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
 int append(SdFile &file, const void* buf, size_t nbyte);
 uint8_t createFile(const char* filename);
 
-// Menu
-void menuTime();
-void menuTimeManual();
-void menuNetwork();
-void menuLog();
-void menuLog2(uint8_t flag, const char* var);
-void menuBatteryType();
-void menuLogLevel();
-void menuSensors();
-void menuWakeup();
-void menuSensor(uint16_t sensor, uint8_t &value);
-void menuSD();
-const char* flagStatus(uint8_t flag);
-const char* sensorStatus(uint8_t sensor);
-void setNetwork(network_t);
-
-// Variables
-uint8_t period;
-
 /// public methods and attributes ////////////
 public:
+
+// Like Arduino's EEPROM.update, it writes the given value only if different
+// from the value already saved.
+bool updateEEPROM(int address, uint8_t value);
+bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
 uint8_t flags;
 uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
-uint8_t wakeup_period;
-uint8_t sensor_sensirion;
-uint8_t sensor_pressure;
-uint8_t sensor_leafwetness;
-uint8_t sensor_ctd10;
-uint8_t sensor_ds2;
-uint8_t sensor_ds1820;
-uint8_t sensor_bme280;
-uint8_t sensor_mb;
+uint8_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)
 uint8_t batteryLevel;
+uint8_t cooldown; // Reduces frequency of action, depends on batteryLevel
 // To keep time without calling RCT each time
+float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
-timestamp_t time;        // broken timestamp
-float rtc_temp;          // internal temperature
+int minute;              // minute of the day, from 0 to 1439
+int next_minute;         // minute of the next alarm
 
 // SD
 const char* tmpFilename = "TMP.TXT";
@@ -190,7 +172,6 @@ void stopSD();
 char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 Network network;
-uint8_t receiveGPSsyncTime();
 uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
@@ -207,15 +188,15 @@ const uint32_t send_timeout = 3 * 60; // seconds
 // Frames
 void createFrame(bool discard=false);
 uint8_t frame2Sd();
-void showFrame();
+void showBinaryFrame();
 
 // Menu
-const char* input(char* buffer, size_t size, const __FlashStringHelper *, unsigned long timeout);
-void menu();
-const char* menuFormatBattery(char* dst, size_t size);
-const char* menuFormatLog(char* dst, size_t size);
-const char* menuFormatNetwork(char* dst, size_t size);
-const char* menuFormatSensors(char* dst, size_t size);
+void clint();
+const char* pprintSerial(char* str, size_t size);
+const char* pprintBattery(char* dst, size_t size);
+const char* pprintLog(char* dst, size_t size);
+const char* pprintNetwork(char* dst, size_t size);
+const char* pprintActions(char* dst, size_t size);
 
 // Time
 unsigned long getEpochTime();
@@ -224,7 +205,8 @@ uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t
 void loadTime(bool temp=false);
 
 // Sleep
-const char* getNextAlarm(char* alarmTime);
+void nextAlarm();
+const char* nextAlarm(char* alarmTime);
 void deepSleep();
 
 // Register of "devices" that are On
@@ -241,7 +223,6 @@ bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 void sort_uint16(uint16_t* array, uint8_t size);
 uint16_t median_uint16(uint16_t* array, uint8_t size);
 uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
-char* sprintSerial(char* str);
 
 };
 
@@ -254,6 +235,30 @@ void vlog(loglevel_t level, const char* message, va_list args);
 void beforeSleep();
 void afterSleep();
 void onHAIwakeUP_after(void);
+
+
+/*
+ * Commands
+ */
+uint8_t _getFlag(const char*);
+
+int8_t exeCommand(const char*);
+int8_t cmdBattery(const char*);
+int8_t cmdCat(const char*);
+int8_t cmdDisable(const char*);
+int8_t cmdEnable(const char*);
+int8_t cmdExit(const char*);
+int8_t cmdFormat(const char*);
+int8_t cmdHelp(const char*);
+int8_t cmdLs(const char*);
+int8_t cmdNetwork(const char*);
+int8_t cmdPrint(const char*);
+int8_t cmdRun(const char*);
+int8_t cmdLogLevel(const char*);
+int8_t cmdSDI12(const char*);
+int8_t cmdTime(const char*);
+int8_t cmdTimeGPS(const char*);
+
 
 /*
  * Actions. Base components to implement a flexible and efficient main loop.

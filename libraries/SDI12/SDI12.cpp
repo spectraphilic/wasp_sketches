@@ -1027,7 +1027,7 @@ uint8_t SDI12::command2address(uint8_t address, const char* cmd)
     return 1;
   }
 
-  debug(F("command2address(%s): success, read '%s'"), aux, buffer);
+  info(F("command2address(%s): success, read '%s'"), aux, buffer);
   return 0;
 }
 

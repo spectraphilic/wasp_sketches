@@ -76,7 +76,7 @@ Swithced the v12 waspmote for a v15 (serial ID: 3F7C67057C105419)
 
 ## Finselvi discharge (6721025.8, 418116.92)
 
-Waspmote v15, Lead Acid battery, 10W solar panel, CTD 10 sensor. GPS
+Waspmote v15 Lead Acid battery, 10W solar panel, CTD 10 sensor. GPS
 
 ### 2017-11-21
 
@@ -88,7 +88,7 @@ Pushed latest script but SD card would not be accessible byt the waspmote. Sd ca
 
 ### 2017-11-21
 
-Switched waspmote v12 for a v15. No sensor, lithium battery with solar panel (libelium box). Script [dad3fb4](https://github.com/spectraphilic/wasp_sketches/commit/dad3fb407ec0cb60f96c1c493ae6eb938b39006b) pushed to it.
+Switched waspmote v12 for a v15 (wasp ID: 01857f322),. No sensor, lithium battery with solar panel (libelium box). Script [dad3fb4](https://github.com/spectraphilic/wasp_sketches/commit/dad3fb407ec0cb60f96c1c493ae6eb938b39006b) pushed to it.
 
 
 

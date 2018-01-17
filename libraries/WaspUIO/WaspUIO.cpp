@@ -2,11 +2,8 @@
  * Includes
  ******************************************************************************/
 
-#ifndef __WPROGRAM_H__
-#include <WaspClasses.h>
-#endif
-
 #include "WaspUIO.h"
+#include <assert.h>
 
 
 /******************************************************************************
@@ -30,7 +27,6 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
-  wakeup_period = Utils.readEEPROM(EEPROM_UIO_WAKEUP_PERIOD);
   batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
   if (batteryType != 1 && batteryType != 2)
   {
@@ -45,32 +41,20 @@ void WaspUIO::onSetup()
   }
   memcpy_P(&network, &networks[panid_low], sizeof network);
 
-  // Sensors
-#if USE_AGR
-  sensor_sensirion = Utils.readEEPROM(EEPROM_SENSOR_SENSIRION);
-  sensor_pressure = Utils.readEEPROM(EEPROM_SENSOR_PRESSURE);
-  sensor_leafwetness = Utils.readEEPROM(EEPROM_SENSOR_LEAFWETNESS);
-#endif
-#if USE_SDI
-  sensor_ctd10 = Utils.readEEPROM(EEPROM_SENSOR_CTD10);
-  sensor_ds2 = Utils.readEEPROM(EEPROM_SENSOR_DS2);
-#endif
-#if USE_I2C
-  sensor_ds1820 = Utils.readEEPROM(EEPROM_SENSOR_DS1820);
-  sensor_bme280 = Utils.readEEPROM(EEPROM_SENSOR_BME280);
-  sensor_mb =  Utils.readEEPROM(EEPROM_SENSOR_MB);
-#endif
+  // Read run table
+  for (uint8_t i=0; i < RUN_LEN; i++)
+  {
+    actions[i] = Utils.readEEPROM(EEPROM_RUN + i);
+  }
 
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
   /*** 2. Autodetect hardware ***/
-  cr.print(F("Hardware autodetect in progress"));
   hasSD = SD.ON();
   SD.OFF();
   hasGPS = GPS.ON();
   GPS.OFF();
-  cr.print(F("Hardware autodetect done (SD=%d GPS=%d)"), hasSD, hasGPS);
 
 /*
     // USB autodetect
@@ -88,7 +72,8 @@ void WaspUIO::onLoop()
   onRegister = 0;
 
   loadTime(true); // Read temperature as well
-  RTC.breakTimeAbsolute(getEpochTime(), &time); // Keep minute & hour for later
+  uint32_t epoch = getEpochTime();
+  minute = (epoch / 60) % 1440;
   readBattery();
 }
 
@@ -124,7 +109,7 @@ void WaspUIO::startSD()
   {
     if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
     {
-      cr.print(F("openFiles: opening log file failed"));
+      cr.println(F("openFiles: opening log file failed"));
     }
   }
 
@@ -214,7 +199,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
     // Print to log file
     if (UIO.logFile.write(buffer) == -1)
     {
-      cr.print(F("ERROR vlog: failed writing to SD"));
+      cr.println(F("ERROR vlog: failed writing to SD"));
     }
   }
 }
@@ -279,15 +264,11 @@ void WaspUIO::createFrame(bool discard)
     frame2Sd();
   }
 
-#if FRAME_BINARY
-  frame.createFrame(BINARY);
-#else
-  frame.createFrame(ASCII);
-#endif
+  frame.createFrameBin(BINARY);
 
   // In binary frames, the timestamp must be first, that's what I deduce from
   // frame.addTimestamp
-  frame.addSensor(SENSOR_TST, epochTime);
+  frame.addSensorBin(SENSOR_TST, epochTime);
 }
 
 
@@ -348,11 +329,7 @@ uint8_t WaspUIO::frame2Sd()
     return 1;
   }
 
-#if FRAME_BINARY
   if (SD.append(dataFilename, frame.buffer, frame.length) == 0)
-#else
-  if (SD.appendln(dataFilename, frame.buffer, frame.length) == 0)
-#endif
   {
     error(F("frame2Sd: Failed to append frame to %s"), dataFilename);
     return 1;
@@ -372,7 +349,7 @@ uint8_t WaspUIO::frame2Sd()
   {
     USB.ON();
     USB.flush();
-    showFrame();
+    showBinaryFrame();
     USB.OFF();
   }
 
@@ -380,11 +357,10 @@ uint8_t WaspUIO::frame2Sd()
 }
 
 /**
- * Print the frame to USB. If it's ASCII just call frame.showFrame; if it's
- * binary decode and print it.
+ * Print the binary frame to USB.
  */
 
-void WaspUIO::showFrame()
+void WaspUIO::showBinaryFrame()
 {
    uint8_t *p;
    uint8_t nbytes;
@@ -392,37 +368,28 @@ void WaspUIO::showFrame()
    uint8_t i, j;
    char c;
 
-   // ASCII Frame
-   if (frame.buffer[3] & 128)
-   {
-     frame.showFrame();
-     return;
-   }
-
-   //frame.showFrame();
-
    // Binary Frame
-   cr.print(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
+   cr.println(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
    p = frame.buffer;
 
    // Start delimiter
    if (strncmp((const char*) p, "<=>", 3) != 0)
    {
-     cr.print(F("Error reading Start delimiter <=>"));
+     cr.println(F("Error reading Start delimiter <=>"));
      return;
    }
    p += 3;
 
    // Frame type (TODO Print text identifier: Information, TimeOut, ...)
    // Don't clear the most significant bit, we already know it's zero
-   cr.print(F("Frame type: %d"), *p++);
+   cr.println(F("Frame type: %d"), *p++);
 
    // Number of bytes
    nbytes = *p++;
-   //cr.print(F("Number of bytes left: %d"), nbytes);
+   //cr.println(F("Number of bytes left: %d"), nbytes);
 
    // Serial ID
-   //cr.print(F("BOOT VERSION %c"), _boot_version);
+   //cr.println(F("BOOT VERSION %c"), _boot_version);
    if (_boot_version >= 'G')
    {
      Utils.hex2str(p, buffer, 8);
@@ -433,7 +400,7 @@ void WaspUIO::showFrame()
      Utils.hex2str(p, buffer, 4);
      p += 4;
    }
-   cr.print(F("Serial ID: 0x%s"), buffer);
+   cr.println(F("Serial ID: 0x%s"), buffer);
 
    // Waspmote ID
    for (i = 0; i < 17 ; i++)
@@ -448,13 +415,13 @@ void WaspUIO::showFrame()
    }
    if (c != '#')
    {
-     cr.print(F("Error reading Waspmote ID"));
+     cr.println(F("Error reading Waspmote ID"));
      return;
    }
-   cr.print(F("Waspmote ID: %s"), buffer);
+   cr.println(F("Waspmote ID: %s"), buffer);
 
    // Sequence
-   cr.print(F("Sequence: %d"), *p++);
+   cr.println(F("Sequence: %d"), *p++);
 
    // Payload
    uint8_t sensor_id, nfields, type, decimals;
@@ -484,17 +451,17 @@ void WaspUIO::showFrame()
      {
        if (type == 0) // uint8_t
        {
-         cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
+         cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
        }
        else if (type == 1) // int
        {
-         cr.print(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
+         cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
          p += 2;
        }
        else if (type == 2) // double
        {
          Utils.float2String(*(float *)p, value, decimals);
-         cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+         cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value);
          p += 4;
        }
        else if (type == 3) // char*
@@ -502,66 +469,29 @@ void WaspUIO::showFrame()
          len = *p++;
          if (len > sizeof(value) - 1)
          {
-           cr.print(F("Error reading sensor value, string too long %d"), len);
+           cr.println(F("Error reading sensor value, string too long %d"), len);
            return;
          }
          strncpy(value, (char*) p, len);
          p += len;
-         cr.print(F("Sensor %d (%s): %s"), sensor_id, name, value);
+         cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value);
        }
        else if (type == 4) // uint32_t
        {
-         cr.print(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
+         cr.println(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
          p += 4;
        }
        else if (type == 5) // uint8_t*
        {
-         cr.print(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
+         cr.println(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
        }
        else
        {
-         cr.print(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
+         cr.println(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
        }
      }
    }
-   cr.print(F("=========================================="));
-}
-
-
-/**
- * Function to receive, parse and update RTC from GPS_sync frame
- *
- * Parameters: void
- *
- * Returns: uint8_t (0 on success, 1 on error)
- */
-
-uint8_t WaspUIO::receiveGPSsyncTime()
-{
-  char * pch; // Define pointer for string
-  unsigned long epoch; // Define variable for epoch time
-  timestamp_t time;
-
-  debug(F("receiveGPSsyncTime: got frame %s"), xbeeDM._payload);
-
-  pch = strstr((const char*)xbeeDM._payload, "TST:");
-  //trace(F("receiveGPSsyncTime: pch = %s"), pch);
-  epoch = strtoul(pch+4, NULL, 10);
-  epoch = epoch + 2; // Add some seconds for the delays, FIXME Check this!!!
-  // Break Epoch time into UTC time
-  RTC.breakTimeAbsolute(epoch, &time);
-
-  // Setting time [yy:mm:dd:dow:hh:mm:ss]
-  // '0' on succes, '1' otherwise
-  if (saveTime(time.year, time.month, time.date, time.hour, time.minute, time.second) != 0)
-  {
-    error(F("No RTC update from GPS"));
-    return 1;
-  }
-
-  // Success!!
-  info(F("Got GPStime, RTC updated"));
-  return 0;
+   cr.println(F("=========================================="));
 }
 
 
@@ -603,16 +533,19 @@ void WaspUIO::OTA_communication(int OTA_duration)
 bool WaspUIO::action(uint8_t n, ...)
 {
   va_list args;
+  int idx;
   int value;
   bool yes = false;
 
   va_start(args, n);
   for (; n; n--)
   {
-    value = va_arg(args, int);
+    idx = va_arg(args, int);
+    assert(idx < RUN_LEN); // TODO Define __assert
+    value = (int) actions[idx];
     if (value > 0)
     {
-      if ((time.hour * 60 + time.minute) % (period * value) == 0)
+      if (minute % (cooldown * value) == 0)
       {
         yes = true;
         break;
@@ -779,7 +712,7 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 
   // Create ASCII frame
   createFrame();
-  ADD_SENSOR(SENSOR_MAC, (char*) myMac);
+  ADD_SENSOR(SENSOR_MAC, (char*) myMac); // Add 2 unsigned longs
   ADD_SENSOR(SENSOR_RSSI, (int) rssi);
   ADD_SENSOR(SENSOR_MAC, sourceMAC);
   ADD_SENSOR(SENSOR_TX_PWR, (uint8_t) sourcePower);
@@ -792,33 +725,27 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 
 void WaspUIO::readBattery()
 {
-  // Battery
-  batteryLevel = PWR.getBatteryLevel();
+  // Lead acid battery does not support reading voltage, yet
+  if (UIO.batteryType == 2)
+  {
+    batteryLevel = 100;
+  }
+  else
+  {
+    batteryLevel = PWR.getBatteryLevel();
+  }
 
+  // Calculate the cooldown factor, depends on battery level
+  cooldown = 1;
   // Power logic for lithium battery
   if (UIO.batteryType == 1)
   {
-    // Find out sampling period, in minutes. The value must be a factor of 60*24
-    // (number of minutes in a day).
-    // Different values for different battery levels.
-    if (batteryLevel <= 30)
-    {
-      period = wakeup_period * 3; // 15 minutes
-    }
-    else if (batteryLevel <= 40)
-    {
-      period = wakeup_period * 2; // 10 minutes
-    }
-    else
-    {
-      period = wakeup_period * 1; // 5 minutes
-    }
+    if      (batteryLevel <= 30) { cooldown = 3; }
+    else if (batteryLevel <= 40) { cooldown = 2; }
   }
-
-  // Logic for Lead acid battery
+  // TODO Logic for Lead acid battery
   else if (UIO.batteryType == 2)
   {
-    period = wakeup_period * 1;
   }
 }
 
@@ -829,18 +756,39 @@ void WaspUIO::readBattery()
  * Return the string of the next alarm.
  *
  */
-const char* WaspUIO::getNextAlarm(char* alarmTime)
+void WaspUIO::nextAlarm()
 {
-  // TODO Be more clever, check the enabled sensors (and network), and only
-  // wake up when something needs to be done
+  int value;
+  int next = INT_MAX;
+
+  for (uint8_t i=0; i < RUN_LEN; i++)
+  {
+    value = (int) actions[i];
+    if (value > 0)
+    {
+      value *= cooldown;
+      value = (minute / value) * value + value;
+      if (value < next)
+      {
+        next = value;
+      }
+    }
+  }
+
+  if (next >= (24 * 60))
+    next = 0;
+
+  next_minute = next;
+}
+
+const char* WaspUIO::nextAlarm(char* alarmTime)
+{
+  uint32_t epoch = getEpochTime();
+  minute = (epoch / 60) % 1440;
+  nextAlarm();
 
   // Format relative time to string, to be passed to deepSleep
-  RTC.breakTimeAbsolute(getEpochTime(), &time);
-  uint8_t alarmMinute = (time.minute / period) * period + period;
-  if (alarmMinute >= 60)
-    alarmMinute = 0;
-  sprintf(alarmTime, "00:00:%02d:00", alarmMinute);
-
+  sprintf(alarmTime, "00:%02d:%02d:00", next_minute / 60, next_minute % 60);
   return alarmTime;
 }
 
@@ -850,14 +798,22 @@ void WaspUIO::deepSleep()
   intFlag = 0;
   PWR.clearInterruptionPin();
 
+  // Get next alarm time
+  char alarmTime[12]; // "00:00:00:00"
+  nextAlarm(alarmTime);
+
   // Reset watchdog
-  RTC.setWatchdog(period + 1);
+  int left = (next_minute == 0)? 1440 - minute: next_minute - minute;
+  if (left < 59) // XXX Maximum is 59
+  {
+    RTC.setWatchdog(left + 1);
+  }
 
   // Enable RTC interruption and sleep
-  char alarmTime[12]; // "00:00:00:00"
-  getNextAlarm(alarmTime);
-  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF);
-  RTC.setWatchdog(UIO.loop_timeout); // Reset if stuck for 4 minutes
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
+
+  // Awake: Reset if stuck for 4 minutes
+  RTC.setWatchdog(UIO.loop_timeout);
 }
 
 

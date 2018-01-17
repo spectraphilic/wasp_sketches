@@ -2,55 +2,6 @@
 
 
 /**
- * Main task
- */
-
-CR_TASK(taskMain)
-{
-  static tid_t health_id, sensors_id, network_id, gps_id;
-
-  CR_BEGIN;
-
-  // Create the first frame
-  UIO.createFrame(true);
-
-  // Sensors
-  CR_SPAWN2(taskHealthFrame, health_id);
-  CR_SPAWN2(taskSensors, sensors_id);
-
-  // Network
-  if ((UIO.flags & FLAG_NETWORK) && UIO.action(1, 12)) // 12 x 5min = 1hour
-  {
-    CR_SPAWN2(taskNetwork, network_id);
-    CR_JOIN(network_id);
-  }
-
-  CR_JOIN(health_id);
-  CR_JOIN(sensors_id);
-
-  // GPS (Once a day)
-  // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
-  // for our networking requirements, so we have to sync it once a day. See
-  // http://hycamp.org/private-area/waspmote-rtc/
-  if (UIO.hasGPS && UIO.time.minute == 0 && UIO.time.hour == 0)
-  {
-    CR_SPAWN2(taskGps, gps_id);
-    CR_JOIN(gps_id);
-  }
-
-  // Save the last frame, if there is something to save
-  if (frame.numFields > 1)
-  {
-    UIO.frame2Sd();
-  }
-
-  //CR_SPAWN(taskSlow);
-
-  CR_END;
-}
-
-
-/**
  * Internal sensors
  *
  * The accelerometer uses the I2C bus.
@@ -86,8 +37,12 @@ CR_TASK(taskAcc)
 
 CR_TASK(taskHealthFrame)
 {
-  // Battery
-  ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel); // Battery level (uint8_t)
+  // Battery level (not for lead acid)
+  // TODO Define how often in the menu with action_battery
+  if (UIO.batteryType != 2)
+  {
+    ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel);
+  }
 
   // RTC temperature (v12 only)
   if (_boot_version < 'H')
@@ -109,15 +64,15 @@ CR_TASK(taskHealthFrame)
 CR_TASK(taskSensors)
 {
 #if USE_AGR
-  bool agr = UIO.action(3, UIO.sensor_pressure, UIO.sensor_leafwetness, UIO.sensor_sensirion);
+  bool agr = UIO.action(3, RUN_PRESSURE, RUN_LEAFWETNESS, RUN_SENSIRION);
 #endif
 #if USE_SDI
-  bool sdi = UIO.action(2, UIO.sensor_ctd10, UIO.sensor_ds2);
+  bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
 #endif
 #if USE_I2C
-  bool onewire = UIO.action(1, UIO.sensor_ds1820);
-  bool i2c = UIO.action(1, UIO.sensor_bme280);
-  bool ttl = UIO.action(1, UIO.sensor_mb);
+  bool onewire = UIO.action(1, RUN_DS1820);
+  bool i2c = UIO.action(1, RUN_BME280);
+  bool ttl = UIO.action(1, RUN_MB);
 #endif
   static tid_t agr_id, sdi_id, onewire_id, i2c_id, ttl_id;
 
@@ -147,7 +102,7 @@ CR_TASK(taskSensors)
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
-  if (UIO.action(1, UIO.sensor_bme280))
+  if (UIO.action(1, RUN_BME280))
   {
     // Check if the sensor is accesible
     if (BME.checkID() == 1)
@@ -220,21 +175,21 @@ CR_TASK(taskAgr)
   CR_BEGIN;
 
   // Measure
-  if (UIO.action(1, UIO.sensor_pressure))
+  if (UIO.action(1, RUN_PRESSURE))
   {
     CR_SPAWN2(taskAgrPressure, p_id);
   }
-  if (UIO.action(2, UIO.sensor_leafwetness, UIO.sensor_sensirion))
+  if (UIO.action(2, RUN_LEAFWETNESS, RUN_SENSIRION))
   {
     CR_SPAWN2(taskAgrLC, lc_id);
   }
 
   // Wait
-  if (UIO.action(1, UIO.sensor_pressure))
+  if (UIO.action(1, RUN_PRESSURE))
   {
     CR_JOIN(p_id);
   }
-  if (UIO.action(2, UIO.sensor_leafwetness, UIO.sensor_sensirion))
+  if (UIO.action(2, RUN_LEAFWETNESS, RUN_SENSIRION))
   {
     CR_JOIN(lc_id);
   }
@@ -266,7 +221,7 @@ CR_TASK(taskAgrLC)
   CR_BEGIN;
 
   // Leaf wetness
-  if (UIO.action(1, UIO.sensor_leafwetness))
+  if (UIO.action(1, RUN_LEAFWETNESS))
   {
     UIO.on(UIO_LEAFWETNESS);
     CR_DELAY(50);
@@ -275,7 +230,7 @@ CR_TASK(taskAgrLC)
   }
 
   // Sensirion (temperature, humidity)
-  if (UIO.action(1, UIO.sensor_sensirion))
+  if (UIO.action(1, RUN_SENSIRION))
   {
     UIO.on(UIO_SENSIRION);
     CR_DELAY(50);
@@ -286,11 +241,11 @@ CR_TASK(taskAgrLC)
   }
 
   // OFF
-  if (UIO.action(1, UIO.sensor_leafwetness))
+  if (UIO.action(1, RUN_LEAFWETNESS))
   {
     UIO.off(UIO_LEAFWETNESS);
   }
-  if (UIO.action(1, UIO.sensor_sensirion))
+  if (UIO.action(1, RUN_SENSIRION))
   {
     UIO.off(UIO_SENSIRION);
   }
@@ -317,14 +272,14 @@ CR_TASK(taskSdi)
   // - Use service requests
 
   // CTD-10
-  if (UIO.action(1, UIO.sensor_ctd10))
+  if (UIO.action(1, RUN_CTD10))
   {
     CR_SPAWN2(taskSdiCtd10, tid);
     CR_JOIN(tid);
   }
 
   // DS-2
-  if (UIO.action(1, UIO.sensor_ds2))
+  if (UIO.action(1, RUN_DS2))
   {
     CR_SPAWN2(taskSdiDs2, tid);
     CR_JOIN(tid);
@@ -558,303 +513,4 @@ CR_TASK(taskTTL)
   ADD_SENSOR(SENSOR_MB73XX, (uint32_t) median, (uint32_t) sd);
 
   return CR_TASK_STOP;
-}
-
-/**
- * Network
- */
-
-CR_TASK(taskNetwork)
-{
-  static tid_t tid;
-
-  // Send, once every 3 hours if low battery  and lithium battery
-  bool send;
-  if (UIO.batteryType == 1)
-  {
-    send = (
-      UIO.hasSD &&
-      (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.time.hour % 3 == 0)
-    );
-  }
-
-  // send period for Lead Acid battery
-  else if (UIO.batteryType == 2)
-  {
-    send = UIO.hasSD;
-  }
-
-  CR_BEGIN;
-
-  if (!xbeeDM.XBee_ON)
-  {
-    if (xbeeDM.ON())
-    {
-      error(F("startNetwork: xbeeDM.ON() failed"));
-      CR_ERROR;
-    }
-  }
-  info(F("Network started"));
-
-  // Spawn first the receive task
-  //CR_SPAWN(taskNetworkReceive);
-
-  // Schedule sending frames
-  if (send)
-  {
-    CR_SPAWN2(taskNetworkSend, tid);
-  }
-
-  CR_DELAY(8000); // Keep the network open at least for 8s
-
-  if (send)
-  {
-    CR_JOIN(tid);
-  }
-
-  // Stop network
-  if (xbeeDM.XBee_ON)
-  {
-    xbeeDM.OFF();
-    info(F("Network stopped"));
-  }
-
-  CR_END;
-}
-
-CR_TASK(taskNetworkSend)
-{
-  SdFile archive;
-  uint32_t fileSize;
-  uint8_t item[8];
-  uint32_t t0;
-  char dataFilename[18]; // /data/YYMMDD.txt
-  int size;
-
-  CR_BEGIN;
-
-  UIO.startSD();
-
-  // Delay sending of frame by a random time within 50 to 550 ms to avoid
-  // jaming the network. XXX
-  // CR_DELAY(rand() % 500);
-
-  // Security check, the file size must be a multiple of 8. If it is not we
-  // consider there has been a write error, and we trunctate the file.
-  fileSize = UIO.tmpFile.fileSize();
-  if (fileSize % 8 != 0)
-  {
-    UIO.tmpFile.truncate(fileSize - fileSize % 8);
-    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.tmpFilename);
-  }
-
-  // Send frames
-  while (UIO.tmpFile.fileSize() && (! cr.timeout(UIO.start, UIO.send_timeout * 1000)))
-  {
-    t0 = millis();
-
-    // Read the frame length
-    UIO.tmpFile.seekEnd(-8);
-    if (UIO.tmpFile.read(item, 8) != 8)
-    {
-      error(F("sendFrames (%s): read error"), UIO.tmpFilename);
-      CR_ERROR;
-    }
-
-    // Read the frame
-    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &archive, O_RDONLY))
-    {
-      error(F("sendFrames: fail to open %s"), dataFilename);
-      CR_ERROR;
-    }
-    archive.seekSet(*(uint32_t *)(item + 3));
-    size = archive.read(SD.buffer, (size_t) item[7]);
-    archive.close();
-
-    if (size < 0 || size != (int) item[7])
-    {
-      error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
-      CR_ERROR;
-    }
-
-    // Send the frame
-    if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
-    {
-      warn(F("sendFrames: Send failure"));
-      CR_ERROR;
-    }
-
-    // Truncate (pop)
-    if (UIO.tmpFile.truncate(UIO.tmpFile.fileSize() - 8) == false)
-    {
-      error(F("sendFrames: error in tmpFile.truncate"));
-      CR_ERROR;
-    }
-
-    debug(F("Frame sent in %lu ms"), cr.millisDiff(t0));
-
-    // Give control back
-    CR_DELAY(0);
-  }
-
-  CR_END;
-}
-
-CR_TASK(taskNetworkReceive)
-{
-  char sourceMAC[17];
-
-  CR_BEGIN;
-
-  while (xbeeDM.XBee_ON)
-  {
-    if (xbeeDM.available())
-    {
-      debug(F("receivePacket: data available"));
-      // Data is expected to be available before calling this method, that's
-      // why we only timout for 50ms, much less should be enough (to be
-      // tested).
-      if (xbeeDM.receivePacketTimeout(100))
-      {
-        warn(F("receivePacket: timeout (we will retry)"));
-      }
-      else
-      {
-        // RSSI
-        UIO.readRSSI2Frame();
-
-        // Proxy call to appropriate handler
-        if (strstr((const char*)xbeeDM._payload, "GPS_sync") != NULL)
-        {
-          UIO.receiveGPSsyncTime();
-        }
-        else
-        {
-          warn(F("receivePacket: unexpected packet"));
-          // Show data stored in '_payload' buffer indicated by '_length'
-          debug(F("Data: %s"), xbeeDM._payload);
-          // Show data stored in '_payload' buffer indicated by '_length'
-          debug(F("Length: %d"), xbeeDM._length);
-          // Show data stored in '_payload' buffer indicated by '_length'
-          Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
-          debug(F("Source MAC Address: %s"), sourceMAC);
-        }
-      }
-    }
-
-    // Give control back
-    CR_DELAY(0);
-  }
-
-  CR_END;
-}
-
-/**
- * Set RTC time from GPS
- *
- * TODO Use ephemiris, apparently this is required to improve power.
- */
-
-CR_TASK(taskGps)
-{
-  uint32_t before, after;
-  uint32_t start, time;
-
-  // On
-  if (GPS.ON() == 0)
-  {
-    warn(F("GPS: GPS.ON() failed"));
-    return CR_TASK_ERROR;
-  }
-
-  debug(F("GPS: Start"));
-  start = millis();
-
-  // Ephemerides
-  if (UIO.hasSD)
-  {
-    if (GPS.loadEphems() == 1)
-    {
-      debug(F("GPS: Ephemerides loaded"));
-    }
-    else
-    {
-      warn(F("GPS: Ephemerides loading failed"));
-    }
-  }
-
-  // XXX We could use GPS.check instead, and give control back with CR_DELAY,
-  // problem is when we sleep (cr) the gps is powered off (to verify).
-  if (GPS.waitForSignal(150) == false) // 150s = 2m30s
-  {
-    warn(F("GPS: Timeout"));
-    GPS.OFF();
-    return CR_TASK_ERROR;
-  }
-
-  // Ephemerides
-  if (UIO.hasSD)
-  {
-    if (GPS.saveEphems() == 1)
-    {
-      debug(F("GPS: Ephemerides saved"));
-    }
-    else
-    {
-      warn(F("GPS: Ephemerides saving failed"));
-    }
-  }
-  time = millis() - start;
-
-  // Position
-  if (GPS.getPosition() != 1)
-  {
-    warn(F("GPS: getPosition failed"));
-    GPS.OFF();
-    return CR_TASK_ERROR;
-  }
-
-  // Time
-  // XXX could optimize, as part of the work in setTimeFromGPS is already done
-  // in getPosition above.
-  before = UIO.getEpochTime();
-  GPS.setTimeFromGPS(); // Save time to RTC
-  UIO.loadTime(); // Set system time
-  after = UIO.getEpochTime();
-  GPS.OFF();
-
-  // Frames
-  uint32_t skew = (after > before) ? (after - before): (before - after);
-  info(F("GPS: Success, time updated (time=%lu skew=%lu)"), time, skew);
-  debug(F("GPS: Position latitude=%s %c"), GPS.latitude, GPS.NS_indicator);
-  debug(F("GPS: Position longitude=%s %c"), GPS.longitude, GPS.EW_indicator);
-  debug(F("GPS: Position altitude=%s course=%s speed=%s"), GPS.altitude, GPS.course, GPS.speed);
-  //ADD_SENSOR(SENSOR_GPS_STATS, time, skew);
-  ADD_SENSOR(SENSOR_GPS, GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator),
-                         GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator));
-  //ADD_SENSOR(SENSOR_ALTITUDE, GPS.altitude);
-  //ADD_SENSOR(SENSOR_SPEED, GPS.speed);
-  //ADD_SENSOR(SENSOR_COURSE, GPS.course);
-
-  // Off
-  return CR_TASK_STOP;
-}
-
-/**
- * This task is only to test the watchdog reset.
- */
-
-CR_TASK(taskSlow)
-{
-  CR_BEGIN;
-
-  // Wait a little bit so this is executed last
-  CR_DELAY(12000);
-
-  warn(F("Start slow task"));
-  delay(5 * 60000); // 5 minutes
-  warn(F("End slow task"));
-
-  CR_END;
 }
