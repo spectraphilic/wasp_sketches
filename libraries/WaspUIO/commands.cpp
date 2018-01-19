@@ -20,21 +20,26 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_BATTERY  [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
-const char CMD_CAT      [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
-const char CMD_DISABLE  [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
-const char CMD_ENABLE   [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
-const char CMD_EXIT     [] PROGMEM = "exit           - Exit the command line interface";
-const char CMD_FORMAT   [] PROGMEM = "format         - Format SD card";
-const char CMD_HELP     [] PROGMEM = "help           - Prints the list of commands";
-const char CMD_LOG_LEVEL[] PROGMEM = "loglevel VALUE - Sets the log level: 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char CMD_LS       [] PROGMEM = "ls             - List files in SD card";
-const char CMD_NETWORK  [] PROGMEM = "network VALUE  - Choose network: 0=Finse 1=Gateway 2=Broadcast 3=Finse-alt 4=Pi@Finse 5=Pi@Spain";
-const char CMD_PRINT    [] PROGMEM = "print          - Print configuration and other information";
-const char CMD_RUN      [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: 0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
-const char CMD_SDI12    [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
-const char CMD_TIME_GPS [] PROGMEM = "time gps       - Sets time from GPS";
-const char CMD_TIME     [] PROGMEM = "time VALUE     - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
+const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
+const char CMD_CAT     [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
+const char CMD_DISABLE [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
+const char CMD_ENABLE  [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
+const char CMD_EXIT    [] PROGMEM = "exit           - Exit the command line interface";
+const char CMD_FORMAT  [] PROGMEM = "format         - Format SD card";
+const char CMD_HELP    [] PROGMEM = "help           - Prints the list of commands";
+const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE - Sets the log level: "
+                                    "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
+const char CMD_LS      [] PROGMEM = "ls             - List files in SD card";
+const char CMD_NETWORK [] PROGMEM = "network VALUE  - Choose network: "
+                                    "0=Finse 1=Gateway 2=Broadcast 3=Finse-alt 4=Pi@Finse 5=Pi@Spain";
+const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s) - Identify OneWire sensors attached to the given pins,"
+                                    "saves to onewire.txt";
+const char CMD_PRINT   [] PROGMEM = "print          - Print configuration and other information";
+const char CMD_RUN     [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: "
+                                    "0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
+const char CMD_SDI12   [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
+const char CMD_TIME_GPS[] PROGMEM = "time gps       - Sets time from GPS";
+const char CMD_TIME    [] PROGMEM = "time VALUE     - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
 
 const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
@@ -44,8 +49,9 @@ const Command commands[] PROGMEM = {
   {"exit",      &cmdExit,     CMD_EXIT},
   {"format",    &cmdFormat,   CMD_FORMAT},
   {"help",      &cmdHelp,     CMD_HELP},
-  {"loglevel ", &cmdLogLevel, CMD_LOG_LEVEL},
+  {"loglevel ", &cmdLogLevel, CMD_LOGLEVEL},
   {"ls",        &cmdLs,       CMD_LS},
+  {"onewire ",  &cmdOneWire,  CMD_ONEWIRE},
   {"network ",  &cmdNetwork,  CMD_NETWORK},
   {"print",     &cmdPrint,    CMD_PRINT},
   {"run ",      &cmdRun,      CMD_RUN},
@@ -308,6 +314,114 @@ COMMAND(cmdNetwork)
   UIO.initNet();
 
   return cmd_ok;
+}
+
+/**
+ * Autodetect sensors attached to the given OneWire pin
+ */
+
+uint8_t _getPin(uint8_t pin)
+{
+  // 0 - 8
+  if (pin == 0) return DIGITAL0;
+  if (pin == 1) return DIGITAL1;
+  if (pin == 2) return DIGITAL2;
+  if (pin == 3) return DIGITAL3;
+  if (pin == 4) return DIGITAL4;
+  if (pin == 5) return DIGITAL5;
+  if (pin == 6) return DIGITAL6;
+  if (pin == 7) return DIGITAL7;
+  if (pin == 8) return DIGITAL8;
+
+  return 255;
+}
+
+COMMAND(cmdOneWire)
+{
+  uint8_t npins;
+  uint8_t pins[] = {255, 255, 255};
+  uint8_t pin;
+  uint8_t addr[8];
+  char addr_str[17];
+  uint8_t crc;
+  SdFile file;
+  bool has_file = false;
+  size_t size = 20;
+  char buffer[size];
+
+  // Check input
+  npins = sscanf(str, "%hhu %hhu %hhu", &pins[0], &pins[1], &pins[2]);
+  if (npins < 1) { return cmd_bad_input; }
+
+  // ON
+  if (UIO.hasSD)
+  {
+    SD.ON();
+    if (SD.openFile("onewire.txt", &file, O_WRONLY | O_CREAT | O_TRUNC))
+    {
+      has_file = true;
+    }
+    else
+    {
+      cr.print(F("Error opening onewire.txt"));
+    }
+    file.truncate(0);
+  }
+  PWR.setSensorPower(SENS_3V3, SENS_ON);
+  delay(750);
+
+  for (uint8_t i = 0; i < npins; i++)
+  {
+    pin = _getPin(pins[i]);
+    if (pin == 255) continue;
+
+    snprintf_F(buffer, size, F("%hhu"), pins[i]);
+    USB.print(buffer); if (has_file) file.write(buffer);
+    WaspOneWire oneWire(pin);
+
+    // For now we only support the DS1820, so here just read that directly
+    // We assume we have a chain of DS1820 sensors, and read all of them.
+    if (! oneWire.reset())
+    {
+      cr.print(F(" nothing"));
+      goto next;
+    }
+
+    // Send conversion command to all sensors
+    oneWire.skip();
+    oneWire.write(0x44, 1); // Keep sensors powered (parasite mode)
+    delay(1000);            // 750ms may be enough
+
+    // Search
+    oneWire.reset_search();
+    while (oneWire.search(addr))
+    {
+      Utils.hex2str(addr, addr_str, 8);
+      snprintf_F(buffer, size, F(" %s"), addr_str);
+      USB.print(buffer); if (has_file) file.write(buffer);
+
+      // Check address CRC
+      crc = oneWire.crc8(addr, 7);
+      if (crc != addr[7]) { cr.print(F("(crc error)")); continue; }
+
+      // Only DS18B20 is supported for now
+      if (addr[0] != 0x28) { cr.print(F("(not DS18B20)")); continue; }
+    }
+
+next:
+    oneWire.depower();
+    USB.println(); if (has_file) file.write("\n");
+  }
+
+  // OFF
+  PWR.setSensorPower(SENS_3V3, SENS_OFF);
+  if (UIO.hasSD)
+  {
+    file.close();
+    SD.OFF();
+  }
+
+  return cmd_quiet;
 }
 
 /**

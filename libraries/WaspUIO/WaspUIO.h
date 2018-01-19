@@ -251,6 +251,7 @@ enum cmd_status_t {
 };
 
 uint8_t _getFlag(const char*);
+uint8_t _getPin(uint8_t);
 
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
@@ -263,6 +264,7 @@ COMMAND(cmdFormat);
 COMMAND(cmdHelp);
 COMMAND(cmdLs);
 COMMAND(cmdNetwork);
+COMMAND(cmdOneWire);
 COMMAND(cmdPrint);
 COMMAND(cmdRun);
 COMMAND(cmdLogLevel);

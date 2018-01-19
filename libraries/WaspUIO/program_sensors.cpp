@@ -390,7 +390,7 @@ CR_TASK(task1Wire)
   // delay needed for DS18B20 to response
   // CR_DELAY(750); // This dosn't work... it only read sensor when it tries to send frames
   delay(750);       // ...but this does! Check this???
-  
+
   present = oneWire.reset();
   if (! present)
   {
