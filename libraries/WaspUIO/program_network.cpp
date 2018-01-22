@@ -99,7 +99,7 @@ CR_TASK(taskNetworkSend)
 
     // Read the frame
     UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &archive, O_RDONLY))
+    if (!SD.openFile((char*)dataFilename, &archive, O_READ))
     {
       error(F("sendFrames: fail to open %s"), dataFilename);
       CR_ERROR;

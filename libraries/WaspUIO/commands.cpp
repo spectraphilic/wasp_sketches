@@ -357,7 +357,7 @@ COMMAND(cmdOneWire)
   if (UIO.hasSD)
   {
     SD.ON();
-    if (SD.openFile("onewire.txt", &file, O_WRONLY | O_CREAT | O_TRUNC))
+    if (SD.openFile("onewire.txt", &file, O_WRITE | O_CREAT | O_TRUNC))
     {
       has_file = true;
     }

@@ -110,7 +110,7 @@ void WaspUIO::startSD()
   // Open log file (TODO Log rotate)
   if (flags & FLAG_LOG_SD)
   {
-    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
+    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND))
     {
       cr.println(F("openFiles: opening log file failed"));
     }
@@ -200,7 +200,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
     UIO.startSD();
 
     // Print to log file
-    if (UIO.logFile.write(buffer) == -1)
+    if (UIO.logFile.write(buffer) == -1 || UIO.logFile.sync() == false)
     {
       cr.println(F("ERROR vlog: failed writing to SD"));
     }
