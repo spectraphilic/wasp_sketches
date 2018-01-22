@@ -387,11 +387,6 @@ COMMAND(cmdOneWire)
       goto next;
     }
 
-    // Send conversion command to all sensors
-    oneWire.skip();
-    oneWire.write(0x44, 1); // Keep sensors powered (parasite mode)
-    delay(1000);            // 750ms may be enough
-
     // Search
     oneWire.reset_search();
     while (oneWire.search(addr))

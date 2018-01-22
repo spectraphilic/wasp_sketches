@@ -168,6 +168,7 @@ SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
+int readline(SdFile &file);
 
 // Network
 char myMac[17];
