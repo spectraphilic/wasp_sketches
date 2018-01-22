@@ -375,7 +375,7 @@ CR_TASK(task1Wire)
   SdFile file;
   int len;
   char* word;
-  int pin;
+  uint8_t pin;
   uint8_t addr[8];
   uint8_t data[12];
   char data_str[17];
@@ -403,8 +403,8 @@ CR_TASK(task1Wire)
     if (word == NULL)
       continue;
 
-    pin = atoi(word);
-    WaspOneWire oneWire(pin);
+    pin = (uint8_t) atoi(word);
+    WaspOneWire oneWire(_getPin(pin));
     delay(750); // Delay needed for DS18B20 to reply (TODO Check again)
     if (oneWire.reset())
     {
