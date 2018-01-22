@@ -383,6 +383,9 @@ CR_TASK(task1Wire)
   int16_t temp;
   float temp_f;
   char temp_str[20];
+  uint8_t max = 10;
+  int values[max];
+  uint8_t n = 0;
 
   // TODO
   // - spawn 1 task per pin
@@ -443,7 +446,14 @@ CR_TASK(task1Wire)
           Utils.hex2str(data, data_str, 8);
           warn(F("OneWire %s bad data, CRC failed: %s %02X"), word, data_str, crc);
         }
-        ADD_SENSOR(SENSOR_DS1820, temp);
+        values[n] = temp;
+        n++;
+
+        if (n == max)
+        {
+          ADD_SENSOR(SENSOR_DS1820, n, values);
+          n = 0;
+        }
       }
     }
     else
@@ -460,6 +470,11 @@ CR_TASK(task1Wire)
   {
     error(F("Cannot read onewire.txt"));
     CR_ERROR;
+  }
+
+  if (n > 0)
+  {
+    ADD_SENSOR(SENSOR_DS1820, n, values);
   }
 
   CR_END;
