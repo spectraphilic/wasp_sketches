@@ -356,7 +356,6 @@ COMMAND(cmdOneWire)
   // ON
   if (UIO.hasSD)
   {
-    SD.ON();
     if (SD.openFile("onewire.txt", &file, O_WRITE | O_CREAT | O_TRUNC))
     {
       has_file = true;
@@ -365,7 +364,6 @@ COMMAND(cmdOneWire)
     {
       cr.print(F("Error opening onewire.txt"));
     }
-    file.truncate(0);
   }
   PWR.setSensorPower(SENS_3V3, SENS_ON);
   delay(750);
@@ -410,10 +408,9 @@ next:
 
   // OFF
   PWR.setSensorPower(SENS_3V3, SENS_OFF);
-  if (UIO.hasSD)
+  if (has_file)
   {
     file.close();
-    SD.OFF();
   }
 
   return cmd_quiet;
