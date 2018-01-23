@@ -450,6 +450,10 @@ void WaspUIO::showBinaryFrame()
        type = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[sensor_id]));
        decimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[sensor_id]));
      }
+     if (nfields == 0)
+     {
+       nfields = *p++;
+     }
      for (j = 0; j < nfields; j++)
      {
        if (type == 0) // uint8_t
