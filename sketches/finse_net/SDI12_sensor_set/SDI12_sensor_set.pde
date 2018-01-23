@@ -1,4 +1,3 @@
-
 /*
 
   Script to read and change SDI 12 sensor address
@@ -9,12 +8,15 @@
 #include <SDI12.h>
 
 
-#define DATAPIN DIGITAL6         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
+#define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
 SDI12 mySDI12(DATAPIN);
+
+char sdiResponse[30];
+char cmd[10];
 
 char ret_input = 'Y';
 char newAddr = '0';
-char oldAddr = '0';
+char oldAddr = '?';
 
 
 
@@ -33,6 +35,12 @@ void setup() {
   mySDI12.begin();
   delay(500);
   mySDI12.read_address();
+
+
+  USB.println("SDI12 sensor information:");
+
+  snprintf( cmd, sizeof(cmd), "%cI!", oldAddr ); // Info command (?I!)
+  SDIdata(cmd);
 
 
   USB.println("Do you want to change the sensor address?");
@@ -69,7 +77,8 @@ void setup() {
   }
 
   USB.println("Adress is:");
-  mySDI12.read_address();
+  snprintf( cmd, sizeof(cmd), "%cI!", newAddr ); // Info command (?I!)
+  SDIdata(cmd);
 
   USB.println("Done!  \t Restart waspmote");
 
@@ -80,7 +89,7 @@ void loop()
 
 }
 
-
+// Function to read input from serial
 char input_serial(const char* question) {
   char c;
   USB.print(question);
@@ -94,22 +103,27 @@ char input_serial(const char* question) {
   return c;
 }
 
+// Function to read data from SDI-12 sensor
+void SDIdata(char* cmd)
+{
+  mySDI12.sendCommand(cmd);
 
+  int i = 0;
+  while (mySDI12.available())  // write the response to the screen
+  {
+    char c = mySDI12.read();
+    if ((c != '\n') && (c != '\r'))
+    {
+      sdiResponse[i] = c;
+      i++;
+    }
+    delay(5);
+  }
+  USB.println(sdiResponse); //write the response to the screen
+  //SD.appendln(filename, sdiResponse); //write the response to SD-card
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  delay(1000); // Needed for CTD10 pressure sensor
+  mySDI12.flush();
+  memset (sdiResponse, 0, sizeof(sdiResponse));
+}
 
