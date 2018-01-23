@@ -306,7 +306,7 @@ CR_TASK(taskSdiCtd10)
   if (ttt > 0)
   {
     // TODO We could listen every n ms for a "Service Request" from the sensor
-    delay(ttt * 1000); // XXX Regression, this worked with CR_DELAY before
+    CR_DELAY(ttt * 1000);
   }
 
   // Send the data command
@@ -341,7 +341,7 @@ CR_TASK(taskSdiDs2)
   // XXX In theory we should wait for the time returned by the M command. But
   // tests show it returns 1, probably because 1s is all it needs to return an
   // instantaneous value. But we want averages, so we have to wait >10s.
-  delay(11000); // XXX Regression, this worked with CR_DELAY before
+  CR_DELAY(11000);
 
   // Wind speed&direction, air temp
   if (mySDI12.command2address(1, "D0"))
