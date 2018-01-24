@@ -421,7 +421,7 @@ CR_TASK(task1Wire)
       {
         if (Utils.str2hex(word, addr, 8) < 8)
         {
-          warn(F("OneWire bad address '%s'"), word);
+          warn(F("OneWire(%hhu) bad address '%s'"), pin, word);
           continue;
         }
 
@@ -438,13 +438,13 @@ CR_TASK(task1Wire)
           // Debug
           temp_f = (float) temp / 16;
           Utils.float2String(temp_f, temp_str, 2);
-          debug(F("OneWire %s  : %s"), word, temp_str);
+          debug(F("OneWire(%hhu) %s  : %s"), pin, word, temp_str);
         }
         else
         {
           temp = INT_MIN;
           Utils.hex2str(data, data_str, 8);
-          warn(F("OneWire %s bad data, CRC failed: %s %02X"), word, data_str, crc);
+          warn(F("OneWire(%hhu) %s bad data, CRC failed: %s %02X"), pin, word, data_str, crc);
         }
         values[n] = temp;
         n++;
