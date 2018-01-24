@@ -408,13 +408,13 @@ CR_TASK(task1Wire)
 
     pin = (uint8_t) atoi(word);
     WaspOneWire oneWire(_getPin(pin));
-    delay(750); // Delay needed for DS18B20 to reply (TODO Check again)
+    //delay(750); // Delay included in reset function needed for DS18B20 to reply (TODO Check again)
     if (oneWire.reset())
     {
       // Send conversion command to all sensors
       oneWire.skip();
       oneWire.write(0x44, 1); // Keep power on (parasite mode)
-      delay(1000);            // Time for the sensors to do their job (TODO test 750ms)
+      delay(800);            // Time for the sensors to do their job (TODO test 750ms)
 
       // Read every sensor
       while ((word = strtok(NULL, " ")) != NULL)
@@ -426,7 +426,7 @@ CR_TASK(task1Wire)
         }
 
         // Read value
-        oneWire.reset();
+        oneWire.reset();    
         oneWire.select(addr);
         oneWire.write(0xBE); // Read Scratchpad
         oneWire.read_bytes(data, 9); // We need 9 bytes

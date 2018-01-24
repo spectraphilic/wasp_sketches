@@ -73,7 +73,7 @@ void loop()
     cr.reset();
     cr.spawn(taskMain);
     cr.run();
-  }
+  } 
 
   if (intFlag)
   {
