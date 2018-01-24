@@ -426,6 +426,7 @@ CR_TASK(task1Wire)
         }
 
         // Read value
+        oneWire.reset();
         oneWire.select(addr);
         oneWire.write(0xBE); // Read Scratchpad
         oneWire.read_bytes(data, 9); // We need 9 bytes
