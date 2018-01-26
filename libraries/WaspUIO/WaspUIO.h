@@ -132,8 +132,6 @@ private:
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-int append(SdFile &file, const void* buf, size_t nbyte);
-uint8_t createFile(const char* filename);
 
 /// public methods and attributes ////////////
 public:
@@ -169,6 +167,7 @@ void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
 int readline(SdFile &file);
+int append(SdFile &file, const void* buf, size_t nbyte);
 
 // Network
 char myMac[17];

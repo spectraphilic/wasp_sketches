@@ -107,19 +107,19 @@ void WaspUIO::startSD()
       SD.mkdir((char*)archive_dir);
   }
 
-  // Open log file (TODO Log rotate)
+  // Open log file
   if (flags & FLAG_LOG_SD)
   {
-    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND))
+    if (!SD.openFile((char*)logFilename, &logFile, O_WRITE | O_CREAT | O_APPEND))
     {
-      cr.println(F("openFiles: opening log file failed"));
+      cr.println(F("startSD: Failed to open log file"));
     }
   }
 
   // Open tmp file
-  if (!SD.openFile((char*)tmpFilename, &tmpFile, O_CREAT | O_RDWR | O_APPEND | O_SYNC))
+  if (!SD.openFile((char*)tmpFilename, &tmpFile, O_RDWR | O_CREAT))
   {
-    error(F("openFiles: opening tmp file failed"));
+    error(F("startSD: Failed to open tmp file"));
   }
 }
 
@@ -136,12 +136,9 @@ void WaspUIO::stopSD()
     tmpFile.close();
   }
 
-  if (flags & FLAG_LOG_SD)
+  if (logFile.isOpen())
   {
-    if (logFile.isOpen())
-    {
-      logFile.close();
-    }
+    logFile.close();
   }
 
   // Off
@@ -195,14 +192,16 @@ void vlog(loglevel_t level, const char* message, va_list args)
   }
 
   // (3) Print to log file
-  if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD)) //&& UIO.logFile.isOpen())
+  if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD))
   {
     UIO.startSD();
-
-    // Print to log file
-    if (UIO.logFile.write(buffer) == -1 || UIO.logFile.sync() == false)
+    if (UIO.logFile.isOpen())
     {
-      cr.println(F("ERROR vlog: failed writing to SD"));
+      // Print to log file
+      if (UIO.append(UIO.logFile, buffer, strlen(buffer)) == -1)
+      {
+        cr.println(F("ERROR vlog: failed writing to SD"));
+      }
     }
   }
 }
@@ -301,15 +300,15 @@ void WaspUIO::createFrame(bool discard)
 
 uint8_t WaspUIO::frame2Sd()
 {
-  int32_t size;
+  uint32_t size;
   uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
+  SdFile dataFile;
 
   if (! hasSD)
   {
     return 1;
   }
-
   startSD();
 
   // (1) Get the date
@@ -319,27 +318,23 @@ uint8_t WaspUIO::frame2Sd()
   getDataFilename(dataFilename, item[0], item[1], item[2]);
 
   // (2) Store frame in archive file
-  if (createFile(dataFilename))
+  if (!SD.openFile((char*)dataFilename, &dataFile, O_WRITE | O_CREAT | O_APPEND))
   {
-    error(F("frame2Sd: Failed to create %s"), dataFilename);
+    error(F("frame2Sd: Failed to open %s"), dataFilename);
     return 1;
   }
+  size = dataFile.fileSize();
 
-  size = SD.getFileSize(dataFilename);
-  if (size < 0)
+  int n = append(dataFile, frame.buffer, frame.length);
+  if (n < frame.length)
   {
-    error(F("frame2Sd: Failed to get size from %s"), dataFilename);
+    error(F("frame2Sd: Failed to append frame to %s, %d / %u bytes written"), dataFilename, n, frame.length);
     return 1;
   }
-
-  if (SD.append(dataFilename, frame.buffer, frame.length) == 0)
-  {
-    error(F("frame2Sd: Failed to append frame to %s"), dataFilename);
-    return 1;
-  }
+  dataFile.close();
 
   // (3) Append to queue
-  *(uint32_t *)(item + 3) = (uint32_t) size;
+  *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
   if (append(tmpFile, item, 8) == -1)
   {

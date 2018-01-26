@@ -2,44 +2,6 @@
 
 
 /**
- * createFile
- *
- * Creates the file with the given filename in the SD card. Returns 0 on
- * success, 1 on error.
- *
- * If the file already exists it is not considered an error.
-*/
-
-uint8_t WaspUIO::createFile(const char* filename)
-{
-  int8_t isFile = SD.isFile(filename);
-
-  // Already created
-  if (isFile == 1)
-  {
-    //trace(F("Failed to create %s, it already exists"), filename);
-    return 0;
-  }
-
-  // Create
-  if (isFile == -1)
-  {
-    if (SD.create(filename))
-    {
-      debug(F("%s created"), filename);
-      return 0;
-    }
-
-    error(F("Failed to create %s, error %d"), filename, SD.flag);
-    return 1;
-  }
-
-  //if (isFile == 0)
-  error(F("Exists but not a file %s"), filename);
-  return 1;
-}
-
-/**
  * Append data to the given file.
  *
  * Return the number of bytes written. Or -1 for error.
@@ -55,10 +17,16 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t nbyte)
     return -1;
   }
 
-  n =file.write(buf, nbyte);
+  n = file.write(buf, nbyte);
   if (n == -1)
   {
     error(F("append(%s): write failed"), tmpFilename);
+    return -1;
+  }
+
+  if (file.sync() == false)
+  {
+    error(F("append(%s): sync failed"), tmpFilename);
     return -1;
   }
 
