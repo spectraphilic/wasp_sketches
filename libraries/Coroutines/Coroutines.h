@@ -134,11 +134,15 @@ enum loglevel_t {
 #define debug(fmt, ...) cr.log(LOG_DEBUG, fmt, ## __VA_ARGS__)
 #define trace(fmt, ...) cr.log(LOG_TRACE, fmt, ## __VA_ARGS__)
 
-/* By default prints to USB. Redefine this function to change behaviour. */
+/*
+ * Weak free functions to be overriden. By default they do nothing.
+ * Override them to define behaviour.
+ */
+
+/* Logging */
 extern void vlog(loglevel_t level, const char* message, va_list args) __attribute__((weak));
 
-/* These are called before and after sleep within the loop. To be defined
- * externally. By default do nothing. */
+/* These are called before and after sleep within the loop. */
 extern void beforeSleep() __attribute__((weak));
 extern void afterSleep() __attribute__((weak));
 
@@ -177,6 +181,10 @@ class Loop
     // without sleep for longer than 49 days.
     uint32_t millisDiff(uint32_t t0) __attribute__((noinline));
     bool timeout(uint32_t t0, uint32_t timeout);
+
+    // Error handling
+    char last_error[150];
+    void set_last_error(const __FlashStringHelper *, ...);
 
     // Printing to USB done right. The print functions takes a formatted
     // string, either a regular string (char*) or one stored in the program
