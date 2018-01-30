@@ -4,6 +4,8 @@ Journal of the deployment of Waspmotes at Finse.
 
 Started Nov. 2017 by S. Filhol
 
+**Last update: Jan. 30, 2018**
+
 ## Summary table
 
 
@@ -24,6 +26,18 @@ Coordinates in UTM 32N, unit meter.
 
 ---
 
+## Thomas Station
+
+### 2018-01-27
+
+ - Installation of a waspmote at the Thomas station in replacement to the pre-existing station (hobo with air temp and wind speed/dir + snowmo)
+ - Sensors: DS-2, and ds18b20 for air temperature. 
+ - Program: commit b627f18d72330e0ddb736dd03ad9d7960bbe921b
+ - Lead acid battery
+ - did not collected the mote ID and xbee ID. 
+
+---
+
 ## Marshland
 
 ### 2017-12-13
@@ -31,7 +45,6 @@ Coordinates in UTM 32N, unit meter.
 - Installation of a waspmote with Maxbotix and DS1820 sensor
 - Waspmote ID: 607867057C1054D2
 - Lead acid battery
-
 
 
 
@@ -47,6 +60,10 @@ Coordinates in UTM 32N, unit meter.
 - UTC time, SD, GPS, lithium Bat, solar panel, Libelium box. 
 - Sensors: DS-2. Sampling interval: 3m. Moved on the same pole as the drift lower lidar, right next to the radar. 
 
+
+### 2018-01-25
+
+Waspmote got burried in snow, sensor still out of snow.
 
 ------
 
