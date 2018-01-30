@@ -237,6 +237,7 @@ COMMAND(cmdFormat)
 
   // Do
   SD.format();
+  UIO.stopSD(); UIO.startSD(); // Create base files
   return cmd_ok;
 }
 
