@@ -5,19 +5,19 @@ CR_TASK(taskNetwork)
   static tid_t tid;
 
   // Send, once every 3 hours if low battery  and lithium battery
-  bool send;
-  if (UIO.batteryType == 1)
+  bool send = false;
+  if (UIO.hasSD)
   {
-    send = (
-      UIO.hasSD &&
-      (UIO.batteryLevel > 75) || (UIO.batteryLevel > 65 && UIO.minute % 180 == 0)
-    );
-  }
-
-  // send period for Lead Acid battery
-  else if (UIO.batteryType == 2)
-  {
-    send = UIO.hasSD;
+    if (UIO.batteryType == 1) // Lithium
+    {
+      send = (
+        (UIO.batteryLevel > 75) ||
+        (UIO.batteryLevel > 65 && UIO.minute % 180 == 0)
+      );
+    }
+    else if (UIO.batteryType == 2) // Lead Acid (send always)
+    {
+    }
   }
 
   CR_BEGIN;
@@ -99,7 +99,7 @@ CR_TASK(taskNetworkSend)
 
     // Read the frame
     UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &archive, O_RDONLY))
+    if (!SD.openFile((char*)dataFilename, &archive, O_READ))
     {
       error(F("sendFrames: fail to open %s"), dataFilename);
       CR_ERROR;
@@ -147,11 +147,10 @@ CR_TASK(taskNetworkReceive)
   {
     if (xbeeDM.available())
     {
-
       // Data is expected to be available before calling this method, that's
       // why we only timout for 50ms, much less should be enough (to be
       // tested).
-      if (xbeeDM.receivePacketTimeout(50))
+      if (xbeeDM.receivePacketTimeout(100))
       {
         warn(F("receivePacket: timeout (we will retry)"));
       }

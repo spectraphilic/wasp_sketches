@@ -9,7 +9,7 @@
  ******************************************************************************/
 
 // We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR true
+#define USE_AGR false
 #define USE_I2C true // I include here OneWire as well
 #define USE_SDI true
 
@@ -156,6 +156,7 @@ float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
 int minute;              // minute of the day, from 0 to 1439
+int day;                 // days since the epoch
 int next_minute;         // minute of the next alarm
 
 // SD
@@ -167,6 +168,7 @@ SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
+int readline(SdFile &file);
 
 // Network
 char myMac[17];
@@ -240,24 +242,36 @@ void onHAIwakeUP_after(void);
 /*
  * Commands
  */
-uint8_t _getFlag(const char*);
+enum cmd_status_t {
+  cmd_exit,
+  cmd_ok,
+  cmd_quiet,
+  cmd_bad_input,
+  cmd_unavailable,
+  cmd_error,
+};
 
-int8_t exeCommand(const char*);
-int8_t cmdBattery(const char*);
-int8_t cmdCat(const char*);
-int8_t cmdDisable(const char*);
-int8_t cmdEnable(const char*);
-int8_t cmdExit(const char*);
-int8_t cmdFormat(const char*);
-int8_t cmdHelp(const char*);
-int8_t cmdLs(const char*);
-int8_t cmdNetwork(const char*);
-int8_t cmdPrint(const char*);
-int8_t cmdRun(const char*);
-int8_t cmdLogLevel(const char*);
-int8_t cmdSDI12(const char*);
-int8_t cmdTime(const char*);
-int8_t cmdTimeGPS(const char*);
+uint8_t _getFlag(const char*);
+uint8_t _getPin(uint8_t);
+
+#define COMMAND(name) cmd_status_t name(const char* str)
+COMMAND(exeCommand);
+COMMAND(cmdBattery);
+COMMAND(cmdCat);
+COMMAND(cmdDisable);
+COMMAND(cmdEnable);
+COMMAND(cmdExit);
+COMMAND(cmdFormat);
+COMMAND(cmdHelp);
+COMMAND(cmdLs);
+COMMAND(cmdNetwork);
+COMMAND(cmdOneWire);
+COMMAND(cmdPrint);
+COMMAND(cmdRun);
+COMMAND(cmdLogLevel);
+COMMAND(cmdSDI12);
+COMMAND(cmdTime);
+COMMAND(cmdTimeGPS);
 
 
 /*

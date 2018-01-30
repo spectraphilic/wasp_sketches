@@ -14,25 +14,27 @@ CR_TASK(taskMain)
   // Create the first frame
   UIO.createFrame(true);
 
-  // Sensors
-  CR_SPAWN2(taskHealthFrame, health_id);
-  CR_SPAWN2(taskSensors, sensors_id);
-
   // Network
+  // First the network, then the sensors. This is to avoid interferences as I
+  // have found between receiving frames and the SDI-12 bus.  We do first the
+  // network because we need it to be run in a predictable time.
   if ((UIO.batteryLevel > 30) && UIO.action(1, RUN_NETWORK))
   {
     CR_SPAWN2(taskNetwork, network_id);
     CR_JOIN(network_id);
   }
 
+  // Sensors
+  CR_SPAWN2(taskHealthFrame, health_id);
+  CR_SPAWN2(taskSensors, sensors_id);
   CR_JOIN(health_id);
   CR_JOIN(sensors_id);
 
-  // GPS (Once a day)
+  // GPS (Once every 3 days)
   // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
   // for our networking requirements, so we have to sync it once a day. See
   // http://hycamp.org/private-area/waspmote-rtc/
-  if (UIO.hasGPS && UIO.minute == 0)
+  if (UIO.hasGPS && UIO.minute == 0 && (UIO.day % 3 == 0))
   {
     CR_SPAWN2(taskGps, gps_id);
     CR_JOIN(gps_id);

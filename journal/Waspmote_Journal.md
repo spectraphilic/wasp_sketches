@@ -4,7 +4,52 @@ Journal of the deployment of Waspmotes at Finse.
 
 Started Nov. 2017 by S. Filhol
 
-------
+**Last update: Jan. 30, 2018**
+
+## Summary table
+
+
+
+|   WASPMOTE_id    |      eAST |      nORTH | location Description |             time-period |
+| :--------------: | --------: | ---------: | :------------------: | ----------------------: |
+| 023D67057C105474 | 416970.35 | 6715977.25 |    Appelsinhytta     |      21/11/2017 - today |
+| 197067057C10549F |        NA |         NA |          NA          |                         |
+| 1F566F057C105487 | 417284.06 | 6717123.73 |        Hills         | 21/11/2017 - 24/11/2017 |
+| 3F7C67057C105419 | 417951.37 | 6716590.57 | Middaselvi dsicharge |                         |
+| 40516F057C105437 | 418116.92 |  6721025.8 |  Finselvi discharge  |                         |
+| 607867057C1054D2 |           |            |      Marshland       |        13/12/2017-today |
+| 667767057C10548E | 417284.06 | 6717123.73 |        Hills         |      14/12/2017 - Today |
+| 6D4467057C1054DC | 419401.31 | 6718414.19 |  Drift lower lidar   |                         |
+|                  |           |            |                      |                         |
+
+Coordinates in UTM 32N, unit meter.
+
+---
+
+## Thomas Station
+
+### 2018-01-27
+
+ - Installation of a waspmote at the Thomas station in replacement to the pre-existing station (hobo with air temp and wind speed/dir + snowmo)
+ - Sensors: DS-2, and ds18b20 for air temperature. 
+ - Program: commit b627f18d72330e0ddb736dd03ad9d7960bbe921b
+ - Lead acid battery
+ - did not collected the mote ID and xbee ID. 
+
+---
+
+## Marshland
+
+### 2017-12-13
+
+- Installation of a waspmote with Maxbotix and DS1820 sensor
+- Waspmote ID: 607867057C1054D2
+- Lead acid battery
+
+
+
+
+---
 
 ## Drift lower lidar (6718414.19, 419401.31) 
 
@@ -15,6 +60,10 @@ Started Nov. 2017 by S. Filhol
 - UTC time, SD, GPS, lithium Bat, solar panel, Libelium box. 
 - Sensors: DS-2. Sampling interval: 3m. Moved on the same pole as the drift lower lidar, right next to the radar. 
 
+
+### 2018-01-25
+
+Waspmote got burried in snow, sensor still out of snow.
 
 ------
 
@@ -58,6 +107,7 @@ This staion stopped nov 24.
  - I have tried the unit i changed, and now when it's dry it works fine
  - ...but with the GPS it keeps bugging for me. Might be that the GPS is more sensitive to humidity???
  - I have nice pictures showing riming on the wind sensor.
+ - New station ID: 667767057C10548E
 
 
 ------
@@ -76,7 +126,7 @@ Swithced the v12 waspmote for a v15 (serial ID: 3F7C67057C105419)
 
 ## Finselvi discharge (6721025.8, 418116.92)
 
-Waspmote v15 Lead Acid battery, 10W solar panel, CTD 10 sensor. GPS
+Waspmote v15 Lead Acid battery, 10W solar panel, CTD 10 sensor. GPS. 40516F057C105437
 
 ### 2017-11-21
 

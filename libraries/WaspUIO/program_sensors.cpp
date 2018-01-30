@@ -372,90 +372,111 @@ CR_TASK(taskSdiDs2)
 
 CR_TASK(task1Wire)
 {
+  SdFile file;
+  int len;
+  char* word;
+  uint8_t pin;
   uint8_t addr[8];
   uint8_t data[12];
-  char addr_str[17];
   char data_str[17];
-  uint8_t present, crc, n;
+  uint8_t crc;
   int16_t temp;
   float temp_f;
   char temp_str[20];
-  WaspOneWire oneWire(PIN_1WIRE);
+  uint8_t max = 10;
+  int values[max];
+  uint8_t n = 0;
+
+  // TODO
+  // - spawn 1 task per pin
+  // - give control back with CR_DELAY
 
   CR_BEGIN;
 
-  // For now we only support the DS1820, so here just read that directly
-  // We assume we have a chain of DS1820 sensors, and read all of them.
-
-  // delay needed for DS18B20 to response
-  // CR_DELAY(750); // This dosn't work... it only read sensor when it tries to send frames
-  delay(750);       // ...but this does! Check this???
-  
-  present = oneWire.reset();
-  if (! present)
+  if (SD.openFile("onewire.txt", &file, O_READ) == 0)
   {
-    error(F("OneWire no devices attached"));
+    error(F("Missing onewire.txt file"));
     CR_ERROR;
   }
+
   UIO.on(UIO_1WIRE);
-
-  // Send conversion command to all sensors
-  oneWire.skip();
-  oneWire.write(0x44, 1); // Keep sensors powered (parasite mode)
-  CR_DELAY(1000);         // 750ms may be enough
-
-  // TODO It may be better to search once in the setup, or in the menu, and
-  // store the addresses in the EEPROM
-  n = 0;
-  oneWire.reset_search();
-  while (oneWire.search(addr))
+  while ((len = UIO.readline(file)) >= 0)
   {
-    Utils.hex2str(addr, addr_str, 8);
-    // Check address CRC
-    crc = oneWire.crc8(addr, 7);
-    if (crc != addr[7])
-    {
-      error(F("OneWire %s bad address, CRC failed: %02X"), addr_str, crc);
-      break;
-    }
+    word = strtok(SD.buffer, " ");
+    if (word == NULL)
+      continue;
 
-    // Check device type
-    if (addr[0] == 0x28) // DS18B20
+    pin = (uint8_t) atoi(word);
+    WaspOneWire oneWire(_getPin(pin));
+    //delay(750); // Delay included in reset function needed for DS18B20 to reply (TODO Check again)
+    if (oneWire.reset())
     {
-      n++;
+      // Send conversion command to all sensors
+      oneWire.skip();
+      oneWire.write(0x44, 1); // Keep power on (parasite mode)
+      delay(800);            // Time for the sensors to do their job (TODO test 750ms)
+
+      // Read every sensor
+      while ((word = strtok(NULL, " ")) != NULL)
+      {
+        if (Utils.str2hex(word, addr, 8) < 8)
+        {
+          warn(F("OneWire(%hhu) bad address '%s'"), pin, word);
+          continue;
+        }
+
+        // Read value
+        oneWire.reset();    
+        oneWire.select(addr);
+        oneWire.write(0xBE); // Read Scratchpad
+        oneWire.read_bytes(data, 9); // We need 9 bytes
+
+        crc = oneWire.crc8(data, 8);
+        if (crc == data[8])
+        {
+          temp = (data[1] << 8) | data[0];
+
+          // Debug
+          temp_f = (float) temp / 16;
+          Utils.float2String(temp_f, temp_str, 2);
+          debug(F("OneWire(%hhu) %s  : %s"), pin, word, temp_str);
+        }
+        else
+        {
+          temp = INT_MIN;
+          Utils.hex2str(data, data_str, 8);
+          warn(F("OneWire(%hhu) %s bad data, CRC failed: %s %02X"), pin, word, data_str, crc);
+        }
+        values[n] = temp;
+        n++;
+
+        if (n == max)
+        {
+          ADD_SENSOR(SENSOR_DS1820, n, values);
+          n = 0;
+        }
+      }
     }
     else
     {
-      warn(F("OneWire %0s unexpected device type: %02X"), addr_str, addr[0]);
-      continue;
+      warn(F("OneWire no devices attached to %d pin"), pin);
     }
 
-    // Read value
-    present = oneWire.reset();
-    oneWire.select(addr);
-    oneWire.write(0xBE); // Read Scratchpad
-    oneWire.read_bytes(data, 9); // We need 9 bytes
+    oneWire.depower();
+  }
+  UIO.off(UIO_1WIRE);
 
-    crc = oneWire.crc8(data, 8);
-    if (crc != data[8])
-    {
-      Utils.hex2str(data, data_str, 8);
-      warn(F("OneWire %s bad data, CRC failed: %s %02X"), addr_str, data_str, crc);
-    }
-
-    // Convert to float. Formula for the DS18B20 model.
-    temp = (data[1] << 8) | data[0];
-    temp_f = (float) temp / 16;
-    ADD_SENSOR(SENSOR_DS1820, temp_f);
-
-    // Debug
-    Utils.float2String(temp_f, temp_str, 2);
-    debug(F("OneWire %s : %s"), addr_str, temp_str);
+  file.close();
+  if (len == -2)
+  {
+    error(F("Cannot read onewire.txt"));
+    CR_ERROR;
   }
 
-  debug(F("OneWire %d devices measured"), n);
-  oneWire.depower();
-  UIO.off(UIO_1WIRE);
+  if (n > 0)
+  {
+    ADD_SENSOR(SENSOR_DS1820, n, values);
+  }
 
   CR_END;
 }

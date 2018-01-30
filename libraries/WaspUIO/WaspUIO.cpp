@@ -73,7 +73,10 @@ void WaspUIO::onLoop()
 
   loadTime(true); // Read temperature as well
   uint32_t epoch = getEpochTime();
-  minute = (epoch / 60) % 1440;
+  // Split the epoch time in 2: days since the epoch, and minute of the day
+  day = epoch / (24L * 60L * 60L);
+  minute = (epoch / 60) % (60 * 24); // mins since the epoch modulus mins in a day
+
   readBattery();
 }
 
@@ -107,7 +110,7 @@ void WaspUIO::startSD()
   // Open log file (TODO Log rotate)
   if (flags & FLAG_LOG_SD)
   {
-    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND | O_SYNC))
+    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND))
     {
       cr.println(F("openFiles: opening log file failed"));
     }
@@ -197,7 +200,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
     UIO.startSD();
 
     // Print to log file
-    if (UIO.logFile.write(buffer) == -1)
+    if (UIO.logFile.write(buffer) == -1 || UIO.logFile.sync() == false)
     {
       cr.println(F("ERROR vlog: failed writing to SD"));
     }
@@ -446,6 +449,10 @@ void WaspUIO::showBinaryFrame()
        nfields = (uint8_t)pgm_read_word(&(SENSOR_FIELD_TABLE[sensor_id]));
        type = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[sensor_id]));
        decimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[sensor_id]));
+     }
+     if (nfields == 0)
+     {
+       nfields = *p++;
      }
      for (j = 0; j < nfields; j++)
      {
@@ -784,7 +791,7 @@ void WaspUIO::nextAlarm()
 const char* WaspUIO::nextAlarm(char* alarmTime)
 {
   uint32_t epoch = getEpochTime();
-  minute = (epoch / 60) % 1440;
+  minute = (epoch / 60) % (60 * 24); // minute of the day
   nextAlarm();
 
   // Format relative time to string, to be passed to deepSleep

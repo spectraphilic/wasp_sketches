@@ -64,7 +64,7 @@ char filename_old[50];
 char timestamp[20];
 uint8_t sd_answer;
 
-uint8_t error;
+uint8_t error_;
 int8_t answer;
 int8_t GPS_status;
 uint8_t connection_status;
@@ -131,11 +131,10 @@ void loop()
 
   USB.println("-------------------------------------");
   PWR.setSensorPower(SENS_3V3, SENS_ON);
-  delay(100);
+  delay(1000);
 
-  SD.ON(); // SD MUST be on to append data
-  USB.println("SD on");
-  
+  //SD.ON();
+  //USB.println("SD on");
   // Reading the DS1820 temperature sensors chain connected to DIGITAL8
   temp = readTempDS1820chain(DIGITAL6,  true);
 
@@ -175,7 +174,7 @@ float readTempDS1820chain(uint8_t pin, bool is3v3 )
   char sample_txt[100];
   char temp_str[7];
 
-  USB.println("WHY DOES THIS WORK???");
+
   while (OneWireTemp.search(addr))
   {
     // Print time
@@ -300,225 +299,225 @@ void Send_etc(void)
   chargeCurrent = PWR.getBatteryCurrent();
 
 
-
-  // GPS and 3G stuff--------------------------------------------------
-  // error = GPSand3G();
-
-  //////////////////////////////////////////////////
-  // Set operator parameters
-  //////////////////////////////////////////////////
-  _3G.set_APN(apn, login, password);
-
-  //////////////////////////////////////////////////
-  // Show APN settings via USB port
-  //////////////////////////////////////////////////
-  _3G.show_APN();
-
-
-  //////////////////////////////////////////////////
-  // 1. Switch ON the 3G module
-  //////////////////////////////////////////////////
-  answer = _3G.ON();
-  if ((answer == 1) || (answer == -3))
-  {
-    USB.println(F("1. 3G module ready"));
-
-
-    ////////////////////////////////////////////////
-    // Enter PIN code
-    ////////////////////////////////////////////////
-    USB.println(F("Setting PIN code..."));
-    // if (_4G.enterPIN(PIN_Code) == 0)
-    if (_3G.setPIN(PIN_Code) == 1)
-    {
-      USB.println(F("PIN code accepted"));
-    }
-    else
-    {
-      USB.println(F("PIN code incorrect"));
-    }
-
-    delay(1000);
-
-    ////////////////////////////////////////////////
-    // 1.1. Check connection to network and continue
-    ////////////////////////////////////////////////
-    connection_status = _3G.check(60);
-
-    if (connection_status == 1)
-    {
-      USB.println(F("1.1. Module connected to network"));
-
-      // delay for network parameters stabilization
-      delay(5000);
-
-      GPS_status = _3G.startGPS();
-      if (GPS_status == 1)
-      {
-        USB.println(F("GPS started"));
-      }
-      else
-      {
-        USB.print(F("GPS NOT started, error: "));
-        USB.println(GPS_status);
-      }
-
-      //////////////////////////////////////////////
-      // 1.2. Get RSSI
-      //////////////////////////////////////////////
-      answer = _3G.getRSSI();
-      if (answer != 0)
-      {
-        USB.print(F("RSSI: "));
-        USB.print(answer, DEC);
-        USB.println(F("dBm"));
-      }
-      else
-      {
-        USB.println(F("1.2. Error calling 'getRSSI' function"));
-      }
-
-      //////////////////////////////////////////////
-      // 1.3. Get Network Type
-      //////////////////////////////////////////////
-      USB.print(F("Network mode: "));
-      USB.println(_3G.showsNetworkMode(), DEC);
-    }
-    else
-    {
-      USB.println(F("1.1. Module NOT connected to network"));
-    }
-  }
-  else
-  {
-    // Problem with the communication with the 3G module
-    USB.println(F("3G module not started"));
-    USB.print(F("Error code: "));
-    USB.println(answer, DEC);
-  }
-
-  ////////////////////////////////////////////////
-  // 2.1. FTP open session, send data in filename_old
-  ////////////////////////////////////////////////
-
-  answer = _3G.configureFTP(ftp_server, ftp_port, ftp_user, ftp_pass, 1, "I");
-
-  // check answer
-  if (answer == 1)
-  {
-    USB.println(F("2.1. FTP open session OK"));
-
-    previous = millis();
-
-    //////////////////////////////////////////////
-    // 2.2. FTP upload
-    //////////////////////////////////////////////
-
-    //    snprintf(SERVER_FILE, sizeof(SERVER_FILE), "/incoming/Munch/%s", filename_old );
-    //    USB.print(F("Server_file: "));
-    //    USB.println(SERVER_FILE);
-
-
-    answer = _3G.uploadData(filename_old, filename_old);
-
-    if (answer == 1)
-    {
-
-      USB.print(F("2.2. Uploading SD file to FTP server done! "));
-      USB.print(F("Upload time: "));
-      USB.print((millis() - previous) / 1000, DEC);
-      USB.println(F(" s"));
-    }
-    else
-    {
-      USB.print(F("2.2. Error calling 'ftpUpload' function. Error: "));
-      USB.println(answer, DEC);
-    }
-  }
-  else
-  {
-    USB.print(F( "2.1. FTP connection error: "));
-    USB.println(answer, DEC);
-  }
-
-
-  ////////////////////////////////////////////////
-  // Wait for satellite signals and get values
-  ////////////////////////////////////////////////
-  if (GPS_status == 1)
-  {
-    answer = _3G.getGPSinfo();
-    if (answer == 1)
-    {
-      USB.print(F("3. GPS signal received. Time(secs) = "));
-      USB.println((millis() - previous) / 1000);
-
-      USB.println(F("Acquired position:"));
-      USB.println(F("----------------------------"));
-
-      USB.print(F("Latitude: "));
-      USB.println(_3G.latitude);
-      USB.print(F("Longitude: "));
-      USB.println(_3G.longitude);
-      USB.print(F("Date: "));
-      USB.println(_3G.date);
-      USB.print(F("UTC_time: "));
-      USB.println(_3G.UTC_time);
-      USB.print(F("Altitude: "));
-      USB.println(_3G.altitude);
-      USB.print(F("SpeedOG: "));
-      USB.println(_3G.speedOG);
-      USB.print(F("Course: "));
-      USB.println(_3G.course);
-
-      USB.println(F("----------------------------"));
-
-      // get degrees
-      gps_latitude  = _3G.convert2Degrees(_3G.latitude);
-      gps_longitude = _3G.convert2Degrees(_3G.longitude);
-
-      USB.println("Conversion to degrees:");
-      USB.print(F("Latitude: "));
-      USB.println(gps_latitude);
-      USB.print(F("Longitude: "));
-      USB.println(gps_longitude);
-      USB.println();
-    }
-    else
-    {
-      USB.print("no satellites fixed. Error: ");
-      USB.println(answer, DEC);
-    }
-  }
-
-  ////////////////////////////////////////////////
-  // Set RTC time
-  ////////////////////////////////////////////////
-  USB.print(F("Time [Day of week, YY/MM/DD, hh:mm:ss]: "));
-  USB.println(RTC.getTime());
-
-  answer = _3G.setTimebyGPS(60, 0);
-  if (answer == 1)
-  {
-    USB.print(F("Time set to [Day of week, YY/MM/DD, hh:mm:ss]: "));
-  }
-  else
-  {
-    USB.print(F("Time NOT! changed [Day of week, YY/MM/DD, hh:mm:ss]: "));
-  }
-  //Show time
-
-  USB.println(RTC.getTime());
-
-
-
-  snprintf( sms_body, sizeof(sms_body), "%s Volt, Batt_level: %d , Charging: %d, %d mA, filename: %s", batteryVoltage_str, batteryLevel, chargeState, chargeCurrent, filename);
-  USB.println(sms_body);
-  SD.appendln(filename, sms_body);
-  //SD.OFF(); // Power off SD
-
   //
-  _3G.OFF();
+  //  // GPS and 3G stuff--------------------------------------------------
+  ////   error_ = GPSand3G();
+  //
+  //  //////////////////////////////////////////////////
+  //  // Set operator parameters
+  //  //////////////////////////////////////////////////
+  //  _3G.set_APN(apn, login, password);
+  //
+  //  //////////////////////////////////////////////////
+  //  // Show APN settings via USB port
+  //  //////////////////////////////////////////////////
+  //  _3G.show_APN();
+  //
+  //
+  //  //////////////////////////////////////////////////
+  //  // 1. Switch ON the 3G module
+  //  //////////////////////////////////////////////////
+  //  answer = _3G.ON();
+  //  if ((answer == 1) || (answer == -3))
+  //  {
+  //    USB.println(F("1. 3G module ready"));
+  //
+  //
+  //    ////////////////////////////////////////////////
+  //    // Enter PIN code
+  //    ////////////////////////////////////////////////
+  //    USB.println(F("Setting PIN code..."));
+  //    // if (_4G.enterPIN(PIN_Code) == 0)
+  //    if (_3G.setPIN(PIN_Code) == 1)
+  //    {
+  //      USB.println(F("PIN code accepted"));
+  //    }
+  //    else
+  //    {
+  //      USB.println(F("PIN code incorrect"));
+  //    }
+  //
+  //    delay(1000);
+  //
+  //    ////////////////////////////////////////////////
+  //    // 1.1. Check connection to network and continue
+  //    ////////////////////////////////////////////////
+  //    connection_status = _3G.check(60);
+  //
+  //    if (connection_status == 1)
+  //    {
+  //      USB.println(F("1.1. Module connected to network"));
+  //
+  //      // delay for network parameters stabilization
+  //      delay(5000);
+  //
+  //      GPS_status = _3G.startGPS();
+  //      if (GPS_status == 1)
+  //      {
+  //        USB.println(F("GPS started"));
+  //      }
+  //      else
+  //      {
+  //        USB.print(F("GPS NOT started, error: "));
+  //        USB.println(GPS_status);
+  //      }
+  //
+  //      //////////////////////////////////////////////
+  //      // 1.2. Get RSSI
+  //      //////////////////////////////////////////////
+  //      answer = _3G.getRSSI();
+  //      if (answer != 0)
+  //      {
+  //        USB.print(F("RSSI: "));
+  //        USB.print(answer, DEC);
+  //        USB.println(F("dBm"));
+  //      }
+  //      else
+  //      {
+  //        USB.println(F("1.2. Error calling 'getRSSI' function"));
+  //      }
+  //
+  //      //////////////////////////////////////////////
+  //      // 1.3. Get Network Type
+  //      //////////////////////////////////////////////
+  //      USB.print(F("Network mode: "));
+  //      USB.println(_3G.showsNetworkMode(), DEC);
+  //    }
+  //    else
+  //    {
+  //      USB.println(F("1.1. Module NOT connected to network"));
+  //    }
+  //  }
+  //  else
+  //  {
+  //    // Problem with the communication with the 3G module
+  //    USB.println(F("3G module not started"));
+  //    USB.print(F("Error code: "));
+  //    USB.println(answer, DEC);
+  //  }
+  //
+  //  ////////////////////////////////////////////////
+  //  // 2.1. FTP open session, send data in filename_old
+  //  ////////////////////////////////////////////////
+  //
+  //  answer = _3G.configureFTP(ftp_server, ftp_port, ftp_user, ftp_pass, 1, "I");
+  //
+  //  // check answer
+  //  if (answer == 1)
+  //  {
+  //    USB.println(F("2.1. FTP open session OK"));
+  //
+  //    previous = millis();
+  //
+  //    //////////////////////////////////////////////
+  //    // 2.2. FTP upload
+  //    //////////////////////////////////////////////
+  //
+  //    //    snprintf(SERVER_FILE, sizeof(SERVER_FILE), "/incoming/Munch/%s", filename_old );
+  //    //    USB.print(F("Server_file: "));
+  //    //    USB.println(SERVER_FILE);
+  //
+  //
+  //    answer = _3G.uploadData(filename_old, filename_old);
+  //
+  //    if (answer == 1)
+  //    {
+  //
+  //      USB.print(F("2.2. Uploading SD file to FTP server done! "));
+  //      USB.print(F("Upload time: "));
+  //      USB.print((millis() - previous) / 1000, DEC);
+  //      USB.println(F(" s"));
+  //    }
+  //    else
+  //    {
+  //      USB.print(F("2.2. Error calling 'ftpUpload' function. Error: "));
+  //      USB.println(answer, DEC);
+  //    }
+  //  }
+  //  else
+  //  {
+  //    USB.print(F( "2.1. FTP connection error: "));
+  //    USB.println(answer, DEC);
+  //  }
+  //
+  //
+  //  ////////////////////////////////////////////////
+  //  // Wait for satellite signals and get values
+  //  ////////////////////////////////////////////////
+  //  if (GPS_status == 1)
+  //  {
+  //    answer = _3G.getGPSinfo();
+  //    if (answer == 1)
+  //    {
+  //      USB.print(F("3. GPS signal received. Time(secs) = "));
+  //      USB.println((millis() - previous) / 1000);
+  //
+  //      USB.println(F("Acquired position:"));
+  //      USB.println(F("----------------------------"));
+  //
+  //      USB.print(F("Latitude: "));
+  //      USB.println(_3G.latitude);
+  //      USB.print(F("Longitude: "));
+  //      USB.println(_3G.longitude);
+  //      USB.print(F("Date: "));
+  //      USB.println(_3G.date);
+  //      USB.print(F("UTC_time: "));
+  //      USB.println(_3G.UTC_time);
+  //      USB.print(F("Altitude: "));
+  //      USB.println(_3G.altitude);
+  //      USB.print(F("SpeedOG: "));
+  //      USB.println(_3G.speedOG);
+  //      USB.print(F("Course: "));
+  //      USB.println(_3G.course);
+  //
+  //      USB.println(F("----------------------------"));
+  //
+  //      // get degrees
+  //      gps_latitude  = _3G.convert2Degrees(_3G.latitude);
+  //      gps_longitude = _3G.convert2Degrees(_3G.longitude);
+  //
+  //      USB.println("Conversion to degrees:");
+  //      USB.print(F("Latitude: "));
+  //      USB.println(gps_latitude);
+  //      USB.print(F("Longitude: "));
+  //      USB.println(gps_longitude);
+  //      USB.println();
+  //    }
+  //    else
+  //    {
+  //      USB.print("no satellites fixed. Error: ");
+  //      USB.println(answer, DEC);
+  //    }
+  //  }
+  //
+  //  ////////////////////////////////////////////////
+  //  // Set RTC time
+  //  ////////////////////////////////////////////////
+  //  USB.print(F("Time [Day of week, YY/MM/DD, hh:mm:ss]: "));
+  //  USB.println(RTC.getTime());
+  //
+  //  answer = _3G.setTimebyGPS(60, 0);
+  //  if (answer == 1)
+  //  {
+  //    USB.print(F("Time set to [Day of week, YY/MM/DD, hh:mm:ss]: "));
+  //  }
+  //  else
+  //  {
+  //    USB.print(F("Time NOT! changed [Day of week, YY/MM/DD, hh:mm:ss]: "));
+  //  }
+  //  //Show time
+  //
+  //  USB.println(RTC.getTime());
+  //
+  //
+  //
+  //  snprintf( sms_body, sizeof(sms_body), "%s Volt, Batt_level: %d , Charging: %d, %d mA, filename: %s", batteryVoltage_str, batteryLevel, chargeState, chargeCurrent, filename);
+  //  USB.println(sms_body);
+  SD.appendln(filename, sms_body);
+  SD.OFF(); // Power off SD
+
+  //b
+  //_3G.OFF();
 }
 
 

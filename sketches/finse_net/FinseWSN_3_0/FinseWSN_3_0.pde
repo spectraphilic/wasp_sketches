@@ -28,7 +28,7 @@ void setup()
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Hardware  : Version=%c Mote=%s MAC=%s"), _boot_version,
+  info(F("Hardware  : Version=%c Mote=%s XBee=%s"), _boot_version,
        UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
   info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
   info(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
@@ -73,7 +73,7 @@ void loop()
     cr.reset();
     cr.spawn(taskMain);
     cr.run();
-  }
+  } 
 
   if (intFlag)
   {
