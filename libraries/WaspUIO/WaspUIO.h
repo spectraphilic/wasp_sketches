@@ -129,10 +129,6 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
-// SD
-const char* archive_dir = "/data";
-const char* logFilename = "LOG.TXT";
-
 /// public methods and attributes ////////////
 public:
 
@@ -157,10 +153,18 @@ int minute;              // minute of the day, from 0 to 1439
 int day;                 // days since the epoch
 int next_minute;         // minute of the next alarm
 
-// SD
-const char* tmpFilename = "TMP.TXT";
+// Autodetect
 bool hasSD;
 bool hasGPS;
+
+// SD
+const char* archive_dir = "/data";
+const char* logFilename = "LOG.TXT";
+const char* tmpFilename = "TMP.TXT";
+int createFile(const char*);
+int createDir(const char*);
+int openFile(const char* filename, SdFile &file, uint8_t mode);
+int baselayout();
 SdFile logFile;
 SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);

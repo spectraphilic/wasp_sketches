@@ -9,7 +9,7 @@ void WaspUIO::initNet()
 
   // Addressing
   memcpy_P(&network, &networks[value], sizeof network);
-  //cr.println(F("Configuring network: %s"), network.name);
+  //println(F("Configuring network: %s"), network.name);
   if (strcmp(network.rx_address, "000000000000FFFF") == 0)
   {
     addressing = BROADCAST_MODE;

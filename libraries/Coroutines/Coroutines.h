@@ -188,15 +188,17 @@ class Loop
 
     // Printing to USB done right. The print functions takes a formatted
     // string, either a regular string (char*) or one stored in the program
-    // memory (F). It appends a new line.
+    // memory (F).  The println variant append a new line.
     void print(const __FlashStringHelper *, ...);
     void println(const __FlashStringHelper *, ...);
+    void println(const char *, ...);
     void println();
     const char* input(char* buffer, size_t size, unsigned long timeout);
 
     // Logging
     loglevel_t loglevel = LOG_DEBUG;
     void log(loglevel_t level, const __FlashStringHelper *, ...);
+    void log(loglevel_t level, const char *, ...);
     const char* loglevel2str(loglevel_t level);
 };
 

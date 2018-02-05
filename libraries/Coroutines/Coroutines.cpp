@@ -175,7 +175,7 @@ void Loop::run()
     // Sleep
     if (! resumed && delay_time > 0)
     {
-      //sleep(delay_time);
+      sleep(delay_time);
     }
   }
 }
@@ -302,21 +302,29 @@ bool Loop::timeout(uint32_t t0, uint32_t timeout)
  * but vlog can be overriden.
  */
 
-void Loop::log(loglevel_t level, const __FlashStringHelper * ifsh, ...)
+void Loop::log(loglevel_t level, const __FlashStringHelper * format, ...)
 {
-  if (level > loglevel)
+  if (level <= loglevel)
   {
-    return;
+    char message[150];
+    strncpy_F(message, format, sizeof(message));
+
+    va_list args;
+    va_start(args, format);
+    vlog(level, message, args);
+    va_end(args);
   }
+}
 
-  va_list args;
-  char message[120];
-
-  strncpy_F(message, ifsh, sizeof(message));
-
-  va_start(args, ifsh);
-  vlog(level, message, args);
-  va_end(args);
+void Loop::log(loglevel_t level, const char * format, ...)
+{
+  if (level <= loglevel)
+  {
+    va_list args;
+    va_start(args, format);
+    vlog(level, format, args);
+    va_end(args);
+  }
 }
 
 const char* Loop::loglevel2str(loglevel_t level)

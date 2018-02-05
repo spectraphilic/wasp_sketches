@@ -91,7 +91,7 @@ void WaspUIO::clint()
     do {
       cr.print(F("> "));
       cr.input(buffer, size, 0);
-      cr.println(F("%s"), buffer);
+      cr.println(buffer);
       status = exeCommand(buffer);
       if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
       else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
@@ -254,7 +254,7 @@ COMMAND(cmdHelp)
   {
     memcpy_P(&cmd, &commands[i], sizeof cmd);
     strncpy_P(help, cmd.help, sizeof help);
-    cr.println(F("%s"), help);
+    cr.println(help);
   }
 
   return cmd_quiet;
