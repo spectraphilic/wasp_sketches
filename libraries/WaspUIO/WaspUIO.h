@@ -87,9 +87,9 @@ enum run_t {
 
 enum network_t {
   NETWORK_FINSE,
-  NETWORK_GATEWAY,
+  NETWORK_UNUSED,
   NETWORK_BROADCAST,
-  NETWORK_FINSE_ALT,
+  NETWORK_PI_UIO,
   NETWORK_PI_FINSE,
   NETWORK_PI_CS,
   NETWORK_LEN // Special value
@@ -107,10 +107,10 @@ struct Network {
 // array.
 
 const Network networks[] PROGMEM = {
-  {"Finse"    , {0x12, 0x00}, 0x0F, "0013A20040779085"},
-  {"Gateway"  , {0x12, 0x01}, 0x0F, "0013A20040DB6048"},
+  {"Finse",     {0x12, 0x00}, 0x0F, "0013A20040779085"},
+  {"unused",    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
   {"Broadcast", {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default
-  {"Finse_alt", {0x12, 0x03}, 0x0F, "13A200416A072300"}, // XXX Looks wrong
+  {"Pi UiO",    {0x12, 0x03}, 0x0F, "0013A200416B1BA0"},
   {"Pi Finse",  {0x12, 0x04}, 0x0F, "0013A200416A0724"},
   {"Pi CS",     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
 };

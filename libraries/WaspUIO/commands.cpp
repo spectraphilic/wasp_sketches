@@ -31,7 +31,7 @@ const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls             - List files in SD card";
 const char CMD_NETWORK [] PROGMEM = "network VALUE  - Choose network: "
-                                    "0=Finse 1=Gateway 2=Broadcast 3=Finse-alt 4=Pi@Finse 5=Pi@Spain";
+                                    "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s) - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
 const char CMD_PRINT   [] PROGMEM = "print          - Print configuration and other information";
