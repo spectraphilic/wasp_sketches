@@ -302,10 +302,10 @@ COMMAND(cmdNetwork)
 
   // Check input
   if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
-  if (value >= NETWORK_LEN) { return cmd_bad_input; }
+  if (value >= network_len) { return cmd_bad_input; }
 
   // Do
-  memcpy_P(&UIO.network, &networks[(network_t) value], sizeof UIO.network);
+  memcpy_P(&UIO.network, &networks[(uint8_t) value], sizeof UIO.network);
   if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK, UIO.network.panid[0]) ||
       ! UIO.updateEEPROM(EEPROM_UIO_NETWORK+1, UIO.network.panid[1]))
   {

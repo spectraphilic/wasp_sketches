@@ -35,9 +35,9 @@ void WaspUIO::onSetup()
 
   // Network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
-  if (panid_low >= NETWORK_LEN)
+  if (panid_low >= network_len)
   {
-    panid_low = NETWORK_BROADCAST; // Default
+    panid_low = 2; // Default
   }
   memcpy_P(&network, &networks[panid_low], sizeof network);
 
@@ -190,7 +190,7 @@ uint8_t WaspUIO::frame2Sd()
   dataFile.close();
 
   // (3) Append to queue
-  if (UIO.openFile(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
+  if (UIO.openFile(tmpFilename, tmpFile, O_RDWR | O_CREAT))
   {
     error(cr.last_error);
     return 2;

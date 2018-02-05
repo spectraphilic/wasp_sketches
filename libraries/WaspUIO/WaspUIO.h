@@ -85,18 +85,8 @@ enum run_t {
 #define encryptionKey "1234567890123456"  // General encryption key for UIO networks
 #define key_access (char*) "LIBELIUM"
 
-enum network_t {
-  NETWORK_FINSE,
-  NETWORK_UNUSED,
-  NETWORK_BROADCAST,
-  NETWORK_PI_UIO,
-  NETWORK_PI_FINSE,
-  NETWORK_PI_CS,
-  NETWORK_LEN // Special value
-};
-
 struct Network {
-  char name[12];
+  const char *name;
   uint8_t panid[2];
   uint8_t channel;
   char rx_address[17];
@@ -106,14 +96,22 @@ struct Network {
 // one by one. This is because the low bit is used as an index to this same
 // array.
 
+const char NETWORK_FINSE     [] PROGMEM = "Finse";
+const char NETWORK_UNUSED    [] PROGMEM = "unused";
+const char NETWORK_BROADCAST [] PROGMEM = "Broadcast";
+const char NETWORK_PI_UIO    [] PROGMEM = "Pi UiO";
+const char NETWORK_PI_FINSE  [] PROGMEM = "Pi Finse";
+const char NETWORK_PI_CS     [] PROGMEM = "Pi CS";
+
 const Network networks[] PROGMEM = {
-  {"Finse",     {0x12, 0x00}, 0x0F, "0013A20040779085"},
-  {"unused",    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
-  {"Broadcast", {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default
-  {"Pi UiO",    {0x12, 0x03}, 0x0F, "0013A200416B1BA0"},
-  {"Pi Finse",  {0x12, 0x04}, 0x0F, "0013A200416A0724"},
-  {"Pi CS",     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
+  {NETWORK_FINSE,     {0x12, 0x00}, 0x0F, "0013A20040779085"},
+  {NETWORK_UNUSED,    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
+  {NETWORK_BROADCAST, {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default (2)
+  {NETWORK_PI_UIO,    {0x12, 0x03}, 0x0F, "0013A200416B1BA0"},
+  {NETWORK_PI_FINSE,  {0x12, 0x04}, 0x0F, "0013A200416A0724"},
+  {NETWORK_PI_CS,     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
 };
+const uint8_t network_len = sizeof(networks) / sizeof(Network);
 
 /******************************************************************************
  * Class

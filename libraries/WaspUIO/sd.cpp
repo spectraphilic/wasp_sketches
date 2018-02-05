@@ -69,26 +69,26 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t size)
 
   if (file.seekEnd() == false)
   {
-    cr.set_last_error(F("append(%s): seekEnd failed"), tmpFilename);
+    cr.set_last_error(F("append seekEnd failed"));
     return 1;
   }
 
   n = file.write(buf, size);
   if (n == -1)
   {
-    cr.set_last_error(F("append(%s): write failed"), tmpFilename);
+    cr.set_last_error(F("append write failed"));
     return 1;
   }
 
   if (file.sync() == false)
   {
-    cr.set_last_error(F("append(%s): sync failed"), tmpFilename);
+    cr.set_last_error(F("append sync failed"));
     return 1;
   }
 
   if (n < size)
   {
-    cr.set_last_error(F("append(%s): wrote only %d bytes of %u"), tmpFilename, n, size);
+    cr.set_last_error(F("append wrote only %d bytes of %u"), n, size);
     return 1;
   }
 

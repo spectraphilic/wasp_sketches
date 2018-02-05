@@ -75,9 +75,12 @@ CR_TASK(taskNetworkSend)
   }
   UIO.startSD();
 
-  // Delay sending of frame by a random time within 50 to 550 ms to avoid
-  // jaming the network. XXX
-  // CR_DELAY(rand() % 500);
+  // Open tmp file
+  if (UIO.openFile(UIO.tmpFilename, UIO.tmpFile, O_RDWR | O_CREAT))
+  {
+    error(cr.last_error);
+    return 2;
+  }
 
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
