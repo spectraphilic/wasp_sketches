@@ -268,6 +268,7 @@ COMMAND(cmdLs);
 COMMAND(cmdNetwork);
 COMMAND(cmdOneWire);
 COMMAND(cmdPrint);
+COMMAND(cmdRead);
 COMMAND(cmdRun);
 COMMAND(cmdLogLevel);
 COMMAND(cmdSDI12);
