@@ -18,12 +18,12 @@ void setup()
 
 void loop() 
 {
-  PWR.setSensorPower(SENS_3V3,SENS_ON);
+  PWR.setSensorPower(SENS_5V,SENS_ON);
   delay(200);
   readMaxbotixSerial();
 
   USB.println("Done!!!");
-  PWR.setSensorPower(SENS_3V3,SENS_OFF);
+  PWR.setSensorPower(SENS_5V,SENS_OFF);
   delay(5000);
 }
 
@@ -50,7 +50,7 @@ uint8_t readMaxbotixSerial(uint8_t samples)
 
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
 
-  PWR.setSensorPower(SENS_3V3,SENS_ON); //  sensor needs 3.3 voltage
+  //PWR.setSensorPower(SENS_3V3,SENS_ON); //  sensor needs 3.3 voltage
   delay(1000);
 
   beginSerial(9600,1); // set boud rate to 9600

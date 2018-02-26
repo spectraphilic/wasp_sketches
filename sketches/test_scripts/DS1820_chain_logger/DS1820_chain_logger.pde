@@ -26,7 +26,7 @@ void loop()
   USB.println("-------------------------------------");
   PWR.setSensorPower(SENS_3V3, SENS_ON);
 
-  delay(100);
+  delay(1000);
 
   // Reading the DS1820 temperature sensor connected to DIGITAL6
   temp = readTempDS1820chain(DIGITAL6,  true);
@@ -59,7 +59,6 @@ float readTempDS1820chain(uint8_t pin, bool is3v3 )
   byte maxsensors = 0;
   // float temp = 0;
   uint32_t R_bin;
-    
 
 
   while (OneWireTemp.search(addr))
