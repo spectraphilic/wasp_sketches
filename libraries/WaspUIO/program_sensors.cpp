@@ -466,6 +466,7 @@ CR_TASK(task1Wire)
 
 	if (eol) { eol = false; break; } // EOL
       }
+      oneWire.depower();
     }
   }
   UIO.off(UIO_1WIRE);
