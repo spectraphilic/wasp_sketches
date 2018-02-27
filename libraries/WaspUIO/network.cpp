@@ -4,12 +4,11 @@
 void WaspUIO::initNet()
 {
   uint8_t addressing = UNICAST_64B;
-  network_t value = (network_t) network.panid[1]; // panid low byte
+  uint8_t value = network.panid[1]; // panid low byte
   const __FlashStringHelper * error = NULL;
 
   // Addressing
   memcpy_P(&network, &networks[value], sizeof network);
-  //cr.println(F("Configuring network: %s"), network.name);
   if (strcmp(network.rx_address, "000000000000FFFF") == 0)
   {
     addressing = BROADCAST_MODE;

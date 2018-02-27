@@ -374,7 +374,7 @@ CR_TASK(task1Wire)
 {
   SdFile file;
   int len;
-  char* word;
+  char word[20];
   uint8_t pin;
   uint8_t addr[8];
   uint8_t data[12];
@@ -386,6 +386,7 @@ CR_TASK(task1Wire)
   uint8_t max = 10;
   int values[max];
   uint8_t n = 0;
+  bool eol;
 
   // TODO
   // - spawn 1 task per pin
@@ -400,69 +401,72 @@ CR_TASK(task1Wire)
   }
 
   UIO.on(UIO_1WIRE);
-  while ((len = UIO.readline(file)) >= 0)
+  while ((len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
   {
-    word = strtok(SD.buffer, " ");
-    if (word == NULL)
-      continue;
-
-    pin = (uint8_t) atoi(word);
-    WaspOneWire oneWire(_getPin(pin));
-    //delay(750); // Delay included in reset function needed for DS18B20 to reply (TODO Check again)
-    if (oneWire.reset())
+    eol = (word[len-1] == '\n');
+    len--; word[len] = '\0'; // Remove delimiter
+    if (len == 1)
     {
+      pin = (uint8_t) atoi(word);
+      WaspOneWire oneWire(_getPin(pin));
+      if (! oneWire.reset())
+      {
+        warn(F("OneWire no devices attached to %hhu pin"), pin);
+        continue;
+      }
+
       // Send conversion command to all sensors
       oneWire.skip();
       oneWire.write(0x44, 1); // Keep power on (parasite mode)
-      delay(800);            // Time for the sensors to do their job (TODO test 750ms)
+      delay(800);             // Time for the sensors to do their job
 
-      // Read every sensor
-      while ((word = strtok(NULL, " ")) != NULL)
+      while ((len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
       {
-        if (Utils.str2hex(word, addr, 8) < 8)
+        eol = (word[len-1] == '\n');
+        len--; word[len] = '\0'; // Remove delimiter
+        if (len == 16)
         {
-          warn(F("OneWire(%hhu) bad address '%s'"), pin, word);
-          continue;
+          if (Utils.str2hex(word, addr, 8) < 8)
+          {
+            warn(F("OneWire(%hhu) bad address '%s'"), pin, word);
+            continue;
+          }
+
+          // Read value
+          oneWire.reset();
+          oneWire.select(addr);
+          oneWire.write(0xBE); // Read Scratchpad
+          oneWire.read_bytes(data, 9); // We need 9 bytes
+
+          crc = oneWire.crc8(data, 8);
+          if (crc == data[8])
+          {
+            temp = (data[1] << 8) | data[0];
+
+            // Debug
+            temp_f = (float) temp / 16;
+            Utils.float2String(temp_f, temp_str, 2);
+            debug(F("OneWire(%hhu) %s  : %s"), pin, word, temp_str);
+          }
+          else
+          {
+            temp = INT_MIN;
+            Utils.hex2str(data, data_str, 8);
+            warn(F("OneWire(%hhu) %s bad data, CRC failed: %s %02X"), pin, word, data_str, crc);
+          }
+          values[n] = temp;
+          n++;
+
+          if (n == max)
+          {
+            ADD_SENSOR(SENSOR_DS1820, n, values);
+            n = 0;
+          }
         }
 
-        // Read value
-        oneWire.reset();    
-        oneWire.select(addr);
-        oneWire.write(0xBE); // Read Scratchpad
-        oneWire.read_bytes(data, 9); // We need 9 bytes
-
-        crc = oneWire.crc8(data, 8);
-        if (crc == data[8])
-        {
-          temp = (data[1] << 8) | data[0];
-
-          // Debug
-          temp_f = (float) temp / 16;
-          Utils.float2String(temp_f, temp_str, 2);
-          debug(F("OneWire(%hhu) %s  : %s"), pin, word, temp_str);
-        }
-        else
-        {
-          temp = INT_MIN;
-          Utils.hex2str(data, data_str, 8);
-          warn(F("OneWire(%hhu) %s bad data, CRC failed: %s %02X"), pin, word, data_str, crc);
-        }
-        values[n] = temp;
-        n++;
-
-        if (n == max)
-        {
-          ADD_SENSOR(SENSOR_DS1820, n, values);
-          n = 0;
-        }
+	if (eol) { eol = false; break; } // EOL
       }
     }
-    else
-    {
-      warn(F("OneWire no devices attached to %d pin"), pin);
-    }
-
-    oneWire.depower();
   }
   UIO.off(UIO_1WIRE);
 

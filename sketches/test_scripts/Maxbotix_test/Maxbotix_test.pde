@@ -46,7 +46,6 @@ uint8_t readMaxbotixSerial(uint8_t samples)
   const int bytes = 4; // Number of bytes to read
   char data_buffer[bytes]; // Store serial data
   int sample; // Store each sample
-  
 
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
 
@@ -63,7 +62,7 @@ uint8_t readMaxbotixSerial(uint8_t samples)
     while (!serialAvailable(1) || serialRead(1) != 'R');
 
     // read the range
-    for (int i = 0; i < bytes; i++) 
+    for (int i = 0; i < bytes; i++)
     {
       while (!serialAvailable(1));
 
@@ -91,7 +90,3 @@ uint8_t readMaxbotixSerial(void)
 {
   return readMaxbotixSerial(5);
 }
-
-
-
-

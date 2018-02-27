@@ -59,10 +59,22 @@ const char* Loop::input(char* buffer, size_t size, unsigned long timeout)
  * Flash).
  */
 
+void Loop::println(const char * format, ...)
+{
+  va_list args;
+  char out[150];
+
+  va_start(args, format);
+  vsnprintf(out, sizeof(out), format, args);
+  va_end(args);
+
+  USB.println(out);
+}
+
 void Loop::print(const __FlashStringHelper * format, ...)
 {
   va_list args;
-  char out[120];
+  char out[150];
 
   va_start(args, format);
   vsnprintf_F(out, sizeof(out), format, args);
@@ -74,7 +86,7 @@ void Loop::print(const __FlashStringHelper * format, ...)
 void Loop::println(const __FlashStringHelper * format, ...)
 {
   va_list args;
-  char out[120];
+  char out[150];
 
   va_start(args, format);
   vsnprintf_F(out, sizeof(out), format, args);

@@ -1,68 +1,98 @@
 #include "WaspUIO.h"
 
 
-/**
- * createFile
- *
- * Creates the file with the given filename in the SD card. Returns 0 on
- * success, 1 on error.
- *
- * If the file already exists it is not considered an error.
-*/
-
-uint8_t WaspUIO::createFile(const char* filename)
+int WaspUIO::createFile(const char* name)
 {
-  int8_t isFile = SD.isFile(filename);
+  SdFile file;
 
-  // Already created
-  if (isFile == 1)
+  if (! SD.openFile((char*)name, &file, O_RDWR | O_CREAT))
   {
-    //trace(F("Failed to create %s, it already exists"), filename);
-    return 0;
-  }
-
-  // Create
-  if (isFile == -1)
-  {
-    if (SD.create(filename))
-    {
-      debug(F("%s created"), filename);
-      return 0;
-    }
-
-    error(F("Failed to create %s, error %d"), filename, SD.flag);
     return 1;
   }
 
-  //if (isFile == 0)
-  error(F("Exists but not a file %s"), filename);
-  return 1;
+  file.close();
+  return 0;
 }
+
+
+int WaspUIO::createDir(const char* name)
+{
+  switch (SD.isDir(name))
+  {
+    case 0: // file
+      return 1;
+    case -1: // error
+      if (SD.mkdir((char*)name) == false) { return 1; }
+  }
+  return 0;
+}
+
+
+int WaspUIO::openFile(const char* filename, SdFile &file, uint8_t mode)
+{
+  if (! file.isOpen())
+  {
+    if (SD.openFile((char*)filename, &file, mode) == 0)
+    {
+      cr.set_last_error(F("openFile(%s) failed"), filename);
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+/*
+ * Create basic filesystem layout. To be called just after format and when
+ * booting, to be sure the filesystem is good.
+ */
+int WaspUIO::baselayout()
+{
+  int error = 0;
+
+  if (createDir(archive_dir))  { error = 1; } // Data directory
+  if (createFile(logFilename)) { error = 1; } // Log file
+  if (createFile(tmpFilename)) { error = 1; } // Tmp file (index to frames)
+
+  return error;
+}
+
 
 /**
  * Append data to the given file.
  *
- * Return the number of bytes written. Or -1 for error.
+ * Return 0 on success, 1 on error.
  */
-
-int WaspUIO::append(SdFile &file, const void* buf, size_t nbyte)
+int WaspUIO::append(SdFile &file, const void* buf, size_t size)
 {
   int n;
 
   if (file.seekEnd() == false)
   {
-    error(F("append(%s): seekEnd failed"), tmpFilename);
-    return -1;
+    cr.set_last_error(F("append seekEnd failed"));
+    return 1;
   }
 
-  n =file.write(buf, nbyte);
+  n = file.write(buf, size);
   if (n == -1)
   {
-    error(F("append(%s): write failed"), tmpFilename);
-    return -1;
+    cr.set_last_error(F("append write failed"));
+    return 1;
   }
 
-  return n;
+  if (file.sync() == false)
+  {
+    cr.set_last_error(F("append sync failed"));
+    return 1;
+  }
+
+  if (n < size)
+  {
+    cr.set_last_error(F("append wrote only %d bytes of %u"), n, size);
+    return 1;
+  }
+
+  return 0;
 }
 
 
@@ -72,7 +102,6 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t nbyte)
  *
  * Return the length of the line. Or -1 for EOF. Or -2 if error.
  */
-
 int WaspUIO::readline(SdFile &file)
 {
   int n;

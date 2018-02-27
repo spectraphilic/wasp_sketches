@@ -35,9 +35,9 @@ void WaspUIO::onSetup()
 
   // Network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
-  if (panid_low >= NETWORK_LEN)
+  if (panid_low >= network_len)
   {
-    panid_low = NETWORK_BROADCAST; // Default
+    panid_low = 2; // Default
   }
   memcpy_P(&network, &networks[panid_low], sizeof network);
 
@@ -87,169 +87,25 @@ void WaspUIO::onLoop()
 
 void WaspUIO::startSD()
 {
-  // Already ON, or not SD.
-  if (SPI.isSD || !hasSD)
+  if (hasSD)
   {
-    return;
-  }
-
-  // On
-  on(UIO_SD);
-
-  // Create directories
-  switch (SD.isDir(archive_dir))
-  {
-    case 1:
-      break;
-    case 0:
-      SD.del(archive_dir);
-    case -1:
-      SD.mkdir((char*)archive_dir);
-  }
-
-  // Open log file (TODO Log rotate)
-  if (flags & FLAG_LOG_SD)
-  {
-    if (!SD.openFile((char*)logFilename, &logFile, O_CREAT | O_WRITE | O_APPEND))
+    if (! SPI.isSD)
     {
-      cr.println(F("openFiles: opening log file failed"));
+      SD.ON();
+      baselayout();
     }
-  }
-
-  // Open tmp file
-  if (!SD.openFile((char*)tmpFilename, &tmpFile, O_CREAT | O_RDWR | O_APPEND | O_SYNC))
-  {
-    error(F("openFiles: opening tmp file failed"));
   }
 }
 
 void WaspUIO::stopSD()
 {
-  if (! SPI.isSD)
+  if (SPI.isSD)
   {
-    return;
-  }
-
-  // Close files
-  if (tmpFile.isOpen())
-  {
-    tmpFile.close();
-  }
-
-  if (flags & FLAG_LOG_SD)
-  {
-    if (logFile.isOpen())
-    {
-      logFile.close();
-    }
-  }
-
-  // Off
-  SD.OFF();
-}
-
-/**
- * Function to log waspmote activity, adds message to a frame etc...
- *
- * Parameters: message
- *
- * Returns: bool             - true on success, false for error
- *
- * Current implementation uses an static variable. This means that (1) the
- * message length is limited (it will be truncated if too long), and (2) the
- * functions is not reentrant (cannot call itself). As a benefit it allows for
- * a predictable memory usage.
- */
-
-void vlog(loglevel_t level, const char* message, va_list args)
-{
-  char buffer[128];
-  size_t len;
-  uint32_t seconds;
-  uint16_t ms;
-
-  // (1) Prepare the string to be printed
-  memset(buffer, 0x00, sizeof(buffer));
-
-  // Timestamp
-  seconds = UIO.getEpochTime(ms);
-  sprintf(buffer, "%lu.%03u ", seconds, ms);
-  // Level
-  len = strlen(buffer);
-  sprintf(buffer + len, "%s ", cr.loglevel2str(level));
-
-  // Message
-  len = strlen(buffer);
-  vsnprintf(buffer + len, sizeof(buffer) - len - 1, message, args);
-  // Newline
-  len = strlen(buffer);
-  buffer[len] = '\n';
-
-  // (2) Print to USB
-  if (UIO.flags & FLAG_LOG_USB)
-  {
-    USB.ON();
-    USB.flush(); // XXX This fixes a weird bug with XBee
-    USB.print(buffer);
-    USB.OFF();
-  }
-
-  // (3) Print to log file
-  if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD)) //&& UIO.logFile.isOpen())
-  {
-    UIO.startSD();
-
-    // Print to log file
-    if (UIO.logFile.write(buffer) == -1 || UIO.logFile.sync() == false)
-    {
-      cr.println(F("ERROR vlog: failed writing to SD"));
-    }
-  }
-}
-
-void beforeSleep()
-{
-  UIO.stopSD();
-}
-
-void afterSleep()
-{
-#if USE_AGR
-  if (UIO.isOn(UIO_PRESSURE))
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
-  }
-  if (UIO.isOn(UIO_LEAFWETNESS))
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
-  }
-  if (UIO.isOn(UIO_SENSIRION))
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
-  }
-#endif
-
-#if USE_SDI
-  if (UIO.isOn(UIO_SDI12))
-  {
-    mySDI12.forceHold(); // XXX
-  }
-#endif
-
-#if USE_I2C
-  if (UIO.isOn(UIO_I2C))
-  {
-    // XXX
-  }
-  if (UIO.isOn(UIO_1WIRE))
-  {
-    // XXX
-  }
-#endif
-
-  if (UIO.isOn(UIO_SD))
-  {
-    UIO.startSD();
+    // Close files
+    if (tmpFile.isOpen()) { tmpFile.close(); }
+    if (logFile.isOpen()) { logFile.close(); }
+    // Off
+    SD.OFF();
   }
 }
 
@@ -301,15 +157,15 @@ void WaspUIO::createFrame(bool discard)
 
 uint8_t WaspUIO::frame2Sd()
 {
-  int32_t size;
+  uint32_t size;
   uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
+  SdFile dataFile;
 
   if (! hasSD)
   {
     return 1;
   }
-
   startSD();
 
   // (1) Get the date
@@ -319,31 +175,32 @@ uint8_t WaspUIO::frame2Sd()
   getDataFilename(dataFilename, item[0], item[1], item[2]);
 
   // (2) Store frame in archive file
-  if (createFile(dataFilename))
+  if (UIO.openFile(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
   {
-    error(F("frame2Sd: Failed to create %s"), dataFilename);
+    error(cr.last_error);
     return 1;
   }
+  size = dataFile.fileSize();
 
-  size = SD.getFileSize(dataFilename);
-  if (size < 0)
+  if (append(dataFile, frame.buffer, frame.length))
   {
-    error(F("frame2Sd: Failed to get size from %s"), dataFilename);
+    error(cr.last_error);
     return 1;
   }
-
-  if (SD.append(dataFilename, frame.buffer, frame.length) == 0)
-  {
-    error(F("frame2Sd: Failed to append frame to %s"), dataFilename);
-    return 1;
-  }
+  dataFile.close();
 
   // (3) Append to queue
-  *(uint32_t *)(item + 3) = (uint32_t) size;
-  item[7] = (uint8_t) frame.length;
-  if (append(tmpFile, item, 8) == -1)
+  if (UIO.openFile(tmpFilename, tmpFile, O_RDWR | O_CREAT))
   {
-    error(F("frame2Sd: Failed to append to %s"), tmpFilename);
+    error(cr.last_error);
+    return 2;
+  }
+
+  *(uint32_t *)(item + 3) = size;
+  item[7] = (uint8_t) frame.length;
+  if (append(tmpFile, item, 8))
+  {
+    error(cr.last_error);
     return 2;
   }
 
@@ -389,10 +246,10 @@ void WaspUIO::showBinaryFrame()
 
    // Number of bytes
    nbytes = *p++;
-   //cr.println(F("Number of bytes left: %d"), nbytes);
+   //println(F("Number of bytes left: %d"), nbytes);
 
    // Serial ID
-   //cr.println(F("BOOT VERSION %c"), _boot_version);
+   //println(F("BOOT VERSION %c"), _boot_version);
    if (_boot_version >= 'G')
    {
      Utils.hex2str(p, buffer, 8);
@@ -577,9 +434,6 @@ void WaspUIO::on(uint8_t device)
 {
   switch (device)
   {
-    case UIO_SD:
-      SD.ON();
-      break;
 #if USE_AGR
     case UIO_PRESSURE:
       SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
@@ -613,9 +467,6 @@ void WaspUIO::off(uint8_t device)
 
   switch (device)
   {
-    case UIO_SD:
-      SD.OFF();
-      break;
 #if USE_AGR
     case UIO_PRESSURE:
       SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);

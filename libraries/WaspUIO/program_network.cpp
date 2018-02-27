@@ -60,20 +60,27 @@ CR_TASK(taskNetwork)
 
 CR_TASK(taskNetworkSend)
 {
-  SdFile archive;
   uint32_t fileSize;
   uint8_t item[8];
   uint32_t t0;
   char dataFilename[18]; // /data/YYMMDD.txt
+  SdFile dataFile;
   int size;
 
   CR_BEGIN;
 
+  if (! UIO.hasSD)
+  {
+    return CR_TASK_STOP;
+  }
   UIO.startSD();
 
-  // Delay sending of frame by a random time within 50 to 550 ms to avoid
-  // jaming the network. XXX
-  // CR_DELAY(rand() % 500);
+  // Open tmp file
+  if (UIO.openFile(UIO.tmpFilename, UIO.tmpFile, O_RDWR | O_CREAT))
+  {
+    error(cr.last_error);
+    return 2;
+  }
 
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
@@ -99,14 +106,14 @@ CR_TASK(taskNetworkSend)
 
     // Read the frame
     UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &archive, O_READ))
+    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
     {
       error(F("sendFrames: fail to open %s"), dataFilename);
       CR_ERROR;
     }
-    archive.seekSet(*(uint32_t *)(item + 3));
-    size = archive.read(SD.buffer, (size_t) item[7]);
-    archive.close();
+    dataFile.seekSet(*(uint32_t *)(item + 3));
+    size = dataFile.read(SD.buffer, (size_t) item[7]);
+    dataFile.close();
 
     if (size < 0 || size != (int) item[7])
     {
