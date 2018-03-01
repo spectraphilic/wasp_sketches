@@ -40,6 +40,10 @@ Coordinates in UTM 32N, unit meter.
 
 ## Marshland
 
+### 2018-01-26
+
+Waspmote taken down and replaced by the mobile flux station. **WARNING** Any data passed this date are meaningless. 
+
 ### 2017-12-13
 
 - Installation of a waspmote with Maxbotix and DS1820 sensor
