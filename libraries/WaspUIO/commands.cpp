@@ -35,7 +35,7 @@ const char CMD_NETWORK [] PROGMEM = "network VALUE  - Choose network: "
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s) - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
 const char CMD_PRINT   [] PROGMEM = "print          - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 8=mb";
+const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 7=ds1820 8=mb";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: "
                                     "0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
 const char CMD_SDI12   [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
@@ -452,7 +452,13 @@ COMMAND(cmdRead)
   if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
 
   // Do
-  if (value == 8)
+  if (value == 7)
+  {
+    uint8_t max = 40;
+    int values[max];
+    UIO.readDS18B20(values, max);
+  }
+  else if (value == 8)
   {
     uint16_t median, sd;
     UIO.readMaxbotixSerial(median, sd, 5);
