@@ -89,7 +89,7 @@ void WaspUIO::startSD()
 {
   if (hasSD)
   {
-    if (! SPI.isSD)
+    if (! (WaspRegister & REG_SD))
     {
       SD.ON();
       baselayout();

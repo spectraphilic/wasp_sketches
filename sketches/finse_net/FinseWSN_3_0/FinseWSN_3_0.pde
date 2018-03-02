@@ -50,6 +50,7 @@ void setup()
 void loop()
 {
   UIO.deepSleep();
+  RTC.ON(); // This fixes a bug with Maxbotix & SD card in some motes
   UIO.onLoop();
 
   // Low battery level: do nothing
