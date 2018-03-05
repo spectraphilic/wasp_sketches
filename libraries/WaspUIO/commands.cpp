@@ -22,7 +22,6 @@ typedef struct {
 
 const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
-const char CMD_TAIL [] PROGMEM = "tail FILENAME nlines    - Print tail lines of FILEMAME to USB";
 const char CMD_DISABLE [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
 const char CMD_ENABLE  [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT    [] PROGMEM = "exit           - Exit the command line interface";
@@ -40,13 +39,13 @@ const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 7=ds1820 8=mb
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: "
                                     "0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
 const char CMD_SDI12   [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
+const char CMD_TAIL [] PROGMEM = "tail nline FILENAME    - Print tail number of lines of FILEMAME to USB. Default 10 lines";
 const char CMD_TIME_GPS[] PROGMEM = "time gps       - Sets time from GPS";
 const char CMD_TIME    [] PROGMEM = "time VALUE     - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
 
 const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"cat ",      &cmdCat,      CMD_CAT},
-  {"tail",      &cmdTail, CMD_TAIL},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
@@ -60,6 +59,7 @@ const Command commands[] PROGMEM = {
   {"read ",     &cmdRead,     CMD_READ},
   {"run ",      &cmdRun,      CMD_RUN},
   {"sdi",       &cmdSDI12,    CMD_SDI12},
+  {"tail",      &cmdTail, CMD_TAIL},
   {"time gps",  &cmdTimeGPS,  CMD_TIME_GPS},
   {"time ",     &cmdTime,     CMD_TIME},
 };
