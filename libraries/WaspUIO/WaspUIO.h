@@ -260,6 +260,7 @@ uint8_t _getPin(uint8_t);
 COMMAND(exeCommand);
 COMMAND(cmdBattery);
 COMMAND(cmdCat);
+COMMAND(cmdTail);
 COMMAND(cmdDisable);
 COMMAND(cmdEnable);
 COMMAND(cmdExit);

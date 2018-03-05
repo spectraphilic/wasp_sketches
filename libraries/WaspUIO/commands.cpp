@@ -22,6 +22,7 @@ typedef struct {
 
 const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
+const char CMD_TAIL [] PROGMEM = "tail FILENAME nlines    - Print tail lines of FILEMAME to USB";
 const char CMD_DISABLE [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
 const char CMD_ENABLE  [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT    [] PROGMEM = "exit           - Exit the command line interface";
@@ -45,6 +46,7 @@ const char CMD_TIME    [] PROGMEM = "time VALUE     - Sets time to the given val
 const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"cat ",      &cmdCat,      CMD_CAT},
+  {"tail",      &cmdTail, CMD_TAIL},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
@@ -158,7 +160,7 @@ COMMAND(cmdBattery)
 }
 
 /**
- * Choose battery type.
+ *  PRint to USB FILENAME.
  */
 COMMAND(cmdCat)
 {
@@ -175,6 +177,35 @@ COMMAND(cmdCat)
   SD.showFile((char*) filename);
   return cmd_quiet;
 }
+
+
+/**
+ * Print Tail lines of FILENAME to USB
+ * WARNING: currently it cannot print all the line requested as there is a buffer maximum capacity (see help of SD.catln())
+ */
+
+COMMAND(cmdTail)
+{
+  char filename[80];
+  int nline;
+  int tailLine = 10;
+  int offsetln; 
+
+  // Check input
+  if (sscanf(str, "%hu %s", &tailLine, &filename) != 2) { return cmd_bad_input; }
+  if (strlen(filename) == 0) { return cmd_bad_input; }
+
+  if(UIO.hasSD){
+    nline = SD.numln(filename);
+    offsetln = nline - tailLine;
+    SD.catln(filename, offsetln, tailLine);
+    cr.println(SD.buffer);
+
+  } 
+return cmd_quiet;
+}
+
+
 
 /**
  * Enable/Disable features (flags).
@@ -570,21 +601,21 @@ COMMAND(cmdTimeGPS)
     return cmd_error;
   }
 
-  debug(F("GPS: Start"));
-  start = millis();
+  // debug(F("GPS: Start"));
+  // start = millis();
 
-  // Ephemerides
-  if (UIO.hasSD)
-  {
-    if (GPS.loadEphems() == 1)
-    {
-      debug(F("GPS: Ephemerides loaded"));
-    }
-    else
-    {
-      warn(F("GPS: Ephemerides loading failed"));
-    }
-  }
+  // // Ephemerides
+  // if (UIO.hasSD)
+  // {
+  //   if (GPS.loadEphems() == 1)
+  //   {
+  //     debug(F("GPS: Ephemerides loaded"));
+  //   }
+  //   else
+  //   {
+  //     warn(F("GPS: Ephemerides loading failed"));
+  //   }
+  // }
 
   // XXX We could use GPS.check instead, and give control back with CR_DELAY,
   // problem is when we sleep (cr) the gps is powered off (to verify).
@@ -593,6 +624,10 @@ COMMAND(cmdTimeGPS)
     warn(F("GPS: Timeout"));
     GPS.OFF();
     return cmd_error;
+  }
+  else{
+    GPS.setTimeFromGPS();
+    cr.println(F("Time from GPS updated"));
   }
 
   // Ephemerides
