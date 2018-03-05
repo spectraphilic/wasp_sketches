@@ -108,7 +108,7 @@ const Network networks[] PROGMEM = {
   {NETWORK_UNUSED,    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
   {NETWORK_BROADCAST, {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default (2)
   {NETWORK_PI_UIO,    {0x12, 0x03}, 0x0F, "0013A200416B1B9B"},
-  {NETWORK_PI_FINSE,  {0x12, 0x04}, 0x0F, "0013A200416A0724"},
+  {NETWORK_PI_FINSE,  {0x12, 0x00}, 0x0F, "0013A20040779085"},
   {NETWORK_PI_CS,     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
 };
 const uint8_t network_len = sizeof(networks) / sizeof(Network);
