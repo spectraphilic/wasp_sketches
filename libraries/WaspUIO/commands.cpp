@@ -185,26 +185,26 @@ COMMAND(cmdCat)
 
 COMMAND(cmdTail)
 {
+  unsigned int tailLine;
   char filename[80];
-  int nline;
-  int tailLine = 10;
-  int offsetln;
+  int32_t nline;
+  uint32_t offsetln, i;
 
   // Check input
-  if (sscanf(str, "%hu %s", &tailLine, &filename) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%u %s", &tailLine, &filename) != 2) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Check feature availability
   if (! UIO.hasSD) { return cmd_unavailable; }
 
+  // Number of lines in the file
   nline = SD.numln(filename);
-  offsetln = nline - tailLine;
-  if (offsetln < 0)
-  {
-    offsetln = 0;
-  }
+  if (nline < 0) { return cmd_error; }
+  if (tailLine > nline) { tailLine = nline; }
 
-  for (uint8_t i=offsetln; i < nline; i++)
+  // Print
+  offsetln = nline - tailLine;
+  for (i=offsetln; i < nline; i++)
   {
     SD.catln(filename, i, 1);
     cr.println(SD.buffer);
