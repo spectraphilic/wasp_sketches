@@ -181,7 +181,6 @@ COMMAND(cmdCat)
 
 /**
  * Print Tail lines of FILENAME to USB
- * WARNING: currently it cannot print all the line requested as there is a buffer maximum capacity (see help of SD.catln())
  */
 
 COMMAND(cmdTail)
@@ -189,22 +188,30 @@ COMMAND(cmdTail)
   char filename[80];
   int nline;
   int tailLine = 10;
-  int offsetln; 
+  int offsetln;
 
   // Check input
   if (sscanf(str, "%hu %s", &tailLine, &filename) != 2) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
-  if(UIO.hasSD){
-    nline = SD.numln(filename);
-    offsetln = nline - tailLine;
-    SD.catln(filename, offsetln, tailLine);
+  // Check feature availability
+  if (! UIO.hasSD) { return cmd_unavailable; }
+
+  nline = SD.numln(filename);
+  offsetln = nline - tailLine;
+  if (offsetln < 0)
+  {
+    offsetln = 0;
+  }
+
+  for (uint8_t i=offsetln; i < nline; i++)
+  {
+    SD.catln(filename, i, 1);
     cr.println(SD.buffer);
+  }
 
-  } 
-return cmd_quiet;
+  return cmd_quiet;
 }
-
 
 
 /**
