@@ -490,11 +490,16 @@ next:
 COMMAND(cmdPrint)
 {
   char buffer[150];
+  char hw[5];
+  char sw[9];
   size_t size = sizeof(buffer);
 
+  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
+  Utils.hex2str(xbeeDM.softVersion, sw, 4);
+
   cr.println(F("Time      : %s"), RTC.getTime());
-  cr.println(F("Hardware  : Version=%c Mote=%s XBee=%s"), _boot_version,
-             UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
+  cr.println(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
+  cr.println(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
   cr.println(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
   cr.println(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));

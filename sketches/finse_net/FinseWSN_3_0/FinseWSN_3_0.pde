@@ -27,9 +27,15 @@ void setup()
 
   // Log configuration
   char buffer[150];
+  char hw[5];
+  char sw[9];
   size_t size = sizeof(buffer);
-  info(F("Hardware  : Version=%c Mote=%s XBee=%s"), _boot_version,
-       UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
+
+  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
+  Utils.hex2str(xbeeDM.softVersion, sw, 4);
+
+  info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
+  info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
   info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
   info(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
   info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));

@@ -28,6 +28,8 @@ void WaspUIO::initNet()
   xbeeDM.ON();
   delay(50);
 
+  xbeeDM.getHardVersion();
+  xbeeDM.getSoftVersion();
   readOwnMAC();
 
   // XXX Reduce the number of retries to reduce the time it is lost in send
