@@ -59,7 +59,7 @@ const Command commands[] PROGMEM = {
   {"read ",     &cmdRead,     CMD_READ},
   {"run ",      &cmdRun,      CMD_RUN},
   {"sdi",       &cmdSDI12,    CMD_SDI12},
-  {"tail",      &cmdTail, CMD_TAIL},
+  {"tail",      &cmdTail,     CMD_TAIL},
   {"time gps",  &cmdTimeGPS,  CMD_TIME_GPS},
   {"time ",     &cmdTime,     CMD_TIME},
 };
@@ -185,32 +185,58 @@ COMMAND(cmdCat)
 
 COMMAND(cmdTail)
 {
-  unsigned int tailLine;
+  unsigned int maxnl, nl;
   char filename[80];
-  int32_t nline;
-  uint32_t offsetln, i;
+  SdFile file;
+  uint32_t size, nc;
+  uint16_t max = DOS_BUFFER_SIZE - 1;
+  int16_t c;
+  size_t nbyte;
+  int nread;
 
   // Check input
-  if (sscanf(str, "%u %s", &tailLine, &filename) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%u %s", &maxnl, &filename) != 2) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Check feature availability
   if (! UIO.hasSD) { return cmd_unavailable; }
 
-  // Number of lines in the file
-  nline = SD.numln(filename);
-  if (nline < 0) { return cmd_error; }
-  if (tailLine > nline) { tailLine = nline; }
+  // Open file
+  if (!SD.openFile(filename, &file, O_READ)) { return cmd_error; }
 
-  // Print
-  offsetln = nline - tailLine;
-  for (i=offsetln; i < nline; i++)
+  // Read backwards
+  maxnl++;
+  size = file.fileSize();
+  nc = 0;
+  nl = 0;
+  while (nc < size && nl < maxnl)
   {
-    SD.catln(filename, i, 1);
-    cr.println(SD.buffer);
+    nc++;
+    file.seekEnd(-nc);
+    if ((c = file.read()) < 0) { goto error; }
+    if (c == '\n') { nl++; }
   }
+  nc--; // do not include the last newline read
 
+  // Read forward
+  cr.println(F("-------------------------"));
+  file.seekEnd(-nc);
+  while (nc > 0)
+  {
+    nbyte = (nc < max) ? nc : max;
+    nread = file.read(SD.buffer, nbyte);
+    if (nread < 0) { goto error; }
+    USB.print(SD.buffer);
+    nc -= nread;
+  }
+  cr.println(F("-------------------------"));
+
+  file.close();
   return cmd_quiet;
+
+error:
+  file.close();
+  return cmd_error;
 }
 
 
