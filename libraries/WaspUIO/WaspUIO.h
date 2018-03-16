@@ -42,6 +42,9 @@
 #define EEPROM_RUN (EEPROM_START + 9)
 enum run_t {
   RUN_NETWORK,
+  RUN_FREE_0, // Available
+  RUN_FREE_1, // Available
+  RUN_FREE_2, // Available
   RUN_CTD10, // SDI-12
   RUN_DS2,
   RUN_DS1820, // OneWire
