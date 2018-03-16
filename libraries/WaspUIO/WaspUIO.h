@@ -8,11 +8,6 @@
  * Includes
  ******************************************************************************/
 
-// We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
-#define USE_I2C true // I include here OneWire as well
-#define USE_SDI true
-
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
@@ -29,11 +24,7 @@
 
 // RTC uses I2C. If there are other sensors with I2C they must be powered on
 // when using RTC, otherwise it won't work. See TwoWire::secureBegin
-#if USE_AGR
-#include <WaspSensorAgr_v20.h>
-#elif USE_I2C
 #include <WaspSensorAmbient.h> // This is used to enable 3V3
-#endif
 
 
 /******************************************************************************
@@ -51,9 +42,6 @@
 #define EEPROM_RUN (EEPROM_START + 9)
 enum run_t {
   RUN_NETWORK,
-  RUN_SENSIRION, // Agr
-  RUN_PRESSURE,
-  RUN_LEAFWETNESS,
   RUN_CTD10, // SDI-12
   RUN_DS2,
   RUN_DS1820, // OneWire
@@ -334,14 +322,6 @@ CR_TASK(taskAcc);
 CR_TASK(taskHealthFrame);
 // Sensors: external
 CR_TASK(taskSensors);
-// Agr board
-CR_TASK(taskAgr);
-// Agr: Pressure
-CR_TASK(taskAgrPressure);
-// Agr: Low consumption group
-CR_TASK(taskAgrLC);
-CR_TASK(taskAgrLeafwetnessFrame);
-CR_TASK(taskAgrSensirionFrame);
 // SDI-12
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);

@@ -292,28 +292,13 @@ void WaspUIO::on(uint8_t device)
 {
   switch (device)
   {
-#if USE_AGR
-    case UIO_PRESSURE:
-      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
-      break;
-    case UIO_SENSIRION:
-      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
-      break;
-    case UIO_LEAFWETNESS:
-      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
-      break;
-#endif
-#if USE_I2C
     case UIO_I2C:
       break;
     case UIO_1WIRE:
       break;
-#endif
-#if USE_SDI
     case UIO_SDI12:
       mySDI12.begin();
       break;
-#endif
   }
 
   onRegister |= device;
@@ -325,28 +310,13 @@ void WaspUIO::off(uint8_t device)
 
   switch (device)
   {
-#if USE_AGR
-    case UIO_PRESSURE:
-      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);
-      break;
-    case UIO_SENSIRION:
-      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
-      break;
-    case UIO_LEAFWETNESS:
-      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
-      break;
-#endif
-#if USE_I2C
     case UIO_I2C:
       break;
     case UIO_1WIRE:
       break;
-#endif
-#if USE_SDI
     case UIO_SDI12:
       mySDI12.end();
       break;
-#endif
   }
 }
 

@@ -49,28 +49,16 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
 
   value = actions[RUN_NETWORK];
   if (value) strnjoin_F(dst, size, F(", "), F("Network (%d)"), value);
-#ifdef USE_AGR
-  value = actions[RUN_SENSIRION];
-  if (value) strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), value);
-  value = actions[RUN_PRESSURE];
-  if (value) strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), value);
-  value = actions[RUN_LEAFWETNESS];
-  if (value) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), value);
-#endif
-#ifdef USE_SDI
   value = actions[RUN_CTD10];
   if (value) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), value);
   value = actions[RUN_DS2];
   if (value) strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), value);
-#endif
-#ifdef USE_I2C
   value = actions[RUN_DS1820];
   if (value) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), value);
   value = actions[RUN_BME280];
   if (value) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), value);
   value = actions[RUN_MB];
   if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
-#endif
   if (! dst[0]) strncpy_F(dst, F("(none)"), size);
   return dst;
 }

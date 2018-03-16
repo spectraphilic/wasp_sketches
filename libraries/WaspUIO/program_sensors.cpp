@@ -56,44 +56,27 @@ CR_TASK(taskHealthFrame)
 
 /**
  * Functions to turn on/off sensor power switches.
- * Supports the Agr board and the SDI-12 bus.
+ * Supports the SDI-12 bus...
  *
- * The Agr board uses both 5V and 3V3. While the SDI-12 bus uses only 5V.
+ * The SDI-12 bus uses only 5V.
  */
 
 CR_TASK(taskSensors)
 {
-#if USE_AGR
-  bool agr = UIO.action(3, RUN_PRESSURE, RUN_LEAFWETNESS, RUN_SENSIRION);
-#endif
-#if USE_SDI
   bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
-#endif
-#if USE_I2C
   bool onewire = UIO.action(1, RUN_DS1820);
   bool i2c = UIO.action(1, RUN_BME280);
   bool ttl = UIO.action(1, RUN_MB);
-#endif
-  static tid_t agr_id, sdi_id, onewire_id, i2c_id, ttl_id;
+  static tid_t sdi_id, onewire_id, i2c_id, ttl_id;
 
   CR_BEGIN;
 
   // Power On
-#if USE_AGR
-  if (agr)
-  {
-    info(F("Agr board ON"));
-    SensorAgrv20.ON();
-  }
-#endif
-#if USE_SDI
   if (! (WaspRegister & REG_5V) && sdi)
   {
     info(F("5V ON"));
     PWR.setSensorPower(SENS_5V, SENS_ON);
   }
-#endif
-#if USE_I2C
   if (! (WaspRegister & REG_3V3) && (onewire || i2c || ttl))
   {
     info(F("3V3 ON"));
@@ -111,45 +94,23 @@ CR_TASK(taskSensors)
       BME.readCalibration();
     }
   }
-#endif
 
   // Wait for power to stabilize
   CR_DELAY(500);
 
   // Spawn tasks to take measures
-#if USE_AGR
-  if (agr)     { CR_SPAWN2(taskAgr, agr_id); }
-#endif
-#if USE_SDI
   if (sdi)     { CR_SPAWN2(taskSdi, sdi_id); }
-#endif
-#if USE_I2C
   if (onewire) { CR_SPAWN2(task1Wire, onewire_id); }
   if (i2c)     { CR_SPAWN2(taskI2C, i2c_id); }
   if (ttl)     { CR_SPAWN2(taskTTL, ttl_id); }
-#endif
 
   // Wait for tasks to complete
-#if USE_AGR
-  if (agr)     { CR_JOIN(agr_id); }
-#endif
-#if USE_SDI
   if (sdi)     { CR_JOIN(sdi_id); }
-#endif
-#if USE_I2C
   if (onewire) { CR_JOIN(onewire_id); }
   if (i2c)     { CR_JOIN(i2c_id); }
   if (ttl)     { CR_JOIN(ttl_id); }
-#endif
 
   // Power Off
-#if USE_AGR
-  if (agr)
-  {
-    info(F("Agr board OFF"));
-    SensorAgrv20.OFF();
-  }
-#endif
   if (WaspRegister & REG_5V)
   {
     info(F("5V OFF"));
@@ -163,96 +124,6 @@ CR_TASK(taskSensors)
 
   CR_END;
 }
-
-/**
- * The Agr board
- */
-
-CR_TASK(taskAgr)
-{
-  static tid_t p_id, lc_id;
-
-  CR_BEGIN;
-
-  // Measure
-  if (UIO.action(1, RUN_PRESSURE))
-  {
-    CR_SPAWN2(taskAgrPressure, p_id);
-  }
-  if (UIO.action(2, RUN_LEAFWETNESS, RUN_SENSIRION))
-  {
-    CR_SPAWN2(taskAgrLC, lc_id);
-  }
-
-  // Wait
-  if (UIO.action(1, RUN_PRESSURE))
-  {
-    CR_JOIN(p_id);
-  }
-  if (UIO.action(2, RUN_LEAFWETNESS, RUN_SENSIRION))
-  {
-    CR_JOIN(lc_id);
-  }
-
-  CR_END;
-}
-
-#if USE_AGR
-CR_TASK(taskAgrPressure)
-{
-  float pressure;
-
-  CR_BEGIN;
-
-  UIO.on(UIO_PRESSURE);
-  CR_DELAY(50);
-  pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE); // Read
-  UIO.off(UIO_PRESSURE);
-  ADD_SENSOR(SENSOR_PA, pressure);
-
-  CR_END;
-}
-
-/* The Low consumption group. */
-CR_TASK(taskAgrLC)
-{
-  float temperature, humidity, wetness;
-
-  CR_BEGIN;
-
-  // Leaf wetness
-  if (UIO.action(1, RUN_LEAFWETNESS))
-  {
-    UIO.on(UIO_LEAFWETNESS);
-    CR_DELAY(50);
-    wetness = SensorAgrv20.readValue(SENS_AGR_LEAF_WETNESS);
-    ADD_SENSOR(SENSOR_LW, wetness);
-  }
-
-  // Sensirion (temperature, humidity)
-  if (UIO.action(1, RUN_SENSIRION))
-  {
-    UIO.on(UIO_SENSIRION);
-    CR_DELAY(50);
-    temperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
-    humidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
-    ADD_SENSOR(SENSOR_TCB, temperature); // Add digital temperature
-    ADD_SENSOR(SENSOR_HUMB, humidity); // Add digital humidity
-  }
-
-  // OFF
-  if (UIO.action(1, RUN_LEAFWETNESS))
-  {
-    UIO.off(UIO_LEAFWETNESS);
-  }
-  if (UIO.action(1, RUN_SENSIRION))
-  {
-    UIO.off(UIO_SENSIRION);
-  }
-
-  CR_END;
-}
-#endif
 
 
 /**
