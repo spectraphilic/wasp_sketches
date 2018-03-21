@@ -20,7 +20,7 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
+const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead 3=power-board";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
 const char CMD_DISABLE [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
 const char CMD_ENABLE  [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
@@ -35,7 +35,7 @@ const char CMD_NETWORK [] PROGMEM = "network VALUE  - Choose network: "
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s) - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
 const char CMD_PRINT   [] PROGMEM = "print          - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 7=ds1820 8=mb";
+const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 7=ds1820 8=mb 9=battery";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: "
                                     "0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
 const char CMD_SDI12   [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
@@ -150,7 +150,7 @@ COMMAND(cmdBattery)
 
   // Check input
   if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
-  if (value != 1 && value != 2) { return cmd_bad_input; }
+  if (value != 1 && value != 2 && value != 3) { return cmd_bad_input; }
 
   // Do
   UIO.batteryType = (uint8_t) value;
@@ -501,7 +501,7 @@ COMMAND(cmdPrint)
   cr.println(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
   cr.println(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
   cr.println(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  cr.println(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
+  cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   cr.println(F("Network   : %s (frame size is %d)"), UIO.pprintNetwork(buffer, size), frame.getFrameSize());
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
@@ -531,6 +531,13 @@ COMMAND(cmdRead)
   {
     uint16_t median, sd;
     UIO.readMaxbotixSerial(median, sd, 5);
+  }
+  else if (value == 9)
+  {
+    char buffer[25];
+    UIO.readBattery();
+    cr.println(F("%s"), UIO.pprintBattery(buffer, sizeof buffer));
+    return cmd_quiet;
   }
 
   return cmd_ok;

@@ -80,18 +80,8 @@ void beforeSleep()
 
 void afterSleep()
 {
-  if (UIO.isOn(UIO_SDI12))
+  if (UIO.state & UIO_SDI12)
   {
     mySDI12.forceHold(); // XXX
-  }
-
-  if (UIO.isOn(UIO_I2C))
-  {
-    // XXX
-  }
-
-  if (UIO.isOn(UIO_1WIRE))
-  {
-    // XXX
   }
 }

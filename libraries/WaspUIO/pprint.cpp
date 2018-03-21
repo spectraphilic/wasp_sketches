@@ -22,8 +22,21 @@ const char* WaspUIO::pprintSerial(char* dst, size_t size)
 const char* WaspUIO::pprintBattery(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if      (batteryType == 1) strncpy_F(dst, F("Lithium-ion"), size);
-  else if (batteryType == 2) strncpy_F(dst, F("Lead acid"), size);
+  if (batteryType == 1)
+  {
+    snprintf_F(dst, size, F("Lithium-ion (%d %%)"), UIO.batteryLevel);
+  }
+  else if (batteryType == 2)
+  {
+    strncpy_F(dst, F("Lead acid"), size);
+  }
+  else if (batteryType == 3)
+  {
+    char aux[10];
+    Utils.float2String(UIO.batteryVolts, aux, 2);
+    snprintf_F(dst, size, F("Power board (%s volts)"), aux);
+  }
+
   return dst;
 }
 

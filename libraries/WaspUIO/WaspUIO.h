@@ -53,17 +53,24 @@ enum run_t {
   RUN_LEN // Special value
 };
 
+enum battery_t {
+  BATTERY_LOW,
+  BATTERY_MIDDLE,
+  BATTERY_HIGH
+};
+
 // Flags available: 2 8 16 32 64 128
 #define FLAG_LOG_USB 1
 #define FLAG_LOG_SD  4
 
-#define UIO_SD 1
-#define UIO_PRESSURE 2
-#define UIO_SENSIRION 4
-#define UIO_LEAFWETNESS 8
-#define UIO_I2C 16
-#define UIO_1WIRE 32
-#define UIO_SDI12 64
+#define UIO_V12 1
+#define UIO_V5 2
+#define UIO_V33 4
+#define UIO_LEAD_VOLTAGE 8
+#define UIO_MAXB 16
+#define UIO_I2C 32
+#define UIO_1WIRE 64
+#define UIO_SDI12 128
 
 #define ADD_SENSOR(type, ...) \
   if (frame.addSensorBin(type, ## __VA_ARGS__) == -1)\
@@ -128,12 +135,14 @@ bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
 uint8_t flags;
-uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
+uint8_t batteryType; // 1: lithium battery 2: Lead acid battery 3: Power board
 uint8_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)
+float batteryVolts;
 uint8_t batteryLevel;
-uint8_t cooldown; // Reduces frequency of action, depends on batteryLevel
+battery_t battery;
+uint8_t cooldown; // Reduces frequency of action, depends on battery
 // To keep time without calling RCT each time
 float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
@@ -170,10 +179,17 @@ uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
 
+// Power
+uint8_t state;
+bool on(uint8_t device);
+bool off(uint8_t device);
+void readBattery();
+float getBatteryVolts();
+float getLeadBatteryVolts();
+
 // Init, start and stop methods
 void onSetup();
 void onLoop();
-void readBattery();
 void initNet();
 bool action(uint8_t n, ...);
 const uint8_t loop_timeout = 4; // minutes
@@ -202,12 +218,6 @@ void loadTime(bool temp=false);
 void nextAlarm();
 const char* nextAlarm(char* alarmTime);
 void deepSleep();
-
-// Register of "devices" that are On
-uint8_t onRegister;
-void on(uint8_t device);
-void off(uint8_t device);
-bool isOn(uint8_t device);
 
 // Sensors
 int getMaxbotixSample();

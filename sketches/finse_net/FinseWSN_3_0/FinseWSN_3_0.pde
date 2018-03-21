@@ -34,10 +34,10 @@ void setup()
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
 
-  info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
+  info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, size));
   info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
   info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  info(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
+  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
@@ -59,18 +59,17 @@ void loop()
   RTC.ON(); // This fixes a bug with Maxbotix & SD card in some motes
   UIO.onLoop();
 
+  char buffer[50];
+
   // Low battery level: do nothing
-  if (UIO.batteryType == 1)
+  if (UIO.battery == BATTERY_LOW)
   {
-    if (UIO.batteryLevel <= 30)
-    {
-      debug(F("*** Loop skip (battery %d %%)"), UIO.batteryLevel);
-      return;
-    }
+    debug(F("*** Loop skip (%s)"), UIO.pprintBattery(buffer, sizeof buffer));
+    return;
   }
 
   // Logging starts here
-  info(F("*** Loop start (battery %d %%)"), UIO.batteryLevel);
+  info(F("*** Loop start (%s)"), UIO.pprintBattery(buffer, sizeof buffer));
 
   // Check RTC interruption
   if (intFlag & RTC_INT)

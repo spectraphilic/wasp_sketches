@@ -39,9 +39,13 @@ CR_TASK(taskHealthFrame)
 {
   // Battery level (not for lead acid)
   // TODO Define how often in the menu with action_battery
-  if (UIO.batteryType != 2)
+  if (UIO.batteryType == 1)
   {
     ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel);
+  }
+  else if (UIO.batteryType == 3)
+  {
+    //ADD_SENSOR(SENSOR_VOLTS, UIO.batteryVolts); // TODO
   }
 
   // RTC temperature (v12 only)

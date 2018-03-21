@@ -8,16 +8,10 @@ CR_TASK(taskNetwork)
   bool send = false;
   if (UIO.hasSD)
   {
-    if (UIO.batteryType == 1) // Lithium
-    {
-      send = (
-        (UIO.batteryLevel > 75) ||
-        (UIO.batteryLevel > 65 && UIO.minute % 180 == 0)
-      );
-    }
-    else if (UIO.batteryType == 2) // Lead Acid (send always)
-    {
-    }
+    send = (
+      (UIO.battery == BATTERY_HIGH) ||
+      (UIO.battery == BATTERY_MIDDLE && UIO.minute % 180 == 0)
+    );
   }
 
   CR_BEGIN;

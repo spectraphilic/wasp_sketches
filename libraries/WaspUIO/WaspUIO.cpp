@@ -28,7 +28,7 @@ void WaspUIO::onSetup()
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
   batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
-  if (batteryType != 1 && batteryType != 2)
+  if (batteryType != 1 && batteryType != 2 && batteryType != 3)
   {
     batteryType = 1;
   }
@@ -69,7 +69,7 @@ void WaspUIO::onSetup()
 void WaspUIO::onLoop()
 {
   cr.sleep_time = 0;
-  onRegister = 0;
+  state = 0;
 
   loadTime(true); // Read temperature as well
   uint32_t epoch = getEpochTime();
@@ -284,47 +284,6 @@ bool WaspUIO::action(uint8_t n, ...)
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
-/*
- * On/Off devices
- */
-
-void WaspUIO::on(uint8_t device)
-{
-  switch (device)
-  {
-    case UIO_I2C:
-      break;
-    case UIO_1WIRE:
-      break;
-    case UIO_SDI12:
-      mySDI12.begin();
-      break;
-  }
-
-  onRegister |= device;
-}
-
-void WaspUIO::off(uint8_t device)
-{
-  onRegister &= ~device;
-
-  switch (device)
-  {
-    case UIO_I2C:
-      break;
-    case UIO_1WIRE:
-      break;
-    case UIO_SDI12:
-      mySDI12.end();
-      break;
-  }
-}
-
-bool WaspUIO::isOn(uint8_t device)
-{
-  return onRegister & device;
-}
-
 /**
  * Read a line from the given open file, not including the end-of-line
  * character. Store the read line in SD.buffer.
@@ -406,33 +365,6 @@ uint8_t WaspUIO::readRSSI2Frame(void)
   // TODO RSSI should be stored in the health frame, no?
 
   return rssi;
-}
-
-
-void WaspUIO::readBattery()
-{
-  // Lead acid battery does not support reading voltage, yet
-  if (UIO.batteryType == 2)
-  {
-    batteryLevel = 100;
-  }
-  else
-  {
-    batteryLevel = PWR.getBatteryLevel();
-  }
-
-  // Calculate the cooldown factor, depends on battery level
-  cooldown = 1;
-  // Power logic for lithium battery
-  if (UIO.batteryType == 1)
-  {
-    if      (batteryLevel <= 30) { cooldown = 3; }
-    else if (batteryLevel <= 40) { cooldown = 2; }
-  }
-  // TODO Logic for Lead acid battery
-  else if (UIO.batteryType == 2)
-  {
-  }
 }
 
 
