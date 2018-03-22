@@ -27,10 +27,10 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
-  batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
-  if (batteryType != 1 && batteryType != 2 && batteryType != 3)
+  batteryType = (battery_type_t) Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
+  if (batteryType != BATTERY_LITHIUM && batteryType != BATTERY_LEAD)
   {
-    batteryType = 1;
+    batteryType = BATTERY_LITHIUM;
   }
 
   // Network

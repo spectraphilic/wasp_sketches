@@ -42,7 +42,7 @@
 #define EEPROM_RUN (EEPROM_START + 9)
 enum run_t {
   RUN_NETWORK,
-  RUN_FREE_0, // Available
+  RUN_BATTERY, // Available
   RUN_FREE_1, // Available
   RUN_FREE_2, // Available
   RUN_CTD10, // SDI-12
@@ -51,6 +51,11 @@ enum run_t {
   RUN_BME280, // I2C
   RUN_MB, // TTL
   RUN_LEN // Special value
+};
+
+enum battery_type_t {
+  BATTERY_LITHIUM = 1,
+  BATTERY_LEAD = 2
 };
 
 enum battery_t {
@@ -135,7 +140,7 @@ bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
 uint8_t flags;
-uint8_t batteryType; // 1: lithium battery 2: Lead acid battery 3: Power board
+battery_type_t batteryType;
 uint8_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)

@@ -20,28 +20,28 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead 3=power-board";
-const char CMD_CAT     [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
-const char CMD_DISABLE [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
-const char CMD_ENABLE  [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
-const char CMD_EXIT    [] PROGMEM = "exit           - Exit the command line interface";
-const char CMD_FORMAT  [] PROGMEM = "format         - Format SD card";
-const char CMD_HELP    [] PROGMEM = "help           - Prints the list of commands";
-const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE - Sets the log level: "
+const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
+const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
+const char CMD_DISABLE [] PROGMEM = "disable FLAG    - Disables a feature: 0=log_sd 1=log_usb";
+const char CMD_ENABLE  [] PROGMEM = "enable FLAG     - Enables a feature: 0=log_sd 1=log_usb";
+const char CMD_EXIT    [] PROGMEM = "exit            - Exit the command line interface";
+const char CMD_FORMAT  [] PROGMEM = "format          - Format SD card";
+const char CMD_HELP    [] PROGMEM = "help            - Prints the list of commands";
+const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE  - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char CMD_LS      [] PROGMEM = "ls             - List files in SD card";
-const char CMD_NETWORK [] PROGMEM = "network VALUE  - Choose network: "
+const char CMD_LS      [] PROGMEM = "ls              - List files in SD card";
+const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
-const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s) - Identify OneWire sensors attached to the given pins,"
+const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
-const char CMD_PRINT   [] PROGMEM = "print          - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 7=ds1820 8=mb 9=battery";
-const char CMD_RUN     [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: "
-                                    "0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
-const char CMD_SDI12   [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
-const char CMD_TAIL [] PROGMEM = "tail nline FILENAME    - Print tail number of lines of FILEMAME to USB. Default 10 lines";
-const char CMD_TIME_GPS[] PROGMEM = "time gps       - Sets time from GPS";
-const char CMD_TIME    [] PROGMEM = "time VALUE     - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
+const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
+const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 7=ds1820 8=mb 9=battery";
+const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery 2=<unused>"
+                                    "3=<unused> 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
+const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0 and 1";
+const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
+const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
+const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
 
 const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
@@ -150,11 +150,11 @@ COMMAND(cmdBattery)
 
   // Check input
   if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
-  if (value != 1 && value != 2 && value != 3) { return cmd_bad_input; }
+  if (value != BATTERY_LITHIUM && value != BATTERY_LEAD) { return cmd_bad_input; }
 
   // Do
-  UIO.batteryType = (uint8_t) value;
-  UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, UIO.batteryType);
+  UIO.batteryType = (battery_type_t) value;
+  UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, (uint8_t) UIO.batteryType);
   UIO.readBattery();
   return cmd_ok;
 }

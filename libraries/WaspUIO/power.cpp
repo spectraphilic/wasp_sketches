@@ -82,17 +82,13 @@ void WaspUIO::readBattery()
   battery = BATTERY_HIGH;
 
   // Read battery level (%) or volts, depending on type
-  if (batteryType == 1)
+  if (batteryType == BATTERY_LITHIUM)
   {
     batteryLevel = PWR.getBatteryLevel();
     if      (batteryLevel <= 35) { battery = BATTERY_LOW; }
     else if (batteryLevel <= 70) { battery = BATTERY_MIDDLE; }
   }
-  else if (batteryType == 2)
-  {
-    batteryLevel = 100;
-  }
-  else if (batteryType == 3)
+  else
   {
     batteryVolts = getLeadBatteryVolts();
     if      (batteryVolts <= 10.5) { battery = BATTERY_LOW; }
@@ -108,10 +104,12 @@ void WaspUIO::readBattery()
 
 float WaspUIO::getBatteryVolts()
 {
-  if (batteryType == 1) { return PWR.getBatteryVolts(); }
-  if (batteryType == 3) { return getLeadBatteryVolts(); }
+  if (batteryType == BATTERY_LITHIUM)
+  {
+    return PWR.getBatteryVolts();
+  }
 
-  return 0.0;
+  return getLeadBatteryVolts();
 }
 
 
@@ -120,7 +118,8 @@ float WaspUIO::getLeadBatteryVolts()
   int analog5;
   float R1 = 10;  // 10k resistor
   float R2 = 2.2; // 2k2 resistor
-  float LeadAcid_V;
+  float volts;
+  char volts_str[15];
 
   // Turn on
   bool change_v12 = on(UIO_V12);
@@ -135,8 +134,9 @@ float WaspUIO::getLeadBatteryVolts()
   if (change_la) { off(UIO_LEAD_VOLTAGE); }
   if (change_v12) { off(UIO_V12); }
 
-  LeadAcid_V = analog5  * (R1 + R2) / R2 * 3.3 / 1023 ;
-  debug(F("Lead acid battery analog5=%d volts=%f"), analog5, LeadAcid_V);
+  volts = analog5  * (R1 + R2) / R2 * 3.3 / 1023 ;
+  Utils.float2String(volts, volts_str, 2);
+  debug(F("Lead acid battery analog5=%d volts=%s"), analog5, volts_str);
 
-  return LeadAcid_V;
+  return volts;
 }
