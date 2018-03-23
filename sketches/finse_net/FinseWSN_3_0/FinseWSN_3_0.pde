@@ -35,9 +35,10 @@ void setup()
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
 
   info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, size));
+  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
+  info(F("Board     : %s"), UIO.pprintBoard(buffer, size));
   info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
   info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));

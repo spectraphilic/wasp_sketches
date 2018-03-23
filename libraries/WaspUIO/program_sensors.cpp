@@ -317,10 +317,7 @@ CR_TASK(taskTTL)
 {
   uint16_t median, sd;
 
-  if (UIO.readMaxbotixSerial(median, sd, 5))
-  {
-    return CR_TASK_ERROR;
-  }
+  if (UIO.readMaxbotixSerial(median, sd, 5)) { return CR_TASK_ERROR; }
   ADD_SENSOR(SENSOR_MB73XX, (uint32_t) median, (uint32_t) sd);
 
   return CR_TASK_STOP;

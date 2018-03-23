@@ -25,7 +25,12 @@ void WaspUIO::initNet()
   frame.setFrameSize(size);
 
   // init XBee
-  xbeeDM.ON();
+  if (xbeeDM.ON())
+  {
+    error = F("ERROR xbeeDM.ON()");
+    return;
+  }
+
   delay(50);
 
   xbeeDM.getHardVersion();

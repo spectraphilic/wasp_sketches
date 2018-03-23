@@ -27,11 +27,11 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
+  boardType = (board_type_t) Utils.readEEPROM(EEPROM_UIO_BOARD_TYPE);
+  if (boardType >= BOARD_LEN) { boardType = BOARD_NONE; }
+
   batteryType = (battery_type_t) Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
-  if (batteryType != BATTERY_LITHIUM && batteryType != BATTERY_LEAD)
-  {
-    batteryType = BATTERY_LITHIUM;
-  }
+  if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }
 
   // Network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);

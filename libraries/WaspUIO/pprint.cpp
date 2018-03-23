@@ -36,6 +36,15 @@ const char* WaspUIO::pprintBattery(char* dst, size_t size)
   return dst;
 }
 
+const char* WaspUIO::pprintBoard(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (boardType == BOARD_LEMMING) { strncat_F(dst, F("lemming"), size); }
+  else                            { strncat_F(dst, F("none"), size); }
+
+  return dst;
+}
+
 const char* WaspUIO::pprintLog(char* dst, size_t size)
 {
   dst[0] = '\0';

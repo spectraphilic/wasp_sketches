@@ -34,7 +34,7 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-// 1 byte available
+#define EEPROM_UIO_BOARD_TYPE (EEPROM_START + 3)
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
 // 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
@@ -55,7 +55,14 @@ enum run_t {
 
 enum battery_type_t {
   BATTERY_LITHIUM = 1,
-  BATTERY_LEAD = 2
+  BATTERY_LEAD,
+  BATTERY_LEN
+};
+
+enum board_type_t {
+  BOARD_NONE,
+  BOARD_LEMMING,
+  BOARD_LEN
 };
 
 enum battery_t {
@@ -140,6 +147,7 @@ bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
 uint8_t flags;
+board_type_t boardType;
 battery_type_t batteryType;
 uint8_t actions[RUN_LEN];
 
@@ -209,6 +217,7 @@ void showBinaryFrame();
 void clint();
 const char* pprintSerial(char* str, size_t size);
 const char* pprintBattery(char* dst, size_t size);
+const char* pprintBoard(char* dst, size_t size);
 const char* pprintLog(char* dst, size_t size);
 const char* pprintNetwork(char* dst, size_t size);
 const char* pprintActions(char* dst, size_t size);
@@ -265,6 +274,7 @@ uint8_t _getPin(uint8_t);
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
 COMMAND(cmdBattery);
+COMMAND(cmdBoard);
 COMMAND(cmdCat);
 COMMAND(cmdTail);
 COMMAND(cmdDisable);
