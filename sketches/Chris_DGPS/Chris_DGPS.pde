@@ -1,35 +1,34 @@
 /*
-    ------ Waspmote Pro Code Example --------
-
+  Control of DGPS with Crydom relay
+  2018-04-08 (C) john.hulth@geo.uio.no
 
   Five Green blinkings indicates GOOD battery (long) and/or GPS (short)
   Five RED blinkings indicates BAD battery (long) and/or GPS (short)
   RED light during GPS search
-  Green Led
+  Green Led indicates relay on and waspmote sleeping
+
+  Define summer and winter dates and turn on/off voltage for battery before deployment!!!
 
 */
-
-// Put your libraries here (#include ...)
 #include <WaspGPS.h>
 
 // define variable for summer and winter season
-#define SummerStartMonth 3
-#define SummerStartDate 15
+#define SummerStartMonth 3 // 3
+#define SummerStartDate 15 // 15
 
-#define WinterStartMonth 9
-#define WinterStartDate 1
-
+#define WinterStartMonth 9 // 9
+#define WinterStartDate 1 // 1
 
 // define variable for battery voltage
-#define TurnOffVoltage 11.5
-#define TurnOnVoltage 12.2
+#define TurnOffVoltage 11.5 // 11.5 ~ 50%
+#define TurnOnVoltage 12.2 // 12.2 ~ 65-70%
 
 float LeadAcid_V;
 char LeadAcid_V_str[10];
 bool relay_on;
 
 // define GPS timeout when connecting to satellites
-// this time is defined in seconds (240sec = 4minutes)
+// this time is defined in seconds (180 sec = 3 minutes)
 #define TIMEOUT 180
 
 // General variables
@@ -38,7 +37,6 @@ char latitude_str[30];
 char longitude_str[30];
 char filename[13]; // define file name: MUST be 8.3 SHORT FILE NAME
 char sample_txt[100]; // text string to append to SD-card
-
 
 
 // - - - Start of program - - -
@@ -61,6 +59,7 @@ void setup()
     // CryDom relay ON
     relay_on = CryDom(1);
 
+    // Update time if waspmote have been reset
     if ( RTC.getEpochTime()  <  RTC.getEpochTime(18, 1, 1, 0, 0, 0))
     {
       // Get basic GPS data and update RTC time
@@ -76,7 +75,8 @@ void setup()
     relay_on = CryDom(0);
   }
 
-  // 1. Create file according to DATE with the following format: [YYMMDD.TXT]
+  // Create file according to DATE with the following format: [YYMMDD.TXT]
+  RTC.getTime();
   SD.ON();
   sprintf(filename, "%02u%02u%02u.TXT", RTC.year, RTC.month, RTC.date);
   if (SD.create(filename))
@@ -88,14 +88,14 @@ void setup()
   {
     USB.print(F("\nfile NOT created (only one file per day)\n"));
   }
-  // Print filemanes to USB
+  // Print list of filemanes to USB
   SD.ls( LS_R | LS_DATE | LS_SIZE );
   SD.OFF();
 }
 
 void loop()
 {
-  // Set watchdog reboot after 5 min
+  // Set watchdog to reboot after 5 min
   RTC.setWatchdog(5);
 
   USB.print(F("\nStart loop..."));
@@ -113,6 +113,7 @@ void loop()
   USB.print(F("\nSummer mode: "));
   USB.print(Summer());
 
+  // Logic to control relay on/off
   if (  (Summer() && relay_on && (LeadAcid_V > TurnOffVoltage))
         || (Summer() && (LeadAcid_V > TurnOnVoltage))
         || ((RTC.hour == 12) && (LeadAcid_V > TurnOffVoltage))  )
@@ -124,7 +125,7 @@ void loop()
     relay_on = CryDom(0); // Turn relay OFF
   }
 
-  // Get basic GPS data, update RTC time and write to SD-card
+  // Get basic GPS data, update RTC time and write to SD-card (every hour in summer and at noon during winter)
   if (Summer() || (RTC.hour == 12))
   {
     // Get basic GPS data and update RTC time
@@ -140,7 +141,7 @@ void loop()
              , RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second, LeadAcid_V_str, relay_on, longitude_str, latitude_str, GPS.altitude );
 
     USB.print(sample_txt);
-   
+
     SD.ON();
     SD.append(filename, sample_txt);
     SD.OFF();
