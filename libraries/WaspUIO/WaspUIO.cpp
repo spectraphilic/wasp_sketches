@@ -77,6 +77,9 @@ void WaspUIO::onLoop()
   day = epoch / (24L * 60L * 60L);
   minute = (epoch / 60) % (60 * 24); // mins since the epoch modulus mins in a day
 
+  if (batteryType == BATTERY_LEAD) { startPowerBoard(); }
+  if (boardType == BOARD_LEMMING) { startSensorBoard(); }
+
   readBattery();
 }
 

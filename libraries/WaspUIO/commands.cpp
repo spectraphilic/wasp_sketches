@@ -452,8 +452,8 @@ COMMAND(cmdOneWire)
       cr.print(F("Error opening onewire.txt"));
     }
   }
-  PWR.setSensorPower(SENS_3V3, SENS_ON);
-  delay(750);
+  bool old_state = UIO.v33(1);
+  if (! old_state) { delay(750); }
 
   for (uint8_t i = 0; i < npins; i++)
   {
@@ -494,11 +494,8 @@ next:
   }
 
   // OFF
-  PWR.setSensorPower(SENS_3V3, SENS_OFF);
-  if (has_file)
-  {
-    file.close();
-  }
+  UIO.v33(old_state);
+  if (has_file) { file.close(); }
 
   return cmd_quiet;
 }
@@ -591,12 +588,12 @@ COMMAND(cmdRun)
 COMMAND(cmdSDI12)
 {
   // Do
-  PWR.setSensorPower(SENS_5V, SENS_ON);
+  bool old_state = UIO.v33(1);
   mySDI12.begin();
   mySDI12.identification(0);
   mySDI12.identification(1);
   mySDI12.end();
-  PWR.setSensorPower(SENS_5V, SENS_OFF);
+  UIO.v33(old_state);
   return cmd_quiet;
 }
 

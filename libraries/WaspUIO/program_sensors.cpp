@@ -7,34 +7,6 @@
  * The accelerometer uses the I2C bus.
  */
 
-CR_TASK(taskAcc)
-{
-  int16_t accX, accY, accZ;
-
-  // ON
-  ACC.ON();
-
-  // Check correct operation
-  if (ACC.check() != 0x32)
-  {
-    error(F("acc: check failed"));
-    return CR_TASK_ERROR;
-  }
-
-  // Read values
-  accX = ACC.getX();
-  accY = ACC.getY();
-  accZ = ACC.getZ();
-
-  // OFF
-  ACC.OFF();
-
-  // Frame
-  ADD_SENSOR(SENSOR_ACC, accX, accY, accZ);
-
-  return CR_TASK_STOP;
-}
-
 CR_TASK(taskHealthFrame)
 {
   // Battery level
@@ -78,16 +50,8 @@ CR_TASK(taskSensors)
   CR_BEGIN;
 
   // Power On
-  if (! (WaspRegister & REG_5V) && sdi)
-  {
-    info(F("5V ON"));
-    PWR.setSensorPower(SENS_5V, SENS_ON);
-  }
-  if (! (WaspRegister & REG_3V3) && (onewire || i2c || ttl))
-  {
-    info(F("3V3 ON"));
-    PWR.setSensorPower(SENS_3V3, SENS_ON);
-  }
+  if (sdi) { UIO.v5(1); }
+  if (onewire || i2c || ttl) { UIO.v33(1); }
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
@@ -117,16 +81,8 @@ CR_TASK(taskSensors)
   if (ttl)     { CR_JOIN(ttl_id); }
 
   // Power Off
-  if (WaspRegister & REG_5V)
-  {
-    info(F("5V OFF"));
-    PWR.setSensorPower(SENS_5V, SENS_OFF);
-  }
-  if (WaspRegister & REG_3V3)
-  {
-    info(F("3V3 OFF"));
-    PWR.setSensorPower(SENS_3V3, SENS_OFF);
-  }
+  UIO.v5(0);
+  UIO.v33(0);
 
   CR_END;
 }
@@ -141,8 +97,7 @@ CR_TASK(taskSdi)
   static tid_t tid;
 
   CR_BEGIN;
-
-  UIO.on(UIO_SDI12);
+  UIO.sdi12(1);
 
   // XXX There are 2 incompatible strategies to improve this:
   // - Use the Concurrent command
@@ -162,8 +117,7 @@ CR_TASK(taskSdi)
     CR_JOIN(tid);
   }
 
-  UIO.off(UIO_SDI12);
-
+  UIO.sdi12(0);
   CR_END;
 }
 
@@ -259,9 +213,9 @@ CR_TASK(task1Wire)
 
   CR_BEGIN;
 
-  UIO.on(UIO_1WIRE);
+  UIO.onewire(1);
   n = UIO.readDS18B20(values, max);
-  UIO.off(UIO_1WIRE);
+  UIO.onewire(0);
 
   if (n > 0)
   {
@@ -280,7 +234,7 @@ CR_TASK(taskI2C)
   float temperature, humidity, pressure;
   char aux[20];
 
-  UIO.on(UIO_I2C);
+  UIO.i2c(1);
 
   // Read enviromental variables
   temperature = BME.getTemperature(BME280_OVERSAMP_1X, 0);
@@ -302,8 +256,7 @@ CR_TASK(taskI2C)
   ADD_SENSOR(SENSOR_BME_HUM, humidity);
   ADD_SENSOR(SENSOR_BME_PRES, pressure);
 
-  UIO.off(UIO_I2C);
-
+  UIO.i2c(0);
   return CR_TASK_STOP;
 }
 

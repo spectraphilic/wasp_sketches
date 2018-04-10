@@ -193,9 +193,17 @@ void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
 
 // Power
+void startPowerBoard();
+void startSensorBoard();
 uint8_t state;
-bool on(uint8_t device);
-bool off(uint8_t device);
+bool v33(bool new_state);
+bool v5(bool new_state);
+bool v12(bool new_state);
+bool leadVoltage(bool new_state);
+bool maxbotix(bool new_state);
+bool i2c(bool new_state);
+bool onewire(bool new_state);
+bool sdi12(bool new_state);
 void readBattery();
 float getBatteryVolts();
 float getLeadBatteryVolts();
@@ -346,7 +354,6 @@ COMMAND(cmdTimeGPS);
 
 CR_TASK(taskMain);
 // Sensors: internal
-CR_TASK(taskAcc);
 CR_TASK(taskHealthFrame);
 // Sensors: external
 CR_TASK(taskSensors);
