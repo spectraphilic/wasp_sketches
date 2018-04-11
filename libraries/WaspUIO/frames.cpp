@@ -77,22 +77,14 @@ void WaspUIO::showBinaryFrame()
    for (i = 0; i < frame.numFields; i++)
    {
      sensor_id = *p++;
-     if (_boot_version >= 'G')
-     {
-       // v12
-       strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[sensor_id])));
-       nfields = (uint8_t)pgm_read_word(&(FRAME_SENSOR_FIELD_TABLE[sensor_id]));
-       type = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[sensor_id]));
-       decimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[sensor_id]));
-     }
-     else
-     {
-       // v15
-       strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[sensor_id])));
-       nfields = (uint8_t)pgm_read_word(&(SENSOR_FIELD_TABLE[sensor_id]));
-       type = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[sensor_id]));
-       decimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[sensor_id]));
-     }
+     // Use always the v15 tables
+     // It would make sense to use the v12 only with a v12 board *and* one of
+     // the Libelium's shields (eg the Agr board). But we don't support that
+     // configuration.
+     strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[sensor_id])));
+     nfields = (uint8_t)pgm_read_word(&(FRAME_SENSOR_FIELD_TABLE[sensor_id]));
+     type = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[sensor_id]));
+     decimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[sensor_id]));
 
      if (nfields == 0)
      {
