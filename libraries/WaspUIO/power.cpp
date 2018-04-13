@@ -3,9 +3,11 @@
 
 void WaspUIO::startPowerBoard()
 {
-  pinMode(ANA2, OUTPUT); // 12V_SW ON/OFF SWITCH
-  pinMode(ANA3, OUTPUT); // Lead-Acid meassurement ON/OFF SWITCH
-  pinMode(ANALOG5, INPUT);  //ANALOG5 Read data
+  pinMode(14, OUTPUT); // 3V3 switch
+  pinMode(15, OUTPUT); // 5V switch
+  pinMode(16, OUTPUT); // 12V switch
+  pinMode(17, OUTPUT); // Lead-Acid meassurement switch
+  pinMode(ANALOG5, INPUT);  // Lead-Acid measurement input line
 }
 
 void WaspUIO::startSensorBoard()
@@ -18,69 +20,79 @@ void WaspUIO::startSensorBoard()
 
   pinMode(DIGITAL6, INPUT); // OneWire data line
   pinMode(DIGITAL8, INPUT); // SDI-12 data line
+  // 1RX Maxbotix
+  // SCL/SDA I2C
 }
 
 
 /*
  * On/Off devices
  */
+bool WaspUIO::_powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state)
+{
+  // Safeguard, don't call this if not using the sensor board
+  if (boardType != BOARD_LEMMING)
+  {
+    return false;
+  }
+
+  bool old_state = state & device;
+  if (new_state == old_state) { return old_state; }
+
+  if (new_state)
+  {
+    state |= device;
+    digitalWrite(pin, HIGH);
+  }
+  else
+  {
+    state &= ~device;
+    digitalWrite(pin, LOW);
+  }
+
+  return old_state;
+}
+
+bool WaspUIO::v12(bool new_state)
+{
+  return _powerBoardSwitch(UIO_12V, 16, new_state);
+}
 
 bool WaspUIO::v33(bool new_state)
 {
+  if (boardType == BOARD_LEMMING)
+  {
+    if (new_state && ! v12(1)) {} // Switch V12 on if needed
+    return _powerBoardSwitch(UIO_3V3, 14, new_state);
+  }
+
+  // Without board
   bool old_state = WaspRegister & REG_3V3;
   if (new_state == old_state) { return old_state; }
-
   PWR.setSensorPower(SENS_3V3, new_state ? SENS_ON : SENS_OFF);
   return old_state;
 }
 
 bool WaspUIO::v5(bool new_state)
 {
-  bool old_state = WaspRegister & REG_5V;
-  if (new_state == old_state) { return old_state; }
+  if (boardType == BOARD_LEMMING)
+  {
+    if (new_state && ! v12(1)) {} // Switch V12 on if needed
+    return _powerBoardSwitch(UIO_3V3, 14, new_state);
+    return _powerBoardSwitch(UIO_5V, 15, new_state);
+  }
 
+  // Without board
+  bool old_state = WaspRegister & REG_3V3;
+  if (new_state == old_state) { return old_state; }
   PWR.setSensorPower(SENS_5V, new_state ? SENS_ON : SENS_OFF);
-  return old_state;
-}
-
-bool WaspUIO::v12(bool new_state)
-{
-  uint8_t device = UIO_V12;
-  bool old_state = state & device;
-  if (new_state == old_state) { return old_state; }
-
-  if (new_state)
-  {
-    state |= device;
-    digitalWrite(ANA2, HIGH);
-  }
-  else
-  {
-    state &= ~device;
-    digitalWrite(ANA2, LOW);
-  }
-
   return old_state;
 }
 
 bool WaspUIO::leadVoltage(bool new_state)
 {
-  uint8_t device = UIO_LEAD_VOLTAGE;
-  bool old_state = state & device;
-  if (new_state == old_state) { return old_state; }
-
-  if (new_state)
-  {
-    state |= device;
-    digitalWrite(ANA3, HIGH);
-  }
-  else
-  {
-    state &= ~device;
-    digitalWrite(ANA3, LOW);
-  }
-
-  return old_state;
+  if (new_state && ! v12(1)) {} // Switch V12 on if needed
+  return _powerBoardSwitch(UIO_LEAD_VOLTAGE, 17, new_state);
 }
 
 bool WaspUIO::maxbotix(bool new_state)
@@ -92,12 +104,23 @@ bool WaspUIO::maxbotix(bool new_state)
   if (new_state)
   {
     state |= device;
-    if (boardType == BOARD_LEMMING) { } // TODO
+    if (boardType == BOARD_LEMMING)
+    {
+      if (! v5(1)) { delay(1000); }
+      digitalWrite(DIGITAL1, HIGH);
+    }
+    else
+    {
+      if (! v33(1)) { delay(1000); }
+    }
   }
   else
   {
     state &= ~device;
-    if (boardType == BOARD_LEMMING) { } // TODO
+    if (boardType == BOARD_LEMMING)
+    {
+      digitalWrite(DIGITAL1, LOW);
+    }
   }
 
   return old_state;
@@ -109,13 +132,18 @@ bool WaspUIO::i2c(bool new_state)
   bool old_state = state & device;
   if (new_state == old_state) { return old_state; }
 
+  // XXX Do we have an I2C isolator
   if (new_state)
   {
     state |= device;
     if (boardType == BOARD_LEMMING)
     {
-      digitalWrite(14, HIGH); // enable I2C isolator
-      digitalWrite(DIGITAL2, LOW);
+      if (! v5(1)) { delay(1000); }
+      digitalWrite(DIGITAL2, HIGH);
+    }
+    else
+    {
+      if (! v33(1)) { delay(1000); }
     }
   }
   else
@@ -123,8 +151,7 @@ bool WaspUIO::i2c(bool new_state)
     state &= ~device;
     if (boardType == BOARD_LEMMING)
     {
-      digitalWrite(14, LOW); // disable I2C isolator
-      digitalWrite(DIGITAL2, HIGH);
+      digitalWrite(DIGITAL2, LOW);
     }
   }
 
@@ -140,12 +167,23 @@ bool WaspUIO::onewire(bool new_state)
   if (new_state)
   {
     state |= device;
-    if (boardType == BOARD_LEMMING) { } // TODO
+    if (boardType == BOARD_LEMMING)
+    {
+      if (! v5(1)) { delay(1000); }
+      digitalWrite(DIGITAL5, HIGH);
+    }
+    else
+    {
+      if (! v33(1)) { delay(1000); }
+    }
   }
   else
   {
     state &= ~device;
-    if (boardType == BOARD_LEMMING) { } // TODO
+    if (boardType == BOARD_LEMMING)
+    {
+      digitalWrite(DIGITAL5, LOW);
+    }
   }
 
   return old_state;
@@ -160,13 +198,20 @@ bool WaspUIO::sdi12(bool new_state)
   if (new_state)
   {
     state |= device;
-    if (boardType == BOARD_LEMMING) { } // TODO
+    if (! v5(1)) { delay(1000); }
+    if (boardType == BOARD_LEMMING)
+    {
+      digitalWrite(DIGITAL7, HIGH);
+    }
     mySDI12.begin();
   }
   else
   {
     state &= ~device;
-    if (boardType == BOARD_LEMMING) { } // TODO
+    if (boardType == BOARD_LEMMING)
+    {
+      digitalWrite(DIGITAL7, LOW);
+    }
     mySDI12.end();
   }
 

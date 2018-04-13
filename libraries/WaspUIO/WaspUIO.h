@@ -75,9 +75,9 @@ enum battery_t {
 #define FLAG_LOG_USB 1
 #define FLAG_LOG_SD  4
 
-#define UIO_V12 1
-#define UIO_V5 2
-#define UIO_V33 4
+#define UIO_12V 1
+#define UIO_5V 2
+#define UIO_3V3 4
 #define UIO_LEAD_VOLTAGE 8
 #define UIO_MAXB 16
 #define UIO_I2C 32
@@ -196,6 +196,7 @@ const char* readOwnMAC();
 void startPowerBoard();
 void startSensorBoard();
 uint8_t state;
+bool _powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state);
 bool v33(bool new_state);
 bool v5(bool new_state);
 bool v12(bool new_state);
