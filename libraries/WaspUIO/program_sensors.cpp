@@ -50,8 +50,11 @@ CR_TASK(taskSensors)
   CR_BEGIN;
 
   // Power On
-  if (sdi) { UIO.v5(1); }
-  if (onewire || i2c || ttl) { UIO.v33(1); }
+  UIO.saveState();
+  if (sdi)     { UIO.sdi12(1); }
+  if (onewire) { UIO.onewire(1); }
+  if (i2c)     { UIO.i2c(1); }
+  if (ttl)     { UIO.maxbotix(1); }
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
@@ -81,8 +84,7 @@ CR_TASK(taskSensors)
   if (ttl)     { CR_JOIN(ttl_id); }
 
   // Power Off
-  UIO.v5(0);
-  UIO.v33(0);
+  UIO.loadState();
 
   CR_END;
 }
@@ -217,10 +219,7 @@ CR_TASK(task1Wire)
   n = UIO.readDS18B20(values, max);
   UIO.onewire(0);
 
-  if (n > 0)
-  {
-    ADD_SENSOR(SENSOR_DS1820, n, values);
-  }
+  if (n > 0) { ADD_SENSOR(SENSOR_DS1820, n, values); }
 
   CR_END;
 }
@@ -270,7 +269,10 @@ CR_TASK(taskTTL)
 {
   uint16_t median, sd;
 
+  UIO.maxbotix(1);
   if (UIO.readMaxbotixSerial(median, sd, 5)) { return CR_TASK_ERROR; }
+  UIO.maxbotix(0);
+
   ADD_SENSOR(SENSOR_MB73XX, (uint32_t) median, (uint32_t) sd);
 
   return CR_TASK_STOP;

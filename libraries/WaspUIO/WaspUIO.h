@@ -24,7 +24,7 @@
 
 // RTC uses I2C. If there are other sensors with I2C they must be powered on
 // when using RTC, otherwise it won't work. See TwoWire::secureBegin
-#include <WaspSensorAmbient.h> // This is used to enable 3V3
+//#include <WaspSensorAmbient.h> // This is used to enable 3V3
 
 
 /******************************************************************************
@@ -193,18 +193,26 @@ void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
 
 // Power
-void startPowerBoard();
-void startSensorBoard();
+// (power) state management
 uint8_t state;
+uint8_t saved_state;
+uint16_t saved_WaspRegister;
+void saveState();
+void loadState();
+// Power board
+void startPowerBoard();
 bool _powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state);
 bool v33(bool new_state);
 bool v5(bool new_state);
 bool v12(bool new_state);
 bool leadVoltage(bool new_state);
+// Sensor board
+void startSensorBoard();
 bool maxbotix(bool new_state);
 bool i2c(bool new_state);
 bool onewire(bool new_state);
 bool sdi12(bool new_state);
+// Battery
 void readBattery();
 float getBatteryVolts();
 float getLeadBatteryVolts();

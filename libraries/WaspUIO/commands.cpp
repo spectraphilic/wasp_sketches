@@ -128,6 +128,7 @@ COMMAND(exeCommand)
 {
   Command cmd;
   size_t len;
+  cmd_status_t status;
 
   for (uint8_t i=0; i < nCommands; i++)
   {
@@ -136,7 +137,10 @@ COMMAND(exeCommand)
     if (strncmp(cmd.prefix, str, len) == 0)
     {
       debug(F("command %s"), str);
-      return cmd.function(&(str[len]));
+      UIO.saveState();
+      status = cmd.function(&(str[len]));
+      UIO.loadState();
+      return status;
     }
   }
 
@@ -452,8 +456,8 @@ COMMAND(cmdOneWire)
       cr.print(F("Error opening onewire.txt"));
     }
   }
-  bool old_state = UIO.v33(1);
-  if (! old_state) { delay(750); }
+
+  if (! UIO.onewire(1)) { delay(750); }
 
   for (uint8_t i = 0; i < npins; i++)
   {
@@ -494,7 +498,7 @@ next:
   }
 
   // OFF
-  UIO.v33(old_state);
+  UIO.onewire(0);
   if (has_file) { file.close(); }
 
   return cmd_quiet;
@@ -537,6 +541,7 @@ COMMAND(cmdRead)
 
   // Check input
   if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
+  if (value != 1 && value != 6 && value != 8) { return cmd_bad_input; }
 
   // Do
   if (value == 1)
@@ -587,13 +592,12 @@ COMMAND(cmdRun)
 
 COMMAND(cmdSDI12)
 {
-  // Do
-  bool old_state = UIO.v33(1);
+  UIO.sdi12(1);
   mySDI12.begin();
   mySDI12.identification(0);
   mySDI12.identification(1);
   mySDI12.end();
-  UIO.v33(old_state);
+  UIO.sdi12(0);
   return cmd_quiet;
 }
 

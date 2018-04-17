@@ -3,6 +3,7 @@
 
 void WaspUIO::startPowerBoard()
 {
+  debug(F("Start power board"));
   pinMode(14, OUTPUT); // 3V3 switch
   pinMode(15, OUTPUT); // 5V switch
   pinMode(16, OUTPUT); // 12V switch
@@ -12,7 +13,8 @@ void WaspUIO::startPowerBoard()
 
 void WaspUIO::startSensorBoard()
 {
-  pinMode(ANA0, OUTPUT); // I2C isolator
+  debug(F("Start sensor board"));
+  //pinMode(ANA0, OUTPUT); // I2C isolator (?)
   pinMode(DIGITAL1, OUTPUT); // Maxbotix power switch
   pinMode(DIGITAL2, OUTPUT); // I2C power switch
   pinMode(DIGITAL5, OUTPUT); // OneWire power switch
@@ -26,17 +28,64 @@ void WaspUIO::startSensorBoard()
 
 
 /*
+ * State handling
+ */
+void WaspUIO::saveState()
+{
+  saved_state = state;
+  saved_WaspRegister = WaspRegister;
+}
+
+void WaspUIO::loadState()
+{
+  // Shortcut
+  if (saved_state == state && saved_WaspRegister == WaspRegister) { return; }
+
+  // Turn stuff off
+  if (! (saved_state & UIO_MAXB))  { maxbotix(0); }
+  if (! (saved_state & UIO_I2C))   { i2c(0); }
+  if (! (saved_state & UIO_1WIRE)) { onewire(0); }
+  if (! (saved_state & UIO_SDI12)) { sdi12(0); }
+  if (batteryType == BATTERY_LEAD)
+  {
+    if (! (saved_state & UIO_3V3)) { v33(0); }
+    if (! (saved_state & UIO_5V))  { v5(0); }
+    if (! (saved_state & UIO_LEAD_VOLTAGE)) { leadVoltage(0); }
+    if (! (saved_state & UIO_12V)) { v12(0); }
+  }
+  else
+  {
+    if (! (saved_WaspRegister & REG_3V3)) { v33(0); }
+    if (! (saved_WaspRegister & REG_5V)) { v5(0); }
+  }
+
+  // Turn stuff on
+  if (batteryType == BATTERY_LEAD)
+  {
+    if (saved_state & UIO_12V) { v12(1); }
+    if (saved_state & UIO_3V3) { v33(1); }
+    if (saved_state & UIO_5V)  { v5(1); }
+    if (saved_state & UIO_LEAD_VOLTAGE) { leadVoltage(1); }
+  }
+  else
+  {
+    if (saved_WaspRegister & REG_3V3) { v33(1); }
+    if (saved_WaspRegister & REG_5V)  { v5(1); }
+  }
+  if (saved_state & UIO_MAXB)  { maxbotix(1); }
+  if (saved_state & UIO_I2C)   { i2c(1); }
+  if (saved_state & UIO_1WIRE) { onewire(1); }
+  if (saved_state & UIO_SDI12) { sdi12(1); }
+}
+
+
+/*
  * On/Off devices
  */
 bool WaspUIO::_powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state)
 {
-  // Safeguard, don't call this if not using the sensor board
-  if (boardType != BOARD_LEMMING)
-  {
-    return false;
-  }
-
   bool old_state = state & device;
+  //debug(F("_powerBoardSwitch(%d %d %d): %d"), device, pin, new_state, old_state);
   if (new_state == old_state) { return old_state; }
 
   if (new_state)
@@ -55,7 +104,12 @@ bool WaspUIO::_powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state)
 
 bool WaspUIO::v12(bool new_state)
 {
-  return _powerBoardSwitch(UIO_12V, 16, new_state);
+  if (batteryType == BATTERY_LEAD)
+  {
+    return _powerBoardSwitch(UIO_12V, 16, new_state);
+  }
+
+  return false;
 }
 
 bool WaspUIO::v33(bool new_state)
@@ -78,12 +132,11 @@ bool WaspUIO::v5(bool new_state)
   if (boardType == BOARD_LEMMING)
   {
     if (new_state && ! v12(1)) {} // Switch V12 on if needed
-    return _powerBoardSwitch(UIO_3V3, 14, new_state);
     return _powerBoardSwitch(UIO_5V, 15, new_state);
   }
 
   // Without board
-  bool old_state = WaspRegister & REG_3V3;
+  bool old_state = WaspRegister & REG_5V;
   if (new_state == old_state) { return old_state; }
   PWR.setSensorPower(SENS_5V, new_state ? SENS_ON : SENS_OFF);
   return old_state;
@@ -91,8 +144,13 @@ bool WaspUIO::v5(bool new_state)
 
 bool WaspUIO::leadVoltage(bool new_state)
 {
-  if (new_state && ! v12(1)) {} // Switch V12 on if needed
-  return _powerBoardSwitch(UIO_LEAD_VOLTAGE, 17, new_state);
+  if (batteryType == BATTERY_LEAD)
+  {
+    if (new_state && ! v12(1)) {} // Switch V12 on if needed
+    return _powerBoardSwitch(UIO_LEAD_VOLTAGE, 17, new_state);
+  }
+
+  return false;
 }
 
 bool WaspUIO::maxbotix(bool new_state)
@@ -267,17 +325,9 @@ float WaspUIO::getLeadBatteryVolts()
   float volts;
   char volts_str[15];
 
-  // Turn on
-  bool old_state_v12 = v12(1);
-  bool old_state_lv = leadVoltage(1);
-  if (!old_state_v12 || !old_state_lv) { delay(100); } // Let power to stabilize
-
-  // Analog output (0 - 3.3V): from 0 to 1023
-  analog5 = analogRead(ANALOG5);
-
-  // Turn off
-  leadVoltage(old_state_lv);
-  v12(old_state_v12);
+  if (! leadVoltage(1)) { delay(100); } // Turn on, let power to stabilize
+  analog5 = analogRead(ANALOG5);   // Analog output (0 - 3.3V): from 0 to 1023
+  leadVoltage(0);                  // Turn off
 
   volts = analog5  * (R1 + R2) / R2 * 3.3 / 1023 ;
   Utils.float2String(volts, volts_str, 2);

@@ -430,6 +430,16 @@ void WaspUIO::deepSleep()
     RTC.setWatchdog(left + 1);
   }
 
+  // Turn off sensor & power boards
+  if (boardType == BOARD_LEMMING)
+  {
+    i2c(0); maxbotix(0); onewire(0); sdi12(0);
+  }
+  if (batteryType == BATTERY_LEAD)
+  {
+    leadVoltage(0); v33(0); v5(0); v12(0);
+  }
+
   // Enable RTC interruption and sleep
   PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
 
