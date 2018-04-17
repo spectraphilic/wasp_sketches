@@ -22,7 +22,7 @@ void setup()
 
 void loop()
 {
-  SDI12 mySDI12(DIGITAL7);
+  SDI12 mySDI12(DIGITAL8);
   uint8_t id;
 
   // ON
