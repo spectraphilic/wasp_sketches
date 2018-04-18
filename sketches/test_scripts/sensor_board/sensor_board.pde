@@ -19,8 +19,8 @@
 #include <WaspSensorAmbient.h> // This is used to enable 3V3
 
 
-#define SENSOR_BOARD 1
-#define POWER_BOARD 0
+#define SENSOR_BOARD 0
+#define POWER_BOARD 1
 
 
 void setup()
@@ -50,13 +50,13 @@ void loop()
   uint8_t id;
 
   // Power On
-#if POWER_BOAD
+#if POWER_BOARD
   digitalWrite(16, HIGH); // 12V
   digitalWrite(15, HIGH); // 5V
 #else
   PWR.setSensorPower(SENS_5V, SENS_ON);
 #endif
-#if SENSOR_BOARD
+#if (SENSOR_BOARD || POWER_BOARD)
   digitalWrite(DIGITAL7, HIGH);
 #endif
   delay(1000);
