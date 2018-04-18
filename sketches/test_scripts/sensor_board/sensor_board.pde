@@ -76,12 +76,12 @@ void loop()
   USB.println();
 
   // OFF
-#if SENSOR_BOAD
-  digitalWrite(DIGITAL7, LOW);
+#if (SENSOR_BOARD || POWER_BOARD)
+  digitalWrite(DIGITAL7, LOW); // SDI12 power
 #endif
-#if POWER_BOAD
-  digitalWrite(15, LOW);
-  digitalWrite(14, LOW);
+#if POWER_BOARD
+  digitalWrite(16, LOW); // 12V
+  digitalWrite(15, LOW); // 5V
 #endif
 
   // Sleep
