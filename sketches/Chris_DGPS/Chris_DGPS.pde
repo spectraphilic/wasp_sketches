@@ -12,6 +12,8 @@
 */
 #include <WaspGPS.h>
 
+#define deploy 1 // Set to 1 for deployment and 0 for testing
+
 // define variable for summer and winter season
 #define SummerStartMonth 3 // 3
 #define SummerStartDate 15 // 15
@@ -28,8 +30,8 @@ char LeadAcid_V_str[10];
 bool relay_on;
 
 // define GPS timeout when connecting to satellites
-// this time is defined in seconds (180 sec = 3 minutes)
-#define TIMEOUT 180
+// this time is defined in seconds (180 sec = 3 minutes, 300 sec = 5 min)
+#define TIMEOUT 300
 
 // General variables
 bool status; // define status variable for GPS connection
@@ -37,7 +39,6 @@ char latitude_str[30];
 char longitude_str[30];
 char filename[13]; // define file name: MUST be 8.3 SHORT FILE NAME
 char sample_txt[100]; // text string to append to SD-card
-
 
 // - - - Start of program - - -
 void setup()
@@ -154,15 +155,21 @@ void loop()
   {
     Utils.setLED(LED1, LED_ON); // Green LED when relay is on and waspmote sleeps
 
+#if deploy
     PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE4, ALL_OFF); //Once an hour !!!! use for deployment !!!
-    // PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF); //Once a minute
-
+#else
+    PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF); //Once a minute
+#endif
     Utils.setLED(LED1, LED_OFF); // Green LED OFF
   }
   else // relay is OFF, sleep until 12.00
   {
+
+#if deploy
     PWR.deepSleep("00:12:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF); //Once a day !!!! use for deployment !!!
-    //PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF); //Once a minute
+#else
+    PWR.deepSleep("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, ALL_OFF); //Once a minute
+#endif
   }
 
   // After wake up check interruption source
