@@ -3,7 +3,7 @@
 
 void WaspUIO::startPowerBoard()
 {
-  debug(F("Start power board"));
+  //debug(F("Start power board"));
   pinMode(14, OUTPUT); // 3V3 switch
   pinMode(15, OUTPUT); // 5V switch
   pinMode(16, OUTPUT); // 12V switch
@@ -13,8 +13,7 @@ void WaspUIO::startPowerBoard()
 
 void WaspUIO::startSensorBoard()
 {
-  debug(F("Start sensor board"));
-  //pinMode(ANA0, OUTPUT); // I2C isolator (?)
+  //debug(F("Start sensor board"));
   pinMode(DIGITAL1, OUTPUT); // Maxbotix power switch
   pinMode(DIGITAL2, OUTPUT); // I2C power switch
   pinMode(DIGITAL5, OUTPUT); // OneWire power switch
@@ -82,24 +81,22 @@ void WaspUIO::loadState()
 /*
  * On/Off devices
  */
+
+bool WaspUIO::_setState(uint8_t device, bool new_state)
+{
+  bool old_state = state & device;
+  if (new_state) { state |= device; }
+  else           { state &= ~device; }
+  return old_state;
+}
+
 bool WaspUIO::_powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state)
 {
   bool old_state = state & device;
-  //debug(F("_powerBoardSwitch(%d %d %d): %d"), device, pin, new_state, old_state);
   if (new_state == old_state) { return old_state; }
 
-  if (new_state)
-  {
-    state |= device;
-    digitalWrite(pin, HIGH);
-  }
-  else
-  {
-    state &= ~device;
-    digitalWrite(pin, LOW);
-  }
-
-  return old_state;
+  digitalWrite(pin, (new_state) ? HIGH: LOW);
+  return _setState(device, new_state);
 }
 
 bool WaspUIO::v12(bool new_state)
@@ -114,13 +111,13 @@ bool WaspUIO::v12(bool new_state)
 
 bool WaspUIO::v33(bool new_state)
 {
-  if (boardType == BOARD_LEMMING)
+  if (batteryType == BATTERY_LEAD)
   {
     if (new_state && ! v12(1)) {} // Switch V12 on if needed
     return _powerBoardSwitch(UIO_3V3, 14, new_state);
   }
 
-  // Without board
+  // Lithium
   bool old_state = WaspRegister & REG_3V3;
   if (new_state == old_state) { return old_state; }
   PWR.setSensorPower(SENS_3V3, new_state ? SENS_ON : SENS_OFF);
@@ -129,13 +126,13 @@ bool WaspUIO::v33(bool new_state)
 
 bool WaspUIO::v5(bool new_state)
 {
-  if (boardType == BOARD_LEMMING)
+  if (batteryType == BATTERY_LEAD)
   {
     if (new_state && ! v12(1)) {} // Switch V12 on if needed
     return _powerBoardSwitch(UIO_5V, 15, new_state);
   }
 
-  // Without board
+  // Lithium
   bool old_state = WaspRegister & REG_5V;
   if (new_state == old_state) { return old_state; }
   PWR.setSensorPower(SENS_5V, new_state ? SENS_ON : SENS_OFF);
@@ -156,29 +153,26 @@ bool WaspUIO::leadVoltage(bool new_state)
 bool WaspUIO::maxbotix(bool new_state)
 {
   uint8_t device = UIO_MAXB;
+  uint8_t pin = DIGITAL1;
+
   bool old_state = state & device;
   if (new_state == old_state) { return old_state; }
 
+  // Requires 5V or 3V3
   if (new_state)
   {
-    state |= device;
-    if (boardType == BOARD_LEMMING)
-    {
-      if (! v5(1)) { delay(1000); }
-      digitalWrite(DIGITAL1, HIGH);
-    }
-    else
-    {
-      if (! v33(1)) { delay(1000); }
-    }
+    if (boardType == BOARD_LEMMING) { v5(1); }
+    if (boardType == BOARD_NONE)    { v33(1); }
+  }
+
+  // Switch
+  if (boardType == BOARD_LEMMING)
+  {
+    _powerBoardSwitch(device, pin, new_state);
   }
   else
   {
-    state &= ~device;
-    if (boardType == BOARD_LEMMING)
-    {
-      digitalWrite(DIGITAL1, LOW);
-    }
+    _setState(device, new_state);
   }
 
   return old_state;
@@ -187,30 +181,21 @@ bool WaspUIO::maxbotix(bool new_state)
 bool WaspUIO::i2c(bool new_state)
 {
   uint8_t device = UIO_I2C;
+  uint8_t pin = DIGITAL2;
+
   bool old_state = state & device;
   if (new_state == old_state) { return old_state; }
 
-  // XXX Do we have an I2C isolator
-  if (new_state)
+  // Requires 3V3
+  v33(1);
+
+  if (boardType == BOARD_LEMMING)
   {
-    state |= device;
-    if (boardType == BOARD_LEMMING)
-    {
-      if (! v5(1)) { delay(1000); }
-      digitalWrite(DIGITAL2, HIGH);
-    }
-    else
-    {
-      if (! v33(1)) { delay(1000); }
-    }
+    _powerBoardSwitch(device, pin, new_state);
   }
   else
   {
-    state &= ~device;
-    if (boardType == BOARD_LEMMING)
-    {
-      digitalWrite(DIGITAL2, LOW);
-    }
+    _setState(device, new_state);
   }
 
   return old_state;
@@ -219,29 +204,26 @@ bool WaspUIO::i2c(bool new_state)
 bool WaspUIO::onewire(bool new_state)
 {
   uint8_t device = UIO_1WIRE;
+  uint8_t pin = DIGITAL5;
+
   bool old_state = state & device;
   if (new_state == old_state) { return old_state; }
 
+  // Requires 5V or 3V3
   if (new_state)
   {
-    state |= device;
-    if (boardType == BOARD_LEMMING)
-    {
-      if (! v5(1)) { delay(1000); }
-      digitalWrite(DIGITAL5, HIGH);
-    }
-    else
-    {
-      if (! v33(1)) { delay(1000); }
-    }
+    if (boardType == BOARD_LEMMING) { v5(1); }
+    if (boardType == BOARD_NONE)    { v33(1); }
+  }
+
+  // Switch
+  if (boardType == BOARD_LEMMING)
+  {
+    _powerBoardSwitch(device, pin, new_state);
   }
   else
   {
-    state &= ~device;
-    if (boardType == BOARD_LEMMING)
-    {
-      digitalWrite(DIGITAL5, LOW);
-    }
+    _setState(device, new_state);
   }
 
   return old_state;
@@ -250,28 +232,28 @@ bool WaspUIO::onewire(bool new_state)
 bool WaspUIO::sdi12(bool new_state)
 {
   uint8_t device = UIO_SDI12;
+  uint8_t pin = DIGITAL7;
+
   bool old_state = state & device;
   if (new_state == old_state) { return old_state; }
 
-  if (new_state)
+  // Requires 5V
+  if (new_state) { v5(1); }
+
+  // Switch
+  if (boardType == BOARD_LEMMING)
   {
-    state |= device;
-    if (! v5(1)) { delay(1000); }
-    if (boardType == BOARD_LEMMING)
-    {
-      digitalWrite(DIGITAL7, HIGH);
-    }
-    mySDI12.begin();
+    _powerBoardSwitch(device, pin, new_state);
   }
   else
   {
-    state &= ~device;
-    if (boardType == BOARD_LEMMING)
-    {
-      digitalWrite(DIGITAL7, LOW);
-    }
-    mySDI12.end();
+    _setState(device, new_state);
   }
+
+/*
+  if (new_state) { mySDI12.begin(); }
+  else           { mySDI12.end(); }
+*/
 
   return old_state;
 }

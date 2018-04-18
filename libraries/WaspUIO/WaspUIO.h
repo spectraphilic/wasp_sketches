@@ -22,10 +22,6 @@
 #include <Coroutines.h>
 #include <SDI12.h>
 
-// RTC uses I2C. If there are other sensors with I2C they must be powered on
-// when using RTC, otherwise it won't work. See TwoWire::secureBegin
-//#include <WaspSensorAmbient.h> // This is used to enable 3V3
-
 
 /******************************************************************************
  * Definitions & Declarations
@@ -199,6 +195,7 @@ uint8_t saved_state;
 uint16_t saved_WaspRegister;
 void saveState();
 void loadState();
+bool _setState(uint8_t device, bool new_state);
 // Power board
 void startPowerBoard();
 bool _powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state);
