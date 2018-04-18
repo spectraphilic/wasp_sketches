@@ -175,7 +175,7 @@ void Loop::run()
     // Sleep
     if (! resumed && delay_time > 0)
     {
-      //sleep(delay_time);
+      sleep(delay_time);
     }
   }
 }
