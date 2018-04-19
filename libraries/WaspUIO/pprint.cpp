@@ -22,8 +22,26 @@ const char* WaspUIO::pprintSerial(char* dst, size_t size)
 const char* WaspUIO::pprintBattery(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if      (batteryType == 1) strncpy_F(dst, F("Lithium-ion"), size);
-  else if (batteryType == 2) strncpy_F(dst, F("Lead acid"), size);
+  if (batteryType == BATTERY_LITHIUM)
+  {
+    snprintf_F(dst, size, F("Lithium-ion (%d %%)"), UIO.batteryLevel);
+  }
+  else
+  {
+    char aux[10];
+    Utils.float2String(UIO.batteryVolts, aux, 2);
+    snprintf_F(dst, size, F("Lead-acid (%s volts)"), aux);
+  }
+
+  return dst;
+}
+
+const char* WaspUIO::pprintBoard(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  if (boardType == BOARD_LEMMING) { strncat_F(dst, F("lemming"), size); }
+  else                            { strncat_F(dst, F("none"), size); }
+
   return dst;
 }
 
@@ -49,28 +67,26 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
 
   value = actions[RUN_NETWORK];
   if (value) strnjoin_F(dst, size, F(", "), F("Network (%d)"), value);
-#ifdef USE_AGR
-  value = actions[RUN_SENSIRION];
-  if (value) strnjoin_F(dst, size, F(", "), F("Sensirion (%d)"), value);
-  value = actions[RUN_PRESSURE];
-  if (value) strnjoin_F(dst, size, F(", "), F("Pressure (%d)"), value);
-  value = actions[RUN_LEAFWETNESS];
-  if (value) strnjoin_F(dst, size, F(", "), F("Leaf Wetness (%d)"), value);
-#endif
-#ifdef USE_SDI
+
+  value = actions[RUN_BATTERY];
+  if (value) strnjoin_F(dst, size, F(", "), F("Battery (%d)"), value);
+
   value = actions[RUN_CTD10];
   if (value) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), value);
+
   value = actions[RUN_DS2];
   if (value) strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), value);
-#endif
-#ifdef USE_I2C
+
   value = actions[RUN_DS1820];
   if (value) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), value);
+
   value = actions[RUN_BME280];
   if (value) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), value);
+
   value = actions[RUN_MB];
   if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
-#endif
+
   if (! dst[0]) strncpy_F(dst, F("(none)"), size);
+
   return dst;
 }

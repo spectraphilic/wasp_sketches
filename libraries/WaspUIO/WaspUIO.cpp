@@ -27,11 +27,11 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
-  batteryType = Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
-  if (batteryType != 1 && batteryType != 2)
-  {
-    batteryType = 1;
-  }
+  boardType = (board_type_t) Utils.readEEPROM(EEPROM_UIO_BOARD_TYPE);
+  if (boardType >= BOARD_LEN) { boardType = BOARD_NONE; }
+
+  batteryType = (battery_type_t) Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
+  if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }
 
   // Network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
@@ -69,13 +69,16 @@ void WaspUIO::onSetup()
 void WaspUIO::onLoop()
 {
   cr.sleep_time = 0;
-  onRegister = 0;
+  state = 0;
 
   loadTime(true); // Read temperature as well
   uint32_t epoch = getEpochTime();
   // Split the epoch time in 2: days since the epoch, and minute of the day
   day = epoch / (24L * 60L * 60L);
   minute = (epoch / 60) % (60 * 24); // mins since the epoch modulus mins in a day
+
+  if (batteryType == BATTERY_LEAD) { startPowerBoard(); }
+  if (boardType == BOARD_LEMMING) { startSensorBoard(); }
 
   readBattery();
 }
@@ -284,77 +287,6 @@ bool WaspUIO::action(uint8_t n, ...)
  * PRIVATE FUNCTIONS                                                          *
  ******************************************************************************/
 
-/*
- * On/Off devices
- */
-
-void WaspUIO::on(uint8_t device)
-{
-  switch (device)
-  {
-#if USE_AGR
-    case UIO_PRESSURE:
-      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
-      break;
-    case UIO_SENSIRION:
-      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
-      break;
-    case UIO_LEAFWETNESS:
-      SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
-      break;
-#endif
-#if USE_I2C
-    case UIO_I2C:
-      break;
-    case UIO_1WIRE:
-      break;
-#endif
-#if USE_SDI
-    case UIO_SDI12:
-      mySDI12.begin();
-      break;
-#endif
-  }
-
-  onRegister |= device;
-}
-
-void WaspUIO::off(uint8_t device)
-{
-  onRegister &= ~device;
-
-  switch (device)
-  {
-#if USE_AGR
-    case UIO_PRESSURE:
-      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);
-      break;
-    case UIO_SENSIRION:
-      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
-      break;
-    case UIO_LEAFWETNESS:
-      SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_LEAF_WETNESS);
-      break;
-#endif
-#if USE_I2C
-    case UIO_I2C:
-      break;
-    case UIO_1WIRE:
-      break;
-#endif
-#if USE_SDI
-    case UIO_SDI12:
-      mySDI12.end();
-      break;
-#endif
-  }
-}
-
-bool WaspUIO::isOn(uint8_t device)
-{
-  return onRegister & device;
-}
-
 /**
  * Read a line from the given open file, not including the end-of-line
  * character. Store the read line in SD.buffer.
@@ -439,33 +371,6 @@ uint8_t WaspUIO::readRSSI2Frame(void)
 }
 
 
-void WaspUIO::readBattery()
-{
-  // Lead acid battery does not support reading voltage, yet
-  if (UIO.batteryType == 2)
-  {
-    batteryLevel = 100;
-  }
-  else
-  {
-    batteryLevel = PWR.getBatteryLevel();
-  }
-
-  // Calculate the cooldown factor, depends on battery level
-  cooldown = 1;
-  // Power logic for lithium battery
-  if (UIO.batteryType == 1)
-  {
-    if      (batteryLevel <= 30) { cooldown = 3; }
-    else if (batteryLevel <= 40) { cooldown = 2; }
-  }
-  // TODO Logic for Lead acid battery
-  else if (UIO.batteryType == 2)
-  {
-  }
-}
-
-
 /**
  * getNextAlarm
  *
@@ -523,6 +428,16 @@ void WaspUIO::deepSleep()
   if (left < 59) // XXX Maximum is 59
   {
     RTC.setWatchdog(left + 1);
+  }
+
+  // Turn off sensor & power boards
+  if (boardType == BOARD_LEMMING)
+  {
+    i2c(0); maxbotix(0); onewire(0); sdi12(0);
+  }
+  if (batteryType == BATTERY_LEAD)
+  {
+    leadVoltage(0); v33(0); v5(0); v12(0);
   }
 
   // Enable RTC interruption and sleep

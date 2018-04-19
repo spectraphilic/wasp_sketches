@@ -8,11 +8,6 @@
  * Includes
  ******************************************************************************/
 
-// We cannot enable everything at the same time or we run out of program memory
-#define USE_AGR false
-#define USE_I2C true // I include here OneWire as well
-#define USE_SDI true
-
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
@@ -27,14 +22,6 @@
 #include <Coroutines.h>
 #include <SDI12.h>
 
-// RTC uses I2C. If there are other sensors with I2C they must be powered on
-// when using RTC, otherwise it won't work. See TwoWire::secureBegin
-#if USE_AGR
-#include <WaspSensorAgr_v20.h>
-#elif USE_I2C
-#include <WaspSensorAmbient.h> // This is used to enable 3V3
-#endif
-
 
 /******************************************************************************
  * Definitions & Declarations
@@ -43,7 +30,7 @@
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
-// 1 byte available
+#define EEPROM_UIO_BOARD_TYPE (EEPROM_START + 3)
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
 // 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
@@ -51,9 +38,9 @@
 #define EEPROM_RUN (EEPROM_START + 9)
 enum run_t {
   RUN_NETWORK,
-  RUN_SENSIRION, // Agr
-  RUN_PRESSURE,
-  RUN_LEAFWETNESS,
+  RUN_BATTERY, // Available
+  RUN_FREE_1, // Available
+  RUN_FREE_2, // Available
   RUN_CTD10, // SDI-12
   RUN_DS2,
   RUN_DS1820, // OneWire
@@ -62,17 +49,36 @@ enum run_t {
   RUN_LEN // Special value
 };
 
+enum battery_type_t {
+  BATTERY_LITHIUM = 1,
+  BATTERY_LEAD,
+  BATTERY_LEN
+};
+
+enum board_type_t {
+  BOARD_NONE,
+  BOARD_LEMMING,
+  BOARD_LEN
+};
+
+enum battery_t {
+  BATTERY_LOW,
+  BATTERY_MIDDLE,
+  BATTERY_HIGH
+};
+
 // Flags available: 2 8 16 32 64 128
 #define FLAG_LOG_USB 1
 #define FLAG_LOG_SD  4
 
-#define UIO_SD 1
-#define UIO_PRESSURE 2
-#define UIO_SENSIRION 4
-#define UIO_LEAFWETNESS 8
-#define UIO_I2C 16
-#define UIO_1WIRE 32
-#define UIO_SDI12 64
+#define UIO_12V 1
+#define UIO_5V 2
+#define UIO_3V3 4
+#define UIO_LEAD_VOLTAGE 8
+#define UIO_MAXB 16
+#define UIO_I2C 32
+#define UIO_1WIRE 64
+#define UIO_SDI12 128
 
 #define ADD_SENSOR(type, ...) \
   if (frame.addSensorBin(type, ## __VA_ARGS__) == -1)\
@@ -137,12 +143,15 @@ bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
 uint8_t flags;
-uint8_t batteryType; // 1 => lithium battery  |||||| 2 => Lead acid battery
+board_type_t boardType;
+battery_type_t batteryType;
 uint8_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)
+float batteryVolts;
 uint8_t batteryLevel;
-uint8_t cooldown; // Reduces frequency of action, depends on batteryLevel
+battery_t battery;
+uint8_t cooldown; // Reduces frequency of action, depends on battery
 // To keep time without calling RCT each time
 float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
@@ -179,10 +188,35 @@ uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
 
+// Power
+// (power) state management
+uint8_t state;
+uint8_t saved_state;
+uint16_t saved_WaspRegister;
+void saveState();
+void loadState();
+bool _setState(uint8_t device, bool new_state);
+// Power board
+void startPowerBoard();
+bool _powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state);
+bool v33(bool new_state);
+bool v5(bool new_state);
+bool v12(bool new_state);
+bool leadVoltage(bool new_state);
+// Sensor board
+void startSensorBoard();
+bool maxbotix(bool new_state);
+bool i2c(bool new_state);
+bool onewire(bool new_state);
+bool sdi12(bool new_state);
+// Battery
+void readBattery();
+float getBatteryVolts();
+float getLeadBatteryVolts();
+
 // Init, start and stop methods
 void onSetup();
 void onLoop();
-void readBattery();
 void initNet();
 bool action(uint8_t n, ...);
 const uint8_t loop_timeout = 4; // minutes
@@ -197,6 +231,7 @@ void showBinaryFrame();
 void clint();
 const char* pprintSerial(char* str, size_t size);
 const char* pprintBattery(char* dst, size_t size);
+const char* pprintBoard(char* dst, size_t size);
 const char* pprintLog(char* dst, size_t size);
 const char* pprintNetwork(char* dst, size_t size);
 const char* pprintActions(char* dst, size_t size);
@@ -211,12 +246,6 @@ void loadTime(bool temp=false);
 void nextAlarm();
 const char* nextAlarm(char* alarmTime);
 void deepSleep();
-
-// Register of "devices" that are On
-uint8_t onRegister;
-void on(uint8_t device);
-void off(uint8_t device);
-bool isOn(uint8_t device);
 
 // Sensors
 int getMaxbotixSample();
@@ -259,6 +288,7 @@ uint8_t _getPin(uint8_t);
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
 COMMAND(cmdBattery);
+COMMAND(cmdBoard);
 COMMAND(cmdCat);
 COMMAND(cmdTail);
 COMMAND(cmdDisable);
@@ -330,18 +360,9 @@ COMMAND(cmdTimeGPS);
 
 CR_TASK(taskMain);
 // Sensors: internal
-CR_TASK(taskAcc);
 CR_TASK(taskHealthFrame);
 // Sensors: external
 CR_TASK(taskSensors);
-// Agr board
-CR_TASK(taskAgr);
-// Agr: Pressure
-CR_TASK(taskAgrPressure);
-// Agr: Low consumption group
-CR_TASK(taskAgrLC);
-CR_TASK(taskAgrLeafwetnessFrame);
-CR_TASK(taskAgrSensirionFrame);
 // SDI-12
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);

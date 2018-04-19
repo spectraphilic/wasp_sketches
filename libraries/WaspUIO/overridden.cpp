@@ -80,36 +80,8 @@ void beforeSleep()
 
 void afterSleep()
 {
-#if USE_AGR
-  if (UIO.isOn(UIO_PRESSURE))
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
-  }
-  if (UIO.isOn(UIO_LEAFWETNESS))
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_LEAF_WETNESS);
-  }
-  if (UIO.isOn(UIO_SENSIRION))
-  {
-    SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
-  }
-#endif
-
-#if USE_SDI
-  if (UIO.isOn(UIO_SDI12))
+  if (UIO.state & UIO_SDI12)
   {
     mySDI12.forceHold(); // XXX
   }
-#endif
-
-#if USE_I2C
-  if (UIO.isOn(UIO_I2C))
-  {
-    // XXX
-  }
-  if (UIO.isOn(UIO_1WIRE))
-  {
-    // XXX
-  }
-#endif
 }

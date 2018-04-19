@@ -81,15 +81,10 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t nsample
   int sample; // Store each sample
   uint16_t samples[nsamples];
   uint8_t i, j;
-  bool v33;
 
   // ON Sensor needs 3.3 voltage
-  v33 = WaspRegister & REG_3V3;
-  if (v33 == 0)
-  {
-    PWR.setSensorPower(SENS_3V3, SENS_ON);
-    delay(1000);
-  }
+  if (! maxbotix(1)) { } // delay(1000);
+
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
   beginSerial(9600, port); // set baud rate to 9600
 
@@ -112,10 +107,7 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t nsample
   // OFF
   closeSerial(port);
   Utils.muxOFF1();
-  if (v33 == 0)
-  {
-    PWR.setSensorPower(SENS_3V3, SENS_OFF);
-  }
+  maxbotix(0);
 
   // Error
   if (j < nsamples)

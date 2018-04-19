@@ -25,9 +25,16 @@ void WaspUIO::initNet()
   frame.setFrameSize(size);
 
   // init XBee
-  xbeeDM.ON();
+  if (xbeeDM.ON())
+  {
+    error = F("ERROR xbeeDM.ON()");
+    return;
+  }
+
   delay(50);
 
+  xbeeDM.getHardVersion();
+  xbeeDM.getSoftVersion();
   readOwnMAC();
 
   // XXX Reduce the number of retries to reduce the time it is lost in send

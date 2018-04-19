@@ -32,6 +32,8 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
     return 0;
   }
 
+  if (! onewire(1)) { }
+
   while ((len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
   {
     eol = (word[--len] == '\n');
@@ -96,6 +98,8 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
       oneWire.depower();
     }
   }
+
+  onewire(0);
 
   file.close();
   if (len == -2)

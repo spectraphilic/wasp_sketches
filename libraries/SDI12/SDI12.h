@@ -71,7 +71,6 @@ private:
   static const char * getStateName(uint8_t state);     // get state name (in ASCII)
 
 public:
-  char sdi12_buffer[75];
   SDI12(uint8_t dataPin);    // constructor
   ~SDI12();            // destructor
   void begin();          // enable SDI-12 object

@@ -55,7 +55,7 @@ void setup() {
 
     ret_input = input_serial("Type new sensor address (e.g. 3):");
     newAddr = ret_input;
-    //oldAddr = mySDI12.sdi12_buffer;
+    //oldAddr = mySDI12.buffer;
 
     USB.print("Old sensor address: ");
     USB.println(oldAddr);

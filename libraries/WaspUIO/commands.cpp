@@ -20,31 +20,33 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_BATTERY [] PROGMEM = "bat VALUE      - Choose the battery type: 1=lithium 2=lead";
-const char CMD_CAT     [] PROGMEM = "cat FILENAME   - Print FILENAME contents to USB";
-const char CMD_DISABLE [] PROGMEM = "disable FLAG   - Disables a feature: 0=log_sd 1=log_usb";
-const char CMD_ENABLE  [] PROGMEM = "enable FLAG    - Enables a feature: 0=log_sd 1=log_usb";
-const char CMD_EXIT    [] PROGMEM = "exit           - Exit the command line interface";
-const char CMD_FORMAT  [] PROGMEM = "format         - Format SD card";
-const char CMD_HELP    [] PROGMEM = "help           - Prints the list of commands";
-const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE - Sets the log level: "
+const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
+const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
+const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
+const char CMD_DISABLE [] PROGMEM = "disable FLAG    - Disables a feature: 0=log_sd 1=log_usb";
+const char CMD_ENABLE  [] PROGMEM = "enable FLAG     - Enables a feature: 0=log_sd 1=log_usb";
+const char CMD_EXIT    [] PROGMEM = "exit            - Exit the command line interface";
+const char CMD_FORMAT  [] PROGMEM = "format          - Format SD card";
+const char CMD_HELP    [] PROGMEM = "help            - Prints the list of commands";
+const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE  - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char CMD_LS      [] PROGMEM = "ls             - List files in SD card";
-const char CMD_NETWORK [] PROGMEM = "network VALUE  - Choose network: "
+const char CMD_LS      [] PROGMEM = "ls              - List files in SD card";
+const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
-const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s) - Identify OneWire sensors attached to the given pins,"
+const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
-const char CMD_PRINT   [] PROGMEM = "print          - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE     - Read sensor: 7=ds1820 8=mb";
-const char CMD_RUN     [] PROGMEM = "run VALUE MIN  - Run every 0-255 minutes: "
-                                    "0=network 1=sensirion 2=pressure 3=lw 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
-const char CMD_SDI12   [] PROGMEM = "sdi            - Identify SDI-12 sensors in addresses 0 and 1";
-const char CMD_TAIL [] PROGMEM = "tail nline FILENAME    - Print tail number of lines of FILEMAME to USB. Default 10 lines";
-const char CMD_TIME_GPS[] PROGMEM = "time gps       - Sets time from GPS";
-const char CMD_TIME    [] PROGMEM = "time VALUE     - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
+const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
+const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
+const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
+                                    "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
+const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0 and 1";
+const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
+const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
+const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
 
 const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
+  {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
@@ -59,7 +61,7 @@ const Command commands[] PROGMEM = {
   {"read ",     &cmdRead,     CMD_READ},
   {"run ",      &cmdRun,      CMD_RUN},
   {"sdi",       &cmdSDI12,    CMD_SDI12},
-  {"tail",      &cmdTail, CMD_TAIL},
+  {"tail",      &cmdTail,     CMD_TAIL},
   {"time gps",  &cmdTimeGPS,  CMD_TIME_GPS},
   {"time ",     &cmdTime,     CMD_TIME},
 };
@@ -126,6 +128,7 @@ COMMAND(exeCommand)
 {
   Command cmd;
   size_t len;
+  cmd_status_t status;
 
   for (uint8_t i=0; i < nCommands; i++)
   {
@@ -134,7 +137,10 @@ COMMAND(exeCommand)
     if (strncmp(cmd.prefix, str, len) == 0)
     {
       debug(F("command %s"), str);
-      return cmd.function(&(str[len]));
+      UIO.saveState();
+      status = cmd.function(&(str[len]));
+      UIO.loadState();
+      return status;
     }
   }
 
@@ -146,15 +152,33 @@ COMMAND(exeCommand)
  */
 COMMAND(cmdBattery)
 {
-  int value;
+  uint8_t value;
 
   // Check input
-  if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
-  if (value != 1 && value != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
+  if (value >= BATTERY_LEN) { return cmd_bad_input; }
 
   // Do
-  UIO.batteryType = (uint8_t) value;
-  UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, UIO.batteryType);
+  UIO.batteryType = (battery_type_t) value;
+  UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, value);
+  UIO.readBattery();
+  return cmd_ok;
+}
+
+/**
+ * Choose the sensor board type.
+ */
+COMMAND(cmdBoard)
+{
+  uint8_t value;
+
+  // Check input
+  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
+  if (value >= BOARD_LEN) { return cmd_bad_input; }
+
+  // Do
+  UIO.boardType = (board_type_t) value;
+  UIO.updateEEPROM(EEPROM_UIO_BOARD_TYPE, value);
   UIO.readBattery();
   return cmd_ok;
 }
@@ -185,32 +209,58 @@ COMMAND(cmdCat)
 
 COMMAND(cmdTail)
 {
+  unsigned int maxnl, nl;
   char filename[80];
-  int nline;
-  int tailLine = 10;
-  int offsetln;
+  SdFile file;
+  uint32_t size, nc;
+  uint16_t max = DOS_BUFFER_SIZE - 1;
+  int16_t c;
+  size_t nbyte;
+  int nread;
 
   // Check input
-  if (sscanf(str, "%hu %s", &tailLine, &filename) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%u %s", &maxnl, &filename) != 2) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Check feature availability
   if (! UIO.hasSD) { return cmd_unavailable; }
 
-  nline = SD.numln(filename);
-  offsetln = nline - tailLine;
-  if (offsetln < 0)
-  {
-    offsetln = 0;
-  }
+  // Open file
+  if (!SD.openFile(filename, &file, O_READ)) { return cmd_error; }
 
-  for (uint8_t i=offsetln; i < nline; i++)
+  // Read backwards
+  maxnl++;
+  size = file.fileSize();
+  nc = 0;
+  nl = 0;
+  while (nc < size && nl < maxnl)
   {
-    SD.catln(filename, i, 1);
-    cr.println(SD.buffer);
+    nc++;
+    file.seekEnd(-nc);
+    if ((c = file.read()) < 0) { goto error; }
+    if (c == '\n') { nl++; }
   }
+  nc--; // do not include the last newline read
 
+  // Read forward
+  cr.println(F("-------------------------"));
+  file.seekEnd(-nc);
+  while (nc > 0)
+  {
+    nbyte = (nc < max) ? nc : max;
+    nread = file.read(SD.buffer, nbyte);
+    if (nread < 0) { goto error; }
+    USB.print(SD.buffer);
+    nc -= nread;
+  }
+  cr.println(F("-------------------------"));
+
+  file.close();
   return cmd_quiet;
+
+error:
+  file.close();
+  return cmd_error;
 }
 
 
@@ -406,8 +456,8 @@ COMMAND(cmdOneWire)
       cr.print(F("Error opening onewire.txt"));
     }
   }
-  PWR.setSensorPower(SENS_3V3, SENS_ON);
-  delay(750);
+
+  if (! UIO.onewire(1)) { delay(750); }
 
   for (uint8_t i = 0; i < npins; i++)
   {
@@ -448,11 +498,8 @@ next:
   }
 
   // OFF
-  PWR.setSensorPower(SENS_3V3, SENS_OFF);
-  if (has_file)
-  {
-    file.close();
-  }
+  UIO.onewire(0);
+  if (has_file) { file.close(); }
 
   return cmd_quiet;
 }
@@ -464,13 +511,19 @@ next:
 COMMAND(cmdPrint)
 {
   char buffer[150];
+  char hw[5];
+  char sw[9];
   size_t size = sizeof(buffer);
 
+  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
+  Utils.hex2str(xbeeDM.softVersion, sw, 4);
+
   cr.println(F("Time      : %s"), RTC.getTime());
-  cr.println(F("Hardware  : Version=%c Mote=%s XBee=%s"), _boot_version,
-             UIO.pprintSerial(buffer, sizeof buffer), UIO.myMac);
+  cr.println(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
+  cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
+  cr.println(F("Board     : %s"), UIO.pprintBoard(buffer, size));
+  cr.println(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
   cr.println(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  cr.println(F("Battery   : %s (%d %%)"), UIO.pprintBattery(buffer, size), UIO.batteryLevel);
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   cr.println(F("Network   : %s (frame size is %d)"), UIO.pprintNetwork(buffer, size), frame.getFrameSize());
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
@@ -488,9 +541,17 @@ COMMAND(cmdRead)
 
   // Check input
   if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
+  if (value != 1 && value != 6 && value != 8) { return cmd_bad_input; }
 
   // Do
-  if (value == 7)
+  if (value == 1)
+  {
+    char buffer[25];
+    UIO.readBattery();
+    cr.println(F("%s"), UIO.pprintBattery(buffer, sizeof buffer));
+    return cmd_quiet;
+  }
+  else if (value == 6)
   {
     uint8_t max = 40;
     int values[max];
@@ -531,13 +592,12 @@ COMMAND(cmdRun)
 
 COMMAND(cmdSDI12)
 {
-  // Do
-  PWR.setSensorPower(SENS_5V, SENS_ON);
+  UIO.sdi12(1);
   mySDI12.begin();
   mySDI12.identification(0);
   mySDI12.identification(1);
   mySDI12.end();
-  PWR.setSensorPower(SENS_5V, SENS_OFF);
+  UIO.sdi12(0);
   return cmd_quiet;
 }
 
