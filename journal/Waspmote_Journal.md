@@ -28,6 +28,12 @@ Coordinates in UTM 32N, unit meter.
 
 ## Thomas Station
 
+### 2018-03-08
+
+- Installation of a new waspmote equipped of a maxbotix, a ds2, and two air temperature sensors with two different radiation shield
+- program commit: 558889eaf7f778e7a2e5cee6b24fac76d043cbbb
+- lithium battery, Mote=774C67057C105413 XBee=0013A2004105D4C5
+
 ### 2018-01-27
 
  - Installation of a waspmote at the Thomas station in replacement to the pre-existing station (hobo with air temp and wind speed/dir + snowmo)
@@ -39,6 +45,13 @@ Coordinates in UTM 32N, unit meter.
 ---
 
 ## Marshland
+
+### 2018-03.07
+
+New waspmote next to the mobile flux tower. The waspmote has a thermistor string of 20 elements to measure the temperature in the snowpack.
+
+- lithium battery, Mote=2F0C67057C105419 XBee=0013A200416A0720
+- commit: 186b4c79b0a46cadb6620551ccf60293613b385b
 
 ### 2018-01-26
 
@@ -73,6 +86,13 @@ Waspmote got burried in snow, sensor still out of snow.
 
 ## Applesinhytta (6715977.25, 416970.35)	
 
+### 2018-03-07
+
+Same set up, but swap the waspmote as it was not running (waspmote was working fine once back at the station though). 
+
+- program commit: 558889eaf7f778e7a2e5cee6b24fac76d043cbbb
+- lead acid battery, Mote=1F566F057C105487 XBee=0013A2004154B0B4
+
 ### 2017-11-20
 
 Deployement of a waspmote v15 at appelsinhytta with the following config:
@@ -86,6 +106,13 @@ Deployement of a waspmote v15 at appelsinhytta with the following config:
 ------
 
 ## The hill that wants to be a mountain (6717123.73, 417284.06)
+
+### 2018-03-07
+
+Same set up, but swap the waspmote as it was not running (waspmote was working fine once back at the station though). 
+
+- program commit: 558889eaf7f778e7a2e5cee6b24fac76d043cbbb
+- lead acid battery, Mote=556667057C10542D XBee=0013A2004105D4B6
 
 ### 2017-11-20
 
@@ -117,6 +144,12 @@ This staion stopped nov 24.
 ------
 
 ## Middalselvi (6716590.57, 417951.37)
+
+### 2018-03-07
+
+New waspmote with better connectors for plugging CTD10 pins into waspmote, new Lithium battery. program commit: 558889eaf7f778e7a2e5cee6b24fac76d043cbbb
+
+Mote=607867057C1054D2 XBee=0013A200412539D2
 
 ### 2017-11-20
 
