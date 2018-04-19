@@ -9,7 +9,7 @@
 
 
 #define DATAPIN DIGITAL8         // change to the proper pin (JH) 6 = DIGITAL 6 on Waspmote
-const int sdiPower DIGITAL7;
+const int sdiPower = DIGITAL7;
 SDI12 mySDI12(DATAPIN);
 
 char sdiResponse[30];
@@ -31,6 +31,7 @@ int i;
 void setup() {
   USB.ON();
 
+  // added support for the sensor board
   pinMode(sdiPower, OUTPUT);
   digitalWrite(sdiPower, HIGH);
 
