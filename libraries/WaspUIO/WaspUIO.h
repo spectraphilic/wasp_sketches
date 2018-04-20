@@ -167,17 +167,20 @@ bool hasGPS;
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-const char* tmpFilename = "TMP.TXT";
+const char* fifoFilename = "FIFO.TXT";
+const char* tmpFilename = "TMP.TXT"; // LIFO
+SdFile logFile;
+SdFile fifoFile;
+SdFile tmpFile;
 int createFile(const char*);
 int createDir(const char*);
 int openFile(const char* filename, SdFile &file, uint8_t mode);
 int baselayout();
-SdFile logFile;
-SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
 int readline(SdFile &file);
+int write(SdFile &file, const void* buf, size_t nbyte);
 int append(SdFile &file, const void* buf, size_t nbyte);
 
 // Network
@@ -224,8 +227,8 @@ const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
 void createFrame(bool discard=false);
-uint8_t frame2Sd();
 void showBinaryFrame();
+uint8_t frame2Sd();
 
 // Menu
 void clint();
@@ -374,6 +377,7 @@ CR_TASK(taskTTL);
 // Network
 CR_TASK(taskNetwork);
 CR_TASK(taskNetworkSend);
+CR_TASK(taskNetworkSendOld);
 CR_TASK(taskNetworkReceive);
 // GPS
 CR_TASK(taskGps);

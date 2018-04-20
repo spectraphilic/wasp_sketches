@@ -32,7 +32,18 @@ CR_TASK(taskNetwork)
   // Schedule sending frames
   if (send)
   {
-    CR_SPAWN2(taskNetworkSend, tid);
+    UIO.startSD();
+    if (SD.getFileSize(UIO.tmpFilename) > 0)
+    {
+      // Send frames in old format if it still exists
+      // TODO To be removed in a few months, once all motes have been running
+      // the new code for a while.
+      CR_SPAWN2(taskNetworkSendOld, tid);
+    }
+    else
+    {
+      CR_SPAWN2(taskNetworkSend, tid);
+    }
   }
 
   CR_DELAY(8000); // Keep the network open at least for 8s
@@ -54,6 +65,110 @@ CR_TASK(taskNetwork)
 
 CR_TASK(taskNetworkSend)
 {
+  uint32_t fileSize, offset;
+  uint8_t item[8];
+  uint32_t t0;
+  char dataFilename[18]; // /data/YYMMDD.txt
+  SdFile dataFile;
+  int size;
+
+  CR_BEGIN;
+
+  // Open tmp file
+  if (UIO.openFile(UIO.fifoFilename, UIO.fifoFile, O_RDWR | O_CREAT))
+  {
+    error(cr.last_error);
+    CR_ERROR;
+  }
+
+  // Security check, the file size must be a multiple of 8. If it is not we
+  // consider there has been a write error, and we trunctate the file.
+  fileSize = UIO.fifoFile.fileSize();
+  offset = (fileSize - 4) % 8;
+  if (offset != 0)
+  {
+    UIO.fifoFile.truncate(fileSize - offset);
+    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.fifoFilename);
+  }
+
+  // Read header
+  UIO.fifoFile.seekSet(0);
+  if (UIO.fifoFile.read(item, 4) != 4)
+  {
+      error(F("sendFrames (%s): read error"), UIO.fifoFilename);
+      CR_ERROR;
+  }
+  offset = *(uint32_t *)item;
+
+  // Send frames
+  while (offset < fileSize && !cr.timeout(UIO.start, UIO.send_timeout * 1000))
+  {
+    t0 = millis();
+
+    // Read the record
+    UIO.fifoFile.seekSet(offset);
+    if (UIO.fifoFile.read(item, 8) != 8)
+    {
+      error(F("sendFrames (%s): read error"), UIO.fifoFilename);
+      CR_ERROR;
+    }
+
+    // Read the frame
+    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
+    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
+    {
+      error(F("sendFrames: fail to open %s"), dataFilename);
+      CR_ERROR;
+    }
+    dataFile.seekSet(*(uint32_t *)(item + 3));
+    size = dataFile.read(SD.buffer, (size_t) item[7]);
+    dataFile.close();
+
+    if (size < 0 || size != (int) item[7])
+    {
+      error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
+      CR_ERROR;
+    }
+
+    // Send the frame
+    if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
+    {
+      warn(F("sendFrames: Send failure"));
+      CR_ERROR;
+    }
+
+    // Truncate (pop)
+    offset += 8;
+    if (offset >= fileSize)
+    {
+      offset = 4;
+      if (UIO.fifoFile.truncate(4) == false)
+      {
+        error(F("sendFrames: error in fifoFile.truncate"));
+        CR_ERROR;
+      }
+    }
+
+    // Update offset
+    UIO.fifoFile.seekSet(0);
+    *(uint32_t *)item = offset;
+    if (UIO.write(UIO.fifoFile, item, 4))
+    {
+      error(F("sendFrames: error updating offset"));
+      CR_ERROR;
+    }
+
+    debug(F("Frame sent in %lu ms"), cr.millisDiff(t0));
+
+    // Give control back
+    CR_DELAY(0);
+  }
+
+  CR_END;
+}
+
+CR_TASK(taskNetworkSendOld)
+{
   uint32_t fileSize;
   uint8_t item[8];
   uint32_t t0;
@@ -63,17 +178,11 @@ CR_TASK(taskNetworkSend)
 
   CR_BEGIN;
 
-  if (! UIO.hasSD)
-  {
-    return CR_TASK_STOP;
-  }
-  UIO.startSD();
-
   // Open tmp file
   if (UIO.openFile(UIO.tmpFilename, UIO.tmpFile, O_RDWR | O_CREAT))
   {
     error(cr.last_error);
-    return 2;
+    CR_ERROR;
   }
 
   // Security check, the file size must be a multiple of 8. If it is not we
@@ -90,7 +199,7 @@ CR_TASK(taskNetworkSend)
   {
     t0 = millis();
 
-    // Read the frame length
+    // Read the record
     UIO.tmpFile.seekEnd(-8);
     if (UIO.tmpFile.read(item, 8) != 8)
     {
@@ -133,6 +242,15 @@ CR_TASK(taskNetworkSend)
 
     // Give control back
     CR_DELAY(0);
+  }
+
+  if (UIO.tmpFile.fileSize() == 0)
+  {
+    if (UIO.tmpFile.remove() == false)
+    {
+      error(F("sendFrames: error removing tmpfile"));
+      CR_ERROR;
+    }
   }
 
   CR_END;

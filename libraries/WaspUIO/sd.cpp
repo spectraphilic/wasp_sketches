@@ -52,9 +52,41 @@ int WaspUIO::baselayout()
 
   if (createDir(archive_dir))  { error = 1; } // Data directory
   if (createFile(logFilename)) { error = 1; } // Log file
-  if (createFile(tmpFilename)) { error = 1; } // Tmp file (index to frames)
+  if (createFile(fifoFilename)) { error = 1; } // Log file
 
   return error;
+}
+
+
+/**
+ * Append data to the given file.
+ *
+ * Return 0 on success, 1 on error.
+ */
+int WaspUIO::write(SdFile &file, const void* buf, size_t size)
+{
+  int n;
+
+  n = file.write(buf, size);
+  if (n == -1)
+  {
+    cr.set_last_error(F("write write failed"));
+    return 1;
+  }
+
+  if (file.sync() == false)
+  {
+    cr.set_last_error(F("write sync failed"));
+    return 1;
+  }
+
+  if (n < size)
+  {
+    cr.set_last_error(F("write wrote only %d bytes of %u"), n, size);
+    return 1;
+  }
+
+  return 0;
 }
 
 
@@ -73,26 +105,7 @@ int WaspUIO::append(SdFile &file, const void* buf, size_t size)
     return 1;
   }
 
-  n = file.write(buf, size);
-  if (n == -1)
-  {
-    cr.set_last_error(F("append write failed"));
-    return 1;
-  }
-
-  if (file.sync() == false)
-  {
-    cr.set_last_error(F("append sync failed"));
-    return 1;
-  }
-
-  if (n < size)
-  {
-    cr.set_last_error(F("append wrote only %d bytes of %u"), n, size);
-    return 1;
-  }
-
-  return 0;
+  return write(file, buf, size);
 }
 
 

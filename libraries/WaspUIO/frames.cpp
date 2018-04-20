@@ -157,3 +157,126 @@ void WaspUIO::showBinaryFrame()
    }
    cr.println(F("=========================================="));
 }
+
+/**
+ * Wrap the frame.addSensor functions. If there is no place left in the frame,
+ * aves the frame to the SD, creates a new one, and then adds the sensor to the
+ * new frame.
+ */
+
+void WaspUIO::createFrame(bool discard)
+{
+  if (frame.numFields > 1 && !discard)
+  {
+    frame2Sd();
+  }
+
+  frame.createFrameBin(BINARY);
+
+  // In binary frames, the timestamp must be first, that's what I deduce from
+  // frame.addTimestamp
+  frame.addSensorBin(SENSOR_TST, epochTime);
+}
+
+
+/**
+ * This function:
+ *
+ * - Stores the frame in the "archive file"
+ * - Appends record to the FIFO queue (tmp file), to be sent later
+ *
+ * The data files are stored in /data/YYMMDD.TXT
+ *
+ * The FIFO file starts with a 4 bytes header. It contains the offset of the
+ * next record to be sent, the start of the FIFO queue.
+ *
+ * After the header there is a sequence of 8 bytes records:
+ *
+ * - 0: year
+ * - 1: month
+ * - 2: date
+ * - 3-6: offset in the archive file
+ * - 7: the size of the frame
+ *
+ * Returns: uint8_t
+ * - 0 success
+ * - 1 error, failed to archive frame
+ * - 2 error, archived frame, but append to queue failed
+ */
+
+uint8_t WaspUIO::frame2Sd()
+{
+  uint8_t year, month, date;
+  char dataFilename[18]; // /data/YYMMDD.txt
+  uint32_t size;
+  uint8_t item[8];
+  SdFile dataFile;
+
+  if (! hasSD)
+  {
+    return 1;
+  }
+  startSD();
+
+  // (1) Get the date
+  year = RTC.year;
+  month = RTC.month;
+  date = RTC.date;
+  getDataFilename(dataFilename, year, month, date);
+
+  // (2) Store frame in archive file
+  if (openFile(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
+  {
+    error(cr.last_error);
+    return 1;
+  }
+  size = dataFile.fileSize();
+
+  if (append(dataFile, frame.buffer, frame.length))
+  {
+    error(cr.last_error);
+    return 1;
+  }
+  dataFile.close();
+
+  // (3) Append to queue
+  if (openFile(fifoFilename, fifoFile, O_RDWR | O_CREAT))
+  {
+    error(cr.last_error);
+    return 2;
+  }
+
+  // Add header if it's empty
+  if (fifoFile.fileSize() == 0)
+  {
+    *(uint32_t *)item = 4;
+    if (write(fifoFile, item, 4))
+    {
+      error(cr.last_error);
+      return 2;
+    }
+  }
+
+  // Append record
+  item[0] = year;
+  item[1] = month;
+  item[2] = date;
+  *(uint32_t *)(item + 3) = size;
+  item[7] = (uint8_t) frame.length;
+  if (append(fifoFile, item, 8))
+  {
+    error(cr.last_error);
+    return 2;
+  }
+
+  // (4) Print frame to USB
+  if (flags & FLAG_LOG_USB)
+  {
+    USB.ON();
+    USB.flush();
+    showBinaryFrame();
+    USB.OFF();
+  }
+
+  return 0;
+}
