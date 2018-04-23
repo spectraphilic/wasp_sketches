@@ -27,6 +27,8 @@
  * Definitions & Declarations
  ******************************************************************************/
 
+#define NAME_MAX 30
+
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
 #define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
@@ -35,7 +37,9 @@
 // 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 1 bytes available
-#define EEPROM_RUN (EEPROM_START + 9)
+#define EEPROM_UIO_RUN (EEPROM_START + 9)
+#define EEPROM_UIO_NAME (EEPROM_START + 10) // NAME_MAX + 1 bytes long
+
 enum run_t {
   RUN_NETWORK,
   RUN_BATTERY, // Available
@@ -293,20 +297,21 @@ COMMAND(exeCommand);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);
-COMMAND(cmdTail);
 COMMAND(cmdDisable);
 COMMAND(cmdEnable);
 COMMAND(cmdExit);
 COMMAND(cmdFormat);
 COMMAND(cmdHelp);
+COMMAND(cmdLogLevel);
 COMMAND(cmdLs);
+COMMAND(cmdName);
 COMMAND(cmdNetwork);
 COMMAND(cmdOneWire);
 COMMAND(cmdPrint);
 COMMAND(cmdRead);
 COMMAND(cmdRun);
-COMMAND(cmdLogLevel);
 COMMAND(cmdSDI12);
+COMMAND(cmdTail);
 COMMAND(cmdTime);
 COMMAND(cmdTimeGPS);
 

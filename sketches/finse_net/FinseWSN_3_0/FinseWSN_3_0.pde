@@ -33,7 +33,10 @@ void setup()
 
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
+  eeprom_read_block(buffer, (uint8_t*)EEPROM_UIO_NAME, NAME_MAX+1);
+  buffer[NAME_MAX] = '\0'; // Safety
 
+  info(F("Name      : %s"), buffer);
   info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, size));
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Board     : %s"), UIO.pprintBoard(buffer, size));

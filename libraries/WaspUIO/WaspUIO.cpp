@@ -44,7 +44,7 @@ void WaspUIO::onSetup()
   // Read run table
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    actions[i] = Utils.readEEPROM(EEPROM_RUN + i);
+    actions[i] = Utils.readEEPROM(EEPROM_UIO_RUN + i);
   }
 
   // Log level
