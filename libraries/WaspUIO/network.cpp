@@ -14,10 +14,6 @@ void WaspUIO::initNet()
     addressing = BROADCAST_MODE;
   }
 
-  // This is common to all networks, for now
-  frame.setID((char*) "");
-  //Utils.setAuthKey(key_access);
-
   // Set Frame size. Will be 73 bytes for XBeeDM-pro S1
   // linkEncryption = DISABLED (not supported by DIGIMESH, apparently)
   // AESEncryption = DISABLED

@@ -31,7 +31,7 @@ const char CMD_HELP    [] PROGMEM = "help            - Prints the list of comman
 const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE  - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls              - List files in SD card";
-const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (max 30 chars)";
+const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (max 16 chars)";
 const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
@@ -331,13 +331,13 @@ COMMAND(cmdLs)
 
 COMMAND(cmdName)
 {
-  char value[NAME_MAX+1];
+  char value[17];
 
   // Check input
-  if (sscanf(str, "%30s", &value) != 1) { return cmd_bad_input; }
+  if (sscanf(str, "%16s", &value) != 1) { return cmd_bad_input; }
   if (strlen(value) == 0) { return cmd_bad_input; }
 
-  eeprom_update_block(value, (uint8_t*)EEPROM_UIO_NAME, strlen(value) + 1);
+  Utils.setID(value);
   return cmd_ok;
 }
 
@@ -477,8 +477,7 @@ COMMAND(cmdPrint)
 
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
-  eeprom_read_block(buffer, (uint8_t*)EEPROM_UIO_NAME, NAME_MAX+1);
-  buffer[NAME_MAX] = '\0'; // Safety
+  Utils.getID(buffer);
 
   cr.println(F("Time      : %s"), RTC.getTime());
   cr.println(F("Name      : %s"), buffer);

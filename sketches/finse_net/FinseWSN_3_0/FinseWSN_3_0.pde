@@ -14,6 +14,11 @@
 
 void setup()
 {
+  char buffer[150];
+  char hw[5];
+  char sw[9];
+  size_t size = sizeof(buffer);
+
   // Boot process
   USB.ON();
   cr.print(F("."));
@@ -25,16 +30,25 @@ void setup()
   UIO.clint();   // Command line interface
   USB.OFF();
 
-  // Log configuration
-  char buffer[150];
-  char hw[5];
-  char sw[9];
-  size_t size = sizeof(buffer);
+  // Uptime frame
+  Utils.getID(buffer);
+  frame.createFrameBin(BINARY);
+  frame.setID(buffer);
+  frame.addSensorBin(SENSOR_TST, UIO.epochTime);
+  UIO.frame2Sd();
+  frame.setID((char*)""); // We only want to send the name once
 
+  // Set time from GPS if wrong time is detected
+  // XXX Do this unconditionally to update location?
+  if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
+  {
+    warn(F("Wrong time detected, updating from GPS"));
+    taskGps();
+  }
+
+  // Log configuration
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
-  eeprom_read_block(buffer, (uint8_t*)EEPROM_UIO_NAME, NAME_MAX+1);
-  buffer[NAME_MAX] = '\0'; // Safety
 
   info(F("Name      : %s"), buffer);
   info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, size));
@@ -46,13 +60,6 @@ void setup()
   info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
-  // Set time from GPS if wrong time is detected
-  // XXX Do this unconditionally to update location?
-  if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
-  {
-    warn(F("Wrong time detected, updating from GPS"));
-    taskGps();
-  }
   info(F("Boot done, go to sleep"));
   UIO.stopSD();
 }
