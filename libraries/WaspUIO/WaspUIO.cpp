@@ -106,8 +106,8 @@ void WaspUIO::stopSD()
   {
     // Close files
     if (logFile.isOpen()) { logFile.close(); }
-    if (fifoFile.isOpen()) { fifoFile.close(); }
-    if (tmpFile.isOpen()) { tmpFile.close(); }
+    if (queueFile.isOpen()) { queueFile.close(); }
+    if (qstartFile.isOpen()) { qstartFile.close(); }
     // Off
     SD.OFF();
   }

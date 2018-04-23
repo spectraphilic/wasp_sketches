@@ -32,18 +32,7 @@ CR_TASK(taskNetwork)
   // Schedule sending frames
   if (send)
   {
-    UIO.startSD();
-    if (SD.getFileSize(UIO.tmpFilename) > 0)
-    {
-      // Send frames in old format if it still exists
-      // TODO To be removed in a few months, once all motes have been running
-      // the new code for a while.
-      CR_SPAWN2(taskNetworkSendOld, tid);
-    }
-    else
-    {
-      CR_SPAWN2(taskNetworkSend, tid);
-    }
+    CR_SPAWN2(taskNetworkSend, tid);
   }
 
   CR_DELAY(8000); // Keep the network open at least for 8s
@@ -73,9 +62,10 @@ CR_TASK(taskNetworkSend)
   int size;
 
   CR_BEGIN;
+  UIO.startSD();
 
-  // Open tmp file
-  if (UIO.openFile(UIO.fifoFilename, UIO.fifoFile, O_RDWR | O_CREAT))
+  // Open queue file
+  if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_RDWR | O_CREAT))
   {
     error(cr.last_error);
     CR_ERROR;
@@ -83,19 +73,23 @@ CR_TASK(taskNetworkSend)
 
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
-  fileSize = UIO.fifoFile.fileSize();
-  offset = (fileSize - 4) % 8;
+  fileSize = UIO.queueFile.fileSize();
+  offset = fileSize % 8;
   if (offset != 0)
   {
-    UIO.fifoFile.truncate(fileSize - offset);
-    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.fifoFilename);
+    UIO.queueFile.truncate(fileSize - offset);
+    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.queueFilename);
   }
 
-  // Read header
-  UIO.fifoFile.seekSet(0);
-  if (UIO.fifoFile.read(item, 4) != 4)
+  // Read offset
+  if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_RDWR))
   {
-      error(F("sendFrames (%s): read error"), UIO.fifoFilename);
+    error(cr.last_error);
+    CR_ERROR;
+  }
+  if (UIO.qstartFile.read(item, 4) != 4)
+  {
+      error(F("sendFrames (%s): read error"), UIO.qstartFilename);
       CR_ERROR;
   }
   offset = *(uint32_t *)item;
@@ -106,10 +100,10 @@ CR_TASK(taskNetworkSend)
     t0 = millis();
 
     // Read the record
-    UIO.fifoFile.seekSet(offset);
-    if (UIO.fifoFile.read(item, 8) != 8)
+    UIO.queueFile.seekSet(offset);
+    if (UIO.queueFile.read(item, 8) != 8)
     {
-      error(F("sendFrames (%s): read error"), UIO.fifoFilename);
+      error(F("sendFrames (%s): read error"), UIO.queueFilename);
       CR_ERROR;
     }
 
@@ -141,18 +135,18 @@ CR_TASK(taskNetworkSend)
     offset += 8;
     if (offset >= fileSize)
     {
-      offset = 4;
-      if (UIO.fifoFile.truncate(4) == false)
+      offset = 0;
+      if (UIO.queueFile.truncate(0) == false)
       {
-        error(F("sendFrames: error in fifoFile.truncate"));
+        error(F("sendFrames: error in queueFile.truncate"));
         CR_ERROR;
       }
     }
 
     // Update offset
-    UIO.fifoFile.seekSet(0);
+    UIO.qstartFile.seekSet(0);
     *(uint32_t *)item = offset;
-    if (UIO.write(UIO.fifoFile, item, 4))
+    if (UIO.write(UIO.qstartFile, item, 4))
     {
       error(F("sendFrames: error updating offset"));
       CR_ERROR;
@@ -162,95 +156,6 @@ CR_TASK(taskNetworkSend)
 
     // Give control back
     CR_DELAY(0);
-  }
-
-  CR_END;
-}
-
-CR_TASK(taskNetworkSendOld)
-{
-  uint32_t fileSize;
-  uint8_t item[8];
-  uint32_t t0;
-  char dataFilename[18]; // /data/YYMMDD.txt
-  SdFile dataFile;
-  int size;
-
-  CR_BEGIN;
-
-  // Open tmp file
-  if (UIO.openFile(UIO.tmpFilename, UIO.tmpFile, O_RDWR | O_CREAT))
-  {
-    error(cr.last_error);
-    CR_ERROR;
-  }
-
-  // Security check, the file size must be a multiple of 8. If it is not we
-  // consider there has been a write error, and we trunctate the file.
-  fileSize = UIO.tmpFile.fileSize();
-  if (fileSize % 8 != 0)
-  {
-    UIO.tmpFile.truncate(fileSize - fileSize % 8);
-    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.tmpFilename);
-  }
-
-  // Send frames
-  while (UIO.tmpFile.fileSize() && (! cr.timeout(UIO.start, UIO.send_timeout * 1000)))
-  {
-    t0 = millis();
-
-    // Read the record
-    UIO.tmpFile.seekEnd(-8);
-    if (UIO.tmpFile.read(item, 8) != 8)
-    {
-      error(F("sendFrames (%s): read error"), UIO.tmpFilename);
-      CR_ERROR;
-    }
-
-    // Read the frame
-    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
-    {
-      error(F("sendFrames: fail to open %s"), dataFilename);
-      CR_ERROR;
-    }
-    dataFile.seekSet(*(uint32_t *)(item + 3));
-    size = dataFile.read(SD.buffer, (size_t) item[7]);
-    dataFile.close();
-
-    if (size < 0 || size != (int) item[7])
-    {
-      error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
-      CR_ERROR;
-    }
-
-    // Send the frame
-    if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
-    {
-      warn(F("sendFrames: Send failure"));
-      CR_ERROR;
-    }
-
-    // Truncate (pop)
-    if (UIO.tmpFile.truncate(UIO.tmpFile.fileSize() - 8) == false)
-    {
-      error(F("sendFrames: error in tmpFile.truncate"));
-      CR_ERROR;
-    }
-
-    debug(F("Frame sent in %lu ms"), cr.millisDiff(t0));
-
-    // Give control back
-    CR_DELAY(0);
-  }
-
-  if (UIO.tmpFile.fileSize() == 0)
-  {
-    if (UIO.tmpFile.remove() == false)
-    {
-      error(F("sendFrames: error removing tmpfile"));
-      CR_ERROR;
-    }
   }
 
   CR_END;

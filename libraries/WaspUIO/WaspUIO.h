@@ -171,11 +171,11 @@ bool hasGPS;
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-const char* fifoFilename = "FIFO.TXT";
-const char* tmpFilename = "TMP.TXT"; // LIFO
+const char* qstartFilename = "QSTART.TXT";
+const char* queueFilename = "TMP.TXT";
 SdFile logFile;
-SdFile fifoFile;
-SdFile tmpFile;
+SdFile queueFile;
+SdFile qstartFile;
 int createFile(const char*);
 int createDir(const char*);
 int openFile(const char* filename, SdFile &file, uint8_t mode);
@@ -382,7 +382,6 @@ CR_TASK(taskTTL);
 // Network
 CR_TASK(taskNetwork);
 CR_TASK(taskNetworkSend);
-CR_TASK(taskNetworkSendOld);
 CR_TASK(taskNetworkReceive);
 // GPS
 CR_TASK(taskGps);

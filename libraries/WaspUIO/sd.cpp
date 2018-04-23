@@ -52,7 +52,15 @@ int WaspUIO::baselayout()
 
   if (createDir(archive_dir))  { error = 1; } // Data directory
   if (createFile(logFilename)) { error = 1; } // Log file
-  if (createFile(fifoFilename)) { error = 1; } // Log file
+  if (createFile(queueFilename)) { error = 1; } // Queue file
+  if (createFile(qstartFilename)) { error = 1; } // Queue file
+
+  if (SD.getFileSize(qstartFilename) == 0)
+  {
+    SD.openFile((char*)qstartFilename, &qstartFile, O_WRITE);
+    write(qstartFile, (uint8_t*)0, 4);
+    qstartFile.close();
+  }
 
   return error;
 }

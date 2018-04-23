@@ -240,21 +240,10 @@ uint8_t WaspUIO::frame2Sd()
   dataFile.close();
 
   // (3) Append to queue
-  if (openFile(fifoFilename, fifoFile, O_RDWR | O_CREAT))
+  if (openFile(queueFilename, queueFile, O_RDWR | O_CREAT))
   {
     error(cr.last_error);
     return 2;
-  }
-
-  // Add header if it's empty
-  if (fifoFile.fileSize() == 0)
-  {
-    *(uint32_t *)item = 4;
-    if (write(fifoFile, item, 4))
-    {
-      error(cr.last_error);
-      return 2;
-    }
   }
 
   // Append record
@@ -263,7 +252,7 @@ uint8_t WaspUIO::frame2Sd()
   item[2] = date;
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
-  if (append(fifoFile, item, 8))
+  if (append(queueFile, item, 8))
   {
     error(cr.last_error);
     return 2;
