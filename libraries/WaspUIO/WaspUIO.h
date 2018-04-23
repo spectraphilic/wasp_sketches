@@ -188,7 +188,6 @@ int append(SdFile &file, const void* buf, size_t nbyte);
 char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 Network network;
-uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
 

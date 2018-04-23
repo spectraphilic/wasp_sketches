@@ -180,9 +180,6 @@ CR_TASK(taskNetworkReceive)
       }
       else
       {
-        // RSSI
-        //UIO.readRSSI2Frame();
-
         Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
         debug(F("frame received from %s"), sourceMAC);
         exeCommand((const char*)xbeeDM._payload);

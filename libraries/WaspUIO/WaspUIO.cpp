@@ -226,45 +226,6 @@ const char* WaspUIO::readOwnMAC()
 }
 
 
-/******************************************************************************/
-/* Function to read last Packet hop signal strength absorption
-*/
-
-uint8_t WaspUIO::readRSSI2Frame(void)
-{
-  char sourceMAC[17];
-  uint8_t sourcePower;
-  int rssi;
-  uint8_t error;
-
-  xbeeDM.getRSSI();
-  //sprintf(archiveFile,"%02u%02u%02u.TXT",RTC.year, RTC.month, RTC.date);
-  Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
-  sourcePower = xbeeDM.powerLevel;
-
-  // check AT flag
-  if( xbeeDM.error_AT == 0 )
-  {
-    //get rssi from getRSSI function and make conversion
-    rssi = xbeeDM.valueRSSI[0];
-    rssi *= -1;
-
-    //trace(F("readRSSI2Frame: getRSSI(dBm): %d"), rssi);
-  }
-
-  // Create ASCII frame
-  createFrame();
-  ADD_SENSOR(SENSOR_MAC, (char*) myMac); // Add 2 unsigned longs
-  ADD_SENSOR(SENSOR_RSSI, (int) rssi);
-  ADD_SENSOR(SENSOR_MAC, sourceMAC);
-  ADD_SENSOR(SENSOR_TX_PWR, (uint8_t) sourcePower);
-  createFrame();
-  // TODO RSSI should be stored in the health frame, no?
-
-  return rssi;
-}
-
-
 /**
  * getNextAlarm
  *
