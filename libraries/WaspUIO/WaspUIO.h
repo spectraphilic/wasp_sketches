@@ -168,8 +168,8 @@ bool hasGPS;
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-const char* qstartFilename = "QSTART.TXT";
-const char* queueFilename = "TMP.TXT";
+const char* qstartFilename = "QSTART.BIN";
+const char* queueFilename = "TMP.TXT"; // TODO Rename to QUEUE.BIN
 SdFile logFile;
 SdFile queueFile;
 SdFile qstartFile;
@@ -293,6 +293,7 @@ COMMAND(exeCommand);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);
+COMMAND(cmdCatx);
 COMMAND(cmdDisable);
 COMMAND(cmdEnable);
 COMMAND(cmdExit);

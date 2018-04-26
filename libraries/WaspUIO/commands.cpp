@@ -23,6 +23,7 @@ typedef struct {
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
+const char CMD_CATX    [] PROGMEM = "catx FILENAME   - Print FILENAME contents in hexadecimal to USB";
 const char CMD_DISABLE [] PROGMEM = "disable FLAG    - Disables a feature: 0=log_sd 1=log_usb";
 const char CMD_ENABLE  [] PROGMEM = "enable FLAG     - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT    [] PROGMEM = "exit            - Exit the command line interface";
@@ -49,6 +50,7 @@ const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
+  {"catx ",     &cmdCatx,      CMD_CATX},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
@@ -186,7 +188,7 @@ COMMAND(cmdBoard)
 }
 
 /**
- *  PRint to USB FILENAME.
+ *  Print to USB FILENAME.
  */
 COMMAND(cmdCat)
 {
@@ -204,6 +206,42 @@ COMMAND(cmdCat)
   return cmd_quiet;
 }
 
+COMMAND(cmdCatx)
+{
+  char filename[80];
+  SdFile file;
+  uint32_t size;
+  uint8_t idx;
+  int chr;
+
+  // Check input
+  if (sscanf(str, "%s", filename) != 1) { return cmd_bad_input; }
+  if (strlen(filename) == 0) { return cmd_bad_input; }
+
+  // Check feature availability
+  if (! UIO.hasSD) { return cmd_unavailable; }
+
+  // Open file
+  if (! SD.openFile(filename, &file, O_READ)) { return cmd_error; }
+
+  size = file.fileSize();
+  for (idx=0; idx < size; idx++)
+  {
+    chr = file.read();
+    if (chr < 0)
+    {
+      file.close();
+      return cmd_error;
+    }
+    USB.printHex((char)chr);
+    USB.print(" ");
+  }
+
+  file.close();
+  USB.println();
+
+  return cmd_quiet;
+}
 
 
 /**

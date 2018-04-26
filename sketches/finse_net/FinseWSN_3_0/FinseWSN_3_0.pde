@@ -32,8 +32,8 @@ void setup()
 
   // Uptime frame
   Utils.getID(buffer);
-  frame.createFrameBin(BINARY);
   frame.setID(buffer);
+  frame.createFrameBin(BINARY);
   frame.addSensorBin(SENSOR_TST, UIO.epochTime);
   UIO.frame2Sd();
   frame.setID((char*)""); // We only want to send the name once

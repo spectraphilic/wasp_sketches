@@ -49,6 +49,7 @@ int WaspUIO::openFile(const char* filename, SdFile &file, uint8_t mode)
 int WaspUIO::baselayout()
 {
   int error = 0;
+  uint32_t start = 0;
 
   if (createDir(archive_dir))  { error = 1; } // Data directory
   if (createFile(logFilename)) { error = 1; } // Log file
@@ -58,7 +59,7 @@ int WaspUIO::baselayout()
   if (SD.getFileSize(qstartFilename) == 0)
   {
     SD.openFile((char*)qstartFilename, &qstartFile, O_WRITE);
-    write(qstartFile, (uint8_t*)0, 4);
+    write(qstartFile, (void*)(&start), 4);
     qstartFile.close();
   }
 
