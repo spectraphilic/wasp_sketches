@@ -508,6 +508,7 @@ next:
 
 COMMAND(cmdPrint)
 {
+  char name[17];
   char buffer[150];
   char hw[5];
   char sw[9];
@@ -515,11 +516,10 @@ COMMAND(cmdPrint)
 
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
-  Utils.getID(buffer);
+  Utils.getID(name);
 
   cr.println(F("Time      : %s"), RTC.getTime());
-  cr.println(F("Name      : %s"), buffer);
-  cr.println(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
+  cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Board     : %s"), UIO.pprintBoard(buffer, size));
   cr.println(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);

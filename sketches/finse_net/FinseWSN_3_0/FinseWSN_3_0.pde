@@ -14,6 +14,7 @@
 
 void setup()
 {
+  char name[17];
   char buffer[150];
   char hw[5];
   char sw[9];
@@ -31,9 +32,10 @@ void setup()
   USB.OFF();
 
   // Uptime frame
-  Utils.getID(buffer);
-  frame.setID(buffer);
+  Utils.getID(name);
+  frame.setID(name);
   frame.createFrameBin(BINARY);
+  frame.setFrameType(EVENT_FRAME);
   frame.addSensorBin(SENSOR_TST, UIO.epochTime);
   UIO.frame2Sd();
   frame.setID((char*)""); // We only want to send the name once
@@ -51,7 +53,7 @@ void setup()
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
 
   info(F("Name      : %s"), buffer);
-  info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, size));
+  info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Board     : %s"), UIO.pprintBoard(buffer, size));
   info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
