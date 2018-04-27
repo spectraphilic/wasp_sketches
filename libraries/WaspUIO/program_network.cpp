@@ -54,7 +54,7 @@ CR_TASK(taskNetwork)
 
 CR_TASK(taskNetworkSend)
 {
-  uint32_t fileSize, offset;
+  static uint32_t offset;
   uint8_t item[8];
   uint32_t t0;
   char dataFilename[18]; // /data/YYMMDD.txt
@@ -73,11 +73,10 @@ CR_TASK(taskNetworkSend)
 
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
-  fileSize = UIO.queueFile.fileSize();
-  offset = fileSize % 8;
+  offset = UIO.queueFile.fileSize() % 8;
   if (offset != 0)
   {
-    UIO.queueFile.truncate(fileSize - offset);
+    UIO.queueFile.truncate(UIO.queueFile.fileSize() - offset);
     warn(F("sendFrames: wrong file size (%s), truncated"), UIO.queueFilename);
   }
 
@@ -95,7 +94,7 @@ CR_TASK(taskNetworkSend)
   offset = *(uint32_t *)item;
 
   // Send frames
-  while (offset < fileSize && !cr.timeout(UIO.start, UIO.send_timeout * 1000))
+  while (offset < UIO.queueFile.fileSize() && !cr.timeout(UIO.start, UIO.send_timeout * 1000))
   {
     t0 = millis();
 
@@ -133,7 +132,7 @@ CR_TASK(taskNetworkSend)
 
     // Truncate (pop)
     offset += 8;
-    if (offset >= fileSize)
+    if (offset >= UIO.queueFile.fileSize())
     {
       offset = 0;
       if (UIO.queueFile.truncate(0) == false)
@@ -145,8 +144,7 @@ CR_TASK(taskNetworkSend)
 
     // Update offset
     UIO.qstartFile.seekSet(0);
-    *(uint32_t *)item = offset;
-    if (UIO.write(UIO.qstartFile, item, 4))
+    if (UIO.write(UIO.qstartFile, (void*)(&offset), 4))
     {
       error(F("sendFrames: error updating offset"));
       CR_ERROR;

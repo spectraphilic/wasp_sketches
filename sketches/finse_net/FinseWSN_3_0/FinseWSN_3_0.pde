@@ -35,7 +35,14 @@ void setup()
   Utils.getID(name);
   frame.setID(name);
   frame.createFrameBin(BINARY);
-  frame.setFrameType(EVENT_FRAME);
+  if (_boot_version >= 'G')
+  {
+    frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
+  }
+  else
+  {
+    frame.setFrameType(INFORMATION_FRAME_V12 + EVENT_FRAME);
+  }
   frame.addSensorBin(SENSOR_TST, UIO.epochTime);
   UIO.frame2Sd();
   frame.setID((char*)""); // We only want to send the name once
@@ -52,7 +59,6 @@ void setup()
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
 
-  info(F("Name      : %s"), buffer);
   info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Board     : %s"), UIO.pprintBoard(buffer, size));
