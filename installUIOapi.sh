@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Bash script to install Waspmote IDE with UIO sketches and libraries
 # Linux ONLY
 #
@@ -8,7 +10,7 @@
 
 printf "WARNING: before running this script make sure to have git setup with ssh cloning capabilities"
 printf "\n\t Also, make sure your github account is set up with a ssh key! \n"
-printf"\n\n"
+printf "\n\n"
 printf "Creating folder and clone git UIO repositories ...\n"
 mkdir waspmote-uio
 cd waspmote-uio
@@ -19,8 +21,8 @@ git clone git@github.com:spectraphilic/wasp_sketches.git
 printf "Downloading Waspmote IDE, and installing it ...\n"
 mkdir waspmote-pro-ide-v06.02
 cd waspmote-pro-ide-v06.02
-wget http://downloads.libelium.com/waspmote-pro-ide-v06.02-linux64.zip
-unzip waspmote-pro-ide-v06.02-linux64.zip
+wget http://downloads.libelium.com/waspmote-pro-ide-v06.05-linux64.zip
+unzip waspmote-pro-ide-v06.05-linux64.zip
 ./install.sh
 
 # create simulink to our own copy of the librayr API
