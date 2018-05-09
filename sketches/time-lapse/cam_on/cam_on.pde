@@ -38,7 +38,7 @@ const int camPowerPin = DIGITAL1;
 //========== SET time step !! ====================================
 //================================================================
 
-int timeStep = 1; // time step in minute 
+//String imageFiles = "IMAGES.TXT";
 
 //================================================================
 //================================================================
@@ -71,90 +71,19 @@ void setup(){
 	delay(10000);
 
 	RTC.setTime("00:01:01:01:00:00:00");
-	logActivity("=== Waspmote starting ===");
-
 
 	camON();
-	delay(120000);
-	camTrigger();
-	delay(1000);
-	camOFF();
-
 }
 
 //================================================================
 void loop(){
 
-  USB.println(F("Mote to sleep ..."));
-  logActivity("Mote to sleep ...");
-  PWR.sleep(ALL_OFF);
-  
-  USB.ON();
-  USB.println(F("Mote awaking!!"));
-  logActivity("Mote awaking");
-  USB.print(F("Time: "));
-  USB.println(RTC.getTime());
-
-
-  if (intFlag & RTC_INT){
-    intFlag &= ~(RTC_INT); // Clear flag
-
-    takePicture();
-    // RTC captured
-
-    if(RTC.alarmTriggered == 2){
-      RTC.setAlarm2(0,0,timeStep, RTC_OFFSET, RTC_ALM2_MODE4);
-    }
-  }
 }
 
 //================================================================
 // =========== Local functions
 //================================================================
 
-void logActivity(String message){
-  SD.ON();
-  RTC.ON();
-  delay(50);
-  uint8_t answer = 0;
-  String message2write;
-
-
-  char datetime[20];
-  RTC.getTime();
-  sprintf(datetime,"%02u-%02u-%02u %02u:%02u:%02u ----> ",RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
-  
-
-  message2write = String(datetime) + message;
-
-  if(SD.isFile((const char*)&logfile[0]))
-    { 
-      if(SD.appendln((const char*)&logfile[0], (const char*)&message2write[0]))
-      { 
-        //frame.showFrame(); // Print frame to USB
-        USB.print("------------>: ");
-        USB.println((const char*)&message2write[0]);
-        answer = 1;
-        delay(50);
-      }
-      else
-      {
-        USB.print("--------> Failed to append message: ");
-        USB.println((const char*)&message2write[0]);
-      } 
-    }
-  SD.OFF();
-}
-
-
-void takePicture(){
-    camON();
-    delay(15000);
-    camTrigger();
-    delay(10000);
-    camOFF();
-    //collectImageName();
-}
 
 void camON(){
 	// function to turn camera ON
@@ -162,27 +91,6 @@ void camON(){
 	delay(20);
 	digitalWrite(onoffPin, LOW);
 	USB.println("Camera turned ON");
-	logActivity("Cam ON");
 }
 
-void camOFF(){
-	// function to turn camera OFF
-	digitalWrite(onoffPin, HIGH);
-	delay(60);
-	digitalWrite(onoffPin, LOW);
-	USB.println("Camera turned OFF");
-	logActivity("Cam OFF");
-}
 
-void camTrigger(){
-	// function to focus, and trigger the camera shutter
-	//digitalWrite(focusPin, HIGH);	
-	//delay(50);
-	digitalWrite(shutterPin, HIGH);	
-	delay(300);
-	digitalWrite(shutterPin, LOW);	
-	//digitalWrite(focusPin, LOW);	
-	//delay(100);
-	USB.println("Photo captured");
-	logActivity("Photo captured");
-}
