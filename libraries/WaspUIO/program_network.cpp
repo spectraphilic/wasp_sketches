@@ -54,7 +54,7 @@ CR_TASK(taskNetwork)
 
 CR_TASK(taskNetworkSend)
 {
-  uint32_t fileSize;
+  static uint32_t offset;
   uint8_t item[8];
   uint32_t t0;
   char dataFilename[18]; // /data/YYMMDD.txt
@@ -62,39 +62,47 @@ CR_TASK(taskNetworkSend)
   int size;
 
   CR_BEGIN;
-
-  if (! UIO.hasSD)
-  {
-    return CR_TASK_STOP;
-  }
   UIO.startSD();
 
-  // Open tmp file
-  if (UIO.openFile(UIO.tmpFilename, UIO.tmpFile, O_RDWR | O_CREAT))
+  // Open queue file
+  if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_RDWR | O_CREAT))
   {
     error(cr.last_error);
-    return 2;
+    CR_ERROR;
   }
 
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
-  fileSize = UIO.tmpFile.fileSize();
-  if (fileSize % 8 != 0)
+  offset = UIO.queueFile.fileSize() % 8;
+  if (offset != 0)
   {
-    UIO.tmpFile.truncate(fileSize - fileSize % 8);
-    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.tmpFilename);
+    UIO.queueFile.truncate(UIO.queueFile.fileSize() - offset);
+    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.queueFilename);
   }
 
+  // Read offset
+  if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_RDWR))
+  {
+    error(cr.last_error);
+    CR_ERROR;
+  }
+  if (UIO.qstartFile.read(item, 4) != 4)
+  {
+      error(F("sendFrames (%s): read error"), UIO.qstartFilename);
+      CR_ERROR;
+  }
+  offset = *(uint32_t *)item;
+
   // Send frames
-  while (UIO.tmpFile.fileSize() && (! cr.timeout(UIO.start, UIO.send_timeout * 1000)))
+  while (offset < UIO.queueFile.fileSize() && !cr.timeout(UIO.start, UIO.send_timeout * 1000))
   {
     t0 = millis();
 
-    // Read the frame length
-    UIO.tmpFile.seekEnd(-8);
-    if (UIO.tmpFile.read(item, 8) != 8)
+    // Read the record
+    UIO.queueFile.seekSet(offset);
+    if (UIO.queueFile.read(item, 8) != 8)
     {
-      error(F("sendFrames (%s): read error"), UIO.tmpFilename);
+      error(F("sendFrames (%s): read error"), UIO.queueFilename);
       CR_ERROR;
     }
 
@@ -123,9 +131,22 @@ CR_TASK(taskNetworkSend)
     }
 
     // Truncate (pop)
-    if (UIO.tmpFile.truncate(UIO.tmpFile.fileSize() - 8) == false)
+    offset += 8;
+    if (offset >= UIO.queueFile.fileSize())
     {
-      error(F("sendFrames: error in tmpFile.truncate"));
+      offset = 0;
+      if (UIO.queueFile.truncate(0) == false)
+      {
+        error(F("sendFrames: error in queueFile.truncate"));
+        CR_ERROR;
+      }
+    }
+
+    // Update offset
+    UIO.qstartFile.seekSet(0);
+    if (UIO.write(UIO.qstartFile, (void*)(&offset), 4))
+    {
+      error(F("sendFrames: error updating offset"));
       CR_ERROR;
     }
 
@@ -157,9 +178,6 @@ CR_TASK(taskNetworkReceive)
       }
       else
       {
-        // RSSI
-        //UIO.readRSSI2Frame();
-
         Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
         debug(F("frame received from %s"), sourceMAC);
         exeCommand((const char*)xbeeDM._payload);

@@ -23,6 +23,7 @@ typedef struct {
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
+const char CMD_CATX    [] PROGMEM = "catx FILENAME   - Print FILENAME contents in hexadecimal to USB";
 const char CMD_DISABLE [] PROGMEM = "disable FLAG    - Disables a feature: 0=log_sd 1=log_usb";
 const char CMD_ENABLE  [] PROGMEM = "enable FLAG     - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT    [] PROGMEM = "exit            - Exit the command line interface";
@@ -31,6 +32,7 @@ const char CMD_HELP    [] PROGMEM = "help            - Prints the list of comman
 const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE  - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls              - List files in SD card";
+const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (max 16 chars)";
 const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
@@ -48,6 +50,7 @@ const Command commands[] PROGMEM = {
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
+  {"catx ",     &cmdCatx,      CMD_CATX},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
@@ -55,6 +58,7 @@ const Command commands[] PROGMEM = {
   {"help",      &cmdHelp,     CMD_HELP},
   {"loglevel ", &cmdLogLevel, CMD_LOGLEVEL},
   {"ls",        &cmdLs,       CMD_LS},
+  {"name",      &cmdName,     CMD_NAME},
   {"onewire ",  &cmdOneWire,  CMD_ONEWIRE},
   {"network ",  &cmdNetwork,  CMD_NETWORK},
   {"print",     &cmdPrint,    CMD_PRINT},
@@ -184,7 +188,7 @@ COMMAND(cmdBoard)
 }
 
 /**
- *  PRint to USB FILENAME.
+ *  Print to USB FILENAME.
  */
 COMMAND(cmdCat)
 {
@@ -202,65 +206,41 @@ COMMAND(cmdCat)
   return cmd_quiet;
 }
 
-
-/**
- * Print Tail lines of FILENAME to USB
- */
-
-COMMAND(cmdTail)
+COMMAND(cmdCatx)
 {
-  unsigned int maxnl, nl;
   char filename[80];
   SdFile file;
-  uint32_t size, nc;
-  uint16_t max = DOS_BUFFER_SIZE - 1;
-  int16_t c;
-  size_t nbyte;
-  int nread;
+  uint32_t size;
+  uint8_t idx;
+  int chr;
 
   // Check input
-  if (sscanf(str, "%u %s", &maxnl, &filename) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%s", filename) != 1) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Check feature availability
   if (! UIO.hasSD) { return cmd_unavailable; }
 
   // Open file
-  if (!SD.openFile(filename, &file, O_READ)) { return cmd_error; }
+  if (! SD.openFile(filename, &file, O_READ)) { return cmd_error; }
 
-  // Read backwards
-  maxnl++;
   size = file.fileSize();
-  nc = 0;
-  nl = 0;
-  while (nc < size && nl < maxnl)
+  for (idx=0; idx < size; idx++)
   {
-    nc++;
-    file.seekEnd(-nc);
-    if ((c = file.read()) < 0) { goto error; }
-    if (c == '\n') { nl++; }
+    chr = file.read();
+    if (chr < 0)
+    {
+      file.close();
+      return cmd_error;
+    }
+    USB.printHex((char)chr);
+    USB.print(" ");
   }
-  nc--; // do not include the last newline read
-
-  // Read forward
-  cr.println(F("-------------------------"));
-  file.seekEnd(-nc);
-  while (nc > 0)
-  {
-    nbyte = (nc < max) ? nc : max;
-    nread = file.read(SD.buffer, nbyte);
-    if (nread < 0) { goto error; }
-    USB.print(SD.buffer);
-    nc -= nread;
-  }
-  cr.println(F("-------------------------"));
 
   file.close();
+  USB.println();
+
   return cmd_quiet;
-
-error:
-  file.close();
-  return cmd_error;
 }
 
 
@@ -381,6 +361,24 @@ COMMAND(cmdLs)
   SD.ls(LS_DATE | LS_SIZE | LS_R);
   return cmd_quiet;
 }
+
+
+/**
+ * Give a name to the mote
+ */
+
+COMMAND(cmdName)
+{
+  char value[17];
+
+  // Check input
+  if (sscanf(str, "%16s", &value) != 1) { return cmd_bad_input; }
+  if (strlen(value) == 0) { return cmd_bad_input; }
+
+  Utils.setID(value);
+  return cmd_ok;
+}
+
 
 /**
  * Print configuration and other information
@@ -510,6 +508,7 @@ next:
 
 COMMAND(cmdPrint)
 {
+  char name[17];
   char buffer[150];
   char hw[5];
   char sw[9];
@@ -517,9 +516,10 @@ COMMAND(cmdPrint)
 
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
+  Utils.getID(name);
 
   cr.println(F("Time      : %s"), RTC.getTime());
-  cr.println(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, sizeof buffer));
+  cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Board     : %s"), UIO.pprintBoard(buffer, size));
   cr.println(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
@@ -582,7 +582,7 @@ COMMAND(cmdRun)
 
   // Do
   UIO.actions[what] = (uint8_t) minutes;
-  UIO.updateEEPROM(EEPROM_RUN + what, UIO.actions[what]);
+  UIO.updateEEPROM(EEPROM_UIO_RUN + what, UIO.actions[what]);
   return cmd_ok;
 }
 
@@ -600,6 +600,67 @@ COMMAND(cmdSDI12)
   UIO.sdi12(0);
   return cmd_quiet;
 }
+
+/**
+ * Print Tail lines of FILENAME to USB
+ */
+
+COMMAND(cmdTail)
+{
+  unsigned int maxnl, nl;
+  char filename[80];
+  SdFile file;
+  uint32_t size, nc;
+  uint16_t max = DOS_BUFFER_SIZE - 1;
+  int16_t c;
+  size_t nbyte;
+  int nread;
+
+  // Check input
+  if (sscanf(str, "%u %s", &maxnl, &filename) != 2) { return cmd_bad_input; }
+  if (strlen(filename) == 0) { return cmd_bad_input; }
+
+  // Check feature availability
+  if (! UIO.hasSD) { return cmd_unavailable; }
+
+  // Open file
+  if (!SD.openFile(filename, &file, O_READ)) { return cmd_error; }
+
+  // Read backwards
+  maxnl++;
+  size = file.fileSize();
+  nc = 0;
+  nl = 0;
+  while (nc < size && nl < maxnl)
+  {
+    nc++;
+    file.seekEnd(-nc);
+    if ((c = file.read()) < 0) { goto error; }
+    if (c == '\n') { nl++; }
+  }
+  nc--; // do not include the last newline read
+
+  // Read forward
+  cr.println(F("-------------------------"));
+  file.seekEnd(-nc);
+  while (nc > 0)
+  {
+    nbyte = (nc < max) ? nc : max;
+    nread = file.read(SD.buffer, nbyte);
+    if (nread < 0) { goto error; }
+    USB.print(SD.buffer);
+    nc -= nread;
+  }
+  cr.println(F("-------------------------"));
+
+  file.close();
+  return cmd_quiet;
+
+error:
+  file.close();
+  return cmd_error;
+}
+
 
 /**
  * Sets time. Accepts two formats:

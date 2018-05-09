@@ -14,6 +14,12 @@
 
 void setup()
 {
+  char name[17];
+  char buffer[150];
+  char hw[5];
+  char sw[9];
+  size_t size = sizeof(buffer);
+
   // Boot process
   USB.ON();
   cr.print(F("."));
@@ -25,23 +31,21 @@ void setup()
   UIO.clint();   // Command line interface
   USB.OFF();
 
-  // Log configuration
-  char buffer[150];
-  char hw[5];
-  char sw[9];
-  size_t size = sizeof(buffer);
-
-  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
-  Utils.hex2str(xbeeDM.softVersion, sw, 4);
-
-  info(F("Hardware  : Version=%c Mote=%s"), _boot_version, UIO.pprintSerial(buffer, size));
-  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  info(F("Board     : %s"), UIO.pprintBoard(buffer, size));
-  info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
-  info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
-  info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
+  // Uptime frame
+  Utils.getID(name);
+  frame.setID(name);
+  frame.createFrameBin(BINARY);
+  if (_boot_version >= 'G')
+  {
+    frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
+  }
+  else
+  {
+    frame.setFrameType(INFORMATION_FRAME_V12 + EVENT_FRAME);
+  }
+  frame.addSensorBin(SENSOR_TST, UIO.epochTime);
+  UIO.frame2Sd();
+  frame.setID((char*)""); // We only want to send the name once
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?
@@ -50,6 +54,20 @@ void setup()
     warn(F("Wrong time detected, updating from GPS"));
     taskGps();
   }
+
+  // Log configuration
+  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
+  Utils.hex2str(xbeeDM.softVersion, sw, 4);
+
+  info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
+  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
+  info(F("Board     : %s"), UIO.pprintBoard(buffer, size));
+  info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
+  info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
+  info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+  info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
+  info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
+
   info(F("Boot done, go to sleep"));
   UIO.stopSD();
 }

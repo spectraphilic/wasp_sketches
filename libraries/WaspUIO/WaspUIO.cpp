@@ -44,7 +44,7 @@ void WaspUIO::onSetup()
   // Read run table
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    actions[i] = Utils.readEEPROM(EEPROM_RUN + i);
+    actions[i] = Utils.readEEPROM(EEPROM_UIO_RUN + i);
   }
 
   // Log level
@@ -105,118 +105,12 @@ void WaspUIO::stopSD()
   if (SPI.isSD)
   {
     // Close files
-    if (tmpFile.isOpen()) { tmpFile.close(); }
     if (logFile.isOpen()) { logFile.close(); }
+    if (queueFile.isOpen()) { queueFile.close(); }
+    if (qstartFile.isOpen()) { qstartFile.close(); }
     // Off
     SD.OFF();
   }
-}
-
-
-/**
- * Wrap the frame.addSensor functions. If there is no place left in the frame,
- * aves the frame to the SD, creates a new one, and then adds the sensor to the
- * new frame.
- */
-
-void WaspUIO::createFrame(bool discard)
-{
-  if (frame.numFields > 1 && !discard)
-  {
-    frame2Sd();
-  }
-
-  frame.createFrameBin(BINARY);
-
-  // In binary frames, the timestamp must be first, that's what I deduce from
-  // frame.addTimestamp
-  frame.addSensorBin(SENSOR_TST, epochTime);
-}
-
-
-/**
- * This function:
- * - Stores the frame in the "archive file"
- * - Appends the to the LIFO queue (tmp file), to be sent later
- *
- * The name of the archive file is "YYMMDD.TXT". This means that every frame
- * can be referenced with 7 bytes: 3 for the date, and 4 for the offset within
- * the archive file.
- *
- * Every entry in the LIFO queue (tmp file) is 7 bytes long:
- * - 0: year
- * - 1: month
- * - 2: date
- * - 3-6: offset in the archive file
- *
- * Parameters:
- * - char* filename: Filename of the LIFO queue (tmp file)
- *
- * Returns: uint8_t
- * - 0 success
- * - 1 error, failed to archive frame
- * - 2 error, archived frame, but append to queue failed
- */
-
-uint8_t WaspUIO::frame2Sd()
-{
-  uint32_t size;
-  uint8_t item[8];
-  char dataFilename[18]; // /data/YYMMDD.txt
-  SdFile dataFile;
-
-  if (! hasSD)
-  {
-    return 1;
-  }
-  startSD();
-
-  // (1) Get the date
-  item[0] = RTC.year;
-  item[1] = RTC.month;
-  item[2] = RTC.date;
-  getDataFilename(dataFilename, item[0], item[1], item[2]);
-
-  // (2) Store frame in archive file
-  if (UIO.openFile(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
-  {
-    error(cr.last_error);
-    return 1;
-  }
-  size = dataFile.fileSize();
-
-  if (append(dataFile, frame.buffer, frame.length))
-  {
-    error(cr.last_error);
-    return 1;
-  }
-  dataFile.close();
-
-  // (3) Append to queue
-  if (UIO.openFile(tmpFilename, tmpFile, O_RDWR | O_CREAT))
-  {
-    error(cr.last_error);
-    return 2;
-  }
-
-  *(uint32_t *)(item + 3) = size;
-  item[7] = (uint8_t) frame.length;
-  if (append(tmpFile, item, 8))
-  {
-    error(cr.last_error);
-    return 2;
-  }
-
-  // (4) Print frame to USB
-  if (flags & FLAG_LOG_USB)
-  {
-    USB.ON();
-    USB.flush();
-    showBinaryFrame();
-    USB.OFF();
-  }
-
-  return 0;
 }
 
 
@@ -329,45 +223,6 @@ const char* WaspUIO::readOwnMAC()
   }
 
   return myMac;
-}
-
-
-/******************************************************************************/
-/* Function to read last Packet hop signal strength absorption
-*/
-
-uint8_t WaspUIO::readRSSI2Frame(void)
-{
-  char sourceMAC[17];
-  uint8_t sourcePower;
-  int rssi;
-  uint8_t error;
-
-  xbeeDM.getRSSI();
-  //sprintf(archiveFile,"%02u%02u%02u.TXT",RTC.year, RTC.month, RTC.date);
-  Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
-  sourcePower = xbeeDM.powerLevel;
-
-  // check AT flag
-  if( xbeeDM.error_AT == 0 )
-  {
-    //get rssi from getRSSI function and make conversion
-    rssi = xbeeDM.valueRSSI[0];
-    rssi *= -1;
-
-    //trace(F("readRSSI2Frame: getRSSI(dBm): %d"), rssi);
-  }
-
-  // Create ASCII frame
-  createFrame();
-  ADD_SENSOR(SENSOR_MAC, (char*) myMac); // Add 2 unsigned longs
-  ADD_SENSOR(SENSOR_RSSI, (int) rssi);
-  ADD_SENSOR(SENSOR_MAC, sourceMAC);
-  ADD_SENSOR(SENSOR_TX_PWR, (uint8_t) sourcePower);
-  createFrame();
-  // TODO RSSI should be stored in the health frame, no?
-
-  return rssi;
 }
 
 

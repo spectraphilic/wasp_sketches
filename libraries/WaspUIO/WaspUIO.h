@@ -35,7 +35,8 @@
 // 2 bytes available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 1 bytes available
-#define EEPROM_RUN (EEPROM_START + 9)
+#define EEPROM_UIO_RUN (EEPROM_START + 9)
+
 enum run_t {
   RUN_NETWORK,
   RUN_BATTERY, // Available
@@ -167,24 +168,26 @@ bool hasGPS;
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-const char* tmpFilename = "TMP.TXT";
+const char* qstartFilename = "QSTART.BIN";
+const char* queueFilename = "TMP.TXT"; // TODO Rename to QUEUE.BIN
+SdFile logFile;
+SdFile queueFile;
+SdFile qstartFile;
 int createFile(const char*);
 int createDir(const char*);
 int openFile(const char* filename, SdFile &file, uint8_t mode);
 int baselayout();
-SdFile logFile;
-SdFile tmpFile;
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
 int readline(SdFile &file);
+int write(SdFile &file, const void* buf, size_t nbyte);
 int append(SdFile &file, const void* buf, size_t nbyte);
 
 // Network
 char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 Network network;
-uint8_t readRSSI2Frame(void);
 void OTA_communication(int OTA_duration);
 const char* readOwnMAC();
 
@@ -224,8 +227,8 @@ const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
 void createFrame(bool discard=false);
-uint8_t frame2Sd();
 void showBinaryFrame();
+uint8_t frame2Sd();
 
 // Menu
 void clint();
@@ -290,20 +293,22 @@ COMMAND(exeCommand);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);
-COMMAND(cmdTail);
+COMMAND(cmdCatx);
 COMMAND(cmdDisable);
 COMMAND(cmdEnable);
 COMMAND(cmdExit);
 COMMAND(cmdFormat);
 COMMAND(cmdHelp);
+COMMAND(cmdLogLevel);
 COMMAND(cmdLs);
+COMMAND(cmdName);
 COMMAND(cmdNetwork);
 COMMAND(cmdOneWire);
 COMMAND(cmdPrint);
 COMMAND(cmdRead);
 COMMAND(cmdRun);
-COMMAND(cmdLogLevel);
 COMMAND(cmdSDI12);
+COMMAND(cmdTail);
 COMMAND(cmdTime);
 COMMAND(cmdTimeGPS);
 
