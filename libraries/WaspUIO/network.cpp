@@ -36,7 +36,7 @@ void WaspUIO::initNet()
   // XXX Reduce the number of retries to reduce the time it is lost in send
   // failures (default is 3).
   // 3 retries ~ 5s ; 2 retries ~ 3.5 s ; 1 retry ~ 2.4s
-  xbeeDM.setSendingRetries(2);
+  xbeeDM.setSendingRetries(1);
 
   // Set channel, check AT commmand execution flag
   xbeeDM.setChannel(network.channel);
