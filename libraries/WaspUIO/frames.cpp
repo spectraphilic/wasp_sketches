@@ -5,6 +5,28 @@
  * Print the binary frame to USB.
  */
 
+uint8_t WaspUIO::getSequence(uint8_t *p)
+{
+   uint8_t offset, i;
+
+   // Fixed header, depends on version (4 or 8 bytes serial)
+   if (_boot_version >= 'G') { offset = 3 + 1 + 1 + 8; }
+   else                      { offset = 3 + 1 + 1 + 4; }
+
+   // Variable header, mote name
+   p += offset;
+   for (i = 0; i < 17 ; i++)
+   {
+     if ((char)*p++ == '#')
+     {
+       return *p;
+     }
+   }
+
+   error(F("getSequence error"));
+   return 0;
+}
+
 void WaspUIO::showBinaryFrame()
 {
    uint8_t *p;
@@ -244,6 +266,15 @@ uint8_t WaspUIO::frame2Sd()
   {
     error(cr.last_error);
     return 2;
+  }
+
+  // Security check, the file size must be a multiple of 8. If it is not we
+  // consider there has been a write error, and we trunctate the file.
+  uint32_t offset = queueFile.fileSize() % 8;
+  if (offset != 0)
+  {
+    queueFile.truncate(queueFile.fileSize() - offset);
+    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.queueFilename);
   }
 
   // Append record

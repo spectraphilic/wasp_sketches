@@ -20,6 +20,7 @@ typedef struct {
   const char* help;
 } Command;
 
+const char CMD_ACK     [] PROGMEM = ""; // Hidden command
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
@@ -47,10 +48,11 @@ const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
 const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
 
 const Command commands[] PROGMEM = {
+  {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
-  {"catx ",     &cmdCatx,      CMD_CATX},
+  {"catx ",     &cmdCatx,     CMD_CATX},
   {"disable ",  &cmdDisable,  CMD_DISABLE},
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
@@ -149,6 +151,75 @@ COMMAND(exeCommand)
   }
 
   return cmd_bad_input;
+}
+
+/**
+ * Choose battery type.
+ */
+COMMAND(cmdAck)
+{
+  uint8_t item[4];
+  uint32_t offset;
+  cmd_status_t status = cmd_ok;
+
+  if (UIO.ack_wait == false)
+  {
+    warn(F("unexpected ack command"));
+    return cmd_quiet;
+  }
+
+  // Open files
+  UIO.startSD();
+  if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_RDWR))
+  {
+    error(cr.last_error);
+    return cmd_error;
+  }
+  if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_RDWR))
+  {
+    UIO.qstartFile.close();
+    error(cr.last_error);
+    return cmd_error;
+  }
+
+  // Read offset
+  if (UIO.qstartFile.read(item, 4) != 4)
+  {
+    error(F("ack (%s): read error"), UIO.qstartFilename);
+    status = cmd_error;
+    goto exit;
+  }
+  offset = *(uint32_t *)item;
+
+  // Truncate (pop)
+  offset += 8;
+  if (offset >= UIO.queueFile.fileSize())
+  {
+    offset = 0;
+    if (UIO.queueFile.truncate(0) == false)
+    {
+      error(F("ack: error in queueFile.truncate"));
+      status = cmd_error;
+      goto exit;
+    }
+  }
+
+  // Update offset
+  UIO.qstartFile.seekSet(0);
+  if (UIO.write(UIO.qstartFile, (void*)(&offset), 4))
+  {
+    error(F("sendFrames: error updating offset"));
+    status = cmd_error;
+    goto exit;
+  }
+
+  // Ready for next frame!
+  UIO.ack_wait = false;
+
+exit:
+  UIO.qstartFile.close();
+  UIO.queueFile.close();
+  return status;
 }
 
 /**
@@ -324,7 +395,10 @@ COMMAND(cmdHelp)
   {
     memcpy_P(&cmd, &commands[i], sizeof cmd);
     strncpy_P(help, cmd.help, sizeof help);
-    cr.println(help);
+    if (strlen(help) > 0) // Do not print help for hidden commands
+    {
+      cr.println(help);
+    }
   }
 
   return cmd_quiet;

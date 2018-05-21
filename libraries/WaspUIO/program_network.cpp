@@ -60,100 +60,107 @@ CR_TASK(taskNetworkSend)
   char dataFilename[18]; // /data/YYMMDD.txt
   SdFile dataFile;
   int size;
+  bool err = false;
+  static unsigned long sent;
 
   CR_BEGIN;
-  UIO.startSD();
-
-  // Open queue file
-  if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_RDWR | O_CREAT))
-  {
-    error(cr.last_error);
-    CR_ERROR;
-  }
-
-  // Security check, the file size must be a multiple of 8. If it is not we
-  // consider there has been a write error, and we trunctate the file.
-  offset = UIO.queueFile.fileSize() % 8;
-  if (offset != 0)
-  {
-    UIO.queueFile.truncate(UIO.queueFile.fileSize() - offset);
-    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.queueFilename);
-  }
-
-  // Read offset
-  if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_RDWR))
-  {
-    error(cr.last_error);
-    CR_ERROR;
-  }
-  if (UIO.qstartFile.read(item, 4) != 4)
-  {
-      error(F("sendFrames (%s): read error"), UIO.qstartFilename);
-      CR_ERROR;
-  }
-  offset = *(uint32_t *)item;
+  UIO.ack_wait = false;
 
   // Send frames
-  while (offset < UIO.queueFile.fileSize() && !cr.timeout(UIO.start, UIO.send_timeout * 1000))
+  while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
   {
-    t0 = millis();
-
-    // Read the record
-    UIO.queueFile.seekSet(offset);
-    if (UIO.queueFile.read(item, 8) != 8)
+    if (UIO.ack_wait == false)
     {
-      error(F("sendFrames (%s): read error"), UIO.queueFilename);
-      CR_ERROR;
-    }
+      t0 = millis();
 
-    // Read the frame
-    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
-    {
-      error(F("sendFrames: fail to open %s"), dataFilename);
-      CR_ERROR;
-    }
-    dataFile.seekSet(*(uint32_t *)(item + 3));
-    size = dataFile.read(SD.buffer, (size_t) item[7]);
-    dataFile.close();
-
-    if (size < 0 || size != (int) item[7])
-    {
-      error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
-      CR_ERROR;
-    }
-
-    // Send the frame
-    if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
-    {
-      warn(F("sendFrames: Send failure"));
-      CR_ERROR;
-    }
-
-    // Truncate (pop)
-    offset += 8;
-    if (offset >= UIO.queueFile.fileSize())
-    {
-      offset = 0;
-      if (UIO.queueFile.truncate(0) == false)
+      // Open files
+      UIO.startSD();
+      if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_READ))
       {
-        error(F("sendFrames: error in queueFile.truncate"));
-        CR_ERROR;
+        err = true;
+        break;
+      }
+      if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_READ))
+      {
+        err = true;
+        break;
+      }
+
+      // Read offset
+      if (UIO.qstartFile.read(item, 4) != 4)
+      {
+        cr.set_last_error(F("sendFrames (%s): read error"), UIO.qstartFilename);
+        err = true;
+        break;
+      }
+      offset = *(uint32_t *)item;
+      if (offset >= UIO.queueFile.fileSize())
+      {
+        break;
+      }
+
+      // Read the record
+      UIO.queueFile.seekSet(offset);
+      if (UIO.queueFile.read(item, 8) != 8)
+      {
+        cr.set_last_error(F("sendFrames (%s): read error"), UIO.queueFilename);
+        err = true;
+        break;
+      }
+
+      // Read the frame
+      UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
+      if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
+      {
+        cr.set_last_error(F("sendFrames: fail to open %s"), dataFilename);
+        err = true;
+        break;
+      }
+      dataFile.seekSet(*(uint32_t *)(item + 3));
+      size = dataFile.read(SD.buffer, (size_t) item[7]);
+      dataFile.close();
+
+      if (size < 0 || size != (int) item[7])
+      {
+        cr.set_last_error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
+        err = true;
+        break;
+      }
+
+      // Send the frame
+      if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
+      {
+        warn(F("sendFrames: Send failure"));
+        break;
+      }
+      UIO.ack_wait = true;
+      sent = millis();
+
+      // Next
+      UIO.qstartFile.close(); // Close files
+      UIO.queueFile.close();
+      debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
+    }
+    else
+    {
+      // Do not wait more than 5s
+      if (cr.timeout(sent, 5 * 1000))
+      {
+         break;
       }
     }
 
-    // Update offset
-    UIO.qstartFile.seekSet(0);
-    if (UIO.write(UIO.qstartFile, (void*)(&offset), 4))
-    {
-      error(F("sendFrames: error updating offset"));
-      CR_ERROR;
-    }
+    CR_DELAY(50); // Give control back
+  }
 
-    debug(F("Frame sent in %lu ms"), cr.millisDiff(t0));
+  // Close files
+  if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
+  if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
-    // Give control back
-    CR_DELAY(0);
+  if (err)
+  {
+    error(cr.last_error);
+    CR_ERROR;
   }
 
   CR_END;

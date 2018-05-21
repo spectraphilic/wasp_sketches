@@ -173,6 +173,7 @@ const char* queueFilename = "TMP.TXT"; // TODO Rename to QUEUE.BIN
 SdFile logFile;
 SdFile queueFile;
 SdFile qstartFile;
+bool ack_wait;
 int createFile(const char*);
 int createDir(const char*);
 int openFile(const char* filename, SdFile &file, uint8_t mode);
@@ -227,6 +228,7 @@ const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
 void createFrame(bool discard=false);
+uint8_t getSequence(uint8_t *p);
 void showBinaryFrame();
 uint8_t frame2Sd();
 
@@ -290,6 +292,7 @@ uint8_t _getPin(uint8_t);
 
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
+COMMAND(cmdAck);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);
