@@ -169,6 +169,7 @@ CR_TASK(taskNetworkSend)
 CR_TASK(taskNetworkReceive)
 {
   char sourceMAC[17];
+  cmd_status_t status;
 
   CR_BEGIN;
 
@@ -186,8 +187,11 @@ CR_TASK(taskNetworkReceive)
       else
       {
         Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
-        debug(F("frame received from %s"), sourceMAC);
-        exeCommand((const char*)xbeeDM._payload);
+        status = exeCommand((const char*)xbeeDM._payload);
+        if (status == cmd_bad_input)
+        {
+          warn(F("unexpected frame received from %s"), sourceMAC);
+        }
       }
     }
 
