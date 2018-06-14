@@ -61,7 +61,7 @@ void setup(){
 
   pinMode(camPowerPin, OUTPUT);
   digitalWrite(camPowerPin, HIGH);
-  delay(1000);
+  delay(10000);
     
 
   camON();
@@ -98,7 +98,7 @@ void takePicture(){
 void camON(){
   // function to turn camera ON
   digitalWrite(onoffPin, HIGH);
-  delay(100);
+  delay(600);
   digitalWrite(onoffPin, LOW);
   delay(8000);
 }
