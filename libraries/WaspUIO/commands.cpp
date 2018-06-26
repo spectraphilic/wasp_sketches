@@ -21,6 +21,7 @@ typedef struct {
 } Command;
 
 const char CMD_ACK     [] PROGMEM = ""; // Hidden command
+const char CMD_4G      [] PROGMEM = "4g              - 4G configuration (not implemented)";
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
@@ -34,8 +35,7 @@ const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE  - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls              - List files in SD card";
 const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (max 16 chars)";
-const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network: "
-                                    "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
+const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network type: 0=xbee 1=4g";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
 const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
@@ -46,8 +46,11 @@ const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors i
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
 const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
 const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
+const char CMD_XBEE    [] PROGMEM = "xbee VALUE      - Choose xbee network: "
+                                    "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
+  {"4g ",       &cmd4G,       CMD_4G},
   {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
@@ -70,6 +73,7 @@ const Command commands[] PROGMEM = {
   {"tail",      &cmdTail,     CMD_TAIL},
   {"time gps",  &cmdTimeGPS,  CMD_TIME_GPS},
   {"time ",     &cmdTime,     CMD_TIME},
+  {"xbee ",     &cmdXBee,     CMD_XBEE},
 };
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
@@ -154,8 +158,19 @@ COMMAND(exeCommand)
 }
 
 /**
- * Choose battery type.
+ * 4G configuration
  */
+COMMAND(cmd4G)
+{
+  warn(F("Not implemented"));
+  return cmd_ok;
+}
+
+
+/**
+ * Internal: ack frame
+ */
+
 COMMAND(cmdAck)
 {
   uint8_t item[4];
@@ -455,29 +470,24 @@ COMMAND(cmdName)
 
 
 /**
- * Print configuration and other information
+ * Choose network type
  */
 
 COMMAND(cmdNetwork)
 {
-  unsigned int value;
+  uint8_t value;
 
   // Check input
-  if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
-  if (value >= network_len) { return cmd_bad_input; }
+  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
+  if (value >= NETWORK_LEN) { return cmd_bad_input; }
 
   // Do
-  memcpy_P(&UIO.network, &networks[(uint8_t) value], sizeof UIO.network);
-  if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK, UIO.network.panid[0]) ||
-      ! UIO.updateEEPROM(EEPROM_UIO_NETWORK+1, UIO.network.panid[1]))
-  {
-    error(F("ERROR Saving network id to EEPROM failed"));
-    return cmd_error;
-  }
-  UIO.initNet();
-
+  UIO.networkType = (network_type_t) value;
+  UIO.updateEEPROM(EEPROM_UIO_NETWORK_TYPE, value);
+  // XXX Action?
   return cmd_ok;
 }
+
 
 /**
  * Autodetect sensors attached to the given OneWire pin
@@ -593,13 +603,20 @@ COMMAND(cmdPrint)
   Utils.getID(name);
 
   cr.println(F("Time      : %s"), RTC.getTime());
-  cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
+  cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, size), _boot_version, name);
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  cr.println(F("Board     : %s"), UIO.pprintBoard(buffer, size));
-  cr.println(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
-  cr.println(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
+  cr.println(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
+
+  if (UIO.networkType == NETWORK_XBEE)
+  {
+    cr.println(F("XBee      : %s hw=%s sw=%s network=\"%s\""), UIO.myMac, hw, sw, UIO.pprintXBee(buffer, size));
+  }
+  else if (UIO.networkType == NETWORK_4G)
+  {
+    cr.println(F("4G        : pin=XXXX"));
+  }
+
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  cr.println(F("Network   : %s (frame size is %d)"), UIO.pprintNetwork(buffer, size), frame.getFrameSize());
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
   return cmd_quiet;
@@ -877,5 +894,31 @@ COMMAND(cmdTimeGPS)
   //ADD_SENSOR(SENSOR_COURSE, GPS.course);
 
   // Off
+  return cmd_ok;
+}
+
+
+/**
+ * Choose Xbee network
+ */
+
+COMMAND(cmdXBee)
+{
+  unsigned int value;
+
+  // Check input
+  if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
+  if (value >= xbee_len) { return cmd_bad_input; }
+
+  // Do
+  memcpy_P(&UIO.xbee, &xbees[(uint8_t) value], sizeof UIO.xbee);
+  if (! UIO.updateEEPROM(EEPROM_UIO_XBEE, UIO.xbee.panid[0]) ||
+      ! UIO.updateEEPROM(EEPROM_UIO_XBEE+1, UIO.xbee.panid[1]))
+  {
+    error(F("ERROR Saving xbee id to EEPROM failed"));
+    return cmd_error;
+  }
+  UIO.initNet();
+
   return cmd_ok;
 }

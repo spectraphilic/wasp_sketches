@@ -29,26 +29,14 @@
 
 // EEPROM addresses used by the library
 #define EEPROM_UIO_FLAGS (EEPROM_START + 0)
-#define EEPROM_UIO_NETWORK (EEPROM_START + 1)   // 2 bytes to store the network id
+#define EEPROM_UIO_XBEE (EEPROM_START + 1)   // 2 bytes to store the xbee id
 #define EEPROM_UIO_BOARD_TYPE (EEPROM_START + 3)
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
-// 2 bytes available
+#define EEPROM_UIO_NETWORK_TYPE (EEPROM_START + 5)
+// 1 byte available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
-// 1 bytes available
+// 1 byte available
 #define EEPROM_UIO_RUN (EEPROM_START + 9)
-
-enum run_t {
-  RUN_NETWORK,
-  RUN_BATTERY, // Available
-  RUN_FREE_1, // Available
-  RUN_FREE_2, // Available
-  RUN_CTD10, // SDI-12
-  RUN_DS2,
-  RUN_DS1820, // OneWire
-  RUN_BME280, // I2C
-  RUN_MB, // TTL
-  RUN_LEN // Special value
-};
 
 enum battery_type_t {
   BATTERY_LITHIUM = 1,
@@ -66,6 +54,25 @@ enum battery_t {
   BATTERY_LOW,
   BATTERY_MIDDLE,
   BATTERY_HIGH
+};
+
+enum network_type_t {
+  NETWORK_XBEE,
+  NETWORK_4G,
+  NETWORK_LEN
+};
+
+enum run_t {
+  RUN_NETWORK,
+  RUN_BATTERY, // Available
+  RUN_FREE_1, // Available
+  RUN_FREE_2, // Available
+  RUN_CTD10, // SDI-12
+  RUN_DS2,
+  RUN_DS1820, // OneWire
+  RUN_BME280, // I2C
+  RUN_MB, // TTL
+  RUN_LEN // Special value
 };
 
 // Flags available: 2 8 16 32 64 128
@@ -89,36 +96,40 @@ enum battery_t {
   }
 
 
-#define encryptionKey "1234567890123456"  // General encryption key for UIO networks
-#define key_access (char*) "LIBELIUM"
+/*
+ * Network
+ */
 
-struct Network {
+
+/* XBee stuff */
+#define encryptionKey "1234567890123456"  // General encryption key
+
+struct XBee {
   const char *name;
   uint8_t panid[2];
   uint8_t channel;
   char rx_address[17];
 };
 
-// NOTE The low bit of the network id (panID) must start at zero and increment
-// one by one. This is because the low bit is used as an index to this same
-// array.
+// NOTE The low bit of the xbee id (panID) must start at zero and increment one
+// by one. This is because the low bit is used as an index to this same array.
 
-const char NETWORK_FINSE     [] PROGMEM = "Finse";
-const char NETWORK_UNUSED    [] PROGMEM = "unused";
-const char NETWORK_BROADCAST [] PROGMEM = "Broadcast";
-const char NETWORK_PI_UIO    [] PROGMEM = "Pi UiO";
-const char NETWORK_PI_FINSE  [] PROGMEM = "Pi Finse";
-const char NETWORK_PI_CS     [] PROGMEM = "Pi CS";
+const char XBEE_FINSE     [] PROGMEM = "Finse";
+const char XBEE_UNUSED    [] PROGMEM = "unused";
+const char XBEE_BROADCAST [] PROGMEM = "Broadcast";
+const char XBEE_PI_UIO    [] PROGMEM = "Pi UiO";
+const char XBEE_PI_FINSE  [] PROGMEM = "Pi Finse";
+const char XBEE_PI_CS     [] PROGMEM = "Pi CS";
 
-const Network networks[] PROGMEM = {
-  {NETWORK_FINSE,     {0x12, 0x00}, 0x0F, "0013A20040779085"},
-  {NETWORK_UNUSED,    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
-  {NETWORK_BROADCAST, {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default (2)
-  {NETWORK_PI_UIO,    {0x12, 0x03}, 0x0F, "0013A200416B1B9B"},
-  {NETWORK_PI_FINSE,  {0x12, 0x00}, 0x0F, "0013A20040779085"},
-  {NETWORK_PI_CS,     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
+const XBee xbees[] PROGMEM = {
+  {XBEE_FINSE,     {0x12, 0x00}, 0x0F, "0013A20040779085"},
+  {XBEE_UNUSED,    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
+  {XBEE_BROADCAST, {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default (2)
+  {XBEE_PI_UIO,    {0x12, 0x03}, 0x0F, "0013A200416B1B9B"},
+  {XBEE_PI_FINSE,  {0x12, 0x00}, 0x0F, "0013A20040779085"},
+  {XBEE_PI_CS,     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
 };
-const uint8_t network_len = sizeof(networks) / sizeof(Network);
+const uint8_t xbee_len = sizeof(xbees) / sizeof(XBee);
 
 /******************************************************************************
  * Class
@@ -146,6 +157,7 @@ bool updateEEPROM(int address, uint32_t value);
 uint8_t flags;
 board_type_t boardType;
 battery_type_t batteryType;
+network_type_t networkType;
 uint8_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)
@@ -188,9 +200,9 @@ int append(SdFile &file, const void* buf, size_t nbyte);
 // Network
 char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
-Network network;
-void OTA_communication(int OTA_duration);
+XBee xbee;
 const char* readOwnMAC();
+void OTA_communication(int OTA_duration);
 
 // Power
 // (power) state management
@@ -234,12 +246,12 @@ uint8_t frame2Sd();
 
 // Menu
 void clint();
-const char* pprintSerial(char* str, size_t size);
+const char* pprintActions(char* dst, size_t size);
 const char* pprintBattery(char* dst, size_t size);
 const char* pprintBoard(char* dst, size_t size);
 const char* pprintLog(char* dst, size_t size);
-const char* pprintNetwork(char* dst, size_t size);
-const char* pprintActions(char* dst, size_t size);
+const char* pprintSerial(char* str, size_t size);
+const char* pprintXBee(char* dst, size_t size);
 
 // Time
 unsigned long getEpochTime();
@@ -292,6 +304,7 @@ uint8_t _getPin(uint8_t);
 
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
+COMMAND(cmd4G);
 COMMAND(cmdAck);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
@@ -314,6 +327,7 @@ COMMAND(cmdSDI12);
 COMMAND(cmdTail);
 COMMAND(cmdTime);
 COMMAND(cmdTimeGPS);
+COMMAND(cmdXBee);
 
 
 /*
@@ -380,7 +394,8 @@ CR_TASK(task1Wire);
 CR_TASK(taskI2C);
 CR_TASK(taskTTL);
 // Network
-CR_TASK(taskNetwork);
+CR_TASK(taskNetwork4G);
+CR_TASK(taskNetworkXBee);
 CR_TASK(taskNetworkSend);
 CR_TASK(taskNetworkReceive);
 // GPS

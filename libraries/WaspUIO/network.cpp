@@ -4,12 +4,12 @@
 void WaspUIO::initNet()
 {
   uint8_t addressing = UNICAST_64B;
-  uint8_t value = network.panid[1]; // panid low byte
+  uint8_t value = xbee.panid[1]; // panid low byte
   const __FlashStringHelper * error = NULL;
 
   // Addressing
-  memcpy_P(&network, &networks[value], sizeof network);
-  if (strcmp(network.rx_address, "000000000000FFFF") == 0)
+  memcpy_P(&xbee, &xbees[value], sizeof xbee);
+  if (strcmp(xbee.rx_address, "000000000000FFFF") == 0)
   {
     addressing = BROADCAST_MODE;
   }
@@ -39,7 +39,7 @@ void WaspUIO::initNet()
   xbeeDM.setSendingRetries(1);
 
   // Set channel, check AT commmand execution flag
-  xbeeDM.setChannel(network.channel);
+  xbeeDM.setChannel(xbee.channel);
   if (xbeeDM.error_AT)
   {
     error = F("ERROR in setChannel %d");
@@ -47,7 +47,7 @@ void WaspUIO::initNet()
   }
 
   // set PANID, check AT commmand execution flag
-  xbeeDM.setPAN(network.panid);
+  xbeeDM.setPAN(xbee.panid);
   if (xbeeDM.error_AT)
   {
     error = F("ERROR in setPAN %d");

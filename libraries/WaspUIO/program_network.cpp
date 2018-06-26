@@ -1,6 +1,18 @@
 #include "WaspUIO.h"
 
-CR_TASK(taskNetwork)
+
+CR_TASK(taskNetwork4G)
+{
+  CR_BEGIN;
+
+  warn(F("4G networking not yet implemented"));
+
+  CR_END;
+}
+
+
+
+CR_TASK(taskNetworkXBee)
 {
   static tid_t tid;
 
@@ -128,7 +140,7 @@ CR_TASK(taskNetworkSend)
       }
 
       // Send the frame
-      if (xbeeDM.send((char*)UIO.network.rx_address, (uint8_t*)SD.buffer, size) == 1)
+      if (xbeeDM.send((char*)UIO.xbee.rx_address, (uint8_t*)SD.buffer, size) == 1)
       {
         warn(F("sendFrames: Send failure"));
         break;

@@ -61,11 +61,18 @@ void setup()
 
   info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  info(F("Board     : %s"), UIO.pprintBoard(buffer, size));
-  info(F("XBee      : %s hw=%s sw=%s"), UIO.myMac, hw, sw);
-  info(F("Autodetect: SD=%d GPS=%d"), UIO.hasSD, UIO.hasGPS);
-  info(F("Logging   : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  info(F("Network   : %s"), UIO.pprintNetwork(buffer, size));
+  info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
+
+  if (UIO.networkType == NETWORK_XBEE)
+  {
+    info(F("XBee      : %s hw=%s sw=%s network=\"%s\""), UIO.myMac, hw, sw, UIO.pprintXBee(buffer, size));
+  }
+  else if (UIO.networkType == NETWORK_4G)
+  {
+    info(F("4G        : pin=XXXX"));
+  }
+
+  info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
   info(F("Boot done, go to sleep"));

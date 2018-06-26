@@ -53,10 +53,10 @@ const char* WaspUIO::pprintLog(char* dst, size_t size)
   return dst;
 }
 
-const char* WaspUIO::pprintNetwork(char* dst, size_t size)
+const char* WaspUIO::pprintXBee(char* dst, size_t size)
 {
   if (actions[RUN_NETWORK] == 0) strncpy_F(dst, F("Disabled"), size);
-  else                           strncpy_P(dst, network.name, size);
+  else                           strncpy_P(dst, xbee.name, size);
   return dst;
 }
 

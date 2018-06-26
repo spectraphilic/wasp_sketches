@@ -33,13 +33,16 @@ void WaspUIO::onSetup()
   batteryType = (battery_type_t) Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
   if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }
 
+  networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
+  if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
+
   // Network
-  uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_NETWORK+1);
-  if (panid_low >= network_len)
+  uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);
+  if (panid_low >= xbee_len)
   {
     panid_low = 2; // Default
   }
-  memcpy_P(&network, &networks[panid_low], sizeof network);
+  memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
 
   // Read run table
   for (uint8_t i=0; i < RUN_LEN; i++)
