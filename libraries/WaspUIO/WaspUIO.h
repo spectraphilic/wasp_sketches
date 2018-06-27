@@ -36,7 +36,8 @@
 // 1 byte available
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 1 byte available
-#define EEPROM_UIO_RUN (EEPROM_START + 9)
+#define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
+#define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 
 enum battery_type_t {
   BATTERY_LITHIUM = 1,
@@ -151,6 +152,7 @@ public:
 // Like Arduino's EEPROM.update, it writes the given value only if different
 // from the value already saved.
 bool updateEEPROM(int address, uint8_t value);
+bool updateEEPROM(int address, uint16_t value);
 bool updateEEPROM(int address, uint32_t value);
 
 // Configuration variables
@@ -202,6 +204,7 @@ char myMac[17];
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 XBee xbee;
 const char* readOwnMAC();
+uint16_t pin; // Pin for 4G module
 void OTA_communication(int OTA_duration);
 
 // Power
@@ -304,7 +307,6 @@ uint8_t _getPin(uint8_t);
 
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
-COMMAND(cmd4G);
 COMMAND(cmdAck);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
@@ -320,6 +322,7 @@ COMMAND(cmdLs);
 COMMAND(cmdName);
 COMMAND(cmdNetwork);
 COMMAND(cmdOneWire);
+COMMAND(cmdPin);
 COMMAND(cmdPrint);
 COMMAND(cmdRead);
 COMMAND(cmdRun);

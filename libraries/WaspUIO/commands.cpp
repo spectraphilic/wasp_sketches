@@ -21,7 +21,6 @@ typedef struct {
 } Command;
 
 const char CMD_ACK     [] PROGMEM = ""; // Hidden command
-const char CMD_4G      [] PROGMEM = "4g              - 4G configuration (not implemented)";
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
@@ -38,6 +37,7 @@ const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (
 const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network type: 0=xbee 1=4g";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
+const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module";
 const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
@@ -50,7 +50,6 @@ const char CMD_XBEE    [] PROGMEM = "xbee VALUE      - Choose xbee network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
-  {"4g ",       &cmd4G,       CMD_4G},
   {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
@@ -66,6 +65,7 @@ const Command commands[] PROGMEM = {
   {"name",      &cmdName,     CMD_NAME},
   {"onewire ",  &cmdOneWire,  CMD_ONEWIRE},
   {"network ",  &cmdNetwork,  CMD_NETWORK},
+  {"pin ",      &cmdPin,      CMD_PIN},
   {"print",     &cmdPrint,    CMD_PRINT},
   {"read ",     &cmdRead,     CMD_READ},
   {"run ",      &cmdRun,      CMD_RUN},
@@ -157,15 +157,6 @@ COMMAND(exeCommand)
   return cmd_bad_input;
 }
 
-/**
- * 4G configuration
- */
-COMMAND(cmd4G)
-{
-  warn(F("Not implemented"));
-  return cmd_ok;
-}
-
 
 /**
  * Internal: ack frame
@@ -249,9 +240,10 @@ COMMAND(cmdBattery)
   if (value >= BATTERY_LEN) { return cmd_bad_input; }
 
   // Do
+  if (! UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, value)) { return cmd_error; }
   UIO.batteryType = (battery_type_t) value;
-  UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, value);
   UIO.readBattery();
+
   return cmd_ok;
 }
 
@@ -267,9 +259,10 @@ COMMAND(cmdBoard)
   if (value >= BOARD_LEN) { return cmd_bad_input; }
 
   // Do
+  if (! UIO.updateEEPROM(EEPROM_UIO_BOARD_TYPE, value)) { return cmd_error; }
   UIO.boardType = (board_type_t) value;
-  UIO.updateEEPROM(EEPROM_UIO_BOARD_TYPE, value);
   UIO.readBattery();
+
   return cmd_ok;
 }
 
@@ -355,7 +348,8 @@ COMMAND(cmdDisable)
 
   // Do
   UIO.flags &= ~flag;
-  UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
+  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
+
   return cmd_ok;
 }
 
@@ -369,7 +363,8 @@ COMMAND(cmdEnable)
 
   // Do
   UIO.flags |= flag;
-  UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags);
+  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
+
   return cmd_ok;
 }
 
@@ -425,15 +420,16 @@ COMMAND(cmdHelp)
 
 COMMAND(cmdLogLevel)
 {
-  unsigned int value;
+  uint8_t value;
 
   // Check input
-  if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
+  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
   if (value >= LOG_LEN) { return cmd_bad_input; }
 
   // Do
+  if (! UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, value)) { return cmd_error; }
   cr.loglevel = (loglevel_t) value;
-  UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, (uint8_t) cr.loglevel);
+
   return cmd_ok;
 }
 
@@ -482,9 +478,10 @@ COMMAND(cmdNetwork)
   if (value >= NETWORK_LEN) { return cmd_bad_input; }
 
   // Do
+  if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK_TYPE, value)) { return cmd_error; }
   UIO.networkType = (network_type_t) value;
-  UIO.updateEEPROM(EEPROM_UIO_NETWORK_TYPE, value);
   // XXX Action?
+
   return cmd_ok;
 }
 
@@ -586,6 +583,25 @@ next:
   return cmd_quiet;
 }
 
+
+/**
+ * 4G configuration
+ */
+
+COMMAND(cmdPin)
+{
+  uint16_t pin;
+
+  if (sscanf(str, "%u", &pin) != 1) { return cmd_bad_input; }
+  if (pin > 9999) { return cmd_bad_input; }
+
+  if (! UIO.updateEEPROM(EEPROM_UIO_PIN, pin)) { return cmd_error; }
+  UIO.pin = pin;
+
+  return cmd_ok;
+}
+
+
 /**
  * Print configuration and other information
  */
@@ -663,17 +679,18 @@ COMMAND(cmdRead)
 
 COMMAND(cmdRun)
 {
-  unsigned int what;
-  unsigned int minutes;
+  uint8_t what;
+  uint8_t minutes;
 
   // Check input
-  if (sscanf(str, "%u %u", &what, &minutes) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%hhu %hhu", &what, &minutes) != 2) { return cmd_bad_input; }
   if (what >= RUN_LEN) { return cmd_bad_input; }
   if (minutes > 255) { return cmd_bad_input; }
 
   // Do
-  UIO.actions[what] = (uint8_t) minutes;
-  UIO.updateEEPROM(EEPROM_UIO_RUN + what, UIO.actions[what]);
+  if (! UIO.updateEEPROM(EEPROM_UIO_RUN + what, minutes)) { return cmd_error; }
+  UIO.actions[what] = minutes;
+
   return cmd_ok;
 }
 
@@ -904,18 +921,17 @@ COMMAND(cmdTimeGPS)
 
 COMMAND(cmdXBee)
 {
-  unsigned int value;
+  uint8_t value;
 
   // Check input
-  if (sscanf(str, "%d", &value) != 1) { return cmd_bad_input; }
+  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
   if (value >= xbee_len) { return cmd_bad_input; }
 
   // Do
-  memcpy_P(&UIO.xbee, &xbees[(uint8_t) value], sizeof UIO.xbee);
+  memcpy_P(&UIO.xbee, &xbees[value], sizeof UIO.xbee);
   if (! UIO.updateEEPROM(EEPROM_UIO_XBEE, UIO.xbee.panid[0]) ||
       ! UIO.updateEEPROM(EEPROM_UIO_XBEE+1, UIO.xbee.panid[1]))
   {
-    error(F("ERROR Saving xbee id to EEPROM failed"));
     return cmd_error;
   }
   UIO.initNet();

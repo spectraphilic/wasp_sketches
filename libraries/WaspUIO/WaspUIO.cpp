@@ -36,12 +36,11 @@ void WaspUIO::onSetup()
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
-  // Network
+  pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
+
+  // XBee network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);
-  if (panid_low >= xbee_len)
-  {
-    panid_low = 2; // Default
-  }
+  if (panid_low >= xbee_len) { panid_low = 2; } // Default
   memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
 
   // Read run table
@@ -59,14 +58,8 @@ void WaspUIO::onSetup()
   hasGPS = GPS.ON();
   GPS.OFF();
 
-/*
-    // USB autodetect
-    debug(F("USB before %d"), serialAvailable(0));
-    USB.ON();
-    uint8_t usb = serialAvailable(0);
-    USB.OFF();
-    debug(F("USB after %d"), usb);
-*/
+  // USB autodetect
+  // Cannot be done with ATMega1281 but it can be with ATmega328P
 }
 
 void WaspUIO::onLoop()
