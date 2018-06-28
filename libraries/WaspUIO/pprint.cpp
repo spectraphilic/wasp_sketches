@@ -55,8 +55,27 @@ const char* WaspUIO::pprintLog(char* dst, size_t size)
 
 const char* WaspUIO::pprintXBee(char* dst, size_t size)
 {
-  if (actions[RUN_NETWORK] == 0) strncpy_F(dst, F("Disabled"), size);
-  else                           strncpy_P(dst, xbee.name, size);
+  char hw[5];
+  char sw[9];
+  char macH[9];
+  char macL[9];
+  char name[20];
+
+  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
+  Utils.hex2str(xbeeDM.softVersion, sw, 4);
+  Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
+  Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
+  strncpy_P(name, xbee.name, sizeof name);
+
+  if (actions[RUN_NETWORK] == 0)
+  {
+    snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"\""), macH, macL, hw, sw);
+  }
+  else
+  {
+    snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\""), macH, macL, hw, sw, name);
+  }
+
   return dst;
 }
 

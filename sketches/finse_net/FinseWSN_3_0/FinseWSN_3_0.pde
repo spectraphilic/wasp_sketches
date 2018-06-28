@@ -16,8 +16,6 @@ void setup()
 {
   char name[17];
   char buffer[150];
-  char hw[5];
-  char sw[9];
   size_t size = sizeof(buffer);
 
   // Boot process
@@ -27,7 +25,7 @@ void setup()
   cr.print(F("."));
   UIO.onLoop();
   cr.print(F("."));
-  UIO.initNet(); // Network
+  UIO.xbeeInit(); // Network
   UIO.clint();   // Command line interface
   USB.OFF();
 
@@ -56,16 +54,13 @@ void setup()
   }
 
   // Log configuration
-  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
-  Utils.hex2str(xbeeDM.softVersion, sw, 4);
-
   info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
 
   if (UIO.networkType == NETWORK_XBEE)
   {
-    info(F("XBee      : %s hw=%s sw=%s network=\"%s\""), UIO.myMac, hw, sw, UIO.pprintXBee(buffer, size));
+    info(F("XBee      : %s"), UIO.pprintXBee(buffer, size));
   }
   else if (UIO.networkType == NETWORK_4G)
   {

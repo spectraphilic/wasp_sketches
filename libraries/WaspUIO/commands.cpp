@@ -610,12 +610,8 @@ COMMAND(cmdPrint)
 {
   char name[17];
   char buffer[150];
-  char hw[5];
-  char sw[9];
   size_t size = sizeof(buffer);
 
-  Utils.hex2str(xbeeDM.hardVersion, hw, 2);
-  Utils.hex2str(xbeeDM.softVersion, sw, 4);
   Utils.getID(name);
 
   cr.println(F("Time      : %s"), RTC.getTime());
@@ -625,7 +621,7 @@ COMMAND(cmdPrint)
 
   if (UIO.networkType == NETWORK_XBEE)
   {
-    cr.println(F("XBee      : %s hw=%s sw=%s network=\"%s\""), UIO.myMac, hw, sw, UIO.pprintXBee(buffer, size));
+    cr.println(F("XBee      : %s"), UIO.pprintXBee(buffer, size));
   }
   else if (UIO.networkType == NETWORK_4G)
   {
@@ -934,7 +930,7 @@ COMMAND(cmdXBee)
   {
     return cmd_error;
   }
-  UIO.initNet();
+  UIO.xbeeInit();
 
   return cmd_ok;
 }

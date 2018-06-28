@@ -1,7 +1,7 @@
 #include "WaspUIO.h"
 
 
-void WaspUIO::initNet()
+void WaspUIO::xbeeInit()
 {
   uint8_t addressing = UNICAST_64B;
   uint8_t value = xbee.panid[1]; // panid low byte
@@ -31,11 +31,10 @@ void WaspUIO::initNet()
 
   xbeeDM.getHardVersion();
   xbeeDM.getSoftVersion();
-  readOwnMAC();
+  xbeeDM.getOwnMac();
 
-  // XXX Reduce the number of retries to reduce the time it is lost in send
-  // failures (default is 3).
-  // 3 retries ~ 5s ; 2 retries ~ 3.5 s ; 1 retry ~ 2.4s
+  // Reduce the number of retries (default is 3)
+  // There're as well 10 retries (by default) at the lower level.
   xbeeDM.setSendingRetries(1);
 
   // Set channel, check AT commmand execution flag
@@ -85,4 +84,36 @@ exit:
   {
     cr.println(error, xbeeDM.error_AT);
   }
+}
+
+
+/******************************************************************************/
+/* Function to communicate through OTA with remote unit
+*
+* Parameters: int OTA_duration  - duration in minute of the time window for OTA access to the unit
+*/
+void WaspUIO::OTA_communication(int OTA_duration)
+{
+  unsigned long start;
+  unsigned long duration_ms;
+
+  // OTA_duration is given in minutes
+  duration_ms = OTA_duration * 60 * 1000;
+
+  start = millis();
+  do
+  {
+    if( xbeeDM.available() )
+    {
+      xbeeDM.treatData();
+      // Keep inside this loop while a new program is being received
+      while( xbeeDM.programming_ON  && !xbeeDM.checkOtapTimeout() )
+      {
+        if( xbeeDM.available() )
+        {
+          xbeeDM.treatData();
+        }
+      }
+    }
+  } while (! cr.timeout(start, duration_ms));
 }

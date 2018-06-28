@@ -110,38 +110,6 @@ void WaspUIO::stopSD()
 }
 
 
-/******************************************************************************/
-/* Function to communicate through OTA with remote unit
-*
-* Parameters: int OTA_duration  - duration in minute of the time window for OTA access to the unit
-*/
-void WaspUIO::OTA_communication(int OTA_duration)
-{
-  unsigned long start;
-  unsigned long duration_ms;
-
-  // OTA_duration is given in minutes
-  duration_ms = OTA_duration * 60 * 1000;
-
-  start = millis();
-  do
-  {
-    if( xbeeDM.available() )
-    {
-      xbeeDM.treatData();
-      // Keep inside this loop while a new program is being received
-      while( xbeeDM.programming_ON  && !xbeeDM.checkOtapTimeout() )
-      {
-        if( xbeeDM.available() )
-        {
-          xbeeDM.treatData();
-        }
-      }
-    }
-  } while (! cr.timeout(start, duration_ms));
-}
-
-
 /**
  * Retturn true if the given sensor is to be read now.
  */
@@ -190,36 +158,6 @@ void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8
 
 /// Preinstantiate Objects /////////////////////////////////////////////////////
 WaspUIO UIO = WaspUIO();
-
-
-/******************************************************************************/
-/* Function to read Mac Address
-*/
-const char* WaspUIO::readOwnMAC()
-{
-  bool on;
-
-  // On
-  on = xbeeDM.XBee_ON;
-  if (! on)
-  {
-    xbeeDM.ON();
-    delay(100);
-  }
-
-  // Convert mac address from array to string
-  xbeeDM.getOwnMac();
-  Utils.hex2str(xbeeDM.sourceMacHigh, myMac, 4);
-  Utils.hex2str(xbeeDM.sourceMacLow, myMac + 8, 4);
-
-  // Off
-  if (! on)
-  {
-    xbeeDM.OFF();
-  }
-
-  return myMac;
-}
 
 
 /**

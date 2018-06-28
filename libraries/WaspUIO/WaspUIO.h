@@ -200,10 +200,9 @@ int write(SdFile &file, const void* buf, size_t nbyte);
 int append(SdFile &file, const void* buf, size_t nbyte);
 
 // Network
-char myMac[17];
-const char* BROADCAST_ADDRESS = "000000000000FFFF";
 XBee xbee;
-const char* readOwnMAC();
+void xbeeInit();
+const char* BROADCAST_ADDRESS = "000000000000FFFF";
 uint16_t pin; // Pin for 4G module
 void OTA_communication(int OTA_duration);
 
@@ -236,7 +235,6 @@ float getLeadBatteryVolts();
 // Init, start and stop methods
 void onSetup();
 void onLoop();
-void initNet();
 bool action(uint8_t n, ...);
 const uint8_t loop_timeout = 4; // minutes
 const uint32_t send_timeout = 3 * 60; // seconds
