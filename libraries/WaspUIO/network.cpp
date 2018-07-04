@@ -1,5 +1,20 @@
 #include "WaspUIO.h"
 
+void WaspUIO::networkInit()
+{
+  if (networkType == NETWORK_XBEE)
+  {
+    xbeeInit();
+  } else if (networkType == NETWORK_4G)
+  {
+    _4GInit();
+  }
+}
+
+void WaspUIO::_4GInit()
+{
+  // XXX Set frame size??
+}
 
 void WaspUIO::xbeeInit()
 {
@@ -20,6 +35,7 @@ void WaspUIO::xbeeInit()
   uint16_t size = frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, DISABLED);
   frame.setFrameSize(size);
 
+#if WITH_XBEE
   // init XBee
   if (xbeeDM.ON())
   {
@@ -84,6 +100,9 @@ exit:
   {
     cr.println(error, xbeeDM.error_AT);
   }
+#else
+  cr.println(F("XBee not enabled, define WITH_XBEE TRUE"));
+#endif
 }
 
 

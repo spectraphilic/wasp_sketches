@@ -25,7 +25,7 @@ void setup()
   cr.print(F("."));
   UIO.onLoop();
   cr.print(F("."));
-  UIO.xbeeInit(); // Network
+  UIO.networkInit(); // Network
   UIO.clint();   // Command line interface
   USB.OFF();
 
@@ -64,7 +64,7 @@ void setup()
   }
   else if (UIO.networkType == NETWORK_4G)
   {
-    info(F("4G        : pin=XXXX"));
+    info(F("4G        : %s"), UIO.pprint4G(buffer, size));
   }
 
   info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));

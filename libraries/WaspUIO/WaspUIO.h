@@ -8,6 +8,10 @@
  * Includes
  ******************************************************************************/
 
+// Features (unfortunately required to reduce sketch size)
+#define WITH_XBEE TRUE
+#define WITH_4G FALSE
+
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
@@ -18,6 +22,7 @@
 #include <WaspGPS.h>
 #include <WaspXBeeDM.h>
 #include <BME280.h>
+#include <Wasp4G.h>
 
 #include <Coroutines.h>
 #include <SDI12.h>
@@ -200,11 +205,15 @@ int write(SdFile &file, const void* buf, size_t nbyte);
 int append(SdFile &file, const void* buf, size_t nbyte);
 
 // Network
+void networkInit();
+void OTA_communication(int OTA_duration); // TODO
+// Network: Xbee
 XBee xbee;
 void xbeeInit();
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
+// Network: 4G
 uint16_t pin; // Pin for 4G module
-void OTA_communication(int OTA_duration);
+void _4GInit();
 
 // Power
 // (power) state management
@@ -247,6 +256,7 @@ uint8_t frame2Sd();
 
 // Menu
 void clint();
+const char* pprint4G(char* dst, size_t size);
 const char* pprintActions(char* dst, size_t size);
 const char* pprintBattery(char* dst, size_t size);
 const char* pprintBoard(char* dst, size_t size);

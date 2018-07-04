@@ -3,13 +3,54 @@
 
 CR_TASK(taskNetwork4G)
 {
+  uint8_t error;
+  char pin[5];
+  int n;
+
   CR_BEGIN;
 
-  warn(F("4G networking not yet implemented"));
+#if WITH_4G
+  if (UIO.pin == 0 || UIO.pin > 9999)
+  {
+    warn(F("4G disabled, set a pin in the menu"));
+    CR_ERROR;
+  }
+
+  n = snprintf(pin, sizeof(pin), "%04d", UIO.pin);
+  if (n != 4)
+  {
+    error(F("bad pin number %d"), UIO.pin);
+    CR_ERROR;
+  }
+
+  // Switch on
+  error = _4G.ON();
+  if (error)
+  {
+    error(F("_4G.ON error=%d"), error);
+    CR_ERROR;
+  }
+  error = _4G.enterPIN(pin);
+  if (error);
+  {
+    _4G.OFF();
+    UIO.pin = 0; UIO.updateEEPROM(EEPROM_UIO_PIN, UIO.pin); // Reset pin to avoid trying again
+    error(F("_4G.enterPIN(%d) error"), UIO.pin);
+    CR_ERROR;
+  }
+
+  // Send frames
+  // TODO
+
+  // Switch off
+  _4G.OFF();
+#else
+  error(F("4G not enabled, define WITH_4G TRUE"));
+  CR_ERROR;
+#endif
 
   CR_END;
 }
-
 
 
 CR_TASK(taskNetworkXBee)
@@ -28,6 +69,7 @@ CR_TASK(taskNetworkXBee)
 
   CR_BEGIN;
 
+#if WITH_XBEE
   if (!xbeeDM.XBee_ON)
   {
     if (xbeeDM.ON())
@@ -60,6 +102,10 @@ CR_TASK(taskNetworkXBee)
     xbeeDM.OFF();
     info(F("Network stopped"));
   }
+#else
+  error(F("XBee not enabled, define WITH_XBEE TRUE"));
+  CR_ERROR;
+#endif
 
   CR_END;
 }

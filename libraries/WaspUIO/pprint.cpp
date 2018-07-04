@@ -1,20 +1,51 @@
 #include "WaspUIO.h"
 
 
-const char* WaspUIO::pprintSerial(char* dst, size_t size)
+const char* WaspUIO::pprint4G(char* dst, size_t size)
 {
-  uint8_t serial[8];
-
-  if (_boot_version < 'H')
+#if WITH_4G
+  if (pin == 0 || pin > 9999)
   {
-    for (uint8_t i=0; i < 4; i++) { serial[i] = _serial_id[7-i]; }
-    sprintf(dst, "%lu", * (uint32_t*) serial);
+    strncpy_F(dst, F("disabled, set pin"), size);
   }
   else
   {
-    for (uint8_t i=0; i < 8; i++) { serial[i] = _serial_id[i]; }
-    Utils.hex2str(serial, dst, 8);
+    strncpy_F(dst, F("pin=XXXX"), size);
   }
+#else
+  snprintf_F(dst, size, F("4G not enabled, define WITH_4G TRUE"));
+#endif
+
+  return dst;
+}
+
+const char* WaspUIO::pprintActions(char* dst, size_t size)
+{
+  dst[0] = '\0';
+  uint8_t value;
+
+  value = actions[RUN_NETWORK];
+  if (value) strnjoin_F(dst, size, F(", "), F("Network (%d)"), value);
+
+  value = actions[RUN_BATTERY];
+  if (value) strnjoin_F(dst, size, F(", "), F("Battery (%d)"), value);
+
+  value = actions[RUN_CTD10];
+  if (value) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), value);
+
+  value = actions[RUN_DS2];
+  if (value) strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), value);
+
+  value = actions[RUN_DS1820];
+  if (value) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), value);
+
+  value = actions[RUN_BME280];
+  if (value) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), value);
+
+  value = actions[RUN_MB];
+  if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
+
+  if (! dst[0]) strncpy_F(dst, F("(none)"), size);
 
   return dst;
 }
@@ -53,6 +84,24 @@ const char* WaspUIO::pprintLog(char* dst, size_t size)
   return dst;
 }
 
+const char* WaspUIO::pprintSerial(char* dst, size_t size)
+{
+  uint8_t serial[8];
+
+  if (_boot_version < 'H')
+  {
+    for (uint8_t i=0; i < 4; i++) { serial[i] = _serial_id[7-i]; }
+    sprintf(dst, "%lu", * (uint32_t*) serial);
+  }
+  else
+  {
+    for (uint8_t i=0; i < 8; i++) { serial[i] = _serial_id[i]; }
+    Utils.hex2str(serial, dst, 8);
+  }
+
+  return dst;
+}
+
 const char* WaspUIO::pprintXBee(char* dst, size_t size)
 {
   char hw[5];
@@ -61,6 +110,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   char macL[9];
   char name[20];
 
+#if WITH_XBEE
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
@@ -75,37 +125,9 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   {
     snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\""), macH, macL, hw, sw, name);
   }
-
-  return dst;
-}
-
-const char* WaspUIO::pprintActions(char* dst, size_t size)
-{
-  dst[0] = '\0';
-  uint8_t value;
-
-  value = actions[RUN_NETWORK];
-  if (value) strnjoin_F(dst, size, F(", "), F("Network (%d)"), value);
-
-  value = actions[RUN_BATTERY];
-  if (value) strnjoin_F(dst, size, F(", "), F("Battery (%d)"), value);
-
-  value = actions[RUN_CTD10];
-  if (value) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), value);
-
-  value = actions[RUN_DS2];
-  if (value) strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), value);
-
-  value = actions[RUN_DS1820];
-  if (value) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), value);
-
-  value = actions[RUN_BME280];
-  if (value) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), value);
-
-  value = actions[RUN_MB];
-  if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
-
-  if (! dst[0]) strncpy_F(dst, F("(none)"), size);
+#else
+  snprintf_F(dst, size, F("XBee not enabled, define WITH_XBEE TRUE"));
+#endif
 
   return dst;
 }

@@ -37,7 +37,7 @@ const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (
 const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network type: 0=xbee 1=4g";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
-const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module";
+const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
@@ -625,7 +625,7 @@ COMMAND(cmdPrint)
   }
   else if (UIO.networkType == NETWORK_4G)
   {
-    cr.println(F("4G        : pin=XXXX"));
+    cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size));
   }
 
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
