@@ -23,6 +23,7 @@ SDI12 mySDI12(PIN_SDI12);
 void WaspUIO::onSetup()
 {
   /*** 1. Read configuration from EEPROM ***/
+  char apn[30];
 
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
@@ -36,7 +37,10 @@ void WaspUIO::onSetup()
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
+  // 4G network
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
+  UIO.readEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
+  _4G.set_APN(apn);
 
   // XBee network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);

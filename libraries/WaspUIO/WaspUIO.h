@@ -43,6 +43,7 @@
 // 1 byte available
 #define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
+#define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
 
 enum battery_type_t {
   BATTERY_LITHIUM = 1,
@@ -159,6 +160,8 @@ public:
 bool updateEEPROM(int address, uint8_t value);
 bool updateEEPROM(int address, uint16_t value);
 bool updateEEPROM(int address, uint32_t value);
+bool writeEEPROM(int address, char* src, size_t size);
+char* readEEPROM(int address, char* dst, size_t size);
 
 // Configuration variables
 uint8_t flags;
@@ -316,6 +319,7 @@ uint8_t _getPin(uint8_t);
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
 COMMAND(cmdAck);
+COMMAND(cmdAPN);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);

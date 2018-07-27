@@ -21,6 +21,7 @@ typedef struct {
 } Command;
 
 const char CMD_ACK     [] PROGMEM = ""; // Hidden command
+const char CMD_APN     [] PROGMEM = "apn [APN]       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
@@ -51,6 +52,7 @@ const char CMD_XBEE    [] PROGMEM = "xbee VALUE      - Choose xbee network: "
 
 const Command commands[] PROGMEM = {
   {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
+  {"apn",       &cmdAPN,      CMD_APN},
   {"bat ",      &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
@@ -226,6 +228,32 @@ exit:
   UIO.qstartFile.close();
   UIO.queueFile.close();
   return status;
+}
+
+/**
+ * Set APN (Access Point Name) for 4G module
+ */
+COMMAND(cmdAPN)
+{
+  char apn[30];
+
+  // Check input
+  int n = sscanf(str, "%29s", apn);
+  if (n == -1) // Suprisingly it returns -1 instead of 0
+  {
+    _4G.show_APN();
+  }
+  else if (n == 1)
+  {
+    UIO.writeEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
+    _4G.set_APN(apn);
+  }
+  else
+  {
+    return cmd_bad_input;
+  }
+
+  return cmd_ok;
 }
 
 /**
