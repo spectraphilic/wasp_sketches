@@ -254,7 +254,7 @@ const uint32_t send_timeout = 3 * 60; // seconds
 // Frames
 void createFrame(bool discard=false);
 uint8_t getSequence(uint8_t *p);
-void showBinaryFrame();
+void showBinaryFrame(uint8_t *p);
 uint8_t frame2Sd();
 
 // Menu

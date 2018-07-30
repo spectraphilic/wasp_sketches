@@ -7,6 +7,14 @@ CR_TASK(taskNetwork4G)
   char pin[5];
   int n;
 
+  uint32_t t0;
+  uint8_t item[8];
+  static uint32_t offset;
+  char dataFilename[18]; // /data/YYMMDD.txt
+  SdFile dataFile;
+  int size;
+  static unsigned long sent;
+
   CR_BEGIN;
 
 #if WITH_4G
@@ -63,7 +71,7 @@ CR_TASK(taskNetwork4G)
 
   // Check data connection: usually ~11s sometimes close to 120s (a 2nd call
   // would take 0.13s)
-  debug(F("Checking data connection..."));
+  debug(F("4G Checking data connection..."));
   err = _4G.checkDataConnection(120);
   if (err)
   {
@@ -75,7 +83,83 @@ CR_TASK(taskNetwork4G)
   debug(F("4G data connection OK"));
 
   // Send frames
-  // TODO
+  debug(F("4G Sending frames..."));
+  while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
+  {
+    t0 = millis();
+
+    // Open files
+    UIO.startSD();
+    if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_READ)) { err = true; break; }
+    if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_READ)) { err = true; break; }
+
+    // Read offset
+    if (UIO.qstartFile.read(item, 4) != 4)
+    {
+      cr.set_last_error(F("sendFrames (%s): read error"), UIO.qstartFilename);
+      err = true;
+      break;
+    }
+    offset = *(uint32_t *)item;
+    if (offset >= UIO.queueFile.fileSize()) { break; }
+
+    // Read the record
+    UIO.queueFile.seekSet(offset);
+    if (UIO.queueFile.read(item, 8) != 8)
+    {
+      cr.set_last_error(F("sendFrames (%s): read error"), UIO.queueFilename);
+      err = true;
+      break;
+    }
+
+    // Read the frame
+    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
+    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
+    {
+      cr.set_last_error(F("sendFrames: fail to open %s"), dataFilename);
+      err = true;
+      break;
+    }
+    dataFile.seekSet(*(uint32_t *)(item + 3));
+    size = dataFile.read(SD.buffer, (size_t) item[7]);
+    dataFile.close();
+
+    if (size < 0 || size != (int) item[7])
+    {
+      cr.set_last_error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
+      err = true;
+      break;
+    }
+
+    // Send the frame
+    UIO.showBinaryFrame((uint8_t*)SD.buffer);
+    err = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
+    if (err)
+    {
+      _4G.OFF();
+      warn(F("_4G.sendFrameToMeshlium error=%d %d"), err, _4G._errorCode);
+      _4G.printErrorCode();
+      CR_ERROR;
+    }
+
+    // Check HTTP status code of the response
+    if (_4G._httpCode != 201)
+    {
+      _4G.OFF();
+      warn(F("Unexpect HTTP code %d"), _4G._httpCode);
+      CR_ERROR;
+    }
+
+    // Next
+    UIO.qstartFile.close(); // Close files
+    UIO.queueFile.close();
+    debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
+
+    cmdAck(""); // Move to the next frame
+
+    CR_DELAY(50); // Give control back
+  }
+  debug(F("4G Frames sent"));
 
   // Switch off
   _4G.OFF();
@@ -170,16 +254,8 @@ CR_TASK(taskNetworkSend)
 
       // Open files
       UIO.startSD();
-      if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_READ))
-      {
-        err = true;
-        break;
-      }
-      if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_READ))
-      {
-        err = true;
-        break;
-      }
+      if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_READ)) { err = true; break; }
+      if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_READ)) { err = true; break; }
 
       // Read offset
       if (UIO.qstartFile.read(item, 4) != 4)
@@ -189,10 +265,7 @@ CR_TASK(taskNetworkSend)
         break;
       }
       offset = *(uint32_t *)item;
-      if (offset >= UIO.queueFile.fileSize())
-      {
-        break;
-      }
+      if (offset >= UIO.queueFile.fileSize()) { break; }
 
       // Read the record
       UIO.queueFile.seekSet(offset);

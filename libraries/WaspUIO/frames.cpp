@@ -27,9 +27,8 @@ uint8_t WaspUIO::getSequence(uint8_t *p)
    return 0;
 }
 
-void WaspUIO::showBinaryFrame()
+void WaspUIO::showBinaryFrame(uint8_t *p)
 {
-   uint8_t *p;
    uint8_t nbytes;
    char buffer[17];
    uint8_t i;
@@ -42,7 +41,6 @@ void WaspUIO::showBinaryFrame()
 
    // Binary Frame
    cr.println(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
-   p = frame.buffer;
 
    // Start delimiter
    if (strncmp((const char*) p, "<=>", 3) != 0)
@@ -66,11 +64,13 @@ void WaspUIO::showBinaryFrame()
    {
      Utils.hex2str(p, buffer, 8);
      p += 8;
+     nbytes -= 8;
    }
    else
    {
      Utils.hex2str(p, buffer, 4);
      p += 4;
+     nbytes -=4;
    }
    cr.println(F("Serial ID: 0x%s"), buffer);
 
@@ -78,6 +78,7 @@ void WaspUIO::showBinaryFrame()
    for (i = 0; i < 17 ; i++)
    {
      c = (char) *p++;
+     nbytes--;
      if (c == '#')
      {
        buffer[i] = '\0';
@@ -94,11 +95,13 @@ void WaspUIO::showBinaryFrame()
 
    // Sequence
    cr.println(F("Sequence: %d"), *p++);
+   nbytes--;
 
    // Payload
-   for (i = 0; i < frame.numFields; i++)
+   while (nbytes > 0)
    {
      sensor_id = *p++;
+     nbytes--;
      // Use always the v15 tables
      // It would make sense to use the v12 only with a v12 board *and* one of
      // the Libelium's shields (eg the Agr board). But we don't support that
@@ -111,6 +114,7 @@ void WaspUIO::showBinaryFrame()
      if (nfields == 0)
      {
        nfields = *p++;
+       nbytes--;
        // Special case, we store ints in a compressed format
        if (type == 1)
        {
@@ -119,6 +123,7 @@ void WaspUIO::showBinaryFrame()
            if (j > 0)
 	   {
 	     diff = *(int8_t *)p; p++;
+             nbytes--;
 	     if (diff != -128)
 	     {
                cr.println(F("Sensor %d (%s): %hhd"), sensor_id, name, diff);
@@ -127,7 +132,7 @@ void WaspUIO::showBinaryFrame()
 	   }
 
            cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
-           p += 2;
+           p += 2; nbytes -= 2;
          }
          continue;
        }
@@ -138,34 +143,36 @@ void WaspUIO::showBinaryFrame()
        if (type == 0) // uint8_t
        {
          cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
+         nbytes--;
        }
        else if (type == 1) // int
        {
          cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
-         p += 2;
+         p += 2; nbytes -= 2;
        }
        else if (type == 2) // double
        {
          Utils.float2String(*(float *)p, value_str, decimals);
          cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value_str);
-         p += 4;
+         p += 4; nbytes -= 4;
        }
        else if (type == 3) // char*
        {
          len = *p++;
+	 nbytes--;
          if (len > sizeof(value_str) - 1)
          {
            cr.println(F("Error reading sensor value, string too long %d"), len);
            return;
          }
          strncpy(value_str, (char*) p, len);
-         p += len;
+         p += len; nbytes -= len;
          cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value_str);
        }
        else if (type == 4) // uint32_t
        {
          cr.println(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
-         p += 4;
+         p += 4; nbytes -= 4;
        }
        else if (type == 5) // uint8_t*
        {
@@ -294,7 +301,7 @@ uint8_t WaspUIO::frame2Sd()
   {
     USB.ON();
     USB.flush();
-    showBinaryFrame();
+    showBinaryFrame(frame.buffer);
     USB.OFF();
   }
 
