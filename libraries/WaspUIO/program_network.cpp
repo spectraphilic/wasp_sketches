@@ -3,47 +3,84 @@
 
 CR_TASK(taskNetwork4G)
 {
-  uint8_t error;
+  uint8_t err, status;
   char pin[5];
   int n;
 
   CR_BEGIN;
 
 #if WITH_4G
+  // Check pin number
   if (UIO.pin == 0 || UIO.pin > 9999)
   {
     warn(F("4G disabled, set a pin in the menu"));
     CR_ERROR;
   }
-
-  n = snprintf(pin, sizeof(pin), "%04d", UIO.pin);
+  n = snprintf(pin, sizeof pin, "%04d", UIO.pin);
   if (n != 4)
   {
     error(F("bad pin number %d"), UIO.pin);
     CR_ERROR;
   }
 
-  // Switch on
-  error = _4G.ON();
-  if (error)
+  // Switch on (11s)
+  debug(F("4G switching on..."));
+  err = _4G.ON();
+  if (err)
   {
-    error(F("_4G.ON error=%d"), error);
+    error(F("_4G.ON error=%d %d"), err, _4G._errorCode);
     CR_ERROR;
   }
-  error = _4G.enterPIN(pin);
-  if (error);
+  debug(F("4G switched on"));
+
+  // Enter PIN (0.2s)
+  status = _4G.checkPIN();
+  if (status == 0)
+  {
+    debug(F("PIN READY"));
+  }
+  else if (status == 1)
+  {
+    err = _4G.enterPIN(pin);
+    if (err)
+    {
+      _4G.OFF();
+      UIO.pin = 0; UIO.updateEEPROM(EEPROM_UIO_PIN, UIO.pin); // Reset pin to avoid trying again
+      error(F("_4G.enterPIN(%s) error=%d %d"), pin, err, _4G._errorCode);
+      CR_ERROR;
+    }
+    else
+    {
+      debug(F("4G PIN success"));
+    }
+  }
+  else
   {
     _4G.OFF();
-    UIO.pin = 0; UIO.updateEEPROM(EEPROM_UIO_PIN, UIO.pin); // Reset pin to avoid trying again
-    error(F("_4G.enterPIN(%d) error"), UIO.pin);
+    error(F("unexpected SIM status=%%hhu"), status);
     CR_ERROR;
   }
+
+  // Check data connection: usually ~11s sometimes close to 120s (a 2nd call
+  // would take 0.13s)
+  debug(F("Checking data connection..."));
+  err = _4G.checkDataConnection(120);
+  if (err)
+  {
+    _4G.OFF();
+    error(F("_4G.checkDataConnection error=%d %d"), err, _4G._errorCode);
+    _4G.printErrorCode();
+    CR_ERROR;
+  }
+  debug(F("4G data connection OK"));
 
   // Send frames
   // TODO
 
   // Switch off
   _4G.OFF();
+  debug(F("4G switched OFF"));
+
 #else
   error(F("4G not enabled, define WITH_4G TRUE"));
   CR_ERROR;
