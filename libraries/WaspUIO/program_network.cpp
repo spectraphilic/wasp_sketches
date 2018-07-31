@@ -52,10 +52,8 @@ CR_TASK(taskNetwork4G)
     err = _4G.enterPIN(pin);
     if (err)
     {
-      _4G.OFF();
       UIO.pin = 0; UIO.updateEEPROM(EEPROM_UIO_PIN, UIO.pin); // Reset pin to avoid trying again
-      error(F("_4G.enterPIN(%s) error=%d %d"), pin, err, _4G._errorCode);
-      CR_ERROR;
+      cr.set_last_error(F("_4G.enterPIN(%s) error=%d %d"), pin, err, _4G._errorCode);
     }
     else
     {
@@ -64,8 +62,14 @@ CR_TASK(taskNetwork4G)
   }
   else
   {
+    cr.set_last_error(F("unexpected SIM status=%%hhu"), status);
+    err = 1;
+  }
+
+  if (err)
+  {
     _4G.OFF();
-    error(F("unexpected SIM status=%%hhu"), status);
+    error(cr.last_error);
     CR_ERROR;
   }
 
@@ -77,7 +81,6 @@ CR_TASK(taskNetwork4G)
   {
     _4G.OFF();
     error(F("_4G.checkDataConnection error=%d %d"), err, _4G._errorCode);
-    _4G.printErrorCode();
     CR_ERROR;
   }
   debug(F("4G data connection OK"));
@@ -132,22 +135,19 @@ CR_TASK(taskNetwork4G)
     }
 
     // Send the frame
-    UIO.showBinaryFrame((uint8_t*)SD.buffer);
     err = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
     if (err)
     {
-      _4G.OFF();
-      warn(F("_4G.sendFrameToMeshlium error=%d %d"), err, _4G._errorCode);
-      _4G.printErrorCode();
-      CR_ERROR;
+      cr.set_last_error(F("_4G.sendFrameToMeshlium error=%d %d"), err, _4G._errorCode);
+      break;
     }
 
     // Check HTTP status code of the response
-    if (_4G._httpCode != 201)
+    if (_4G._httpCode != 200)
     {
-      _4G.OFF();
-      warn(F("Unexpect HTTP code %d"), _4G._httpCode);
-      CR_ERROR;
+      cr.set_last_error(F("Unexpect HTTP code %d"), _4G._httpCode);
+      err = 1;
+      break;
     }
 
     // Next
@@ -155,15 +155,22 @@ CR_TASK(taskNetwork4G)
     UIO.queueFile.close();
     debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
 
+    UIO.ack_wait = true;
     cmdAck(""); // Move to the next frame
 
     CR_DELAY(50); // Give control back
   }
-  debug(F("4G Frames sent"));
 
-  // Switch off
+  // Switch off and close files
   _4G.OFF();
-  debug(F("4G switched OFF"));
+  if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
+  if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
+
+  if (err)
+  {
+    error(cr.last_error);
+    CR_ERROR;
+  }
 
 #else
   error(F("4G not enabled, define WITH_4G TRUE"));

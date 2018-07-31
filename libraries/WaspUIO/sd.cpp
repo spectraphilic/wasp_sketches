@@ -79,7 +79,7 @@ int WaspUIO::write(SdFile &file, const void* buf, size_t size)
   n = file.write(buf, size);
   if (n == -1)
   {
-    cr.set_last_error(F("write write failed"));
+    cr.set_last_error(F("write failed"));
     return 1;
   }
 
