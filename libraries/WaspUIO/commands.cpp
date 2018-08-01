@@ -42,7 +42,7 @@ const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module
 const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
-                                    "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb";
+                                    "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
 const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0 and 1";
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
 const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";

@@ -42,19 +42,21 @@ CR_TASK(taskHealthFrame)
 CR_TASK(taskSensors)
 {
   bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
-  bool onewire = UIO.action(1, RUN_DS1820);
+  bool one = UIO.action(1, RUN_DS1820); // One Wire
   bool i2c = UIO.action(1, RUN_BME280);
   bool ttl = UIO.action(1, RUN_MB);
-  static tid_t sdi_id, onewire_id, i2c_id, ttl_id;
+  bool ext = UIO.action(1, RUN_WS100); // Externally powered devices
+  static tid_t sdi_id, one_id, i2c_id, ttl_id, ext_id;
 
   CR_BEGIN;
 
   // Power On
   UIO.saveState();
-  if (sdi)     { UIO.sdi12(1); }
-  if (onewire) { UIO.onewire(1); }
-  if (i2c)     { UIO.i2c(1); }
-  if (ttl)     { UIO.maxbotix(1); }
+  if (sdi) { UIO.sdi12(1); }
+  if (one) { UIO.onewire(1); }
+  if (i2c) { UIO.i2c(1); }
+  if (ttl) { UIO.maxbotix(1); }
+  if (ext) {}
 
   // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
   // TODO Do this once in the setup
@@ -72,16 +74,18 @@ CR_TASK(taskSensors)
   CR_DELAY(500);
 
   // Spawn tasks to take measures
-  if (sdi)     { CR_SPAWN2(taskSdi, sdi_id); }
-  if (onewire) { CR_SPAWN2(task1Wire, onewire_id); }
-  if (i2c)     { CR_SPAWN2(taskI2C, i2c_id); }
-  if (ttl)     { CR_SPAWN2(taskTTL, ttl_id); }
+  if (sdi) { CR_SPAWN2(taskSdi, sdi_id); }
+  if (one) { CR_SPAWN2(task1Wire, one_id); }
+  if (i2c) { CR_SPAWN2(taskI2C, i2c_id); }
+  if (ttl) { CR_SPAWN2(taskTTL, ttl_id); }
+  if (ext) { CR_SPAWN2(taskExt, ext_id); }
 
   // Wait for tasks to complete
-  if (sdi)     { CR_JOIN(sdi_id); }
-  if (onewire) { CR_JOIN(onewire_id); }
-  if (i2c)     { CR_JOIN(i2c_id); }
-  if (ttl)     { CR_JOIN(ttl_id); }
+  if (sdi) { CR_JOIN(sdi_id); }
+  if (one) { CR_JOIN(one_id); }
+  if (i2c) { CR_JOIN(i2c_id); }
+  if (ttl) { CR_JOIN(ttl_id); }
+  if (ext) { CR_JOIN(ext_id); }
 
   // Power Off
   UIO.loadState();
@@ -131,22 +135,13 @@ CR_TASK(taskSdiCtd10)
 
   // Send the measure command
   ttt = mySDI12.measure(0);
-  if (ttt < 0)
-  {
-    CR_ERROR;
-  }
+  if (ttt < 0) { CR_ERROR; }
 
-  if (ttt > 0)
-  {
-    // TODO We could listen every n ms for a "Service Request" from the sensor
-    CR_DELAY(ttt * 1000);
-  }
+  // TODO We could listen every n ms for a "Service Request" from the sensor
+  if (ttt > 0) { CR_DELAY(ttt * 1000); }
 
   // Send the data command
-  if (mySDI12.data(0))
-  {
-    CR_ERROR;
-  }
+  if (mySDI12.data(0)) { CR_ERROR; }
 
   // Frame. The result looks like 0+167+17.5+103
   char *next;
@@ -195,6 +190,54 @@ CR_TASK(taskSdiDs2)
   b = strtod(next, &next);
   c = strtod(next, &next);
   ADD_SENSOR(SENSOR_SDI12_DS2_2, a, b, c);
+
+  CR_END;
+}
+
+CR_TASK(taskExt)
+{
+  static tid_t tid;
+
+  CR_BEGIN;
+
+  // WS100
+  if (UIO.action(1, RUN_WS100))
+  {
+    CR_SPAWN2(taskSdiWS100, tid);
+    CR_JOIN(tid);
+  }
+
+  CR_END;
+}
+
+CR_TASK(taskSdiWS100)
+{
+  int ttt;
+
+  CR_BEGIN;
+
+  // Send the measure command
+  ttt = mySDI12.measure(2);
+  if (ttt < 0) { CR_ERROR; }
+
+  // TODO We could listen every n ms for a "Service Request" from the sensor
+  if (ttt > 0) { CR_DELAY(ttt * 1000); }
+
+  // Send the data command
+  if (mySDI12.data(2)) { CR_ERROR; }
+
+  // Frame. The result looks like 2+23.5+0.2+3.2+60
+  char *next;
+  double a, b, c;
+  unsigned long int t;
+
+  a = strtod(mySDI12.buffer+1, &next);
+  b = strtod(next, &next);
+  c = strtod(next, &next);
+  ADD_SENSOR(SENSOR_WS100_1, a, b, c);
+
+  t = strtoul(next, &next, 10);
+  ADD_SENSOR(SENSOR_WS100_2, (uint8_t)t);
 
   CR_END;
 }

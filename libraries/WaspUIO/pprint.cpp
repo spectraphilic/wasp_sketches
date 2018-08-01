@@ -45,6 +45,9 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
   value = actions[RUN_MB];
   if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
 
+  value = actions[RUN_WS100];
+  if (value) strnjoin_F(dst, size, F(", "), F("WS100 (%d)"), value);
+
   if (! dst[0]) strncpy_F(dst, F("(none)"), size);
 
   return dst;

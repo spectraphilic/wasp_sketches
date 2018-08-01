@@ -71,7 +71,7 @@ enum network_type_t {
 
 enum run_t {
   RUN_NETWORK,
-  RUN_BATTERY, // Available
+  RUN_BATTERY,
   RUN_FREE_1, // Available
   RUN_FREE_2, // Available
   RUN_CTD10, // SDI-12
@@ -79,6 +79,7 @@ enum run_t {
   RUN_DS1820, // OneWire
   RUN_BME280, // I2C
   RUN_MB, // TTL
+  RUN_WS100, // SDI-12
   RUN_LEN // Special value
 };
 
@@ -404,6 +405,9 @@ CR_TASK(taskSensors);
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
+// Externally powered devices
+CR_TASK(taskExt);
+CR_TASK(taskSdiWS100); // Uses SDI-12
 // 3V3
 CR_TASK(task1Wire);
 CR_TASK(taskI2C);
