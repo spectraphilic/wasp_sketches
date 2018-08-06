@@ -41,7 +41,7 @@ void setup()
   {
     frame.setFrameType(INFORMATION_FRAME_V12 + EVENT_FRAME);
   }
-  frame.addSensorBin(SENSOR_TST, UIO.epochTime);
+  UIO.addSensor(SENSOR_TST, UIO.epochTime);
   UIO.frame2Sd();
   frame.setID((char*)""); // We only want to send the name once
 

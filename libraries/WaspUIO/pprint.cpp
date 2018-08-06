@@ -3,6 +3,7 @@
 
 const char* WaspUIO::pprint4G(char* dst, size_t size)
 {
+  // XXX Print some info from the module with _4G.getInfo(...) ??
 #if WITH_4G
   if (pin == 0 || pin > 9999)
   {
@@ -10,7 +11,7 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
   }
   else
   {
-    strncpy_F(dst, F("pin=XXXX"), size);
+    snprintf_F(dst, size, F("pin=%u"), pin);
   }
 #else
   snprintf_F(dst, size, F("4G not enabled, define WITH_4G TRUE"));

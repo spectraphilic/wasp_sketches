@@ -119,17 +119,17 @@ void WaspUIO::showBinaryFrame(uint8_t *p)
        if (type == 1)
        {
          for (uint8_t j=0; j < nfields; j++)
-	 {
+         {
            if (j > 0)
-	   {
-	     diff = *(int8_t *)p; p++;
+           {
+             diff = *(int8_t *)p; p++;
              nbytes--;
-	     if (diff != -128)
-	     {
+             if (diff != -128)
+             {
                cr.println(F("Sensor %d (%s): %hhd"), sensor_id, name, diff);
-	       continue;
-	     }
-	   }
+               continue;
+             }
+           }
 
            cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
            p += 2; nbytes -= 2;
@@ -159,7 +159,7 @@ void WaspUIO::showBinaryFrame(uint8_t *p)
        else if (type == 3) // char*
        {
          len = *p++;
-	 nbytes--;
+         nbytes--;
          if (len > sizeof(value_str) - 1)
          {
            cr.println(F("Error reading sensor value, string too long %d"), len);
@@ -204,9 +204,203 @@ void WaspUIO::createFrame(bool discard)
 
   // In binary frames, the timestamp must be first, that's what I deduce from
   // frame.addTimestamp
-  frame.addSensorBin(SENSOR_TST, epochTime);
+  addSensor(SENSOR_TST, epochTime);
 }
 
+
+/**
+ * More flexible and memory efficient alternative to the addSensor functions in
+ * upstream library.
+ */
+
+uint8_t WaspUIO::addSensorValue(float value)
+{
+  const uint8_t size = 4;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+uint8_t WaspUIO::addSensorValue(int8_t value)
+{
+  const uint8_t size = 1;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+uint8_t WaspUIO::addSensorValue(uint8_t value)
+{
+  const uint8_t size = 1;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+uint8_t WaspUIO::addSensorValue(int16_t value)
+{
+  const uint16_t size = 2;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+uint8_t WaspUIO::addSensorValue(uint16_t value)
+{
+  const uint16_t size = 2;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+uint8_t WaspUIO::addSensorValue(int32_t value)
+{
+  const uint16_t size = 4;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+uint8_t WaspUIO::addSensorValue(uint32_t value)
+{
+  const uint16_t size = 4;
+  if (frame.length + size <= frame.getFrameSize())
+  {
+    memcpy(&(frame.buffer[frame.length]), &value, size);
+    frame.length += size;
+    return size;
+  }
+  return 0;
+}
+
+int8_t WaspUIO::addSensor(uint8_t type, ...)
+{
+  va_list args;
+  char format[10];
+  const char* format_p;
+  char c;
+  int8_t err = 0; // 0=ok -1=no-space -2=other-error
+  uint8_t len = 0;
+  uint16_t start;
+
+  // Read format from program memory
+  format_p = FRAME_FORMAT_TABLE[type];
+  if (format_p == NULL)
+  {
+    error(F("Unexpected frame type %hhu"), type);
+    return -2;
+  }
+  strcpy_P(format, (char*)pgm_read_word(&format_p));
+
+  // Type
+  va_start(args, type);
+  start = frame.length;
+  if (addSensorValue(type) == 0) { err = -1; goto exit; }
+
+  // Values
+  for (int i=0; i<strlen(format); i++)
+  {
+    c = format[i];
+    if (c == 'f')
+    {
+      float value = (float) va_arg(args, double);
+      if (addSensorValue(value) == 0) { err = -1; goto exit; }
+    }
+    else if (c == 'u')
+    {
+      uint8_t value = (uint8_t) va_arg(args, uint16_t);
+      if (addSensorValue(value) == 0) { err = -1; goto exit; }
+    }
+    else if (c == 'v')
+    {
+      uint16_t value = va_arg(args, uint16_t);
+      if (addSensorValue(value) == 0) { err = -1; goto exit; }
+    }
+    else if (c == 'w')
+    {
+      uint32_t value = va_arg(args, uint32_t);
+      if (addSensorValue(value) == 0) { err = -1; goto exit; }
+    }
+    else if (c == 'n')
+    {
+      uint8_t n = (uint8_t) va_arg(args, uint16_t);
+      if (addSensorValue(n) == 0) { err = -1; goto exit; }
+      const int* values = va_arg(args, const int*);
+      int32_t value;
+      for (uint8_t i = 0; i < n; i++)
+      {
+        if (i > 0)
+        {
+          value = values[i] - values[i-1];
+          if (value > -128 && value < 128)
+          {
+            if (addSensorValue((int8_t)value) == 0) { err = -1; goto exit; }
+            continue;
+          }
+
+          // Use -128 as a marker to say next number is full 2 bytes
+          if (addSensorValue((int8_t)-128) == 0) { err = -1; goto exit; }
+        }
+
+        if (addSensorValue(values[i]) == 0) { err = -1; goto exit; }
+      }
+    }
+    else
+    {
+      error(F("Programming error: unexpected frame format %c"), c);
+      err = -2;
+      break;
+    }
+  }
+
+exit:
+  va_end(args);
+
+  if (err != 0)
+  {
+    frame.length = start;
+    //frame.buffer[frame.length] = '\0';
+    return err;
+  }
+
+  frame.numFields++;                  // increment sensor fields counter
+  frame.buffer[4] = frame.length - 5; // update number of bytes field
+
+  // Add contents to struct (used for tiny frames)
+//if (frame.numFields < frame.max_fields)
+//{
+//  frame.field[frame.numFields].flag = false;
+//  frame.field[frame.numFields].start = start;
+//  frame.field[frame.numFields].size = length - start;
+//}
+
+  //frame.buffer[frame.length] = '\0';
+  return frame.length;
+}
 
 /**
  * This function:

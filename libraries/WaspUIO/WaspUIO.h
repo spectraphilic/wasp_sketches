@@ -97,10 +97,10 @@ enum run_t {
 #define UIO_SDI12 128
 
 #define ADD_SENSOR(type, ...) \
-  if (frame.addSensorBin(type, ## __VA_ARGS__) == -1)\
+  if (UIO.addSensor(type, ## __VA_ARGS__) == -1)\
   {\
     UIO.createFrame();\
-    frame.addSensorBin(type, ## __VA_ARGS__);\
+    UIO.addSensor(type, ## __VA_ARGS__);\
   }
 
 
@@ -254,6 +254,14 @@ const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
 void createFrame(bool discard=false);
+int8_t addSensor(uint8_t type, ...);
+uint8_t addSensorValue(float value);
+uint8_t addSensorValue(int8_t value);
+uint8_t addSensorValue(uint8_t value);
+uint8_t addSensorValue(int16_t value);
+uint8_t addSensorValue(uint16_t value);
+uint8_t addSensorValue(int32_t value);
+uint8_t addSensorValue(uint32_t value);
 uint8_t getSequence(uint8_t *p);
 void showBinaryFrame(uint8_t *p);
 uint8_t frame2Sd();
@@ -421,6 +429,91 @@ CR_TASK(taskNetworkReceive);
 CR_TASK(taskGps);
 // For testing purposes
 CR_TASK(taskSlow);
+
+
+/*
+ * Frames
+ * f: float
+ * u: uint8_t
+ * v: uint16_t
+ * w: uint32_t
+ * n: int (multiple values)
+ */
+
+const char frame_format_u    [] PROGMEM = "u";
+const char frame_format_w    [] PROGMEM = "w";
+const char frame_format_ww   [] PROGMEM = "ww";
+const char frame_format_f    [] PROGMEM = "f";
+const char frame_format_ff   [] PROGMEM = "ff";
+const char frame_format_fff  [] PROGMEM = "fff";
+const char frame_format_n    [] PROGMEM = "n";
+const char frame_format_fffwf[] PROGMEM = "fffwf";
+
+const char* const FRAME_FORMAT_TABLE[] PROGMEM=
+{
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 00x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 01x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 02x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 03x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 04x
+  // 05x
+  NULL, NULL,
+  frame_format_u,                                             // 52 Battery level
+  frame_format_ff,                                            // 53 GPS
+  NULL, NULL, NULL, NULL, NULL, NULL,
+  // 06x
+  NULL, NULL,
+  frame_format_f,                                             // 62 RTC internal temp
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  // 07x
+  NULL, NULL, NULL, NULL,
+  frame_format_f,                                             // 74 BME temperature
+  NULL,
+  frame_format_f,                                             // 76 BME humidity
+  frame_format_f,                                             // 77 BME pressure
+  NULL, NULL,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 08x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 09x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 10x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 11x
+  // 12x
+  NULL, NULL, NULL,
+  frame_format_w,
+  NULL, NULL, NULL, NULL, NULL, NULL,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 13x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 14x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 15x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 16x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 17x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 18x
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 19x
+  // 20x
+  frame_format_fff,   // 200 CTD-10
+  frame_format_fff,   // 201 DS-2 (1)
+  frame_format_fff,   // 202 DS-2 (2)
+  frame_format_n,     // 203 DS18B20
+  frame_format_ww,    // 204 MB73XX
+  frame_format_ww,    // 205 GPS statistics
+  frame_format_f,     // 206 Battery Volts
+  frame_format_fffwf, // 207 WS100-UMB
+};
+
+#define SENSOR_BAT        52
+#define SENSOR_GPS        53
+#define SENSOR_IN_TEMP    62
+#define SENSOR_BME_TC     74
+#define SENSOR_BME_HUM    76
+#define SENSOR_BME_PRES   77
+#define SENSOR_TST       123
+#define SENSOR_CTD10     200
+#define SENSOR_DS2_1     201
+#define SENSOR_DS2_2     202
+#define SENSOR_DS18B20   203
+#define SENSOR_MB73XX    204
+#define SENSOR_GPS_STATS 205
+#define SENSOR_BAT_VOLTS 206
+#define SENSOR_WS100     207
+
 
 
 #endif

@@ -228,16 +228,12 @@ CR_TASK(taskSdiWS100)
 
   // Frame. The result looks like 2+23.5+0.2+3.2+60
   char *next;
-  double a, b, c;
-  unsigned long int t;
-
-  a = strtod(mySDI12.buffer+1, &next);
-  b = strtod(next, &next);
-  c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_WS100_1, a, b, c);
-
-  t = strtoul(next, &next, 10);
-  ADD_SENSOR(SENSOR_WS100_2, (uint8_t)t);
+  float a = strtod(mySDI12.buffer+1, &next);
+  float b = strtod(next, &next);
+  float c = strtod(next, &next);
+  uint32_t d = strtoul(next, &next, 10);
+  float e = strtod(next, &next);
+  ADD_SENSOR(SENSOR_WS100, a, b, c, d, e);
 
   CR_END;
 }
