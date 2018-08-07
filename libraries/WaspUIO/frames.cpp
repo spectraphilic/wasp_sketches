@@ -1,191 +1,137 @@
 #include "WaspUIO.h"
 
-
-/**
- * Print the binary frame to USB.
+/*
+ * Frames
+ * f: float
+ * u: uint8_t
+ * v: uint16_t
+ * w: uint32_t
+ * n: int (multiple values)
  */
 
-uint8_t WaspUIO::getSequence(uint8_t *p)
+
+const char null              [] PROGMEM = "";
+const char frame_format_u    [] PROGMEM = "u";
+const char frame_format_w    [] PROGMEM = "w";
+const char frame_format_ww   [] PROGMEM = "ww";
+const char frame_format_f    [] PROGMEM = "f";
+const char frame_format_ff   [] PROGMEM = "ff";
+const char frame_format_fff  [] PROGMEM = "fff";
+const char frame_format_n    [] PROGMEM = "n";
+const char frame_format_fffuf[] PROGMEM = "fffwf";
+
+const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
+  null, null, null, null, null, null, null, null, null, null, // 00x
+  null, null, null, null, null, null, null, null, null, null, // 01x
+  null, null, null, null, null, null, null, null, null, null, // 02x
+  null, null, null, null, null, null, null, null, null, null, // 03x
+  null, null, null, null, null, null, null, null, null, null, // 04x
+  // 05x
+  null, null,
+  frame_format_u,                                             // 52 Battery level
+  frame_format_ff,                                            // 53 GPS
+  null, null, null, null, null, null,
+  // 06x
+  null, null,
+  frame_format_f,                                             // 62 RTC internal temp
+  null, null, null, null, null, null, null,
+  // 07x
+  null, null, null, null,
+  frame_format_f,                                             // 74 BME temperature
+  null,
+  frame_format_f,                                             // 76 BME humidity
+  frame_format_f,                                             // 77 BME pressure
+  null, null,
+  null, null, null, null, null, null, null, null, null, null, // 08x
+  null, null, null, null, null, null, null, null, null, null, // 09x
+  null, null, null, null, null, null, null, null, null, null, // 10x
+  null, null, null, null, null, null, null, null, null, null, // 11x
+  // 12x
+  null, null, null,
+  frame_format_w,                                             // 123 Timestamp
+  null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null, // 13x
+  null, null, null, null, null, null, null, null, null, null, // 14x
+  null, null, null, null, null, null, null, null, null, null, // 15x
+  null, null, null, null, null, null, null, null, null, null, // 16x
+  null, null, null, null, null, null, null, null, null, null, // 17x
+  null, null, null, null, null, null, null, null, null, null, // 18x
+  null, null, null, null, null, null, null, null, null, null, // 19x
+  // 20x
+  frame_format_fff,   // 200 CTD-10
+  frame_format_fff,   // 201 DS-2 (1)
+  frame_format_fff,   // 202 DS-2 (2)
+  frame_format_n,     // 203 DS18B20
+  frame_format_ww,    // 204 MB73XX
+  frame_format_ww,    // 205 GPS statistics
+  frame_format_f,     // 206 Battery Volts
+  frame_format_fffuf, // 207 WS100-UMB
+};
+
+const char frame_name_bat      [] PROGMEM = "BAT";
+const char frame_name_gps      [] PROGMEM = "GPS";
+const char frame_name_in_temp  [] PROGMEM = "IN TEMP";
+const char frame_name_bme_tc   [] PROGMEM = "BME TC";
+const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
+const char frame_name_bme_pres [] PROGMEM = "BME PRES";
+const char frame_name_tst      [] PROGMEM = "TST";
+const char frame_name_ctd10    [] PROGMEM = "CTD10";
+const char frame_name_ds2_1    [] PROGMEM = "DS2 1";
+const char frame_name_ds2_2    [] PROGMEM = "DS2 2";
+const char frame_name_ds18b20  [] PROGMEM = "DS18B20";
+const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
+const char frame_name_gps_stats[] PROGMEM = "GPS STATS";
+const char frame_name_bat_volts[] PROGMEM = "BAT VOLTS";
+const char frame_name_ws100    [] PROGMEM = "WS100";
+
+const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
-   uint8_t offset, i;
-
-   // Fixed header, depends on version (4 or 8 bytes serial)
-   if (_boot_version >= 'G') { offset = 3 + 1 + 1 + 8; }
-   else                      { offset = 3 + 1 + 1 + 4; }
-
-   // Variable header, mote name
-   p += offset;
-   for (i = 0; i < 17 ; i++)
-   {
-     if ((char)*p++ == '#')
-     {
-       return *p;
-     }
-   }
-
-   error(F("getSequence error"));
-   return 0;
-}
-
-void WaspUIO::showBinaryFrame(uint8_t *p)
-{
-   uint8_t nbytes;
-   char buffer[17];
-   uint8_t i;
-   char c;
-   uint8_t sensor_id, nfields, type, decimals;
-   uint8_t len;
-   char name[20];
-   char value_str[50];
-   int8_t diff;
-
-   // Binary Frame
-   cr.println(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
-
-   // Start delimiter
-   if (strncmp((const char*) p, "<=>", 3) != 0)
-   {
-     cr.println(F("Error reading Start delimiter <=>"));
-     return;
-   }
-   p += 3;
-
-   // Frame type (TODO Print text identifier: Information, TimeOut, ...)
-   // Don't clear the most significant bit, we already know it's zero
-   cr.println(F("Frame type: %d"), *p++);
-
-   // Number of bytes
-   nbytes = *p++;
-   //println(F("Number of bytes left: %d"), nbytes);
-
-   // Serial ID
-   //println(F("BOOT VERSION %c"), _boot_version);
-   if (_boot_version >= 'G')
-   {
-     Utils.hex2str(p, buffer, 8);
-     p += 8;
-     nbytes -= 8;
-   }
-   else
-   {
-     Utils.hex2str(p, buffer, 4);
-     p += 4;
-     nbytes -=4;
-   }
-   cr.println(F("Serial ID: 0x%s"), buffer);
-
-   // Waspmote ID
-   for (i = 0; i < 17 ; i++)
-   {
-     c = (char) *p++;
-     nbytes--;
-     if (c == '#')
-     {
-       buffer[i] = '\0';
-       break;
-     }
-     buffer[i] = c;
-   }
-   if (c != '#')
-   {
-     cr.println(F("Error reading Waspmote ID"));
-     return;
-   }
-   cr.println(F("Waspmote ID: %s"), buffer);
-
-   // Sequence
-   cr.println(F("Sequence: %d"), *p++);
-   nbytes--;
-
-   // Payload
-   while (nbytes > 0)
-   {
-     sensor_id = *p++;
-     nbytes--;
-     // Use always the v15 tables
-     // It would make sense to use the v12 only with a v12 board *and* one of
-     // the Libelium's shields (eg the Agr board). But we don't support that
-     // configuration.
-     strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[sensor_id])));
-     nfields = (uint8_t)pgm_read_word(&(FRAME_SENSOR_FIELD_TABLE[sensor_id]));
-     type = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[sensor_id]));
-     decimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[sensor_id]));
-
-     if (nfields == 0)
-     {
-       nfields = *p++;
-       nbytes--;
-       // Special case, we store ints in a compressed format
-       if (type == 1)
-       {
-         for (uint8_t j=0; j < nfields; j++)
-         {
-           if (j > 0)
-           {
-             diff = *(int8_t *)p; p++;
-             nbytes--;
-             if (diff != -128)
-             {
-               cr.println(F("Sensor %d (%s): %hhd"), sensor_id, name, diff);
-               continue;
-             }
-           }
-
-           cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
-           p += 2; nbytes -= 2;
-         }
-         continue;
-       }
-     }
-
-     for (; nfields > 0; nfields--)
-     {
-       if (type == 0) // uint8_t
-       {
-         cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *p++);
-         nbytes--;
-       }
-       else if (type == 1) // int
-       {
-         cr.println(F("Sensor %d (%s): %d"), sensor_id, name, *(int *)p);
-         p += 2; nbytes -= 2;
-       }
-       else if (type == 2) // double
-       {
-         Utils.float2String(*(float *)p, value_str, decimals);
-         cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value_str);
-         p += 4; nbytes -= 4;
-       }
-       else if (type == 3) // char*
-       {
-         len = *p++;
-         nbytes--;
-         if (len > sizeof(value_str) - 1)
-         {
-           cr.println(F("Error reading sensor value, string too long %d"), len);
-           return;
-         }
-         strncpy(value_str, (char*) p, len);
-         p += len; nbytes -= len;
-         cr.println(F("Sensor %d (%s): %s"), sensor_id, name, value_str);
-       }
-       else if (type == 4) // uint32_t
-       {
-         cr.println(F("Sensor %d (%s): %lu"), sensor_id, name, *(uint32_t *)p);
-         p += 4; nbytes -= 4;
-       }
-       else if (type == 5) // uint8_t*
-       {
-         cr.println(F("Sensor %d (%s): unsupported type %d"), sensor_id, name, type); // TODO
-       }
-       else
-       {
-         cr.println(F("Sensor %d (%s): unexpected type %d"), sensor_id, name, type);
-       }
-     }
-   }
-   cr.println(F("=========================================="));
-}
+  null, null, null, null, null, null, null, null, null, null, // 00x
+  null, null, null, null, null, null, null, null, null, null, // 01x
+  null, null, null, null, null, null, null, null, null, null, // 02x
+  null, null, null, null, null, null, null, null, null, null, // 03x
+  null, null, null, null, null, null, null, null, null, null, // 04x
+  // 05x
+  null, null,
+  frame_name_bat,                                             // 52 Battery level
+  frame_name_gps,                                             // 53 GPS
+  null, null, null, null, null, null,
+  // 06x
+  null, null,
+  frame_name_in_temp,                                         // 62 RTC internal temp
+  null, null, null, null, null, null, null,
+  // 07x
+  null, null, null, null,
+  frame_name_bme_tc,                                          // 74 BME temperature
+  null,
+  frame_name_bme_hum,                                         // 76 BME humidity
+  frame_name_bme_pres,                                        // 77 BME pressure
+  null, null,
+  null, null, null, null, null, null, null, null, null, null, // 08x
+  null, null, null, null, null, null, null, null, null, null, // 09x
+  null, null, null, null, null, null, null, null, null, null, // 10x
+  null, null, null, null, null, null, null, null, null, null, // 11x
+  // 12x
+  null, null, null,
+  frame_name_tst,                                             // 123 Timestamp
+  null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null, // 13x
+  null, null, null, null, null, null, null, null, null, null, // 14x
+  null, null, null, null, null, null, null, null, null, null, // 15x
+  null, null, null, null, null, null, null, null, null, null, // 16x
+  null, null, null, null, null, null, null, null, null, null, // 17x
+  null, null, null, null, null, null, null, null, null, null, // 18x
+  null, null, null, null, null, null, null, null, null, null, // 19x
+  // 20x
+  frame_name_ctd10,                                           // 200 CTD-10
+  frame_name_ds2_1,                                           // 201 DS-2 (1)
+  frame_name_ds2_2,                                           // 202 DS-2 (2)
+  frame_name_ds18b20,                                         // 203 DS18B20
+  frame_name_mb73xx,                                          // 204 MB73XX
+  frame_name_gps_stats,                                       // 205 GPS statistics
+  frame_name_bat_volts,                                       // 206 Battery Volts
+  frame_name_ws100,                                           // 207 WS100-UMB
+};
 
 /**
  * Wrap the frame.addSensor functions. If there is no place left in the frame,
@@ -300,21 +246,18 @@ uint8_t WaspUIO::addSensorValue(uint32_t value)
 int8_t WaspUIO::addSensor(uint8_t type, ...)
 {
   va_list args;
-  char format[10];
-  const char* format_p;
-  char c;
   int8_t err = 0; // 0=ok -1=no-space -2=other-error
   uint8_t len = 0;
   uint16_t start;
 
   // Read format from program memory
-  format_p = FRAME_FORMAT_TABLE[type];
-  if (format_p == NULL)
+  char format[10];
+  strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
+  if (strlen(format) == 0)
   {
     error(F("Unexpected frame type %hhu"), type);
     return -2;
   }
-  strcpy_P(format, (char*)pgm_read_word(&format_p));
 
   // Type
   va_start(args, type);
@@ -322,9 +265,9 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   if (addSensorValue(type) == 0) { err = -1; goto exit; }
 
   // Values
-  for (int i=0; i<strlen(format); i++)
+  for (int i=0; i < strlen(format); i++)
   {
-    c = format[i];
+    char c = format[i];
     if (c == 'f')
     {
       float value = (float) va_arg(args, double);
@@ -401,6 +344,197 @@ exit:
   //frame.buffer[frame.length] = '\0';
   return frame.length;
 }
+
+
+/**
+ * Print the binary frame to USB.
+ */
+
+uint8_t WaspUIO::getSequence(uint8_t *p)
+{
+   uint8_t offset, i;
+
+   // Fixed header, depends on version (4 or 8 bytes serial)
+   if (_boot_version >= 'G') { offset = 3 + 1 + 1 + 8; }
+   else                      { offset = 3 + 1 + 1 + 4; }
+
+   // Variable header, mote name
+   p += offset;
+   for (i = 0; i < 17 ; i++)
+   {
+     if ((char)*p++ == '#')
+     {
+       return *p;
+     }
+   }
+
+   error(F("getSequence error"));
+   return 0;
+}
+
+void WaspUIO::showFrame(uint8_t *p)
+{
+   uint8_t nbytes;
+   char buffer[17];
+   uint8_t i;
+   char c;
+   uint8_t type, nfields;
+   uint8_t len;
+   char name[20];
+   char value_str[50];
+   int8_t diff;
+
+   // Binary Frame
+   cr.println(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
+
+   // Start delimiter
+   if (strncmp((const char*) p, "<=>", 3) != 0)
+   {
+     cr.println(F("Error reading Start delimiter <=>"));
+     return;
+   }
+   p += 3;
+
+   // Frame type (TODO Print text identifier: Information, TimeOut, ...)
+   // Don't clear the most significant bit, we already know it's zero
+   cr.println(F("Frame type: %d"), *p++);
+
+   // Number of bytes
+   nbytes = *p++;
+   //println(F("Number of bytes left: %d"), nbytes);
+
+   // Serial ID
+   //println(F("BOOT VERSION %c"), _boot_version);
+   if (_boot_version >= 'G')
+   {
+     Utils.hex2str(p, buffer, 8);
+     p += 8;
+     nbytes -= 8;
+   }
+   else
+   {
+     Utils.hex2str(p, buffer, 4);
+     p += 4;
+     nbytes -=4;
+   }
+   cr.println(F("Serial ID: 0x%s"), buffer);
+
+   // Waspmote ID
+   for (i = 0; i < 17 ; i++)
+   {
+     c = (char) *p++;
+     nbytes--;
+     if (c == '#')
+     {
+       buffer[i] = '\0';
+       break;
+     }
+     buffer[i] = c;
+   }
+   if (c != '#')
+   {
+     cr.println(F("Error reading Waspmote ID"));
+     return;
+   }
+   cr.println(F("Waspmote ID: %s"), buffer);
+
+   // Sequence
+   cr.println(F("Sequence: %d"), *p++);
+   nbytes--;
+
+   // Payload
+   while (nbytes > 0)
+   {
+     type = *p++;
+     nbytes--;
+
+     // Read format string
+     char format[10];
+     strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
+     if (strlen(format) == 0)
+     {
+       cr.println(F("Unexpected frame type %hhu"), type);
+       return;
+     }
+
+     // Read name
+     strcpy_P(name, (char*)pgm_read_word(&(FRAME_NAME_TABLE[type])));
+
+     // Values
+     for (int i=0; i < strlen(format); i++)
+     {
+       char c = format[i];
+       if (c == 'f')
+       {
+         Utils.float2String(*(float *)p, value_str, 4);
+         cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
+         p += 4; nbytes -= 4;
+       }
+       else if (c == 'j')
+       {
+         cr.println(F("Sensor %d (%s): %d"), type, name, *(int16_t *)p);
+         p += 2; nbytes -= 2;
+       }
+       else if (c == 'u')
+       {
+         cr.println(F("Sensor %d (%s): %d"), type, name, *p++);
+         nbytes--;
+       }
+       else if (c == 'v')
+       {
+         cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint16_t *)p);
+         p += 2; nbytes -= 2;
+       }
+       else if (c == 'w')
+       {
+         cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint32_t *)p);
+         p += 4; nbytes -= 4;
+       }
+       else if (c == 'n')
+       {
+         nfields = *p++;
+         nbytes--;
+         // Special case, we store ints in a compressed format
+         for (uint8_t j=0; j < nfields; j++)
+         {
+           if (j > 0)
+           {
+             diff = *(int8_t *)p; p++;
+             nbytes--;
+             if (diff != -128)
+             {
+               cr.println(F("Sensor %d (%s): %hhd"), type, name, diff);
+               continue;
+             }
+           }
+
+           cr.println(F("Sensor %d (%s): %d"), type, name, *(int *)p);
+           p += 2; nbytes -= 2;
+         }
+       }
+       else if (c == 's')
+       {
+         len = *p++;
+         nbytes--;
+         if (len > sizeof(value_str) - 1)
+         {
+           cr.println(F("Error reading sensor value, string too long %d"), len);
+           return;
+         }
+         strncpy(value_str, (char*) p, len);
+         p += len; nbytes -= len;
+         cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
+       }
+       else
+       {
+         cr.println(F("Sensor %d (%s): unexpected type %c"), type, name, c);
+       }
+     }
+   }
+
+   cr.println(F("=========================================="));
+}
+
 
 /**
  * This function:
@@ -495,7 +629,7 @@ uint8_t WaspUIO::frame2Sd()
   {
     USB.ON();
     USB.flush();
-    showBinaryFrame(frame.buffer);
+    showFrame(frame.buffer);
     USB.OFF();
   }
 

@@ -150,7 +150,7 @@ CR_TASK(taskSdiCtd10)
   a = strtod(mySDI12.buffer+1, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_SDI12_CTD10, a, b, c);
+  ADD_SENSOR(SENSOR_CTD10, a, b, c);
 
   // Success
   CR_END;
@@ -184,12 +184,12 @@ CR_TASK(taskSdiDs2)
   a = strtod(mySDI12.buffer+1, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_SDI12_DS2_1, a, b, c);
+  ADD_SENSOR(SENSOR_DS2_1, a, b, c);
 
   a = strtod(next, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_SDI12_DS2_2, a, b, c);
+  ADD_SENSOR(SENSOR_DS2_2, a, b, c);
 
   CR_END;
 }
@@ -231,7 +231,7 @@ CR_TASK(taskSdiWS100)
   float a = strtod(mySDI12.buffer+1, &next);
   float b = strtod(next, &next);
   float c = strtod(next, &next);
-  uint32_t d = strtoul(next, &next, 10);
+  uint8_t d = (uint8_t) strtoul(next, &next, 10);
   float e = strtod(next, &next);
   ADD_SENSOR(SENSOR_WS100, a, b, c, d, e);
 
@@ -258,7 +258,7 @@ CR_TASK(task1Wire)
   n = UIO.readDS18B20(values, max);
   UIO.onewire(0);
 
-  if (n > 0) { ADD_SENSOR(SENSOR_DS1820, n, values); }
+  if (n > 0) { ADD_SENSOR(SENSOR_DS18B20, n, values); }
 
   CR_END;
 }

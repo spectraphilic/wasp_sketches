@@ -11,7 +11,8 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
   }
   else
   {
-    snprintf_F(dst, size, F("pin=%u"), pin);
+    //snprintf_F(dst, size, F("pin=%u"), pin);
+    strncpy_F(dst, F("pin=XXXX"), size);
   }
 #else
   snprintf_F(dst, size, F("4G not enabled, define WITH_4G TRUE"));
