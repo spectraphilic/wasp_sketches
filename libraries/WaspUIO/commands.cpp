@@ -43,7 +43,7 @@ const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and o
 const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
                                     "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
-const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0 and 1";
+const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0-2";
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
 const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
 const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
@@ -728,6 +728,7 @@ COMMAND(cmdSDI12)
   mySDI12.begin();
   mySDI12.identification(0);
   mySDI12.identification(1);
+  mySDI12.identification(2);
   mySDI12.end();
   UIO.sdi12(0);
   return cmd_quiet;
