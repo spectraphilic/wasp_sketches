@@ -218,6 +218,8 @@ const char* BROADCAST_ADDRESS = "000000000000FFFF";
 // Network: 4G
 uint16_t pin; // Pin for 4G module
 void _4GInit();
+uint8_t _4GStart();
+uint8_t _4GStop();
 
 // Power
 // (power) state management
@@ -281,6 +283,7 @@ unsigned long getEpochTime();
 unsigned long getEpochTime(uint16_t &ms);
 uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 void loadTime(bool temp=false);
+uint8_t setTimeFromNetwork();
 
 // Sleep
 void nextAlarm();
@@ -327,6 +330,7 @@ uint8_t _getPin(uint8_t);
 
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
+COMMAND(cmd4G);
 COMMAND(cmdAck);
 COMMAND(cmdAPN);
 COMMAND(cmdBattery);

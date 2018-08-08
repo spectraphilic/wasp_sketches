@@ -20,8 +20,9 @@ typedef struct {
   const char* help;
 } Command;
 
+const char CMD_4G      [] PROGMEM = "4g              - Test 4G data connection";
 const char CMD_ACK     [] PROGMEM = ""; // Hidden command
-const char CMD_APN     [] PROGMEM = "apn [APN]       - Choose the battery type: 1=lithium 2=lead";
+const char CMD_APN     [] PROGMEM = "apn [APN]       - Set 4G Access Point Name (APN)";
 const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
@@ -46,11 +47,12 @@ const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 
 const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0-2";
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
 const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
-const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time to the given value, format is yy:mm:dd:hh:mm:ss";
+const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time, value can be network, yy:mm:dd:hh:mm:ss or epoch";
 const char CMD_XBEE    [] PROGMEM = "xbee VALUE      - Choose xbee network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
+  {"4g",        &cmd4G,       CMD_4G},
   {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
   {"apn",       &cmdAPN,      CMD_APN},
   {"bat ",      &cmdBattery,  CMD_BATTERY},
@@ -157,6 +159,28 @@ COMMAND(exeCommand)
   }
 
   return cmd_bad_input;
+}
+
+
+/**
+ * Test 4G data connection
+ */
+
+COMMAND(cmd4G)
+{
+  uint8_t err = 1;
+
+#if WITH_4G
+  err = UIO._4GStart();
+  if (err == 0)
+  {
+    UIO._4GStop();
+  }
+#else
+  error(F("4G not enabled, define WITH_4G TRUE"));
+#endif
+
+  return (err) ? cmd_error : cmd_ok;
 }
 
 
@@ -808,6 +832,11 @@ COMMAND(cmdTime)
   unsigned short year, month, day, hour, minute, second;
   unsigned long epoch;
   timestamp_t time;
+
+  if (strcmp(str, "network") == 0)
+  {
+    return (UIO.setTimeFromNetwork()) ? cmd_error : cmd_ok;
+  }
 
   if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
   {
