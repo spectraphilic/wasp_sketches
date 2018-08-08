@@ -18,7 +18,7 @@ const char frame_format_f    [] PROGMEM = "f";
 const char frame_format_ff   [] PROGMEM = "ff";
 const char frame_format_fff  [] PROGMEM = "fff";
 const char frame_format_n    [] PROGMEM = "n";
-const char frame_format_fffuf[] PROGMEM = "fffwf";
+const char frame_format_fffuf[] PROGMEM = "fffuf";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -323,7 +323,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
 exit:
   va_end(args);
 
-  if (err != 0)
+  if (err)
   {
     frame.length = start;
     //frame.buffer[frame.length] = '\0';
