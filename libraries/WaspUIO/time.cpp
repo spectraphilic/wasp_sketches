@@ -97,7 +97,7 @@ uint8_t WaspUIO::setTimeFromNetwork()
     err = _4GStart();
     if (err == 0)
     {
-      err = _4G.setTimeFrom4G();
+      err = _4G.setTimeFrom4G(true);
       if (err == 0)
       {
         loadTime(false);
