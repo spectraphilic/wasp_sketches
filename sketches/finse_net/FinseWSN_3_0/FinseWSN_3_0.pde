@@ -43,7 +43,7 @@ void setup()
   }
   UIO.addSensor(SENSOR_TST, UIO.epochTime);
   UIO.frame2Sd();
-  frame.setID((char*)""); // We only want to send the name once
+  //frame.setID((char*)""); // We only want to send the name once
 
   // Set time from GPS if wrong time is detected
   // XXX Do this unconditionally to update location?
