@@ -34,9 +34,9 @@ void WaspUIO::xbeeInit()
   // We don't call frame.getMaxSizeForXBee to save memory, and because we know
   // already the value.
   // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, DISABLED)
-  // linkEncryption = DISABLED (not supported by DIGIMESH, apparently)
+  // linkEncryption = DISABLED
   // AESEncryption = DISABLED
-  frame.setFrameSize(73);
+  frame.setFrameSize(73); // If AES enabled it would be 48
 
 #if WITH_XBEE
   // init XBee
@@ -142,7 +142,7 @@ void WaspUIO::OTA_communication(int OTA_duration)
 
 void WaspUIO::_4GInit()
 {
-  // XXX Set frame size??
+  frame.setFrameSize(255);
 }
 
 uint8_t WaspUIO::_4GStart()

@@ -21,6 +21,7 @@
 
 #include <WaspFrame.h>
 #include <WaspGPS.h>
+#include <WaspAES.h>
 
 #if WITH_XBEE
 #include <WaspXBeeDM.h>

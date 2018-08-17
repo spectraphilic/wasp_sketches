@@ -569,10 +569,27 @@ uint8_t WaspUIO::frame2Sd()
   uint8_t item[8];
   SdFile dataFile;
 
-  if (! hasSD)
+  // Print frame to USB for debugging
+  if (flags & FLAG_LOG_USB)
   {
+    USB.ON();
+    USB.flush();
+    showFrame(frame.buffer);
+    USB.OFF();
+  }
+
+#if WITH_4G
+  // Encrypt frame
+  if (false)
+  {
+    frame.encryptFrame(AES_128, (char*)"0123456789123456");
+    frame.showFrame();
     return 1;
   }
+#endif
+
+  // Start SD
+  if (! hasSD) { return 1; }
   startSD();
 
   // (1) Get the date
@@ -622,15 +639,6 @@ uint8_t WaspUIO::frame2Sd()
   {
     error(cr.last_error);
     return 2;
-  }
-
-  // (4) Print frame to USB
-  if (flags & FLAG_LOG_USB)
-  {
-    USB.ON();
-    USB.flush();
-    showFrame(frame.buffer);
-    USB.OFF();
   }
 
   return 0;
