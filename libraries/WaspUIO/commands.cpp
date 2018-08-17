@@ -168,19 +168,19 @@ COMMAND(exeCommand)
 
 COMMAND(cmd4G)
 {
-  uint8_t err = 1;
-
 #if WITH_4G
-  err = UIO._4GStart();
-  if (err == 0)
+  uint8_t err = UIO._4GStart();
+  if (err)
   {
-    UIO._4GStop();
+    return cmd_error;
   }
+
+  UIO._4GStop();
+  return cmd_ok;
 #else
   error(F("4G not enabled, define WITH_4G TRUE"));
+  return cmd_error;
 #endif
-
-  return (err) ? cmd_error : cmd_ok;
 }
 
 
@@ -259,6 +259,7 @@ exit:
  */
 COMMAND(cmdAPN)
 {
+#if WITH_4G
   char apn[30];
 
   // Check input
@@ -278,6 +279,10 @@ COMMAND(cmdAPN)
   }
 
   return cmd_ok;
+#else
+  error(F("4G not enabled, define WITH_4G TRUE"));
+  return cmd_error;
+#endif
 }
 
 /**

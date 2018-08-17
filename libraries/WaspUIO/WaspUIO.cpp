@@ -38,9 +38,11 @@ void WaspUIO::onSetup()
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
   // 4G network
+#if WITH_4G
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
   UIO.readEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
   _4G.set_APN(apn);
+#endif
 
   // XBee network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);

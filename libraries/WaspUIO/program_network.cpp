@@ -176,6 +176,7 @@ CR_TASK(taskNetworkXBee)
 
 CR_TASK(taskNetworkSend)
 {
+#if WITH_XBEE
   static uint32_t offset;
   uint8_t item[8];
   uint32_t t0;
@@ -275,10 +276,15 @@ CR_TASK(taskNetworkSend)
   }
 
   CR_END;
+#else
+  error(F("XBee not enabled, define WITH_XBEE TRUE"));
+  return CR_TASK_ERROR;
+#endif
 }
 
 CR_TASK(taskNetworkReceive)
 {
+#if WITH_XBEE
   char sourceMAC[17];
   cmd_status_t status;
 
@@ -311,4 +317,8 @@ CR_TASK(taskNetworkReceive)
   }
 
   CR_END;
+#else
+  error(F("XBee not enabled, define WITH_XBEE TRUE"));
+  return CR_TASK_ERROR;
+#endif
 }

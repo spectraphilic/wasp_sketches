@@ -30,11 +30,13 @@ void WaspUIO::xbeeInit()
     addressing = BROADCAST_MODE;
   }
 
-  // Set Frame size. Will be 73 bytes for XBeeDM-pro S1
+  // Set Frame size.
+  // We don't call frame.getMaxSizeForXBee to save memory, and because we know
+  // already the value.
+  // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, DISABLED)
   // linkEncryption = DISABLED (not supported by DIGIMESH, apparently)
   // AESEncryption = DISABLED
-  uint16_t size = frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, DISABLED);
-  frame.setFrameSize(size);
+  frame.setFrameSize(73);
 
 #if WITH_XBEE
   // init XBee
@@ -114,6 +116,7 @@ exit:
 */
 void WaspUIO::OTA_communication(int OTA_duration)
 {
+#if WITH_XBEE
   unsigned long start;
   unsigned long duration_ms;
 
@@ -136,6 +139,9 @@ void WaspUIO::OTA_communication(int OTA_duration)
       }
     }
   } while (! cr.timeout(start, duration_ms));
+#else
+  error(F("XBee not enabled, define WITH_XBEE TRUE"));
+#endif
 }
 
 
@@ -150,6 +156,7 @@ void WaspUIO::_4GInit()
 
 uint8_t WaspUIO::_4GStart()
 {
+#if WITH_4G
   uint8_t err, status;
   char pin_str[5];
 
@@ -215,10 +222,19 @@ uint8_t WaspUIO::_4GStart()
   }
 
   return err;
+#else
+  error(F("4G not enabled, define WITH_4G TRUE"));
+  return 1;
+#endif
 }
 
 uint8_t WaspUIO::_4GStop()
 {
+#if WITH_4G
   _4G.OFF();
   return 0;
+#else
+  error(F("4G not enabled, define WITH_4G TRUE"));
+  return 1;
+#endif
 }

@@ -17,14 +17,20 @@
 #define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
 #include <inttypes.h>
+#include <Coroutines.h>
 
 #include <WaspFrame.h>
 #include <WaspGPS.h>
-#include <WaspXBeeDM.h>
-#include <BME280.h>
-#include <Wasp4G.h>
 
-#include <Coroutines.h>
+#if WITH_XBEE
+#include <WaspXBeeDM.h>
+#endif
+
+#if WITH_4G
+#include <Wasp4G.h>
+#endif
+
+#include <BME280.h>
 #include <SDI12.h>
 
 
