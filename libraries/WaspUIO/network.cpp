@@ -72,20 +72,11 @@ void WaspUIO::xbeeInit()
     goto exit;
   }
 
-  // set encryption mode (1:enable; 0:disable), check AT commmand execution flag
-  // XXX Should we use encryption
+  // Disable link layer encryption
   xbeeDM.setEncryptionMode(0);
   if (xbeeDM.error_AT)
   {
     error = F("ERROR in setPAN %d");
-    goto exit;
-  }
-
-  // set encryption key, check AT commmand execution flag
-  xbeeDM.setLinkKey(encryptionKey);
-  if (xbeeDM.error_AT)
-  {
-    error = F("ERROR in setLinkKey %d");
     goto exit;
   }
 

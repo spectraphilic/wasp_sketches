@@ -116,8 +116,6 @@ enum run_t {
 
 
 /* XBee stuff */
-#define encryptionKey "1234567890123456"  // General encryption key
-
 struct XBee {
   const char *name;
   uint8_t panid[2];
