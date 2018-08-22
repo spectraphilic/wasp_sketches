@@ -107,6 +107,12 @@ Deployement of a waspmote v15 at appelsinhytta with the following config:
 
 ## The hill that wants to be a mountain (6717123.73, 417284.06)
 
+### 2018-08-15
+Simon visited, upgraded the xbee firmware to 8073, and upgraded the waspmote code to the latest commit. Data since last visit where recorded on the SD card.
+
+### 2018-07-21
+John H. visited and upgraded the code.
+
 ### 2018-03-07
 
 Same set up, but swap the waspmote as it was not running (waspmote was working fine once back at the station though). 
