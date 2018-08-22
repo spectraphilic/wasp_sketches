@@ -587,9 +587,9 @@ sends out an 8.33 ms marking and a String byte by byte the command line.
 void SDI12::wakeSensors(){
   setState(TRANSMITTING);
   digitalWrite(_dataPin, HIGH);
-  delayMicroseconds(12100);
+  delayMicroseconds(12500);
   digitalWrite(_dataPin, LOW);
-  delayMicroseconds(8400);
+  delayMicroseconds(9000);
 }
 
 // 4.2 - this function writes a character out on the data line

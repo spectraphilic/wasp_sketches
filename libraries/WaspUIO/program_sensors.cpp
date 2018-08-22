@@ -215,42 +215,30 @@ CR_TASK(taskSdiWS100)
   int ttt;
 
   CR_BEGIN;
-  
-  // Send the  Additional Measurement Commands M6 / C6 (basic data)
-  if (mySDI12.command2address(2, "C6"))  // ...or M6 or just M?
-  {
-    CR_ERROR;
-  }
-  
-  // Data request buffer 0
-  if (mySDI12.command2address(2, "D1")) // ...or R1 for continuous measurments???
-  {
-    CR_ERROR;
-  }
-   
-  // Data request buffer 2 (not used for C6)
-  // if (mySDI12.command2address(2, "D2"))
-  // {
-  //  CR_ERROR;
-  // }
 
-  // Send the  Additional Measurement Commands C7 (Drop classes etc.)
-  if (mySDI12.command2address(2, "C7")) // ...or M7, not specified in the manual
+/*
+  if (mySDI12.command2address(2, ""))
+  {
+    if (mySDI12.command2address(2, ""))
+    {
+      CR_ERROR;
+    }
+  }
+*/
+
+  if (mySDI12.command2address(2, "R0"))
   {
     CR_ERROR;
   }
-  
-  // Data request buffer 0
-  if (mySDI12.command2address(2, "D1")) // ...or R1 for continuous measurments???
-  {
-    CR_ERROR;
-  }
-  
-  // Data request buffer 2
-  if (mySDI12.command2address(2, "D2")) // ...or R1 for continuous measurments???
-  {
-    CR_ERROR;
-  }
+
+  // Frame. The result looks like 2+23.5+0.2+3.2+60
+  char *next;
+  float a = strtod(mySDI12.buffer+1, &next);
+  float b = strtod(next, &next);
+  float c = strtod(next, &next);
+  uint8_t d = (uint8_t) strtoul(next, &next, 10);
+  float e = strtod(next, &next);
+  ADD_SENSOR(SENSOR_WS100, a, b, c, d, e);
 
   CR_END;
 }
