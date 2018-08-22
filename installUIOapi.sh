@@ -14,15 +14,15 @@ printf "\n\n"
 printf "Creating folder and clone git UIO repositories ...\n"
 mkdir waspmote-uio
 cd waspmote-uio
-git clone git@github.com:spectraphilic/waspmoteapi-uio.git -b v032
+git clone git@github.com:spectraphilic/waspmoteapi-uio.git -b v034
 git clone git@github.com:spectraphilic/wasp_sketches.git
 
 # Download Waspmote IDE, and install it
 printf "Downloading Waspmote IDE, and installing it ...\n"
-mkdir waspmote-pro-ide-v06.02
-cd waspmote-pro-ide-v06.02
-wget http://downloads.libelium.com/waspmote-pro-ide-v06.05-linux64.zip
-unzip waspmote-pro-ide-v06.05-linux64.zip
+mkdir waspmote-pro-ide-v06.08
+cd waspmote-pro-ide-v06.08
+wget http://downloads.libelium.com/waspmote-pro-ide-v06.08-linux64.zip
+unzip waspmote-pro-ide-v06.08-linux64.zip
 ./install.sh
 
 # create simulink to our own copy of the librayr API
