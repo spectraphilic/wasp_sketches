@@ -216,7 +216,6 @@ CR_TASK(taskSdiWS100)
 
   CR_BEGIN;
 
-/*
   if (mySDI12.command2address(2, ""))
   {
     if (mySDI12.command2address(2, ""))
@@ -224,7 +223,6 @@ CR_TASK(taskSdiWS100)
       CR_ERROR;
     }
   }
-*/
 
   if (mySDI12.command2address(2, "R0"))
   {
