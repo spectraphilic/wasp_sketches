@@ -580,11 +580,14 @@ uint8_t WaspUIO::frame2Sd()
 
 #if WITH_4G
   // Encrypt frame
+  //if (strlen(password) != 0)
   if (false)
   {
-    frame.encryptFrame(AES_128, (char*)"0123456789123456");
-    frame.showFrame();
-    return 1;
+    frame.encryptFrame(AES_128, password);
+    if (flags & FLAG_LOG_USB)
+    {
+      frame.showFrame();
+    }
   }
 #endif
 

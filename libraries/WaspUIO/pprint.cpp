@@ -121,15 +121,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
-
-  if (actions[RUN_NETWORK] == 0)
-  {
-    snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"\""), macH, macL, hw, sw);
-  }
-  else
-  {
-    snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\""), macH, macL, hw, sw, name);
-  }
+  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\""), macH, macL, hw, sw, name);
 #else
   snprintf_F(dst, size, F("XBee not enabled, define WITH_XBEE TRUE"));
 #endif

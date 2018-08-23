@@ -39,6 +39,7 @@ const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (
 const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network type: 0=xbee 1=4g";
 const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
+const char CMD_PASSWORD[] PROGMEM = "password VALUE  - password for frame encryption, only used in 4G";
 const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
@@ -69,6 +70,7 @@ const Command commands[] PROGMEM = {
   {"name",      &cmdName,     CMD_NAME},
   {"onewire ",  &cmdOneWire,  CMD_ONEWIRE},
   {"network ",  &cmdNetwork,  CMD_NETWORK},
+  {"password ", &cmdPassword, CMD_PASSWORD},
   {"pin ",      &cmdPin,      CMD_PIN},
   {"print",     &cmdPrint,    CMD_PRINT},
   {"read ",     &cmdRead,     CMD_READ},
@@ -331,7 +333,7 @@ COMMAND(cmdCat)
   char filename[80];
 
   // Check input
-  if (sscanf(str, "%s", filename) != 1) { return cmd_bad_input; }
+  if (sscanf(str, "%79s", filename) != 1) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Check feature availability
@@ -644,6 +646,30 @@ next:
 /**
  * 4G configuration
  */
+
+COMMAND(cmdPassword)
+{
+  char value[33];
+  size_t len;
+
+  // Check input
+  if (sscanf(str, "%32s", value) != 1) { return cmd_bad_input; }
+
+  len = strlen(value);
+  if (len != 16 && len != 24 && len !=32)
+  {
+    cr.println(F("Password disabled (valid passwords have 16, 24 or 32 chars)"));
+    strcpy(UIO.password, "");
+  }
+  else
+  {
+    strcpy(UIO.password, value);
+  }
+
+  UIO.writeEEPROM(EEPROM_UIO_PWD, UIO.password, sizeof UIO.password);
+  return cmd_ok;
+}
+
 
 COMMAND(cmdPin)
 {

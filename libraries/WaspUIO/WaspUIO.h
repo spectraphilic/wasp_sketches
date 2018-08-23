@@ -51,6 +51,7 @@
 #define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
+#define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
 
 enum battery_type_t {
   BATTERY_LITHIUM = 1,
@@ -222,6 +223,7 @@ void xbeeInit();
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
 // Network: 4G
 uint16_t pin; // Pin for 4G module
+char password[33]; // To encrypt frames
 void _4GInit();
 uint8_t _4GStart();
 uint8_t _4GStop();
@@ -352,6 +354,7 @@ COMMAND(cmdLs);
 COMMAND(cmdName);
 COMMAND(cmdNetwork);
 COMMAND(cmdOneWire);
+COMMAND(cmdPassword);
 COMMAND(cmdPin);
 COMMAND(cmdPrint);
 COMMAND(cmdRead);
