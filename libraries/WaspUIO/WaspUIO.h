@@ -213,6 +213,7 @@ void stopSD();
 int readline(SdFile &file);
 int write(SdFile &file, const void* buf, size_t nbyte);
 int append(SdFile &file, const void* buf, size_t nbyte);
+int8_t walk(SdBaseFile &root);
 
 // Network
 void networkInit();
@@ -358,6 +359,7 @@ COMMAND(cmdPassword);
 COMMAND(cmdPin);
 COMMAND(cmdPrint);
 COMMAND(cmdRead);
+COMMAND(cmdRm);
 COMMAND(cmdRun);
 COMMAND(cmdSDI12);
 COMMAND(cmdTail);

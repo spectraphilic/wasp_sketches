@@ -145,3 +145,64 @@ int WaspUIO::readline(SdFile &file)
 
   return n;
 }
+
+
+/*
+ * Walk filesystem tree in pre-order
+ */
+void dir_cb(dir_t & dir_entry)
+{
+  char dir_name[13];
+  SdBaseFile::dirName(dir_entry, dir_name);
+  cr.println(F("%s/"), dir_name);
+}
+
+void file_cb(dir_t & dir_entry)
+{
+  char dir_name[13];
+  SdBaseFile::dirName(dir_entry, dir_name);
+  cr.println(F("%s"), dir_name);
+}
+
+
+int8_t WaspUIO::walk(SdBaseFile &root)
+{
+  int8_t err;
+  dir_t dir_entry;
+  char dir_name[13];
+  SdBaseFile subdir;
+
+  root.rewind();
+  err = root.readDir(&dir_entry);
+  while (err > 0)
+  {
+    SdBaseFile::dirName(dir_entry, dir_name);
+    if (dir_entry.attributes && DIR_ATT_DIRECTORY)
+    {
+      dir_cb(dir_entry);
+      uint32_t pos = root.curPosition();
+      if (subdir.open(&root, dir_name, O_READ))
+      {
+        err = walk(subdir);
+        if (err)
+        {
+          return err;
+        }
+      }
+      else
+      {
+        debug(F("Error opening %s"), dir_name);
+        return -1;
+      }
+      root.seekSet(pos);
+    }
+    else
+    {
+      file_cb(dir_entry);
+    }
+
+    err = root.readDir(&dir_entry); // Next
+  }
+
+  return err;
+}

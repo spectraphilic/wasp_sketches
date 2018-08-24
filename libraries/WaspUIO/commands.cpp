@@ -43,6 +43,7 @@ const char CMD_PASSWORD[] PROGMEM = "password VALUE  - password for frame encryp
 const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
+const char CMD_RM      [] PROGMEM = "rm FILENAME     - Remove file";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
                                     "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
 const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0-2";
@@ -74,6 +75,7 @@ const Command commands[] PROGMEM = {
   {"pin ",      &cmdPin,      CMD_PIN},
   {"print",     &cmdPrint,    CMD_PRINT},
   {"read ",     &cmdRead,     CMD_READ},
+  {"rm ",       &cmdRm,       CMD_RM},
   {"run ",      &cmdRun,      CMD_RUN},
   {"sdi",       &cmdSDI12,    CMD_SDI12},
   {"tail",      &cmdTail,     CMD_TAIL},
@@ -325,62 +327,6 @@ COMMAND(cmdBoard)
   return cmd_ok;
 }
 
-/**
- *  Print to USB FILENAME.
- */
-COMMAND(cmdCat)
-{
-  char filename[80];
-
-  // Check input
-  if (sscanf(str, "%79s", filename) != 1) { return cmd_bad_input; }
-  if (strlen(filename) == 0) { return cmd_bad_input; }
-
-  // Check feature availability
-  if (! UIO.hasSD) { return cmd_unavailable; }
-
-  // Do
-  SD.showFile((char*) filename);
-  return cmd_quiet;
-}
-
-COMMAND(cmdCatx)
-{
-  char filename[80];
-  SdFile file;
-  uint32_t size;
-  uint8_t idx;
-  int chr;
-
-  // Check input
-  if (sscanf(str, "%s", filename) != 1) { return cmd_bad_input; }
-  if (strlen(filename) == 0) { return cmd_bad_input; }
-
-  // Check feature availability
-  if (! UIO.hasSD) { return cmd_unavailable; }
-
-  // Open file
-  if (! SD.openFile(filename, &file, O_READ)) { return cmd_error; }
-
-  size = file.fileSize();
-  for (idx=0; idx < size; idx++)
-  {
-    chr = file.read();
-    if (chr < 0)
-    {
-      file.close();
-      return cmd_error;
-    }
-    USB.printHex((char)chr);
-    USB.print(" ");
-  }
-
-  file.close();
-  USB.println();
-
-  return cmd_quiet;
-}
-
 
 /**
  * Enable/Disable features (flags).
@@ -437,21 +383,6 @@ COMMAND(cmdExit)
 }
 
 /**
- * Format SD card.
- */
-
-COMMAND(cmdFormat)
-{
-  // Check feature availability
-  if (! UIO.hasSD) { return cmd_unavailable; }
-
-  // Do
-  SD.format();
-  UIO.stopSD(); UIO.startSD(); // Create base files
-  return cmd_ok;
-}
-
-/**
  * Help: Prints the list of commands
  */
 
@@ -490,20 +421,6 @@ COMMAND(cmdLogLevel)
   cr.loglevel = (loglevel_t) value;
 
   return cmd_ok;
-}
-
-/**
- * List files in SD.
- */
-
-COMMAND(cmdLs)
-{
-  // Check feature availability
-  if (! UIO.hasSD) { return cmd_unavailable; }
-
-  // Do
-  SD.ls(LS_DATE | LS_SIZE | LS_R);
-  return cmd_quiet;
 }
 
 
@@ -787,66 +704,6 @@ COMMAND(cmdSDI12)
   mySDI12.end();
   UIO.sdi12(0);
   return cmd_quiet;
-}
-
-/**
- * Print Tail lines of FILENAME to USB
- */
-
-COMMAND(cmdTail)
-{
-  unsigned int maxnl, nl;
-  char filename[80];
-  SdFile file;
-  uint32_t size, nc;
-  uint16_t max = DOS_BUFFER_SIZE - 1;
-  int16_t c;
-  size_t nbyte;
-  int nread;
-
-  // Check input
-  if (sscanf(str, "%u %s", &maxnl, &filename) != 2) { return cmd_bad_input; }
-  if (strlen(filename) == 0) { return cmd_bad_input; }
-
-  // Check feature availability
-  if (! UIO.hasSD) { return cmd_unavailable; }
-
-  // Open file
-  if (!SD.openFile(filename, &file, O_READ)) { return cmd_error; }
-
-  // Read backwards
-  maxnl++;
-  size = file.fileSize();
-  nc = 0;
-  nl = 0;
-  while (nc < size && nl < maxnl)
-  {
-    nc++;
-    file.seekEnd(-nc);
-    if ((c = file.read()) < 0) { goto error; }
-    if (c == '\n') { nl++; }
-  }
-  nc--; // do not include the last newline read
-
-  // Read forward
-  cr.println(F("-------------------------"));
-  file.seekEnd(-nc);
-  while (nc > 0)
-  {
-    nbyte = (nc < max) ? nc : max;
-    nread = file.read(SD.buffer, nbyte);
-    if (nread < 0) { goto error; }
-    USB.print(SD.buffer);
-    nc -= nread;
-  }
-  cr.println(F("-------------------------"));
-
-  file.close();
-  return cmd_quiet;
-
-error:
-  file.close();
-  return cmd_error;
 }
 
 
