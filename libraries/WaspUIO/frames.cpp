@@ -578,7 +578,6 @@ uint8_t WaspUIO::frame2Sd()
     USB.OFF();
   }
 
-#if WITH_4G
   // Encrypt frame
   //if (strlen(password) != 0)
   if (false)
@@ -589,7 +588,6 @@ uint8_t WaspUIO::frame2Sd()
       frame.showFrame();
     }
   }
-#endif
 
   // Start SD
   if (! hasSD) { return 1; }

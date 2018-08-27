@@ -37,12 +37,14 @@ void WaspUIO::onSetup()
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
+  // Frame encryption
+  UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
+
   // 4G network
 #if WITH_4G
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
   UIO.readEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
   _4G.set_APN(apn);
-  UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
 #endif
 
   // XBee network
