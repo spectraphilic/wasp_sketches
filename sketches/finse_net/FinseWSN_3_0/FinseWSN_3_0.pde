@@ -32,7 +32,7 @@ void setup()
   // Uptime frame
   Utils.getID(name);
   frame.setID(name);
-  frame.createFrameBin(BINARY);
+  frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
   if (_boot_version >= 'G')
   {
     frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);

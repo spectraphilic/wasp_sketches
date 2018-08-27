@@ -104,12 +104,7 @@ enum run_t {
 #define UIO_1WIRE 64
 #define UIO_SDI12 128
 
-#define ADD_SENSOR(type, ...) \
-  if (UIO.addSensor(type, ## __VA_ARGS__) == -1)\
-  {\
-    UIO.createFrame();\
-    UIO.addSensor(type, ## __VA_ARGS__);\
-  }
+#define ADD_SENSOR(type, ...) UIO.addSensor(type, ## __VA_ARGS__);
 
 
 /*
@@ -266,7 +261,7 @@ const uint8_t loop_timeout = 4; // minutes
 const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
-void createFrame(bool discard=false);
+void createFrame();
 int8_t addSensor(uint8_t type, ...);
 uint8_t addSensorValue(float value);
 uint8_t addSensorValue(int8_t value);

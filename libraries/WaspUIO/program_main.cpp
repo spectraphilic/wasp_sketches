@@ -12,7 +12,7 @@ CR_TASK(taskMain)
   CR_BEGIN;
 
   // Create the first frame
-  UIO.createFrame(true);
+  UIO.createFrame();
 
   // Network
   // First the network, then the sensors. This is to avoid interferences as I

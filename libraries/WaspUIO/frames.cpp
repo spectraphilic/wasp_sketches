@@ -135,21 +135,13 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
 
 /**
  * Wrap the frame.addSensor functions. If there is no place left in the frame,
- * aves the frame to the SD, creates a new one, and then adds the sensor to the
- * new frame.
+ * saves the frame to the SD, creates a new one, and then adds the sensor to
+ * the new frame.
  */
 
-void WaspUIO::createFrame(bool discard)
+void WaspUIO::createFrame()
 {
-  if (frame.numFields > 1 && !discard)
-  {
-    frame2Sd();
-  }
-
   frame.createFrameBin(BINARY);
-
-  // In binary frames, the timestamp must be first, that's what I deduce from
-  // frame.addTimestamp
   addSensor(SENSOR_TST, epochTime);
 }
 
@@ -325,6 +317,11 @@ exit:
 
   if (err)
   {
+    if (err == -1)
+    {
+      error(F("No space left in frame"));
+    }
+
     frame.length = start;
     //frame.buffer[frame.length] = '\0';
     return err;
@@ -351,6 +348,8 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
+  // TODO Set size always to 255, then use frame fragmentation if needed
+
   if (networkType == NETWORK_XBEE)
   {
     // We don't call frame.getMaxSizeForXBee to save memory, and because we
@@ -373,6 +372,8 @@ void WaspUIO::setFrameSize()
 uint8_t WaspUIO::getSequence(uint8_t *p)
 {
    uint8_t offset, i;
+
+   // FIXME Encrypted frames don't have un-encrypted sequence number
 
    // Fixed header, depends on version (4 or 8 bytes serial)
    if (_boot_version >= 'G') { offset = 3 + 1 + 1 + 8; }
@@ -597,6 +598,8 @@ uint8_t WaspUIO::frame2Sd()
     showFrame(frame.buffer);
     USB.OFF();
   }
+
+  // TODO Fragmentation
 
   // Encrypt frame
   //if (strlen(password) != 0)
