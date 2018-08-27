@@ -41,9 +41,9 @@ void WaspUIO::onSetup()
   UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
 
   // 4G network
-#if WITH_4G
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
   UIO.readEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
+#if WITH_4G
   _4G.set_APN(apn);
 #endif
 
@@ -57,6 +57,9 @@ void WaspUIO::onSetup()
   {
     actions[i] = Utils.readEEPROM(EEPROM_UIO_RUN + i);
   }
+
+  // Frames
+  setFrameSize();
 
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);

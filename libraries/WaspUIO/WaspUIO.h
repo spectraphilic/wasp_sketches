@@ -278,6 +278,7 @@ uint8_t addSensorValue(uint32_t value);
 uint8_t getSequence(uint8_t *p);
 void showFrame(uint8_t *p);
 uint8_t frame2Sd();
+void setFrameSize();
 
 // Menu
 void clint();
@@ -285,6 +286,7 @@ const char* pprint4G(char* dst, size_t size);
 const char* pprintActions(char* dst, size_t size);
 const char* pprintBattery(char* dst, size_t size);
 const char* pprintBoard(char* dst, size_t size);
+const char* pprintFrames(char* dst, size_t size);
 const char* pprintLog(char* dst, size_t size);
 const char* pprintSerial(char* str, size_t size);
 const char* pprintXBee(char* dst, size_t size);

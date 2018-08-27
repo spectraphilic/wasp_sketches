@@ -19,26 +19,9 @@ void WaspUIO::networkInit()
 
 void WaspUIO::xbeeInit()
 {
-  uint8_t addressing = UNICAST_64B;
-  uint8_t value = xbee.panid[1]; // panid low byte
+#if WITH_XBEE
   const __FlashStringHelper * error = NULL;
 
-  // Addressing
-  memcpy_P(&xbee, &xbees[value], sizeof xbee);
-  if (strcmp(xbee.rx_address, "000000000000FFFF") == 0)
-  {
-    addressing = BROADCAST_MODE;
-  }
-
-  // Set Frame size.
-  // We don't call frame.getMaxSizeForXBee to save memory, and because we know
-  // already the value.
-  // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, DISABLED)
-  // linkEncryption = DISABLED
-  // AESEncryption = DISABLED
-  frame.setFrameSize(73); // If AES enabled it would be 48
-
-#if WITH_XBEE
   // init XBee
   if (xbeeDM.ON())
   {
@@ -142,7 +125,6 @@ void WaspUIO::OTA_communication(int OTA_duration)
 
 void WaspUIO::_4GInit()
 {
-  frame.setFrameSize(255);
 }
 
 uint8_t WaspUIO::_4GStart()

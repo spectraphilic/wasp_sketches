@@ -66,6 +66,7 @@ void setup()
   {
     info(F("4G        : %s"), UIO.pprint4G(buffer, size));
   }
+  info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
 
   info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));

@@ -456,7 +456,10 @@ COMMAND(cmdNetwork)
   // Do
   if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK_TYPE, value)) { return cmd_error; }
   UIO.networkType = (network_type_t) value;
-  // XXX Action?
+
+  // Action
+  UIO.setFrameSize();
+  UIO.networkInit();
 
   return cmd_ok;
 }
@@ -584,6 +587,10 @@ COMMAND(cmdPassword)
   }
 
   UIO.writeEEPROM(EEPROM_UIO_PWD, UIO.password, sizeof UIO.password);
+
+  // Frame size depends on whether there's encryption or not
+  UIO.setFrameSize();
+
   return cmd_ok;
 }
 
@@ -627,6 +634,8 @@ COMMAND(cmdPrint)
   {
     cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size));
   }
+
+  cr.println(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
 
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));

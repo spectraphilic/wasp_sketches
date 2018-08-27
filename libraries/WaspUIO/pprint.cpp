@@ -81,6 +81,20 @@ const char* WaspUIO::pprintBoard(char* dst, size_t size)
   return dst;
 }
 
+const char* WaspUIO::pprintFrames(char* dst, size_t size)
+{
+  if (strlen(password) == 0)
+  {
+    snprintf_F(dst, size, F("size=%u encryption=disabled"), frame.getFrameSize());
+  }
+  else
+  {
+    snprintf_F(dst, size, F("size=%u encryption=enabled"), frame.getFrameSize());
+  }
+
+  return dst;
+}
+
 const char* WaspUIO::pprintLog(char* dst, size_t size)
 {
   dst[0] = '\0';

@@ -346,6 +346,26 @@ exit:
 }
 
 
+/*
+ * Set frame size
+ */
+void WaspUIO::setFrameSize()
+{
+  if (networkType == NETWORK_XBEE)
+  {
+    // We don't call frame.getMaxSizeForXBee to save memory, and because we
+    // know already the value.
+    // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, encryption);
+    frame.setFrameSize(strlen(password) == 0 ? 73 : 48);
+  }
+  else // 4G
+  {
+    // XXX Likely less if encryption enabled
+    frame.setFrameSize(255);
+  }
+}
+
+
 /**
  * Print the binary frame to USB.
  */
