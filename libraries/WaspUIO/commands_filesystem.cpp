@@ -63,6 +63,15 @@ COMMAND(cmdCatx)
 /*
  * Soft format, just remove all files and dirs.
  */
+bool format_file_cb(SdBaseFile &parent, char * name)
+{
+  return SdBaseFile::remove(&parent, name);
+}
+
+bool format_after_cb(SdBaseFile &me, char * name)
+{
+  return me.isRoot() || me.rmdir();
+}
 
 COMMAND(cmdFormat)
 {
@@ -70,10 +79,10 @@ COMMAND(cmdFormat)
   if (! UIO.hasSD) { return cmd_unavailable; }
 
   // Soft format
-  UIO.walk(SD.root);
+  UIO.walk(SD.root, NULL, format_file_cb, format_after_cb);
 
   // Create base files
-  //UIO.stopSD(); UIO.startSD();
+  UIO.stopSD(); UIO.startSD();
 
   return cmd_ok;
 }
@@ -93,7 +102,20 @@ COMMAND(cmdLs)
 
 /*
  * Remove file
+ * TODO Try rewrite using walk to see whether we can save some memory.
  */
+bool ls_before_cb(SdBaseFile &parent, char * name)
+{
+  cr.println(F("%s/"), name);
+  return true;
+}
+
+bool ls_file_cb(SdBaseFile &me, char * name)
+{
+  cr.println(F("%s"), name);
+  return true;
+}
+
 COMMAND(cmdRm)
 {
   char filename[80];

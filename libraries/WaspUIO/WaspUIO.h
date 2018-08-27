@@ -213,7 +213,10 @@ void stopSD();
 int readline(SdFile &file);
 int write(SdFile &file, const void* buf, size_t nbyte);
 int append(SdFile &file, const void* buf, size_t nbyte);
-int8_t walk(SdBaseFile &root);
+int8_t walk(SdBaseFile &root,
+            bool (*before_cb)(SdBaseFile &me, char* name),
+            bool (*file_cb)(SdBaseFile &parent, char* name),
+            bool (*after_cb)(SdBaseFile &me, char* name));
 
 // Network
 void networkInit();

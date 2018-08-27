@@ -150,57 +150,59 @@ int WaspUIO::readline(SdFile &file)
 /*
  * Walk filesystem tree in pre-order
  */
-void dir_cb(dir_t & dir_entry)
-{
-  char dir_name[13];
-  SdBaseFile::dirName(dir_entry, dir_name);
-  cr.println(F("%s/"), dir_name);
-}
-
-void file_cb(dir_t & dir_entry)
-{
-  char dir_name[13];
-  SdBaseFile::dirName(dir_entry, dir_name);
-  cr.println(F("%s"), dir_name);
-}
-
-
-int8_t WaspUIO::walk(SdBaseFile &root)
+int8_t WaspUIO::walk(SdBaseFile &root,
+                     bool (*before_cb)(SdBaseFile &me, char* name),
+                     bool (*file_cb)(SdBaseFile &parent, char* name),
+                     bool (*after_cb)(SdBaseFile &me, char* name))
 {
   int8_t err;
   dir_t dir_entry;
-  char dir_name[13];
+  char name[13];
   SdBaseFile subdir;
 
   root.rewind();
   err = root.readDir(&dir_entry);
   while (err > 0)
   {
-    SdBaseFile::dirName(dir_entry, dir_name);
+    SdBaseFile::dirName(dir_entry, name);
+    uint32_t pos = root.curPosition();
+
     if (dir_entry.attributes && DIR_ATT_DIRECTORY)
     {
-      dir_cb(dir_entry);
-      uint32_t pos = root.curPosition();
-      if (subdir.open(&root, dir_name, O_READ))
+      if (subdir.open(&root, name, O_READ))
       {
-        err = walk(subdir);
+        if (before_cb != NULL && ! before_cb(subdir, name))
+        {
+          warn(F("before_cb failed %s"), name);
+          return -1;
+        }
+        err = walk(subdir, before_cb, file_cb, after_cb);
         if (err)
         {
           return err;
         }
+        if (after_cb != NULL && ! after_cb(subdir, name))
+        {
+          warn(F("after_cb failed %s"), name);
+          return -1;
+        }
       }
       else
       {
-        debug(F("Error opening %s"), dir_name);
+        debug(F("Error opening %s"), name);
         return -1;
       }
-      root.seekSet(pos);
     }
     else
     {
-      file_cb(dir_entry);
+      if (file_cb != NULL && ! file_cb(root, name))
+      {
+        warn(F("file_cb failed %s"), name);
+        return -1;
+      }
     }
 
+    root.seekSet(pos);
     err = root.readDir(&dir_entry); // Next
   }
 
