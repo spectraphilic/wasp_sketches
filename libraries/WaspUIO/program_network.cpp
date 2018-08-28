@@ -126,8 +126,10 @@ CR_TASK(taskNetworkXBee)
   if (UIO.hasSD)
   {
     send = (
-      (UIO.battery == BATTERY_HIGH) ||
-      (UIO.battery == BATTERY_MIDDLE && UIO.minute % 180 == 0)
+       (UIO.battery == BATTERY_HIGH) ||
+       (UIO.battery == BATTERY_MIDDLE && UIO.day % 7 == 0 && UIO.minute == 720)
+	  //       (UIO.battery == BATTERY_MIDDLE && UIO.minute % 180 == 0)
+
     );
   }
 

@@ -9,8 +9,8 @@
  ******************************************************************************/
 
 // Features (unfortunately required to reduce sketch size)
-#define WITH_XBEE TRUE
-#define WITH_4G FALSE
+#define WITH_XBEE FALSE
+#define WITH_4G TRUE
 
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)

@@ -272,7 +272,7 @@ void WaspUIO::readBattery()
   {
     batteryLevel = PWR.getBatteryLevel();
     if      (batteryLevel <= 35) { battery = BATTERY_LOW; }
-    else if (batteryLevel <= 70) { battery = BATTERY_MIDDLE; }
+    else if (batteryLevel <= 85) { battery = BATTERY_MIDDLE; }
   }
   else
   {
