@@ -216,12 +216,18 @@ CR_TASK(taskSdiWS100)
 
   CR_BEGIN;
 
-  if (mySDI12.command2address(2, ""))
+  uint8_t retries = 3;
+  for (; retries > 0; retries--)
   {
-    if (mySDI12.command2address(2, ""))
+    if (! mySDI12.command2address(2, ""))
     {
-      CR_ERROR;
+      delay(100);
+      break;
     }
+  }
+  if (retries == 0)
+  {
+    CR_ERROR;
   }
 
   if (mySDI12.command2address(2, "R0"))
