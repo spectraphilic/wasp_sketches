@@ -570,16 +570,15 @@ next:
 COMMAND(cmdPassword)
 {
   char value[33];
-  size_t len;
 
   // Check input
   if (sscanf(str, "%32s", value) != 1) { return cmd_bad_input; }
 
-  len = strlen(value);
-  if (len != 16 && len != 24 && len !=32)
+  size_t len = strlen(value);
+  if (len != 16 && len != 24 && len != 32)
   {
     cr.println(F("Password disabled (valid passwords have 16, 24 or 32 chars)"));
-    strcpy(UIO.password, "");
+    UIO.password[0] = '\0';
   }
   else
   {

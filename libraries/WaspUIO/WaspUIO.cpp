@@ -39,6 +39,11 @@ void WaspUIO::onSetup()
 
   // Frame encryption
   UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
+  size_t len = strlen(password);
+  if (len != 0 && len != 16 && len != 24 && len != 32)
+  {
+    password[0] = '\0';
+  }
 
   // 4G network
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
