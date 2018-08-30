@@ -904,50 +904,50 @@ int SDI12::receiveChar()
  * error. */
 uint8_t SDI12::readline()
 {
-  uint32_t start;
   int c;
-  uint8_t code = 1; // Exit code
-  uint8_t i; // Char counter
+  uint8_t err = 1; // Exit code
+  uint8_t i = 0; // Char counter
+  uint8_t state = 0; // simple automata
+  bool started;
 
   memset(buffer, 0x00, sizeof(buffer));
 
-  i = 0;
-  start = millis();
-  do
+  int n = available();
+  if (n < 0)
   {
-    c = available();
-    if (c < 0)
+    error(F("sdi-12 readline overflow"));
+    goto exit;
+  }
+
+  while ((c = read()) >= 0)
+  {
+    // Skip garbage at the beginning, expect address (0-9, A-Z, a-z)
+    if (state == 0 && ! ('0' <= c <= 'z'))
     {
-      goto exit;
+      warn(F("sdi-12 readline skip unexpected garbage %d"), c);
+      continue;
+    }
+    state = 1;
+
+    // Success condition
+    // XXX To be exact we should detect the sequence \r\n TODO use state
+    if (c == '\r' || c == '\n')
+    {
+      err = 0;
+      break;
     }
 
-    if (c > 0)
-    {
-      c = read();
-      if (c < 0)
-      {
-        goto exit;
-      }
+    buffer[i++] = c;
+  }
 
-      // Success condition
-      // XXX To be exact we should detect the sequence \r\n
-      if (c == '\r' || c == '\n')
-      {
-        code = 0;
-        goto exit;
-      }
-
-      // One more char
-      buffer[i++] = c;
-    }
-  } while (! cr.timeout(start, 2000)); // 2s
-
-  // Timeout
-  error(F("readline: Timeout"));
+  if (err)
+  {
+    error(F("sdi-12 readline end-of-line not found"));
+  }
 
 exit:
   flush();
-  return code;
+  return err;
 }
 
 /* Sends the given command to the given address */
