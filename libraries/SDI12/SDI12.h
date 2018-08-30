@@ -70,6 +70,8 @@ private:
 
   static const char * getStateName(uint8_t state);     // get state name (in ASCII)
 
+  int listen(unsigned long listenTimeout); // returns 0 if chars received   /* Added for Waspmote: polls for characters */
+
 public:
   SDI12(uint8_t dataPin);    // constructor
   ~SDI12();            // destructor
@@ -79,8 +81,6 @@ public:
   void forceHold();       // sets line state to HOLDING
   void sendCommand(const char* cmd);   // sends the string 'cmd' out on the data line
   void sendResponse(const char* resp); // sends the string 'resp' out on the data line (JH)
-
-  int listen(unsigned long listenTimeout); // returns 0 if chars received   /* Added for Waspmote: polls for characters */
 
   int available();      // returns the number of bytes available in buffer
   int peek();        // reveals next byte in buffer without consuming

@@ -572,9 +572,9 @@ sends out an 8.33 ms marking and a String byte by byte the command line.
 void SDI12::wakeSensors(){
   setState(TRANSMITTING);
   digitalWrite(_dataPin, HIGH);
-  delayMicroseconds(12500);
+  delayMicroseconds(12500); // 12ms (std) -> 12.1ms (orig) -> 12.5ms (lib)
   digitalWrite(_dataPin, LOW);
-  delayMicroseconds(9000);
+  delayMicroseconds(9000); // 8.33ms (std) -> 8.4ms (orig) -> 9ms (lib)
 }
 
 // 4.2 - this function writes a character out on the data line
@@ -633,31 +633,41 @@ void SDI12::sendResponse(const char* resp)
 
 /* 4.5 - Here is new polling code for waspmote
        This command will poll the bus for data coming back rather than use interrupts
+
+  TODO Make it to look more like libelium's readCommandAnswer but check for
+  \r\n for the stop condition, instead of length
 */
 int SDI12::listen(unsigned long listenTimeout) //time to wait in microseconds
 {
-  setState(LISTENING);
+  bool timeout = true;
+
+  // Only called from sendCommand, state must be LISTENING already
+
   // Wait up to listenTimeout (in microseconds) for response to arrive
   unsigned long timestamp = micros();
   for (unsigned long i = timestamp; (i - timestamp) <= listenTimeout; i = micros() )
   {
-    if (!receiveChar()){
+    if (!receiveChar())
+    {
+      timeout = false;
       break;
     }
   }
 
+  if (timeout)
+  {
+    return -1;
+  }
+
   timestamp = micros();
   // Each additional char will come within 1.66ms of the last one
-  if (available() > 0) {
-    for (unsigned long i = timestamp; (i - timestamp) <= 1700; i = micros())
-    {
-      if (!receiveChar()){
-        timestamp = micros();   //Reset for next char
-      }
+  for (unsigned long i = timestamp; (i - timestamp) <= 1700; i = micros())
+  {
+    if (!receiveChar()){
+      timestamp = micros();   //Reset for next char
     }
-    return 0; // Success (relatively) if we get here
   }
-  return -1; // Failure if we get to this step
+  return 0; // Success (relatively) if we get here
 }
 
 /* ============= 5. Reading from the SDI-12 object.  ===================
