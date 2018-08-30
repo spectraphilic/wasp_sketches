@@ -46,7 +46,7 @@ const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=
 const char CMD_RM      [] PROGMEM = "rm FILENAME     - Remove file";
 const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
                                     "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
-const char CMD_SDI12   [] PROGMEM = "sdi             - Identify SDI-12 sensors in addresses 0-2";
+const char CMD_SDI12   [] PROGMEM = "sdi [ADDRESS]   - Identify SDI-12 sensors";
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
 const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
 const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time, value can be network, yy:mm:dd:hh:mm:ss or epoch";
@@ -704,13 +704,23 @@ COMMAND(cmdRun)
 
 COMMAND(cmdSDI12)
 {
+  uint8_t address;
+
+  int n = sscanf(str, "%hhu", address);
+
   UIO.sdi12(1);
   mySDI12.begin();
-  mySDI12.identification(0);
-  mySDI12.identification(1);
-  mySDI12.identification(2);
+  if (n == -1)
+  {
+    mySDI12.read_address();
+  }
+  else
+  {
+    mySDI12.identification(address);
+  }
   mySDI12.end();
   UIO.sdi12(0);
+
   return cmd_quiet;
 }
 
