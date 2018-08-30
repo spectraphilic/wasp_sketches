@@ -90,8 +90,6 @@ public:
   bool setActive();     // set this instance as the active SDI-12 instance
   bool isActive();      // check if this instance is active
 
-  static inline void handleInterrupt(); // intermediary used by the ISR
-
   // From University of Oslo
   char buffer[75];
 

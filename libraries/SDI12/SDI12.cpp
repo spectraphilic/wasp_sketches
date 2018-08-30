@@ -130,8 +130,6 @@ SDI-12.org, official site of the SDI-12 Support Group.
 #define LISTENING 4            // 0.7 value for LISTENING state
 #define SPACING 830            // 0.8 bit timing in microseconds
 
-#define POLLING 1            // 0.9 to poll or not to poll?
-
 SDI12 *SDI12::_activeObject = NULL;    // 0.9 pointer to active SDI12 object
 uint8_t _dataPin;             // 0.10 reference to the data pin
 bool _bufferOverflow;          // 0.11 buffer overflow status
@@ -436,9 +434,6 @@ void SDI12::setState(uint8_t state){
   if(state == HOLDING){
     pinMode(_dataPin,OUTPUT);
     digitalWrite(_dataPin,LOW);
-#if (POLLING == 0)
-    *digitalPinToPCMSK(_dataPin) &= ~(1<<digitalPinToPCMSKbit(_dataPin));
-#endif
     return;
   }
   if(state == TRANSMITTING){
@@ -453,19 +448,9 @@ void SDI12::setState(uint8_t state){
     other interrupts can still be generated and may mess up the behavior
     of this polling function */
     interrupts();        // supplied by Arduino.h, same as sei()
-#if (POLLING == 0)
-  *digitalPinToPCICR(_dataPin) |= (1<<digitalPinToPCICRbit(_dataPin));
-    *digitalPinToPCMSK(_dataPin) |= (1<<digitalPinToPCMSKbit(_dataPin));
-#endif
   } else {             // implies state==DISABLED
     digitalWrite(_dataPin,LOW);
     pinMode(_dataPin,INPUT);
-#if (POLLING == 0)
-    *digitalPinToPCMSK(_dataPin) &= ~(1<<digitalPinToPCMSKbit(_dataPin));
-    if(!*digitalPinToPCMSK(_dataPin)){
-      *digitalPinToPCICR(_dataPin) &= ~(1<<digitalPinToPCICRbit(_dataPin));
-    }
-#endif
   }
 }
 
@@ -625,11 +610,9 @@ void SDI12::sendCommand(const char* cmd){
   setState(LISTENING);             // listen for reply
 
   // New for waspmote
-  if (POLLING)
-  {
     listen(16700);  // 16.7ms is the max time for a response to be received
                     //   after a command is sent
-  }
+                    //   XXX Spec says 15ms actually, not 16.7
 }
 
 //  4.4 - this function sets up for a response, then sends out the characters
@@ -877,11 +860,6 @@ overflow, and then advance the tail index.
 7.3 - Check if the various interrupt vectors are defined. If they are
 the ISR is instructed to call _handleInterrupt() when they trigger. */
 
-// 7.1 - Passes off responsibility for the interrupt to the active object.
-inline void SDI12::handleInterrupt(){
-  if (_activeObject) _activeObject->receiveChar();
-}
-
 // 7.2 - Quickly reads a new character into the buffer.
 int SDI12::receiveChar()
 {
@@ -915,27 +893,6 @@ int SDI12::receiveChar()
   }
   return -1;
 }
-
-//7.3 - If not polling set interrupts
-#if POLLING == 0
-
-#if defined(PCINT0_vect)
-ISR(PCINT0_vect){ SDI12::handleInterrupt(); }
-#endif
-
-#if defined(PCINT1_vect)
-ISR(PCINT1_vect){ SDI12::handleInterrupt(); }
-#endif
-
-#if defined(PCINT2_vect)
-ISR(PCINT2_vect){ SDI12::handleInterrupt(); }
-#endif
-
-#if defined(PCINT3_vect)
-ISR(PCINT3_vect){ SDI12::handleInterrupt(); }
-#endif
-
-#endif
 
 
 /*
