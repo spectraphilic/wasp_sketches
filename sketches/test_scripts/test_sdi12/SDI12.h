@@ -60,9 +60,6 @@ Implementation: Javier Siscart
 #define SPACING 830
 #define LISTEN_TIME 500
 
-// Data pin only for Agriculute Xtreme board
-//#define _dataPin	DIGITAL8
-
 
 /******************************************************************************
 * Class
@@ -97,7 +94,7 @@ public:
 
 	WaspSDI12(uint8_t dataPin);					// class constructor
 
-	void sendCommand(const char* cmd);
+	void sendCommand(char* cmd, uint8_t length);
 	int available();
 	int read();
 	void readCommandAnswer(unsigned long timeout = LISTEN_TIME);
@@ -106,6 +103,13 @@ public:
 	// From University of Oslo
 	char buffer[_BUFFER_SIZE + 1];
 	const char* readline();
+	const char* sendCommand(const char* cmd);
+	const char* sendCommand(uint8_t address, const char* cmd);
+	const char* identify(uint8_t address);
+	int measure(uint8_t address);
+	const char* data(uint8_t address);
+	char read_address();
+	uint8_t set_address(char current_address, char new_address);
 
 };
 #endif

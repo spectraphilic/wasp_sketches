@@ -194,12 +194,11 @@
  }
  /*	sendCommand: sends a SDI12 command
  *	Parameters: char* cmd: command to be sent
+ * 				uint8_t length: length of the command
  *  Return:	void
  */
- void WaspSDI12::sendCommand(const char* cmd)
+ void WaspSDI12::sendCommand(char* cmd, uint8_t length)
  {
-	 uint8_t length = strlen(cmd);
-
 	 #if SDI12DEBUG
 	 PRINT_SDI12(F("[TX]"));
 	 USB.println(cmd);
@@ -214,7 +213,6 @@
 	 }
 	 
 	 setState(LISTENING);
- 	 readCommandAnswer();
  }
  
  /*	available: number of characters available in the buffer
@@ -289,25 +287,110 @@
 	 #endif
 	 
  }
- 
- 
- /*	readCommandAnswer: waits till sensor answer a command.
- *	Parameters: uint8_t length: legth of expected answer
- * 				unsigned long timeout: time to be waiting for the answer (milliseconds)
- *  Return:	void
+
+
+/*
+ * From the University of Oslo
  */
- const char* WaspSDI12::readline()
- {
- 	 int c;
-	 char* p = buffer;
- 	 while ((c = read()) != -1)
-	 {
-	 	if (c == '\r')
-		{
-			break;
-		}
-	 	*p++ = (char) c;
-	 }
-	 *p = '\0';
-	 return buffer;
- }
+
+const char* WaspSDI12::readline()
+{
+    int c;
+    char* p = buffer;
+    while ((c = read()) != -1)
+    {
+        if (c == '\r')
+        {
+            break;
+        }
+        *p++ = (char) c;
+    }
+    *p = '\0';
+    return buffer;
+}
+
+const char* WaspSDI12::sendCommand(const char* cmd)
+{
+    sendCommand((char*)cmd, strlen(cmd));
+    readCommandAnswer();
+    return readline();
+}
+
+const char* WaspSDI12::sendCommand(uint8_t address, const char* cmd)
+{
+    char aux[5];
+    size_t max = sizeof(aux);
+    int n;
+
+    if (address > 9)
+    {
+        return NULL;
+    }
+
+    n = snprintf(aux, max, "%d%s!", address, cmd);
+    if (n < 0 || n >= max)
+    {
+        return NULL;
+    }
+
+    sendCommand(aux);
+
+    // Check address
+    if (aux[0] != buffer[0])
+    {
+        return NULL;
+    }
+
+    return buffer;
+}
+
+const char* WaspSDI12::identify(uint8_t address)
+{
+    return sendCommand(address, "I");
+}
+
+/*
+ * Send a measure command to the given address. Return the number of seconds to
+ * wait for the data to be available; or -1 if error.
+ */
+int WaspSDI12::measure(uint8_t address)
+{
+    if (sendCommand(address, "M"))
+    {
+      return -1;
+    }
+
+    return atoi(buffer+1);
+}
+
+const char* WaspSDI12::data(uint8_t address)
+{
+    return sendCommand(address, "D0");
+}
+
+
+char WaspSDI12::read_address()
+{
+    sendCommand("?!");
+    return buffer[0];
+}
+
+uint8_t WaspSDI12::set_address(char current_address, char new_address)
+{
+    char aux[5];
+
+    snprintf(aux, sizeof(aux), "%cA%c!", current_address, new_address);
+    sendCommand(aux);
+
+    if (buffer == NULL)
+    {
+        return 1;
+    }
+
+    if (buffer[0] != new_address)
+    {
+        return 1;
+    }
+
+    return 0;
+}
