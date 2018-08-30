@@ -869,7 +869,7 @@ int SDI12::receiveChar()
 
     delayMicroseconds(SPACING/2);      // 7.2.3 - Wait 1/2 SPACING
 
-    for (uint8_t i=0x1; i<0x80; i <<= 1)  // 7.2.4 - read the 7 data bits
+    for (uint8_t i=0x1; i <= 0x80; i <<= 1)  // 7.2.4 - read the 7 data & 1 parity bits
     {
       delayMicroseconds(SPACING);
       uint8_t noti = ~i;
@@ -879,10 +879,19 @@ int SDI12::receiveChar()
         newChar &= noti;
     }
 
-    delayMicroseconds(SPACING);        // 7.2.5 - Skip the parity bit.
-  delayMicroseconds(SPACING);        // 7.2.6 - Skip the stop bit.
+    // 7.2.5 - Skip the stop bit.
+    delayMicroseconds(SPACING);
 
-                    // 7.2.7 - Overflow? If not, proceed.
+    // 7.2.6 Check parity
+    bool odd_parity = (((newChar * 0x0101010101010101ULL) & 0x8040201008040201ULL) % 0x1FF) & 1;
+    if (odd_parity)
+    {
+      // XXX Log this?
+      return -1;
+    }
+    newChar &= 0x7F; // Throw away the parity bit
+
+    // 7.2.7 - Overflow? If not, proceed.
     if ((_rxBufferTail + 1) % _BUFFER_SIZE == _rxBufferHead)
     { _bufferOverflow = true;
     } else {              // 7.2.8 - Save char, advance tail.
