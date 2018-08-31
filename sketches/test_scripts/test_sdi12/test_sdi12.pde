@@ -21,7 +21,7 @@
 */
 
 // Put your libraries here (#include ...)
-#include "SDI12.h"
+#include <SDI12.h>
 
 WaspSDI12 sdi12(DIGITAL8);
 
@@ -44,7 +44,7 @@ void loop()
   PWR.setSensorPower(SENS_5V, SENS_ON);
   delay(500);
 
-  sdi12.sendCommand("?!");
+  sdi12.read_address();
   sdi12.identify(0);
 
   USB.println("");

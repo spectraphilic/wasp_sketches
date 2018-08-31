@@ -238,7 +238,10 @@ bool WaspUIO::sdi12(bool new_state)
   if (new_state == old_state) { return old_state; }
 
   // Requires 5V
-  if (new_state) { v5(1); }
+  if (new_state)
+  {
+    if (v5(1) != 1) { delay(500); };
+  }
 
   // Switch
   if (boardType == BOARD_LEMMING)
@@ -250,10 +253,8 @@ bool WaspUIO::sdi12(bool new_state)
     _setState(device, new_state);
   }
 
-/*
-  if (new_state) { mySDI12.begin(); }
-  else           { mySDI12.end(); }
-*/
+//if (new_state) { sdi12.begin(); }
+//else           { sdi12.end(); }
 
   return old_state;
 }

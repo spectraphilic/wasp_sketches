@@ -1,107 +1,124 @@
-/* ======================== Arduino SDI-12 =================================
+/*
+ * This is a fork, by University of Oslo, of Libelium's lib found at
+ * libraries/SensorAgr_Xtreme/utility/ since API version 033.
+ *
+ * There're some inline changes, and a higher level interface.  Please respect
+ * upstream code as much as possible to keep the diff to a minimum.
+ */
 
-Arduino library for SDI-12 communications to a wide variety of environmental
-sensors. This library provides a general software solution, without requiring
-any additional hardware.
 
-======================== Attribution & License =============================
+/*! \file SDI12.h
+\brief Library for the SDI-12 protocol
 
-Copyright (C) 2013  Stroud Water Research Center
-Available at https://github.com/StroudCenter/Arduino-SDI-12
+Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+http://www.libelium.com
 
-Authored initially in August 2013 by:
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 2.1 of the License, or
+(at your option) any later version.
 
-        Kevin M. Smith (http://ethosengineering.org)
-        Inquiries: SDI12@ethosengineering.org
-
-based on the SoftwareSerial library (formerly NewSoftSerial), authored by:
-        ladyada (http://ladyada.net)
-        Mikal Hart (http://www.arduiniana.org)
-        Paul Stoffregen (http://www.pjrc.com)
-        Garrett Mace (http://www.macetech.com)
-        Brett Hagman (http://www.roguerobotics.com/)
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
+This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Based on SDI12 library of Kevin M. Smith (http://ethosengineering.org)
+
+Version:		3.0
+Design:			David Gascón
+Implementation: Javier Siscart
+
 */
 
+
+/*! \def SDI12
+\brief The library flag
+*/
 #ifndef SDI12_h
 #define SDI12_h
 
-                //  Import Required Libraries
-#include <avr/interrupt.h>      // interrupt handling
+/******************************************************************************
+* Includes
+******************************************************************************/
+#include <inttypes.h>
 #include <util/parity.h>         // optimized parity bit handling
-#include <inttypes.h>      // integer types library
-#include <WaspClasses.h>            // Waspmote core library
-#include <Coroutines.h> // coroutine for millisdiff fucntions
-//=======
 
-/*  Notes on interrupts:
-  The following pins are interrupt capable for the Atmel ATmega640/1280 family:
-    PB0-7 = PCINT0-PCINT7
-    PE0   = PCINT8             *This is USB RX on Waspmote, so not using it
-    PJ0-6 = PCINT9-PCINT15     *Not available on 1281
-    PK0-7 = PCINT16-PCINT23    *Not available on 1281
 
-  The Waspmote uses a 1281 uProcessor and utilizes all its interrupt pins
-  for other things. Without the ability to generate a pin change interrupt
-  we have to modify this library to poll for a response.
+/******************************************************************************
+* Definitions & Declarations
+******************************************************************************/
+/* Debug mode. Possible values are:
+* 0 = no debug messages will be printed
+* 1 = some debug messages will be printed
 */
+#define SDI12DEBUG	0
+#define PRINT_SDI12(str)	USB.print(F("[SDI12] ")); USB.print(str);
+#define PRINTLN_SDI12(str)	USB.print(F("[SDI12] ")); USB.println(str);
 
-class SDI12
+// SDI12 definitions
+#define _BUFFER_SIZE 64
+#define DISABLED 0
+#define ENABLED 1
+#define HOLDING 2
+#define TRANSMITTING 3
+#define LISTENING 4
+#define SPACING 830
+#define LISTEN_TIME 500
+
+
+/******************************************************************************
+* Class
+******************************************************************************/
+
+/*!
+WaspSDI12 Class defines all the variables and functions used for
+managing the SDI-12 sensors
+*/
+class WaspSDI12
 {
+
 private:
-  static SDI12 *_activeObject;  // static pointer to active SDI12 instance
-  void setState(uint8_t state); // sets the state of the SDI12 objects
-  void wakeSensors();      // used to wake up the SDI12 bus
-  void writeChar(uint8_t out);   // used to send a char out on the data line
-  int receiveChar();      // used by the ISR to grab a char from data line /*  Modified for Waspmote: return value indicates whether char was seen  */
 
-  static const char * getStateName(uint8_t state);     // get state name (in ASCII)
+	uint8_t _dataPin;
 
-  int listen(unsigned long listenTimeout); // returns 0 if chars received   /* Added for Waspmote: polls for characters */
+	uint8_t j;						// general counter for received chars
+	bool _bufferOverflow;			// buffer overflow status
+	char _rxBuffer[_BUFFER_SIZE];	// Buffer variables for incomming data
+	uint8_t _rxBufferHead;
+	uint8_t _rxBufferTail;
+
+	int peek();
+	void flush();
+	void wakeSensors();
+	void writeChar(uint8_t out);
+	void receiveChar();
+
+//protected:
 
 public:
-  SDI12(uint8_t dataPin);    // constructor
-  ~SDI12();            // destructor
-  void begin();          // enable SDI-12 object
-  void end();          // disable SDI-12 object
 
-  void forceHold();       // sets line state to HOLDING
-  void sendCommand(const char* cmd);   // sends the string 'cmd' out on the data line
-  void sendResponse(const char* resp); // sends the string 'resp' out on the data line (JH)
+	WaspSDI12(uint8_t dataPin);					// class constructor
 
-  int available();      // returns the number of bytes available in buffer
-  int peek();        // reveals next byte in buffer without consuming
-  int read();        // returns next byte in the buffer (consumes)
-  void flush();        // clears the buffer
+	void sendCommand(char* cmd, uint8_t length);
+	int available();
+	int read();
+	void readCommandAnswer(unsigned long timeout = LISTEN_TIME);
+	void setState(uint8_t status);
 
-  bool setActive();     // set this instance as the active SDI-12 instance
-  bool isActive();      // check if this instance is active
-
-  // From University of Oslo
-  char buffer[75];
-
-  uint8_t readline();
-  uint8_t command2address(uint8_t address, const char* cmd);
-  uint8_t identification(uint8_t address);
-  int measure(uint8_t address);
-  uint8_t data(uint8_t address);
-
-  char read_address();
-  uint8_t set_address(char current_address, char new_address);
+	// From University of Oslo
+	char buffer[_BUFFER_SIZE + 1];
+	const char* readline();
+	const char* sendCommand(const char* cmd);
+	const char* sendCommand(uint8_t address, const char* cmd);
+	const char* identify(uint8_t address);
+	int measure(uint8_t address);
+	const char* data(uint8_t address);
+	char read_address();
+	uint8_t set_address(char current_address, char new_address);
 
 };
-
 #endif

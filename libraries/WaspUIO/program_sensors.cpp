@@ -134,20 +134,20 @@ CR_TASK(taskSdiCtd10)
   CR_BEGIN;
 
   // Send the measure command
-  ttt = mySDI12.measure(0);
+  ttt = sdi12.measure(0);
   if (ttt < 0) { CR_ERROR; }
 
   // TODO We could listen every n ms for a "Service Request" from the sensor
   if (ttt > 0) { CR_DELAY(ttt * 1000); }
 
   // Send the data command
-  if (mySDI12.data(0)) { CR_ERROR; }
+  if (sdi12.data(0)) { CR_ERROR; }
 
   // Frame. The result looks like 0+167+17.5+103
   char *next;
   double a, b, c;
 
-  a = strtod(mySDI12.buffer+1, &next);
+  a = strtod(sdi12.buffer+1, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
   ADD_SENSOR(SENSOR_CTD10, a, b, c);
@@ -161,7 +161,7 @@ CR_TASK(taskSdiDs2)
   CR_BEGIN;
 
   // Send the measure command
-  if (mySDI12.command2address(1, "M6"))
+  if (sdi12.sendCommand(1, "M6"))
   {
     CR_ERROR;
   }
@@ -172,7 +172,7 @@ CR_TASK(taskSdiDs2)
   CR_DELAY(11000);
 
   // Wind speed&direction, air temp
-  if (mySDI12.command2address(1, "D0"))
+  if (sdi12.sendCommand(1, "D0"))
   {
     CR_ERROR;
   }
@@ -181,7 +181,7 @@ CR_TASK(taskSdiDs2)
   char *next;
   double a, b, c;
 
-  a = strtod(mySDI12.buffer+1, &next);
+  a = strtod(sdi12.buffer+1, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
   ADD_SENSOR(SENSOR_DS2_1, a, b, c);
@@ -219,7 +219,7 @@ CR_TASK(taskSdiWS100)
   uint8_t retries = 3;
   for (; retries > 0; retries--)
   {
-    if (! mySDI12.command2address(2, ""))
+    if (! sdi12.sendCommand(2, ""))
     {
       delay(100);
       break;
@@ -230,14 +230,14 @@ CR_TASK(taskSdiWS100)
     CR_ERROR;
   }
 
-  if (mySDI12.command2address(2, "R0"))
+  if (sdi12.sendCommand(2, "R0"))
   {
     CR_ERROR;
   }
 
   // Frame. The result looks like 2+23.5+0.2+3.2+60
   char *next;
-  float a = strtod(mySDI12.buffer+1, &next);
+  float a = strtod(sdi12.buffer+1, &next);
   float b = strtod(next, &next);
   float c = strtod(next, &next);
   uint8_t d = (uint8_t) strtoul(next, &next, 10);

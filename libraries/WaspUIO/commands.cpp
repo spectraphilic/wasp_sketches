@@ -20,37 +20,37 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_4G      [] PROGMEM = "4g              - Test 4G data connection";
+const char CMD_4G      [] PROGMEM = "4g               - Test 4G data connection";
 const char CMD_ACK     [] PROGMEM = ""; // Hidden command
-const char CMD_APN     [] PROGMEM = "apn [APN]       - Set 4G Access Point Name (APN)";
-const char CMD_BATTERY [] PROGMEM = "bat VALUE       - Choose the battery type: 1=lithium 2=lead";
-const char CMD_BOARD   [] PROGMEM = "board VALUE     - Choose the sensor board: 0=none 1=lemming";
-const char CMD_CAT     [] PROGMEM = "cat FILENAME    - Print FILENAME contents to USB";
-const char CMD_CATX    [] PROGMEM = "catx FILENAME   - Print FILENAME contents in hexadecimal to USB";
-const char CMD_DISABLE [] PROGMEM = "disable FLAG    - Disables a feature: 0=log_sd 1=log_usb";
-const char CMD_ENABLE  [] PROGMEM = "enable FLAG     - Enables a feature: 0=log_sd 1=log_usb";
-const char CMD_EXIT    [] PROGMEM = "exit            - Exit the command line interface";
-const char CMD_FORMAT  [] PROGMEM = "format          - Format SD card";
-const char CMD_HELP    [] PROGMEM = "help            - Prints the list of commands";
-const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE  - Sets the log level: "
+const char CMD_APN     [] PROGMEM = "apn [APN]        - Set 4G Access Point Name (APN)";
+const char CMD_BATTERY [] PROGMEM = "bat VALUE        - Choose the battery type: 1=lithium 2=lead";
+const char CMD_BOARD   [] PROGMEM = "board VALUE      - Choose the sensor board: 0=none 1=lemming";
+const char CMD_CAT     [] PROGMEM = "cat FILENAME     - Print FILENAME contents to USB";
+const char CMD_CATX    [] PROGMEM = "catx FILENAME    - Print FILENAME contents in hexadecimal to USB";
+const char CMD_DISABLE [] PROGMEM = "disable FLAG     - Disables a feature: 0=log_sd 1=log_usb";
+const char CMD_ENABLE  [] PROGMEM = "enable FLAG      - Enables a feature: 0=log_sd 1=log_usb";
+const char CMD_EXIT    [] PROGMEM = "exit             - Exit the command line interface";
+const char CMD_FORMAT  [] PROGMEM = "format           - Format SD card";
+const char CMD_HELP    [] PROGMEM = "help             - Prints the list of commands";
+const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE   - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char CMD_LS      [] PROGMEM = "ls              - List files in SD card";
-const char CMD_NAME    [] PROGMEM = "name            - Give a name to the mote (max 16 chars)";
-const char CMD_NETWORK [] PROGMEM = "network VALUE   - Choose network type: 0=xbee 1=4g";
-const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)  - Identify OneWire sensors attached to the given pins,"
+const char CMD_LS      [] PROGMEM = "ls               - List files in SD card";
+const char CMD_NAME    [] PROGMEM = "name             - Give a name to the mote (max 16 chars)";
+const char CMD_NETWORK [] PROGMEM = "network VALUE    - Choose network type: 0=xbee 1=4g";
+const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors attached to the given pins,"
                                     "saves to onewire.txt";
-const char CMD_PASSWORD[] PROGMEM = "password VALUE  - password for frame encryption";
-const char CMD_PIN     [] PROGMEM = "pin VALUE       - set pin for the 4G module (0=disabled)";
-const char CMD_PRINT   [] PROGMEM = "print           - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE      - Read sensor: 1=battery 6=ds1820 8=mb";
-const char CMD_RM      [] PROGMEM = "rm FILENAME     - Remove file";
-const char CMD_RUN     [] PROGMEM = "run VALUE MIN   - Run every 0-255 minutes: 0=network 1=battery "
+const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
+const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
+const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
+const char CMD_READ    [] PROGMEM = "read VALUE       - Read sensor: 1=battery 6=ds1820 8=mb";
+const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
+const char CMD_RUN     [] PROGMEM = "run VALUE MIN    - Run every 0-255 minutes: 0=network 1=battery "
                                     "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
-const char CMD_SDI12   [] PROGMEM = "sdi [ADDRESS]   - Identify SDI-12 sensors";
-const char CMD_TAIL    [] PROGMEM = "tail N FILENAME - Print last N lines of FILENAME to USB";
-const char CMD_TIME_GPS[] PROGMEM = "time gps        - Sets time from GPS";
-const char CMD_TIME    [] PROGMEM = "time VALUE      - Sets time, value can be network, yy:mm:dd:hh:mm:ss or epoch";
-const char CMD_XBEE    [] PROGMEM = "xbee VALUE      - Choose xbee network: "
+const char CMD_SDI12   [] PROGMEM = "sdi [ADDR] [NEW] - Identify SDI-12 sensors";
+const char CMD_TAIL    [] PROGMEM = "tail N FILENAME  - Print last N lines of FILENAME to USB";
+const char CMD_TIME_GPS[] PROGMEM = "time gps         - Sets time from GPS";
+const char CMD_TIME    [] PROGMEM = "time VALUE       - Sets time, value can be network, yy:mm:dd:hh:mm:ss or epoch";
+const char CMD_XBEE    [] PROGMEM = "xbee VALUE       - Choose xbee network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
@@ -433,7 +433,7 @@ COMMAND(cmdName)
   char value[17];
 
   // Check input
-  if (sscanf(str, "%16s", &value) != 1) { return cmd_bad_input; }
+  if (sscanf(str, "%16s", value) != 1) { return cmd_bad_input; }
   if (strlen(value) == 0) { return cmd_bad_input; }
 
   Utils.setID(value);
@@ -704,21 +704,23 @@ COMMAND(cmdRun)
 
 COMMAND(cmdSDI12)
 {
-  uint8_t address;
+  uint8_t address, new_address;
 
-  int n = sscanf(str, "%hhu", address);
+  int n = sscanf(str, "%hhu %hhu", &address, &new_address);
 
   UIO.sdi12(1);
-  mySDI12.begin();
-  if (n == -1)
+  if (n <= 0)
   {
-    mySDI12.read_address();
+    sdi12.read_address();
   }
-  else
+  else if (n == 1)
   {
-    mySDI12.identification(address);
+    sdi12.identify(address);
   }
-  mySDI12.end();
+  else if (n == 2)
+  {
+    sdi12.set_address(address, new_address);
+  }
   UIO.sdi12(0);
 
   return cmd_quiet;

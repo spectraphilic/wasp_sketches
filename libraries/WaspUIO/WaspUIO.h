@@ -312,7 +312,7 @@ uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 
 extern WaspUIO UIO;
-extern SDI12 mySDI12;
+extern WaspSDI12 sdi12;
 
 
 void vlog(loglevel_t level, const char* message, va_list args);
