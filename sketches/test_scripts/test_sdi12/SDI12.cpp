@@ -28,6 +28,7 @@
  #include <WaspClasses.h>
  #endif
  
+ #include <Coroutines.h>
  #include "SDI12.h"
  
  ///////////////////////////////////////// Private methods/////////////
@@ -132,7 +133,7 @@
 		 }
 		 
 		 // skip parity adn stop bit
-		 delayMicroseconds(SPACING);
+		 delayMicroseconds(SPACING); // XXX Should we check parity?
 		 delayMicroseconds(SPACING);
 		 
 		 // Overflow? If not, proceed.
@@ -293,29 +294,63 @@
  * From the University of Oslo
  */
 
+/*
+ * Reads line from internal buffer with some processing: skips garbage at the
+ * beginning, does not include the end-of-line.
+ */
 const char* WaspSDI12::readline()
 {
     int c;
     char* p = buffer;
+    uint8_t state = 0; // 0: start, 1: reading, 2: eol found
+
     while ((c = read()) != -1)
     {
+        // Skip garbage at the beginning, expect address (0-9, A-Z, a-z)
+        if (state == 0 && ! ('0' <= c <= 'z'))
+        {
+	    warn(F("sdi1-12 readline garbage skipped: %d"), c);
+            continue;
+        }
+        state = 1;
+
+        // Stop condition, check only for \r
         if (c == '\r')
         {
+	    state = 2;
             break;
         }
+
         *p++ = (char) c;
     }
+
     *p = '\0';
+
+    if (state != 2)
+    {
+        warn(F("sdi-12 readline eol not found"));
+    }
+
     return buffer;
 }
 
+/*
+ * Higher level interface: sends command, reads answer, processes and returns
+ * it. Exemple: sendCommand("0M!")
+ */
 const char* WaspSDI12::sendCommand(const char* cmd)
 {
+    debug(F("sdi-12 sendCommand(%s)"), cmd);
     sendCommand((char*)cmd, strlen(cmd));
     readCommandAnswer();
-    return readline();
+    readline();
+    debug(F("sdi-12 sendCommand(%s): '%s'"), cmd, buffer);
+    return buffer;
 }
 
+/*
+ * Sends command to address. Example: sendCommand(0, "M")
+ */
 const char* WaspSDI12::sendCommand(uint8_t address, const char* cmd)
 {
     char aux[5];
@@ -344,15 +379,14 @@ const char* WaspSDI12::sendCommand(uint8_t address, const char* cmd)
     return buffer;
 }
 
+/* Sends identity command to address. */
 const char* WaspSDI12::identify(uint8_t address)
 {
     return sendCommand(address, "I");
 }
 
-/*
- * Send a measure command to the given address. Return the number of seconds to
- * wait for the data to be available; or -1 if error.
- */
+/* Sends measure command to address. Returns the number of seconds to wait for
+ * the data to be available; or -1 if error. */
 int WaspSDI12::measure(uint8_t address)
 {
     if (sendCommand(address, "M"))
@@ -363,18 +397,21 @@ int WaspSDI12::measure(uint8_t address)
     return atoi(buffer+1);
 }
 
+/* Sends data command to address. Always to the buffer 0 (TODO Specify buffer
+ * in parameter) */
 const char* WaspSDI12::data(uint8_t address)
 {
     return sendCommand(address, "D0");
 }
 
-
+/* Sends the query address command. Returns the address. */
 char WaspSDI12::read_address()
 {
     sendCommand("?!");
     return buffer[0];
 }
 
+/* Changes the address of the sensor. */
 uint8_t WaspSDI12::set_address(char current_address, char new_address)
 {
     char aux[5];

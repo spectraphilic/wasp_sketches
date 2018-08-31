@@ -352,7 +352,18 @@ const char* Loop::loglevel2str(loglevel_t level)
  * Free functions that can be redefined (because declared weak).
  */
 
-void vlog(loglevel_t level, const char* message, va_list args) { }
+void vlog(loglevel_t level, const char* message, va_list args)
+{
+  size_t size = 150;
+  char buffer[size];
+
+  // Timestamp + Level + Message
+  sprintf(buffer, "%lu %s ", millis(), cr.loglevel2str(level));
+  size_t len = strlen(buffer);
+  vsnprintf(buffer + len, size - len - 1, message, args);
+  USB.println(buffer);
+}
+
 void beforeSleep() {}
 void afterSleep() {}
 

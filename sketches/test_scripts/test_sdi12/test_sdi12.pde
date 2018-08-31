@@ -44,8 +44,8 @@ void loop()
   PWR.setSensorPower(SENS_5V, SENS_ON);
   delay(500);
 
-  USB.println(sdi12.sendCommand("?!"));
-  USB.println(sdi12.identify(0));
+  sdi12.sendCommand("?!");
+  sdi12.identify(0);
 
   USB.println("");
   PWR.deepSleep("00:00:00:10", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF); // 10s
