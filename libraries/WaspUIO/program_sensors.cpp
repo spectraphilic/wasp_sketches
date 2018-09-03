@@ -179,17 +179,15 @@ CR_TASK(taskSdiDs2)
 
   // Frame. The result looks like 1+1.04+347+25.2+1.02-0.24+2.05
   char *next;
-  double a, b, c;
+  double a, b, c, d, e, f;
 
   a = strtod(sdi12.buffer+1, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_DS2_1, a, b, c);
-
-  a = strtod(next, &next);
-  b = strtod(next, &next);
-  c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_DS2_2, a, b, c);
+  d = strtod(next, &next);
+  e = strtod(next, &next);
+  f = strtod(next, &next);
+  ADD_SENSOR(SENSOR_DS2, a, b, c, d, e, f);
 
   CR_END;
 }

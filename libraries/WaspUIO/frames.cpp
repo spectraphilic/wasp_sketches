@@ -10,15 +10,16 @@
  */
 
 
-const char null              [] PROGMEM = "";
-const char frame_format_u    [] PROGMEM = "u";
-const char frame_format_w    [] PROGMEM = "w";
-const char frame_format_ww   [] PROGMEM = "ww";
-const char frame_format_f    [] PROGMEM = "f";
-const char frame_format_ff   [] PROGMEM = "ff";
-const char frame_format_fff  [] PROGMEM = "fff";
-const char frame_format_n    [] PROGMEM = "n";
-const char frame_format_fffuf[] PROGMEM = "fffuf";
+const char null               [] PROGMEM = "";
+const char frame_format_u     [] PROGMEM = "u";
+const char frame_format_w     [] PROGMEM = "w";
+const char frame_format_ww    [] PROGMEM = "ww";
+const char frame_format_f     [] PROGMEM = "f";
+const char frame_format_ff    [] PROGMEM = "ff";
+const char frame_format_fff   [] PROGMEM = "fff";
+const char frame_format_n     [] PROGMEM = "n";
+const char frame_format_fffuf [] PROGMEM = "fffuf";
+const char frame_format_ffffff[] PROGMEM = "ffffff";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -59,13 +60,14 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 19x
   // 20x
   frame_format_fff,   // 200 CTD-10
-  frame_format_fff,   // 201 DS-2 (1)
-  frame_format_fff,   // 202 DS-2 (2)
+  null,               // 201 Reserved, do not reuse (was 201 DS-2 1)
+  null,               // 202 Reserved, do not reuse (was 201 DS-2 2)
   frame_format_n,     // 203 DS18B20
   frame_format_ww,    // 204 MB73XX
   frame_format_ww,    // 205 GPS statistics
   frame_format_f,     // 206 Battery Volts
   frame_format_fffuf, // 207 WS100-UMB
+  frame_format_ffffff,// 208 DS-2
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";
@@ -76,13 +78,14 @@ const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
 const char frame_name_bme_pres [] PROGMEM = "BME PRES";
 const char frame_name_tst      [] PROGMEM = "TST";
 const char frame_name_ctd10    [] PROGMEM = "CTD10";
-const char frame_name_ds2_1    [] PROGMEM = "DS2 1";
-const char frame_name_ds2_2    [] PROGMEM = "DS2 2";
+//const char frame_name_ds2_1    [] PROGMEM = "DS2 1";
+//const char frame_name_ds2_2    [] PROGMEM = "DS2 2";
 const char frame_name_ds18b20  [] PROGMEM = "DS18B20";
 const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
 const char frame_name_gps_stats[] PROGMEM = "GPS STATS";
 const char frame_name_bat_volts[] PROGMEM = "BAT VOLTS";
 const char frame_name_ws100    [] PROGMEM = "WS100";
+const char frame_name_ds2      [] PROGMEM = "DS-2";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -124,13 +127,14 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null, null, null, null, null, null, null, null, null, null, // 19x
   // 20x
   frame_name_ctd10,                                           // 200 CTD-10
-  frame_name_ds2_1,                                           // 201 DS-2 (1)
-  frame_name_ds2_2,                                           // 202 DS-2 (2)
+  null,                                                       // 201 Reserved, do not reuse (was 201 DS-2 1)
+  null,                                                       // 202 Reserved, do not reuse (was 201 DS-2 2)
   frame_name_ds18b20,                                         // 203 DS18B20
   frame_name_mb73xx,                                          // 204 MB73XX
   frame_name_gps_stats,                                       // 205 GPS statistics
   frame_name_bat_volts,                                       // 206 Battery Volts
   frame_name_ws100,                                           // 207 WS100-UMB
+  frame_name_ds2,                                             // 208 DS-2
 };
 
 /**
