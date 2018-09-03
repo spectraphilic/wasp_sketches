@@ -161,7 +161,7 @@ CR_TASK(taskSdiDs2)
   CR_BEGIN;
 
   // Send the measure command
-  if (sdi12.sendCommand(1, "M6"))
+  if (sdi12.sendCommand(1, "M6") == NULL)
   {
     CR_ERROR;
   }
@@ -172,7 +172,7 @@ CR_TASK(taskSdiDs2)
   CR_DELAY(11000);
 
   // Wind speed&direction, air temp
-  if (sdi12.sendCommand(1, "D0"))
+  if (sdi12.sendCommand(1, "D0") == NULL)
   {
     CR_ERROR;
   }
@@ -217,20 +217,17 @@ CR_TASK(taskSdiWS100)
   CR_BEGIN;
 
   uint8_t retries = 3;
-  for (; retries > 0; retries--)
+  while (retries > 0 && sdi12.sendCommand(2, "") == NULL)
   {
-    if (! sdi12.sendCommand(2, ""))
-    {
-      delay(100);
-      break;
-    }
+    retries--;
+    delay(100);
   }
   if (retries == 0)
   {
     CR_ERROR;
   }
 
-  if (sdi12.sendCommand(2, "R0"))
+  if (sdi12.sendCommand(2, "R0") == NULL)
   {
     CR_ERROR;
   }
