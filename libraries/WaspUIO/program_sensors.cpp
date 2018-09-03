@@ -141,7 +141,7 @@ CR_TASK(taskSdiCtd10)
   if (ttt > 0) { CR_DELAY(ttt * 1000); }
 
   // Send the data command
-  if (sdi12.data(0)) { CR_ERROR; }
+  if (sdi12.data(0) == NULL) { CR_ERROR; }
 
   // Frame. The result looks like 0+167+17.5+103
   char *next;
