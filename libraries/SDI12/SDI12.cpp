@@ -389,12 +389,16 @@ const char* WaspSDI12::identify(uint8_t address)
  * the data to be available; or -1 if error. */
 int WaspSDI12::measure(uint8_t address)
 {
+    char aux[4];
+
     if (sendCommand(address, "M") == NULL)
     {
       return -1;
     }
 
-    return atoi(buffer+1);
+    memcpy(aux, buffer+1, 3);
+    aux[3] = 0;
+    return atoi(aux);
 }
 
 /* Sends data command to address. Always to the buffer 0 (TODO Specify buffer
