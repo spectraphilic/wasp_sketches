@@ -21,34 +21,50 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
   return dst;
 }
 
+
+const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name)
+{
+  uint16_t value;
+  uint8_t hours, minutes;
+  size_t len;
+
+  value = actions[action];
+  if (value) {
+    len = strlen(dst);
+    snprintf_F(dst + len, size - len, name);
+    len = strlen(dst);
+
+    hours = value / 60;
+    minutes = value % 60;
+    if (hours == 0) {
+      snprintf_F(dst + len, size - len, F("=%hhum "), minutes);
+    }
+    else if (minutes == 0) {
+      snprintf_F(dst + len, size - len, F("=%hhuh "), hours);
+    }
+    else {
+      snprintf_F(dst + len, size - len, F("=%hhuh%hhu "), hours, minutes);
+    }
+  }
+
+  return dst;
+}
+
 const char* WaspUIO::pprintActions(char* dst, size_t size)
 {
   dst[0] = '\0';
-  uint8_t value;
+  uint16_t value;
+  uint8_t hours, minutes;
 
-  value = actions[RUN_NETWORK];
-  if (value) strnjoin_F(dst, size, F(", "), F("Network (%d)"), value);
-
-  value = actions[RUN_BATTERY];
-  if (value) strnjoin_F(dst, size, F(", "), F("Battery (%d)"), value);
-
-  value = actions[RUN_CTD10];
-  if (value) strnjoin_F(dst, size, F(", "), F("CTD-10 (%d)"), value);
-
-  value = actions[RUN_DS2];
-  if (value) strnjoin_F(dst, size, F(", "), F("DS-2 (%d)"), value);
-
-  value = actions[RUN_DS1820];
-  if (value) strnjoin_F(dst, size, F(", "), F("DS1820 (%d)"), value);
-
-  value = actions[RUN_BME280];
-  if (value) strnjoin_F(dst, size, F(", "), F("BME-280 (%d)"), value);
-
-  value = actions[RUN_MB];
-  if (value) strnjoin_F(dst, size, F(", "), F("MB7389 (%d)"), value);
-
-  value = actions[RUN_WS100];
-  if (value) strnjoin_F(dst, size, F(", "), F("WS100 (%d)"), value);
+  pprintAction(dst, size, RUN_NETWORK, F("Network"));
+  pprintAction(dst, size, RUN_BATTERY, F("Battery"));
+  pprintAction(dst, size, RUN_GPS, F("GPS"));
+  pprintAction(dst, size, RUN_CTD10, F("CTD10"));
+  pprintAction(dst, size, RUN_DS2, F("DS2"));
+  pprintAction(dst, size, RUN_DS1820, F("DS1820"));
+  pprintAction(dst, size, RUN_BME280, F("BME280"));
+  pprintAction(dst, size, RUN_MB, F("MB7389"));
+  pprintAction(dst, size, RUN_WS100, F("WS100"));
 
   if (! dst[0]) strncpy_F(dst, F("(none)"), size);
 

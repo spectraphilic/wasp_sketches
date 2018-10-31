@@ -58,9 +58,14 @@ void WaspUIO::onSetup()
   memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
 
   // Read run table
+  uint16_t base;
+  uint8_t hours, minutes;
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    actions[i] = Utils.readEEPROM(EEPROM_UIO_RUN + i);
+    base = EEPROM_UIO_RUN + (i * 2);
+    hours = Utils.readEEPROM(base);
+    minutes = Utils.readEEPROM(base + 1);
+    actions[i] = (hours * 60) + minutes;
   }
 
   // Frames
@@ -85,10 +90,6 @@ void WaspUIO::onLoop()
   state = 0;
 
   loadTime(true); // Read temperature as well
-  uint32_t epoch = getEpochTime();
-  // Split the epoch time in 2: days since the epoch, and minute of the day
-  day = epoch / (24L * 60L * 60L);
-  minute = (epoch / 60) % (60 * 24); // mins since the epoch modulus mins in a day
 
   if (batteryType == BATTERY_LEAD) { startPowerBoard(); }
   if (boardType == BOARD_LEMMING) { startSensorBoard(); }
@@ -134,18 +135,21 @@ bool WaspUIO::action(uint8_t n, ...)
 {
   va_list args;
   int idx;
-  int value;
+  uint16_t value;
   bool yes = false;
+
+  uint32_t minutes = epochTime / 60; // minutes since the epoch
 
   va_start(args, n);
   for (; n; n--)
   {
     idx = va_arg(args, int);
     assert(idx < RUN_LEN); // TODO Define __assert
-    value = (int) actions[idx];
+
+    value = actions[idx] * cooldown;
     if (value > 0)
     {
-      if (minute % (cooldown * value) == 0)
+      if (minutes % value == 0)
       {
         yes = true;
         break;
@@ -183,18 +187,20 @@ WaspUIO UIO = WaspUIO();
  * Return the string of the next alarm.
  *
  */
-void WaspUIO::nextAlarm()
+int WaspUIO::nextAlarm(char* alarmTime)
 {
-  int value;
+  uint16_t value;
   int next = INT_MAX;
+
+  uint32_t epoch = getEpochTime();
+  uint32_t minutes = (epoch / 60); // minutes since epoch
 
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    value = (int) actions[i];
+    value = actions[i] * cooldown;
     if (value > 0)
     {
-      value *= cooldown;
-      value = (minute / value) * value + value;
+      value = (minutes / value + 1) * value - minutes;
       if (value < next)
       {
         next = value;
@@ -202,21 +208,14 @@ void WaspUIO::nextAlarm()
     }
   }
 
-  if (next >= (24 * 60))
-    next = 0;
-
-  next_minute = next;
-}
-
-const char* WaspUIO::nextAlarm(char* alarmTime)
-{
-  uint32_t epoch = getEpochTime();
-  minute = (epoch / 60) % (60 * 24); // minute of the day
-  nextAlarm();
-
   // Format relative time to string, to be passed to deepSleep
-  sprintf(alarmTime, "00:%02d:%02d:00", next_minute / 60, next_minute % 60);
-  return alarmTime;
+  int days = next / (24 * 60);
+  int left = next - (days * 24 * 60);
+  int hours = left / 60;
+  left = left - (hours * 60);
+
+  sprintf(alarmTime, "%02d:%02d:%02d:00", days, hours, left);
+  return next;
 }
 
 void WaspUIO::deepSleep()
@@ -227,13 +226,12 @@ void WaspUIO::deepSleep()
 
   // Get next alarm time
   char alarmTime[12]; // "00:00:00:00"
-  nextAlarm(alarmTime);
+  int next = nextAlarm(alarmTime);
 
   // Reset watchdog
-  int left = (next_minute == 0)? 1440 - minute: next_minute - minute;
-  if (left < 59) // XXX Maximum is 59
+  if (next < 59) // XXX Maximum is 59
   {
-    RTC.setWatchdog(left + 1);
+    RTC.setWatchdog(next + 1);
   }
 
   // Turn off sensor & power boards
@@ -247,7 +245,7 @@ void WaspUIO::deepSleep()
   }
 
   // Enable RTC interruption and sleep
-  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
+  PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
 
   // Awake: Reset if stuck for 4 minutes
   RTC.setWatchdog(UIO.loop_timeout);

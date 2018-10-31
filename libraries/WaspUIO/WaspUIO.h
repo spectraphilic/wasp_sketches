@@ -49,6 +49,7 @@
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 1 byte available
 #define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
+                                          // (every action takes 2 bytes)
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
 #define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
@@ -80,8 +81,8 @@ enum network_type_t {
 enum run_t {
   RUN_NETWORK,
   RUN_BATTERY,
+  RUN_GPS,
   RUN_FREE_1, // Available
-  RUN_FREE_2, // Available
   RUN_CTD10, // SDI-12
   RUN_DS2,
   RUN_DS1820, // OneWire
@@ -170,7 +171,7 @@ uint8_t flags;
 board_type_t boardType;
 battery_type_t batteryType;
 network_type_t networkType;
-uint8_t actions[RUN_LEN];
+uint16_t actions[RUN_LEN];
 
 // Variables updated on every loop (see onLoop)
 float batteryVolts;
@@ -181,9 +182,6 @@ uint8_t cooldown; // Reduces frequency of action, depends on battery
 float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
-int minute;              // minute of the day, from 0 to 1439
-int day;                 // days since the epoch
-int next_minute;         // minute of the next alarm
 
 // Autodetect
 bool hasSD;
@@ -278,6 +276,7 @@ void setFrameSize();
 // Menu
 void clint();
 const char* pprint4G(char* dst, size_t size);
+const char* pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name);
 const char* pprintActions(char* dst, size_t size);
 const char* pprintBattery(char* dst, size_t size);
 const char* pprintBoard(char* dst, size_t size);
@@ -294,8 +293,7 @@ void loadTime(bool temp=false);
 uint8_t setTimeFromNetwork();
 
 // Sleep
-void nextAlarm();
-const char* nextAlarm(char* alarmTime);
+int nextAlarm(char* alarmTime);
 void deepSleep();
 
 // Sensors

@@ -44,8 +44,8 @@ const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G modul
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read VALUE       - Read sensor: 1=battery 6=ds1820 8=mb";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
-const char CMD_RUN     [] PROGMEM = "run VALUE MIN    - Run every 0-255 minutes: 0=network 1=battery "
-                                    "4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
+const char CMD_RUN     [] PROGMEM = "run VALUE H M    - Run every hours and minutes: "
+                                    "0=network 1=battery 2=gps 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
 const char CMD_SDI12   [] PROGMEM = "sdi [ADDR] [NEW] - Identify SDI-12 sensors";
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME  - Print last N lines of FILENAME to USB";
 const char CMD_TIME_GPS[] PROGMEM = "time gps         - Sets time from GPS";
@@ -684,16 +684,20 @@ COMMAND(cmdRead)
 COMMAND(cmdRun)
 {
   uint8_t what;
+  uint8_t hours;
   uint8_t minutes;
 
   // Check input
-  if (sscanf(str, "%hhu %hhu", &what, &minutes) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%hhu %hhu %hhu", &what, &hours, &minutes) != 3) { return cmd_bad_input; }
   if (what >= RUN_LEN) { return cmd_bad_input; }
-  if (minutes > 255) { return cmd_bad_input; }
+
+  if (minutes > 59) { return cmd_bad_input; }
 
   // Do
-  if (! UIO.updateEEPROM(EEPROM_UIO_RUN + what, minutes)) { return cmd_error; }
-  UIO.actions[what] = minutes;
+  uint16_t base = EEPROM_UIO_RUN + (what * 2);
+  if (! UIO.updateEEPROM(base, hours)) { return cmd_error; }
+  if (! UIO.updateEEPROM(base + 1, minutes)) { return cmd_error; }
+  UIO.actions[what] = (hours * 60) + minutes;
 
   return cmd_ok;
 }

@@ -127,7 +127,7 @@ CR_TASK(taskNetworkXBee)
   {
     send = (
       (UIO.battery == BATTERY_HIGH) ||
-      (UIO.battery == BATTERY_MIDDLE && UIO.minute % 180 == 0)
+      (UIO.battery == BATTERY_MIDDLE && UIO.epochTime % (3*60*60) == 0)
     );
   }
 
