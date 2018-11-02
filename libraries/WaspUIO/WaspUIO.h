@@ -291,6 +291,7 @@ unsigned long getEpochTime(uint16_t &ms);
 uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 void loadTime(bool temp=false);
 uint8_t setTimeFromNetwork();
+int8_t gps(bool setTime, bool getPosition);
 
 // Sleep
 int nextAlarm(char* alarmTime);
@@ -347,6 +348,7 @@ COMMAND(cmdDisable);
 COMMAND(cmdEnable);
 COMMAND(cmdExit);
 COMMAND(cmdFormat);
+COMMAND(cmdGPS);
 COMMAND(cmdHelp);
 COMMAND(cmdLogLevel);
 COMMAND(cmdLs);
@@ -362,7 +364,6 @@ COMMAND(cmdRun);
 COMMAND(cmdSDI12);
 COMMAND(cmdTail);
 COMMAND(cmdTime);
-COMMAND(cmdTimeGPS);
 COMMAND(cmdXBee);
 
 
