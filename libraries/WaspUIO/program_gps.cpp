@@ -8,6 +8,6 @@
 
 CR_TASK(taskGps)
 {
-  UIO.gps(true, true);
+  UIO.gps(true, false);
   return CR_TASK_STOP;
 }

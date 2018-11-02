@@ -20,6 +20,17 @@ WaspSDI12 sdi12(PIN_SDI12);
 /**
  * Function to be called first in setup()
  */
+void WaspUIO::boot()
+{
+  cr.print(F("."));
+  UIO.onSetup();
+  cr.print(F("."));
+  UIO.onLoop();
+  cr.print(F("."));
+  UIO.networkInit(); // Network
+}
+
+
 void WaspUIO::onSetup()
 {
   /*** 1. Read configuration from EEPROM ***/

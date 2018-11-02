@@ -3,6 +3,9 @@
 /*
  * Frames
  * f: float
+ * i: int8_t
+ * j: int16_t
+ * k: int32_t
  * u: uint8_t
  * v: uint16_t
  * w: uint32_t
@@ -11,6 +14,7 @@
 
 
 const char null               [] PROGMEM = "";
+const char frame_format_j     [] PROGMEM = "j";
 const char frame_format_u     [] PROGMEM = "u";
 const char frame_format_w     [] PROGMEM = "w";
 const char frame_format_ww    [] PROGMEM = "ww";
@@ -31,7 +35,8 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null,
   frame_format_u,                                             // 52 Battery level
   frame_format_ff,                                            // 53 GPS
-  null, null, null, null, null, null,
+  frame_format_j,                                             // 54 RSSI
+  null, null, null, null, null,
   // 06x
   null, null,
   frame_format_f,                                             // 62 RTC internal temp
@@ -267,6 +272,21 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
     if (c == 'f')
     {
       float value = (float) va_arg(args, double);
+      if (addSensorValue(value) == 0) { err = -1; goto exit; }
+    }
+//  else if (c == 'i')
+//  {
+//    int8_t value = va_arg(args, int8_t);
+//    if (addSensorValue(value) == 0) { err = -1; goto exit; }
+//  }
+    else if (c == 'j')
+    {
+      int16_t value = va_arg(args, int16_t);
+      if (addSensorValue(value) == 0) { err = -1; goto exit; }
+    }
+    else if (c == 'k')
+    {
+      int32_t value = va_arg(args, int32_t);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
     }
     else if (c == 'u')

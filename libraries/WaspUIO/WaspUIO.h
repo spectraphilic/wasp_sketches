@@ -252,6 +252,7 @@ float getBatteryVolts();
 float getLeadBatteryVolts();
 
 // Init, start and stop methods
+void boot();
 void onSetup();
 void onLoop();
 bool action(uint8_t n, ...);

@@ -20,12 +20,7 @@ void setup()
 
   // Boot process
   USB.ON();
-  cr.print(F("."));
-  UIO.onSetup();
-  cr.print(F("."));
-  UIO.onLoop();
-  cr.print(F("."));
-  UIO.networkInit(); // Network
+  UIO.boot();
   UIO.clint();   // Command line interface
   USB.OFF();
 

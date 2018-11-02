@@ -7,7 +7,8 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   if (! UIO.hasGPS) { return -1; }
 
   // On
-  if (GPS.ON() == 0)
+  uint8_t mode = GPS.getMode();
+  if (mode == GPS_OFF && GPS.ON() == 0)
   {
     warn(F("GPS.ON() Error"));
     return -1;
@@ -69,7 +70,10 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     info(F("GPS: Time updated"));
   }
 
-  GPS.OFF();
+  if (mode == GPS_OFF)
+  {
+    GPS.OFF();
+  }
 
   if (getPosition)
   {
