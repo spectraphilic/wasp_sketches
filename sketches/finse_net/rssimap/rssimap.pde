@@ -1,5 +1,13 @@
 #include <WaspUIO.h>
 
+// David, few comments:
+// The frame do not need to be send to the network, or if so, we need to give a name to the mote,
+// and update its time with GPS. The data can be extracted via the SD to make it easier. 
+// 30s delay between measurements can be good. Also, I can keep the mote on all the time, and that when I plug the battery, 
+// it automatically goes into recording rssi, timestamp, and lat/long/altitude. To do so, the name, 
+// network and so forth can be set within the script before uploading
+
+
 // Global variables
 uint8_t powerLevel;
 int rssi;
