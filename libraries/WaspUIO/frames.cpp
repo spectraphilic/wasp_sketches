@@ -674,7 +674,7 @@ uint8_t WaspUIO::frame2Sd()
   if (offset != 0)
   {
     queueFile.truncate(queueFile.fileSize() - offset);
-    warn(F("sendFrames: wrong file size (%s), truncated"), UIO.queueFilename);
+    warn(F("sendFrames: wrong file size (%s), truncated"), queueFilename);
   }
 
   // Append record
@@ -690,4 +690,66 @@ uint8_t WaspUIO::frame2Sd()
   }
 
   return 0;
+}
+
+
+/**
+ * This function reads the next frame from the SD.
+ *
+ * - Loads the frame into SD.buffer
+ * - Returns the size of the frame
+ *
+ * If there's an error returns -1, if there're no frames returns 0.
+ */
+int WaspUIO::readFrame()
+{
+  static uint32_t offset;
+  uint8_t item[8];
+  char dataFilename[18]; // /data/YYMMDD.txt
+  SdFile dataFile;
+  int size;
+
+  // Open files
+  startSD();
+  if (openFile(qstartFilename, qstartFile, O_READ)) { return -1; }
+  if (openFile(queueFilename, queueFile, O_READ)) { return -1; }
+
+  // Read offset
+  if (qstartFile.read(item, 4) != 4)
+  {
+    cr.set_last_error(F("sendFrames (%s): read error"), qstartFilename);
+    return -1;
+  }
+  offset = *(uint32_t *)item;
+  if (offset >= queueFile.fileSize())
+  {
+    return 0; // Nothing to do
+  }
+
+  // Read the record
+  queueFile.seekSet(offset);
+  if (queueFile.read(item, 8) != 8)
+  {
+    cr.set_last_error(F("sendFrames (%s): read error"), queueFilename);
+    return -1;
+  }
+
+  // Read the frame
+  getDataFilename(dataFilename, item[0], item[1], item[2]);
+  if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
+  {
+    cr.set_last_error(F("sendFrames: fail to open %s"), dataFilename);
+    return -1;
+  }
+  dataFile.seekSet(*(uint32_t *)(item + 3));
+  size = dataFile.read(SD.buffer, (size_t) item[7]);
+  dataFile.close();
+
+  if (size < 0 || size != (int) item[7])
+  {
+    cr.set_last_error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
+    return -1;
+  }
+
+  return size;
 }

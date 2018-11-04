@@ -3,16 +3,6 @@
 
 CR_TASK(taskNetwork4G)
 {
-  uint8_t err;
-
-  uint32_t t0;
-  uint8_t item[8];
-  static uint32_t offset;
-  char dataFilename[18]; // /data/YYMMDD.txt
-  SdFile dataFile;
-  int size;
-  static unsigned long sent;
-
   CR_BEGIN;
 
 #if WITH_4G
@@ -27,46 +17,14 @@ CR_TASK(taskNetwork4G)
   {
     t0 = millis();
 
-    // Open files
-    UIO.startSD();
-    if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_READ)) { err = true; break; }
-    if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_READ)) { err = true; break; }
-
-    // Read offset
-    if (UIO.qstartFile.read(item, 4) != 4)
+    int size = UIO.readFrame();
+    if (size < 0)
     {
-      cr.set_last_error(F("sendFrames (%s): read error"), UIO.qstartFilename);
       err = true;
       break;
     }
-    offset = *(uint32_t *)item;
-    if (offset >= UIO.queueFile.fileSize()) { break; }
-
-    // Read the record
-    UIO.queueFile.seekSet(offset);
-    if (UIO.queueFile.read(item, 8) != 8)
+    if (size == 0)
     {
-      cr.set_last_error(F("sendFrames (%s): read error"), UIO.queueFilename);
-      err = true;
-      break;
-    }
-
-    // Read the frame
-    UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
-    {
-      cr.set_last_error(F("sendFrames: fail to open %s"), dataFilename);
-      err = true;
-      break;
-    }
-    dataFile.seekSet(*(uint32_t *)(item + 3));
-    size = dataFile.read(SD.buffer, (size_t) item[7]);
-    dataFile.close();
-
-    if (size < 0 || size != (int) item[7])
-    {
-      cr.set_last_error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
-      err = true;
       break;
     }
 
@@ -177,12 +135,7 @@ CR_TASK(taskNetworkXBee)
 CR_TASK(taskNetworkSend)
 {
 #if WITH_XBEE
-  static uint32_t offset;
-  uint8_t item[8];
   uint32_t t0;
-  char dataFilename[18]; // /data/YYMMDD.txt
-  SdFile dataFile;
-  int size;
   bool err = false;
   static unsigned long sent;
 
@@ -196,46 +149,14 @@ CR_TASK(taskNetworkSend)
     {
       t0 = millis();
 
-      // Open files
-      UIO.startSD();
-      if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_READ)) { err = true; break; }
-      if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_READ)) { err = true; break; }
-
-      // Read offset
-      if (UIO.qstartFile.read(item, 4) != 4)
+      int size = UIO.readFrame();
+      if (size < 0)
       {
-        cr.set_last_error(F("sendFrames (%s): read error"), UIO.qstartFilename);
         err = true;
         break;
       }
-      offset = *(uint32_t *)item;
-      if (offset >= UIO.queueFile.fileSize()) { break; }
-
-      // Read the record
-      UIO.queueFile.seekSet(offset);
-      if (UIO.queueFile.read(item, 8) != 8)
+      if (size == 0)
       {
-        cr.set_last_error(F("sendFrames (%s): read error"), UIO.queueFilename);
-        err = true;
-        break;
-      }
-
-      // Read the frame
-      UIO.getDataFilename(dataFilename, item[0], item[1], item[2]);
-      if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
-      {
-        cr.set_last_error(F("sendFrames: fail to open %s"), dataFilename);
-        err = true;
-        break;
-      }
-      dataFile.seekSet(*(uint32_t *)(item + 3));
-      size = dataFile.read(SD.buffer, (size_t) item[7]);
-      dataFile.close();
-
-      if (size < 0 || size != (int) item[7])
-      {
-        cr.set_last_error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
-        err = true;
         break;
       }
 

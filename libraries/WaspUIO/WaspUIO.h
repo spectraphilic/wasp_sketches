@@ -272,6 +272,7 @@ uint8_t addSensorValue(uint32_t value);
 uint8_t getSequence(uint8_t *p);
 void showFrame(uint8_t *p);
 uint8_t frame2Sd();
+int readFrame();
 void setFrameSize();
 
 // Menu
