@@ -1,12 +1,24 @@
 #include <WaspUIO.h>
 
-// David, few comments:
-// The frame do not need to be send to the network, or if so, we need to give a name to the mote,
-// and update its time with GPS. The data can be extracted via the SD to make it easier. 
-// 30s delay between measurements can be good. Also, I can keep the mote on all the time, and that when I plug the battery, 
-// it automatically goes into recording rssi, timestamp, and lat/long/altitude. To do so, the name, 
-// network and so forth can be set within the script before uploading
-
+/*
+ * Every 30s this sketch produces a frame with the RSSI, GPS location and
+ * altitude.
+ *
+ * A frame is only generated if the mote can get both the RSSI and GPS. Note
+ * that getting the GPS data may take more than 30s. For these 2 reasons the
+ * final values may not be once every 30s.
+ *
+ * The frame is not sent, just stored. When done running the main sketch can be
+ * used to send the frames.
+ *
+ * To get the RSSI we have to ping (send a frame). The frame is sent to the hub
+ * (Pi), but the RSSI only concerns the first hop. The hub will ignore this
+ * frame, just log it.
+ *
+ * Please before using this sketch first configure the mote properly with the
+ * main sketch, specially the time and name. And logging to the SD, so we can
+ * debug it later.
+ */
 
 // Global variables
 uint8_t powerLevel;
@@ -109,7 +121,7 @@ void setup()
 void loop()
 {
   char time[12];
-  uint32_t wait = 60 - UIO.getEpochTime() % 60;
+  uint32_t wait = 30 - UIO.getEpochTime() % 30; // Every 30s
 
   // Version with delay
   info(F("delay(%ds)"), wait); // Wait until the next minute

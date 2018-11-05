@@ -36,14 +36,14 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   }
 
   // Ephemerides
-  if (GPS.saveEphems() == 1)
-  {
-    debug(F("GPS.saveEphems() Done"));
-  }
-  else
-  {
-    warn(F("GPS.saveEphems() Error"));
-  }
+//if (GPS.saveEphems() == 1)
+//{
+//  debug(F("GPS.saveEphems() Done"));
+//}
+//else
+//{
+//  warn(F("GPS.saveEphems() Error"));
+//}
   uint32_t time = millis() - start;
 
   // Position
@@ -82,9 +82,12 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     debug(F("GPS: Position altitude=%s course=%s speed=%s"), GPS.altitude, GPS.course, GPS.speed);
     ADD_SENSOR(SENSOR_GPS, GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator),
                            GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator));
-    //ADD_SENSOR(SENSOR_ALTITUDE, GPS.altitude);
-    //ADD_SENSOR(SENSOR_SPEED, GPS.speed);
-    //ADD_SENSOR(SENSOR_COURSE, GPS.course);
+    if (GPS.altitude)
+    {
+      ADD_SENSOR(SENSOR_ALTITUDE, atof(GPS.altitude));
+    }
+    //ADD_SENSOR(SENSOR_SPEED, atof(GPS.speed));
+    //ADD_SENSOR(SENSOR_COURSE, atof(GPS.course));
   }
 
   if (setTime)

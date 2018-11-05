@@ -49,7 +49,10 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_f,                                             // 77 BME pressure
   null, null,
   null, null, null, null, null, null, null, null, null, null, // 08x
-  null, null, null, null, null, null, null, null, null, null, // 09x
+  // 09x
+  null,
+  frame_format_f,                                             // 91 GPS Altitude
+  null, null, null, null, null, null, null, null,
   null, null, null, null, null, null, null, null, null, null, // 10x
   null, null, null, null, null, null, null, null, null, null, // 11x
   // 12x
@@ -91,6 +94,8 @@ const char frame_name_gps_stats[] PROGMEM = "GPS STATS";
 const char frame_name_bat_volts[] PROGMEM = "BAT VOLTS";
 const char frame_name_ws100    [] PROGMEM = "WS100";
 const char frame_name_ds2      [] PROGMEM = "DS-2";
+const char frame_name_rssi     [] PROGMEM = "RSSI";
+const char frame_name_altitude [] PROGMEM = "ALT";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -103,7 +108,8 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null, null,
   frame_name_bat,                                             // 52 Battery level
   frame_name_gps,                                             // 53 GPS
-  null, null, null, null, null, null,
+  frame_name_rssi,                                            // 54 RSSI
+  null, null, null, null, null,
   // 06x
   null, null,
   frame_name_in_temp,                                         // 62 RTC internal temp
@@ -116,7 +122,10 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_bme_pres,                                        // 77 BME pressure
   null, null,
   null, null, null, null, null, null, null, null, null, null, // 08x
-  null, null, null, null, null, null, null, null, null, null, // 09x
+  // 09x
+  null,
+  frame_name_altitude,                                        // 91 Altitude
+  null, null, null, null, null, null, null, null,
   null, null, null, null, null, null, null, null, null, null, // 10x
   null, null, null, null, null, null, null, null, null, null, // 11x
   // 12x
