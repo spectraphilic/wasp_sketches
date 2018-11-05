@@ -120,21 +120,24 @@ void setup()
 
 void loop()
 {
-  char time[12];
-  uint32_t wait = 30 - UIO.getEpochTime() % 30; // Every 30s
+  uint32_t time, wait;
 
-  // Version with delay
+  // Wait until the next 30s slot
+  wait = 30 - UIO.getEpochTime() % 30; // Every 30s
   info(F("delay(%ds)"), wait); // Wait until the next minute
   delay(wait * 1000);
+
+  // Get data and create frame
+  time = UIO.getEpochTime();
   if (ping() == 0)
   {
     // Frame
-    UIO.createFrame();
+    frame.createFrameBin(BINARY);
+    ADD_SENSOR(SENSOR_TST, time);
     ADD_SENSOR(SENSOR_RSSI, rssi);
     if (UIO.gps(false, true) == 0)
     {
       UIO.frame2Sd();
-      // Send frame (TODO)
     }
   }
 }
