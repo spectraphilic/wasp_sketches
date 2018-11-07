@@ -37,10 +37,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_ff,                                            // 53 GPS
   frame_format_j,                                             // 54 RSSI
   null, null, null, null, null,
-  // 06x
-  null, null,
-  frame_format_f,                                             // 62 RTC internal temp
-  null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null, // 06x
   // 07x
   null, null, null, null,
   frame_format_f,                                             // 74 BME temperature
@@ -80,7 +77,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
 
 const char frame_name_bat      [] PROGMEM = "BAT";
 const char frame_name_gps      [] PROGMEM = "GPS";
-const char frame_name_in_temp  [] PROGMEM = "IN TEMP";
+//const char frame_name_in_temp  [] PROGMEM = "IN TEMP";
 const char frame_name_bme_tc   [] PROGMEM = "BME TC";
 const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
 const char frame_name_bme_pres [] PROGMEM = "BME PRES";
@@ -110,10 +107,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_gps,                                             // 53 GPS
   frame_name_rssi,                                            // 54 RSSI
   null, null, null, null, null,
-  // 06x
-  null, null,
-  frame_name_in_temp,                                         // 62 RTC internal temp
-  null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null, null, null, // 06x
   // 07x
   null, null, null, null,
   frame_name_bme_tc,                                          // 74 BME temperature

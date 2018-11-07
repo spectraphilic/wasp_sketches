@@ -261,25 +261,3 @@ void WaspUIO::deepSleep()
   // Awake: Reset if stuck for 4 minutes
   RTC.setWatchdog(UIO.loop_timeout);
 }
-
-
-/**
- * To reset v12 after a timeout. Requires our waspmoteapi fork.
- */
-void onHAIwakeUP_after(void)
-{
-  if (_boot_version < 'H')
-  {
-    if (intFlag & RTC_INT)
-    {
-      RTC.ON();
-      if (RTC.alarmTriggered & 2) // Alarm 2
-      {
-        intFlag &= ~(RTC_INT); RTC.alarmTriggered = 0;
-        RTC.disableAlarm2();
-        PWR.reboot();
-      }
-      RTC.OFF();
-    }
-  }
-}

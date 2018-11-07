@@ -179,7 +179,6 @@ uint8_t batteryLevel;
 battery_t battery;
 uint8_t cooldown; // Reduces frequency of action, depends on battery
 // To keep time without calling RCT each time
-float rtc_temp;          // internal temperature
 unsigned long epochTime; // seconds since the epoch
 unsigned long start;     // millis taken at epochTime
 
@@ -448,7 +447,6 @@ CR_TASK(taskSlow);
 
 #define SENSOR_BAT        52
 #define SENSOR_GPS        53
-#define SENSOR_IN_TEMP    62
 #define SENSOR_BME_TC     74
 #define SENSOR_BME_HUM    76
 #define SENSOR_BME_PRES   77

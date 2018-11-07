@@ -22,12 +22,6 @@ CR_TASK(taskHealthFrame)
     }
   }
 
-  // RTC temperature (v12 only)
-  if (_boot_version < 'H')
-  {
-    ADD_SENSOR(SENSOR_IN_TEMP, UIO.rtc_temp); // RTC temperature in Celsius (float)
-  }
-
   return CR_TASK_STOP;
 }
 
@@ -210,8 +204,6 @@ CR_TASK(taskExt)
 
 CR_TASK(taskSdiWS100)
 {
-  int ttt;
-
   CR_BEGIN;
 
   uint8_t retries = 3;

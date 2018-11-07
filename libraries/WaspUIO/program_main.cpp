@@ -38,8 +38,8 @@ CR_TASK(taskMain)
   CR_JOIN(sensors_id);
 
   // GPS
-  // The RTC is DS3231SN (v12) or DS1337C (v15), its accuracy is not enough
-  // for our networking requirements, so we have to sync it once in a while.
+  // The RTC is DS1337C (v15), its accuracy is not enough for our networking
+  // requirements, so we have to sync it once in a while.
   // http://hycamp.org/private-area/waspmote-rtc/
   if (UIO.hasGPS && UIO.action(1, RUN_GPS))
   {

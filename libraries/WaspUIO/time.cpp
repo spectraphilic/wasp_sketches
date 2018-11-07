@@ -40,12 +40,6 @@ void WaspUIO::loadTime(bool temp)
   epochTime = RTC.getEpochTime();
   start = millis() - cr.sleep_time;
 
-  // Read temperature now that RTC is ON (v12 only), it takes less than 2ms
-  if (temp && _boot_version < 'H')
-  {
-    rtc_temp = RTC.getTemperature();
-  }
-
   if (! rtcON) { RTC.OFF(); } // RTC OFF
 }
 
