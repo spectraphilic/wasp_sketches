@@ -69,13 +69,11 @@ void WaspUIO::onSetup()
   memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
 
   // Read run table
-  uint16_t base;
-  uint8_t hours, minutes;
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    base = EEPROM_UIO_RUN + (i * 2);
-    hours = Utils.readEEPROM(base);
-    minutes = Utils.readEEPROM(base + 1);
+    uint16_t base = EEPROM_UIO_RUN + (i * 2);
+    uint8_t hours = Utils.readEEPROM(base);
+    uint8_t minutes = Utils.readEEPROM(base + 1);
     actions[i] = (hours * 60) + minutes;
   }
 
@@ -145,8 +143,6 @@ void WaspUIO::stopSD()
 bool WaspUIO::action(uint8_t n, ...)
 {
   va_list args;
-  int idx;
-  uint16_t value;
   bool yes = false;
 
   uint32_t minutes = epochTime / 60; // minutes since the epoch
@@ -154,10 +150,10 @@ bool WaspUIO::action(uint8_t n, ...)
   va_start(args, n);
   for (; n; n--)
   {
-    idx = va_arg(args, int);
+    int idx = va_arg(args, int);
     assert(idx < RUN_LEN); // TODO Define __assert
 
-    value = actions[idx] * cooldown;
+    uint16_t value = actions[idx] * cooldown;
     if (value > 0)
     {
       if (minutes % value == 0)
@@ -200,7 +196,6 @@ WaspUIO UIO = WaspUIO();
  */
 int WaspUIO::nextAlarm(char* alarmTime)
 {
-  uint16_t value;
   int next = INT_MAX;
 
   uint32_t epoch = getEpochTime();
@@ -208,7 +203,7 @@ int WaspUIO::nextAlarm(char* alarmTime)
 
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    value = actions[i] * cooldown;
+    uint16_t value = actions[i] * cooldown;
     if (value > 0)
     {
       value = (minutes / value + 1) * value - minutes;
@@ -242,7 +237,10 @@ void WaspUIO::deepSleep()
   // Reset watchdog
   if (next < 59) // XXX Maximum is 59
   {
-    RTC.setWatchdog(next + 1);
+    if (_boot_version >= 'H')
+    {
+      RTC.setWatchdog(next + 1);
+    }
   }
 
   // Turn off sensor & power boards
@@ -259,5 +257,8 @@ void WaspUIO::deepSleep()
   PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
 
   // Awake: Reset if stuck for 4 minutes
-  RTC.setWatchdog(UIO.loop_timeout);
+  if (_boot_version >= 'H')
+  {
+    RTC.setWatchdog(UIO.loop_timeout);
+  }
 }
