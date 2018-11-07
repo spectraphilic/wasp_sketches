@@ -14,7 +14,7 @@ printf "\n\n"
 printf "Creating folder and clone git UIO repositories ...\n"
 mkdir waspmote-uio
 cd waspmote-uio
-git clone git@github.com:spectraphilic/waspmoteapi-uio.git -b v034
+git clone git@github.com:spectraphilic/waspmoteapi-uio.git -b v036
 git clone git@github.com:spectraphilic/wasp_sketches.git
 
 # Download Waspmote IDE, and install it
