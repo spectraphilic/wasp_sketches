@@ -1,4 +1,4 @@
-/*
+cd g/*
     ------ Waspmote Pro Code Example --------
 
     Explanation: This is the basic Code for Waspmote Pro
