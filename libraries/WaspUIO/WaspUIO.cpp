@@ -98,7 +98,7 @@ void WaspUIO::onLoop()
   cr.sleep_time = 0;
   state = 0;
 
-  loadTime(true); // Read temperature as well
+  loadTime();
 
   if (batteryType == BATTERY_LEAD) { startPowerBoard(); }
   if (boardType == BOARD_LEMMING) { startSensorBoard(); }

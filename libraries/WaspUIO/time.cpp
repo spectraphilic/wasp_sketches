@@ -1,45 +1,116 @@
 #include "WaspUIO.h"
 
+
 /**
- * Saves the given time to the hardware clock (RTC). Updates the system time as
- * well.
+ * Saves the system time to the hardware clock (RTC).
+ * Returns 1 if error, 0 if success.
  */
-uint8_t WaspUIO::saveTime(uint8_t year, uint8_t month, uint8_t day,
-                          uint8_t hour, uint8_t minute, uint8_t second)
+
+uint8_t WaspUIO::saveTime()
 {
+  timestamp_t ts;
+  uint32_t time = getEpochTime();
+  RTC.breakTimeAbsolute(time, &ts);
+
   uint8_t rtcON = RTC.isON;
   if (! rtcON) { RTC.ON(); } // RTC ON
 
   // Save time to RTC
-  uint8_t dow = RTC.dow(year, month, day);
-  uint8_t err = RTC.setTime(year, month, day, dow, hour, minute, second);
+  uint8_t err = RTC.setTime(ts.year, ts.month, ts.date, ts.day, ts.hour, ts.minute, ts.second);
   if (err)
   {
-    error(F("setTime: RTC.setTime failed (please double check the syntax)"));
-  }
-  else
-  {
-    loadTime();
+    warn(F("saveTime: RTC.setTime(%lu) failed"), epochTime);
   }
 
   if (! rtcON) { RTC.OFF(); } // RTC OFF
-
   return err;
+}
+
+
+uint8_t WaspUIO::saveTimeToSD()
+{
+  SdFile file;
+
+  if (openFile(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC))
+  {
+    warn(F("saveTimeToSD: Opening TIME.TXT failed"));
+    return 1;
+  }
+  else
+  {
+    char buffer[11];
+    uint32_t time = getEpochTime();
+    snprintf_F(buffer, 11, F("%lu"), time);
+    file.write(buffer);
+    file.close();
+  }
+
+  return 0;
+}
+
+
+/**
+ * Sets the given time. Stores it in RTC and SD, then updates the system time.
+ * Returns 1 if error, 0 if success.
+ */
+uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day,
+                         uint8_t hour, uint8_t minute, uint8_t second)
+{
+  epochTime = RTC.getEpochTime(year, month, day, hour, minute, second);
+  start = millis() - cr.sleep_time;
+  return saveTime();
+}
+
+uint8_t WaspUIO::setTime(uint32_t time)
+{
+  epochTime = time;
+  start = millis() - cr.sleep_time;
+  return saveTime();
 }
 
 
 /**
  * Sets the system time from the time in the hardware clock (RTC).
- * Optionally read the temperature as well.
  */
-void WaspUIO::loadTime(bool temp)
+void WaspUIO::loadTime()
 {
-  uint8_t rtcON = RTC.isON;
-  if (! rtcON) { RTC.ON(); } // RTC ON
+  uint8_t rtcON;
+  SdFile file;
 
+  // Read time from RTC
+  rtcON = RTC.isON;
+  if (! rtcON) { RTC.ON(); } // RTC ON
   epochTime = RTC.getEpochTime();
   start = millis() - cr.sleep_time;
 
+  // If it's an old time, read it from the SD
+  if (epochTime < 1541030400) // 2018-11-01 A date in the past
+  {
+    startSD();
+    warn(F("Wrong time detected"));
+    if (openFile(timeFilename, file, O_READ))
+    {
+       warn(F("Opening TIME.TXT failed"));
+    }
+    else
+    {
+      int size = file.read(SD.buffer, 10);
+      file.close();
+      if (size != 10)
+      {
+        warn(F("Reading TIME.TXT failed"));
+      }
+      else
+      {
+        epochTime = strtoul(SD.buffer, NULL, 10);
+        start = millis() - cr.sleep_time;
+	saveTime();
+        info(F("Time loaded from TIME.TXT"));
+      }
+    }
+  }
+
+  // Ok
   if (! rtcON) { RTC.OFF(); } // RTC OFF
 }
 
@@ -94,7 +165,7 @@ uint8_t WaspUIO::setTimeFromNetwork()
       err = _4G.setTimeFrom4G(true);
       if (err == 0)
       {
-        loadTime(false);
+        loadTime();
       }
       _4GStop();
     }

@@ -67,12 +67,14 @@ void setup()
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
   info(F("Boot done, go to sleep"));
-  UIO.stopSD();
 }
 
 void loop()
 {
+  UIO.saveTimeToSD();
+  UIO.stopSD();
   UIO.deepSleep();
+
   RTC.ON(); // This fixes a bug with Maxbotix & SD card in some motes
   UIO.onLoop();
 
@@ -109,5 +111,4 @@ void loop()
 //char alarmTime[12];
 //UIO.getNextAlarm(alarmTime);
 //info(F("NEXT ALARM %s"), alarmTime);
-  UIO.stopSD(); // Logging ends here
 }

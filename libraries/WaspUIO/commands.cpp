@@ -745,6 +745,7 @@ COMMAND(cmdTime)
   unsigned short year, month, day, hour, minute, second;
   unsigned long epoch;
   timestamp_t time;
+  uint8_t err;
 
   if (strcmp(str, "network") == 0)
   {
@@ -758,31 +759,27 @@ COMMAND(cmdTime)
 
   if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
   {
-    // time=yy:mm:dd:hh:mm:ss
+    // time yy:mm:dd:hh:mm:ss
+    err = UIO.setTime(year, month, day, hour, minute, second);
   }
   else if (sscanf(str, "%lu", &epoch) == 1)
   {
-    // time=epoch
-    //epoch = epoch + xxx; // TODO Add half the round trup time
-    RTC.breakTimeAbsolute(epoch, &time);
-    year = time.year;
-    month = time.month;
-    day = time.date;
-    hour = time.hour;
-    minute = time.minute;
-    second = time.second;
+    // time epoch
+    // XXX Add half the round trip time to epoch (if command comes from network)
+    err = UIO.setTime(epoch);
   }
   else
   {
     return cmd_bad_input;
   }
 
-  // Do
-  if (UIO.saveTime(year, month, day, hour, minute, second) != 0)
+  // Error
+  if (err != 0)
   {
     error(F("Failed to save time %lu"), epoch);
     return cmd_error;
   }
+
   return cmd_ok;
 }
 
@@ -796,9 +793,6 @@ COMMAND(cmdTime)
 
 COMMAND(cmdGPS)
 {
-  uint32_t before, after;
-  uint32_t time;
-
   // Check feature availability
   if (! UIO.hasGPS) { return cmd_unavailable; }
 

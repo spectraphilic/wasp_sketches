@@ -191,6 +191,7 @@ const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
 const char* qstartFilename = "QSTART.BIN";
 const char* queueFilename = "TMP.TXT"; // TODO Rename to QUEUE.BIN
+const char* timeFilename = "TIME.TXT"; //
 SdFile logFile;
 SdFile queueFile;
 SdFile qstartFile;
@@ -287,10 +288,13 @@ const char* pprintSerial(char* str, size_t size);
 const char* pprintXBee(char* dst, size_t size);
 
 // Time
+uint8_t saveTime();
+uint8_t saveTimeToSD();
+uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+uint8_t setTime(uint32_t time);
+void loadTime();
 unsigned long getEpochTime();
 unsigned long getEpochTime(uint16_t &ms);
-uint8_t saveTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
-void loadTime(bool temp=false);
 uint8_t setTimeFromNetwork();
 int8_t gps(bool setTime, bool getPosition);
 
