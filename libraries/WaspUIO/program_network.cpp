@@ -118,6 +118,14 @@ CR_TASK(taskNetworkXBee)
     CR_JOIN(tid);
   }
 
+  // RSSI
+  if (xbeeDM.getRSSI() == 0) // FIXME This outputs garbage to USB
+  {
+    int rssi = xbeeDM.valueRSSI[0];
+    rssi *= -1;
+    ADD_SENSOR(SENSOR_RSSI, rssi);
+  }
+
   // Stop network
   if (xbeeDM.XBee_ON)
   {
