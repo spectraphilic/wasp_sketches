@@ -22,6 +22,7 @@ WaspSDI12 sdi12(PIN_SDI12);
  */
 void WaspUIO::boot()
 {
+  RTC.ON();
   cr.print(F("."));
   UIO.onSetup();
   cr.print(F("."));
@@ -85,7 +86,12 @@ void WaspUIO::onSetup()
 
   /*** 2. Autodetect hardware ***/
   hasSD = SD.ON();
+  if (! hasSD)
+  {
+    cr.println(F("SD.ON() failed flag=%u"), SD.flag);
+  }
   SD.OFF();
+
   hasGPS = GPS.ON();
   GPS.OFF();
 

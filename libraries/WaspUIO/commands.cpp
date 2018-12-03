@@ -97,10 +97,8 @@ void WaspUIO::clint()
   char buffer[150];
   //char out[150];
   size_t size = sizeof(buffer);
-  int8_t status;
 
   // Turn ON
-  RTC.ON();
   UIO.startSD();
 
   // Print info
@@ -117,7 +115,7 @@ void WaspUIO::clint()
       cr.print(F("> "));
       cr.input(buffer, size, 0);
       cr.println(buffer);
-      status = exeCommand(buffer);
+      int8_t status = exeCommand(buffer);
       if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
       else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
       else if (status == cmd_error)       { cr.println(F("Error")); }
@@ -135,7 +133,6 @@ void WaspUIO::clint()
 
   // Turn OFF
   UIO.stopSD();
-  RTC.OFF();
 }
 
 
@@ -146,13 +143,12 @@ void WaspUIO::clint()
 COMMAND(exeCommand)
 {
   Command cmd;
-  size_t len;
   cmd_status_t status;
 
   for (uint8_t i=0; i < nCommands; i++)
   {
     memcpy_P(&cmd, &commands[i], sizeof cmd);
-    len = strlen(cmd.prefix);
+    size_t len = strlen(cmd.prefix);
     if (strncmp(cmd.prefix, str, len) == 0)
     {
       debug(F("command %s"), str);
