@@ -151,8 +151,13 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
  * the new frame.
  */
 
-void WaspUIO::createFrame()
+void WaspUIO::createFrame(bool discard)
 {
+  if (frame.numFields > 1 && !discard)
+  {
+    frame2Sd();
+  }
+
   frame.createFrameBin(BINARY);
   addSensor(SENSOR_TST, epochTime);
 }
@@ -346,7 +351,7 @@ exit:
   {
     if (err == -1)
     {
-      error(F("No space left in frame"));
+      warn(F("No space left in frame"));
     }
 
     frame.length = start;
