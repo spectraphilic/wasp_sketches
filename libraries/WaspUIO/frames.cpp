@@ -426,7 +426,7 @@ void WaspUIO::showFrame(uint8_t *p)
    char buffer[17];
    uint8_t i;
    char c;
-   uint8_t type, nfields;
+   uint8_t nfields;
    uint8_t len;
    char name[20];
    char value_str[50];
@@ -493,7 +493,7 @@ void WaspUIO::showFrame(uint8_t *p)
    // Payload
    while (nbytes > 0)
    {
-     type = *p++;
+     uint8_t type = *p++;
      nbytes--;
 
      // Read format string

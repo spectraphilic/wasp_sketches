@@ -593,7 +593,7 @@ COMMAND(cmdPassword)
 
 COMMAND(cmdPin)
 {
-  uint16_t pin;
+  unsigned int pin;
 
   if (sscanf(str, "%u", &pin) != 1) { return cmd_bad_input; }
   if (pin > 9999) { return cmd_bad_input; }
