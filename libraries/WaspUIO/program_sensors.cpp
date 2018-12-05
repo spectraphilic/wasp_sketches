@@ -240,7 +240,7 @@ CR_TASK(taskSdiWS100)
 
 CR_TASK(task1Wire)
 {
-  uint8_t max = 40;
+  uint8_t max = 99;
   int values[max];
   uint8_t n;
 

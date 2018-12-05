@@ -15,7 +15,6 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
   SdFile file;
   int len;
   char word[20];
-  bool eol;
   uint8_t pin;
   uint8_t n = 0;
   uint8_t addr[8];
@@ -36,7 +35,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
 
   while ((len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
   {
-    eol = (word[--len] == '\n');
+    bool eol = (word[--len] == '\n');
     if (eol)
     {
       continue;
@@ -58,8 +57,14 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
       oneWire.write(0x44, 1); // Keep power on (parasite mode)
       delay(800);             // Time for the sensors to do their job
 
-      while (!eol && n < max && (len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
+      while (!eol && (len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
       {
+        if (n >= max)
+        {
+          warn(F("OneWire cannot read more than %hhu sensors"), max);
+          break;
+        }
+
         eol = (word[--len] == '\n');
         word[len] = '\0'; // Remove delimiter
         if (len == 16)

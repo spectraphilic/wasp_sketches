@@ -661,7 +661,7 @@ COMMAND(cmdRead)
   }
   else if (value == 6)
   {
-    uint8_t max = 40;
+    uint8_t max = 99;
     int values[max];
     UIO.readDS18B20(values, max);
   }
