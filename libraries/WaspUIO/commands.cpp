@@ -44,10 +44,10 @@ const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors
 const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE       - Read sensor: 1=battery 6=ds1820 7=bme280 8=mb";
+const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: bat(tery) ds1820 bme(280) mb";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
-const char CMD_RUN     [] PROGMEM = "run VALUE H M    - Run every hours and minutes: "
-                                    "0=network 1=battery 2=gps 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
+const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
+                                    "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
 const char CMD_SDI12   [] PROGMEM = "sdi [ADDR] [NEW] - Identify SDI-12 sensors";
 const char CMD_TAIL    [] PROGMEM = "tail N FILENAME  - Print last N lines of FILENAME to USB";
 const char CMD_TIME    [] PROGMEM = "time VALUE       - Sets time, value can be 'network', 'gps', yy:mm:dd:hh:mm:ss "
@@ -88,6 +88,30 @@ const Command commands[] PROGMEM = {
 };
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
+
+const char RUN_NETWORK_NAME [] PROGMEM = "net";
+const char RUN_BATTERY_NAME [] PROGMEM = "bat";
+const char RUN_GPS_NAME     [] PROGMEM = "gps";
+const char RUN_FREE_1_NAME  [] PROGMEM = "";
+const char RUN_CTD10_NAME   [] PROGMEM = "ctd";
+const char RUN_DS2_NAME     [] PROGMEM = "ds2";
+const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";
+const char RUN_BME280_NAME  [] PROGMEM = "bme";
+const char RUN_MB_NAME      [] PROGMEM = "mb";
+const char RUN_WS100_NAME   [] PROGMEM = "ws100";
+
+const char* const run_names[] PROGMEM = {
+  RUN_NETWORK_NAME,
+  RUN_BATTERY_NAME,
+  RUN_GPS_NAME,
+  RUN_FREE_1_NAME,
+  RUN_CTD10_NAME,
+  RUN_DS2_NAME,
+  RUN_DS1820_NAME,
+  RUN_BME280_NAME,
+  RUN_MB_NAME,
+  RUN_WS100_NAME,
+};
 
 
 /*
@@ -668,10 +692,12 @@ COMMAND(cmdPrint)
 
 COMMAND(cmdRead)
 {
-  unsigned int value;
+  char name[11];
+  int8_t value;
 
   // Check input
-  if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
+  if (sscanf(str, "%10s", &name) != 1) { return cmd_bad_input; }
+  value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
   if (value != 1 && (value < 6 || value > 8)) { return cmd_bad_input; }
 
   // Do
@@ -708,21 +734,23 @@ COMMAND(cmdRead)
 
 COMMAND(cmdRun)
 {
-  uint8_t what;
+  char name[11];
+  int8_t value;
   uint8_t hours;
   uint8_t minutes;
 
   // Check input
-  if (sscanf(str, "%hhu %hhu %hhu", &what, &hours, &minutes) != 3) { return cmd_bad_input; }
-  if (what >= RUN_LEN) { return cmd_bad_input; }
+  if (sscanf(str, "%10s %hhu %hhu", &name, &hours, &minutes) != 3) { return cmd_bad_input; }
+  value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
+  if (value == -1) { return cmd_bad_input; }
 
   if (minutes > 59) { return cmd_bad_input; }
 
   // Do
-  uint16_t base = EEPROM_UIO_RUN + (what * 2);
+  uint16_t base = EEPROM_UIO_RUN + (value * 2);
   if (! UIO.updateEEPROM(base, hours)) { return cmd_error; }
   if (! UIO.updateEEPROM(base + 1, minutes)) { return cmd_error; }
-  UIO.actions[what] = (hours * 60) + minutes;
+  UIO.actions[value] = (hours * 60) + minutes;
 
   return cmd_ok;
 }

@@ -314,6 +314,7 @@ uint8_t readDS18B20(int values[], uint8_t max);
 bool readBME280(float &temperature, float &humidity, float &pressure);
 
 // Utils
+int8_t index(const char* const list[], size_t size, const char* str);
 void sort_uint16(uint16_t* array, uint8_t size);
 uint16_t median_uint16(uint16_t* array, uint8_t size);
 uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);

@@ -1,5 +1,19 @@
 #include "WaspUIO.h"
 
+/* Find the index in a list, return -1 if not found */
+int8_t WaspUIO::index(const char* const list[], size_t size, const char* str)
+{
+  for (size_t i=0; i < size; i++)
+  {
+    if (strcmp_P(str, (const char*)pgm_read_word(&(list[i]))) == 0)
+    {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
 
 /* Sort in place integer array. Bubble sort. */
 void WaspUIO::sort_uint16(uint16_t* array, uint8_t size)
@@ -44,12 +58,11 @@ uint16_t WaspUIO::median_uint16(uint16_t* array, uint8_t size)
 /* Return standard deviation of the given array to the given value. */
 uint16_t WaspUIO::sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
 {
-  uint16_t value;
   uint32_t sd = 0;
 
   for (uint8_t i=0; i<size; i++)
   {
-    value = array[i];
+    uint16_t value = array[i];
     value = (value > mean) ? (value - mean) : (mean - value);
     sd += (value * value);
   }
