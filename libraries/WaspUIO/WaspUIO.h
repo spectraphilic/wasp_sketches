@@ -311,6 +311,7 @@ void deepSleep();
 int getMaxbotixSample();
 bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 uint8_t readDS18B20(int values[], uint8_t max);
+bool readBME280(float &temperature, float &humidity, float &pressure);
 
 // Utils
 void sort_uint16(uint16_t* array, uint8_t size);
@@ -360,6 +361,7 @@ COMMAND(cmdExit);
 COMMAND(cmdFormat);
 COMMAND(cmdGPS);
 COMMAND(cmdHelp);
+COMMAND(cmdI2C);
 COMMAND(cmdLogLevel);
 COMMAND(cmdLs);
 COMMAND(cmdName);

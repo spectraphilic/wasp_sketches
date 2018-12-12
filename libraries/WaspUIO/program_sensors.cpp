@@ -52,18 +52,6 @@ CR_TASK(taskSensors)
   if (ttl) { UIO.maxbotix(1); }
   if (ext) {}
 
-  // Init BME-280. Copied from BME280::ON to avoid the 100ms delay
-  // TODO Do this once in the setup
-  if (UIO.action(1, RUN_BME280))
-  {
-    // Check if the sensor is accesible
-    if (BME.checkID() == 1)
-    {
-      // Read the calibration registers
-      BME.readCalibration();
-    }
-  }
-
   // Wait for power to stabilize
   CR_DELAY(500);
 
@@ -266,31 +254,16 @@ CR_TASK(task1Wire)
 CR_TASK(taskI2C)
 {
   float temperature, humidity, pressure;
-  char aux[20];
 
   UIO.i2c(1);
-
-  // Read enviromental variables
-  temperature = BME.getTemperature(BME280_OVERSAMP_1X, 0);
-  humidity = BME.getHumidity(BME280_OVERSAMP_1X);
-  pressure = BME.getPressure(BME280_OVERSAMP_1X, 0);
-
-  // Debug
-  Utils.float2String(temperature, aux, 2);
-  debug(F("BME-280 Temperature: %s Celsius Degrees"), aux);
-
-  Utils.float2String(humidity, aux, 2);
-  debug(F("BME-280 Humidity   : %s %%RH"), aux);
-
-  Utils.float2String(pressure, aux, 2);
-  debug(F("BME-280 Pressure   : %s Pa"), aux);
+  UIO.readBME280(temperature, humidity, pressure);
+  UIO.i2c(0);
 
   // Frame
   ADD_SENSOR(SENSOR_BME_TC, temperature);
   ADD_SENSOR(SENSOR_BME_HUM, humidity);
   ADD_SENSOR(SENSOR_BME_PRES, pressure);
 
-  UIO.i2c(0);
   return CR_TASK_STOP;
 }
 

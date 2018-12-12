@@ -33,6 +33,7 @@ const char CMD_EXIT    [] PROGMEM = "exit             - Exit the command line in
 const char CMD_FORMAT  [] PROGMEM = "format           - Format SD card";
 const char CMD_GPS     [] PROGMEM = "gps              - Gets position from GPS";
 const char CMD_HELP    [] PROGMEM = "help             - Prints the list of commands";
+const char CMD_I2C     [] PROGMEM = "i2c              - Scan I2C slaves";
 const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE   - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls               - List files in SD card";
@@ -43,7 +44,7 @@ const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors
 const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read VALUE       - Read sensor: 1=battery 6=ds1820 8=mb";
+const char CMD_READ    [] PROGMEM = "read VALUE       - Read sensor: 1=battery 6=ds1820 7=bme280 8=mb";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
 const char CMD_RUN     [] PROGMEM = "run VALUE H M    - Run every hours and minutes: "
                                     "0=network 1=battery 2=gps 4=ctd10 5=ds2 6=ds1820 7=bme280 8=mb 9=ws100";
@@ -68,6 +69,7 @@ const Command commands[] PROGMEM = {
   {"format",    &cmdFormat,   CMD_FORMAT},
   {"gps",       &cmdGPS,      CMD_GPS},
   {"help",      &cmdHelp,     CMD_HELP},
+  {"i2c",       &cmdI2C,      CMD_I2C},
   {"loglevel ", &cmdLogLevel, CMD_LOGLEVEL},
   {"ls",        &cmdLs,       CMD_LS},
   {"name",      &cmdName,     CMD_NAME},
@@ -402,6 +404,27 @@ COMMAND(cmdHelp)
 }
 
 /**
+ * Scan I2C slaves
+ */
+
+COMMAND(cmdI2C)
+{
+  cr.println(F("EEPROM           (%02x) %hhu"), I2C_ADDRESS_EEPROM, I2C.scan(I2C_ADDRESS_EEPROM));
+  cr.println(F("RTC              (%02x) %hhu"), I2C_ADDRESS_WASP_RTC, I2C.scan(I2C_ADDRESS_WASP_RTC));
+  cr.println(F("ACC              (%02x) %hhu"), I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
+  cr.println(F("BME280           (%02x) %hhu"), I2C_ADDRESS_Lemming_BME280, I2C.scan(I2C_ADDRESS_Lemming_BME280));
+
+  cr.println(F("LAGOPUS BME280   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
+  cr.println(F("LAGOPUS TMP102   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_TMP102, I2C.scan(I2C_ADDRESS_LAGOPUS_TMP102));
+  cr.println(F("LAGOPUS VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
+  cr.println(F("LAGOPUS MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
+  cr.println(F("LAGOPUS AS726X   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
+
+  cr.println(F("0=success 1=no-state ..."));
+  return cmd_quiet;
+}
+
+/**
  * Sets log level.
  */
 
@@ -649,7 +672,7 @@ COMMAND(cmdRead)
 
   // Check input
   if (sscanf(str, "%u", &value) != 1) { return cmd_bad_input; }
-  if (value != 1 && value != 6 && value != 8) { return cmd_bad_input; }
+  if (value != 1 && (value < 6 || value > 8)) { return cmd_bad_input; }
 
   // Do
   if (value == 1)
@@ -664,6 +687,11 @@ COMMAND(cmdRead)
     uint8_t max = 99;
     int values[max];
     UIO.readDS18B20(values, max);
+  }
+  else if (value == 7)
+  {
+    float temperature, humidity, pressure;
+    UIO.readBME280(temperature, humidity, pressure);
   }
   else if (value == 8)
   {
