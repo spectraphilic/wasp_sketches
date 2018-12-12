@@ -89,6 +89,11 @@ enum run_t {
   RUN_BME280, // I2C
   RUN_MB, // TTL
   RUN_WS100, // SDI-12
+  RUN_LAGOPUS_AS726X,
+  RUN_LAGOPUS_BME280,
+  RUN_LAGOPUS_MLX90614,
+  RUN_LAGOPUS_TMP102,
+  RUN_LAGOPUS_VL53L1X,
   RUN_LEN // Special value
 };
 
@@ -311,7 +316,7 @@ void deepSleep();
 int getMaxbotixSample();
 bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 uint8_t readDS18B20(int values[], uint8_t max);
-bool readBME280(float &temperature, float &humidity, float &pressure);
+bool readBME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
 
 // Utils
 int8_t index(const char* const list[], size_t size, const char* str);

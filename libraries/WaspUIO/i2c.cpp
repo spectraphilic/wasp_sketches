@@ -6,21 +6,23 @@
  * Returns: bool      - 0 if success, 1 if error
  */
 
-bool WaspUIO::readBME280(float &temperature, float &humidity, float &pressure)
+bool WaspUIO::readBME280(float &temperature, float &humidity, float &pressure, uint8_t address)
 {
-  if (BME.checkID() != 1)
+  BME280 bme(address);
+
+  if (bme.checkID() != 1)
   {
     return 1;
   }
 
   // Read the calibration registers
   // XXX Can this be done once in the setup?
-  BME.readCalibration();
+  bme.readCalibration();
 
   // Read
-  temperature = BME.getTemperature(BME280_OVERSAMP_1X, 0);
-  humidity = BME.getHumidity(BME280_OVERSAMP_1X);
-  pressure = BME.getPressure(BME280_OVERSAMP_1X, 0);
+  temperature = bme.getTemperature(BME280_OVERSAMP_1X, 0);
+  humidity = bme.getHumidity(BME280_OVERSAMP_1X);
+  pressure = bme.getPressure(BME280_OVERSAMP_1X, 0);
 
   // Debug
   char aux[20];

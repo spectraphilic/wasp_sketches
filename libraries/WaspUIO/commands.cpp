@@ -44,7 +44,7 @@ const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors
 const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: bat(tery) ds1820 bme(280) mb";
+const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: bat(tery) ds1820 bme(280) mb l-bme(280)";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
 const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
                                     "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
@@ -99,6 +99,11 @@ const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";
 const char RUN_BME280_NAME  [] PROGMEM = "bme";
 const char RUN_MB_NAME      [] PROGMEM = "mb";
 const char RUN_WS100_NAME   [] PROGMEM = "ws100";
+const char RUN_LAGOPUS_AS726X_NAME   [] PROGMEM = "l-as";
+const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "l-bme";
+const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "l-mlx";
+const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "l-tmp";
+const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "l-vl";
 
 const char* const run_names[] PROGMEM = {
   RUN_NETWORK_NAME,
@@ -111,6 +116,11 @@ const char* const run_names[] PROGMEM = {
   RUN_BME280_NAME,
   RUN_MB_NAME,
   RUN_WS100_NAME,
+  RUN_LAGOPUS_AS726X_NAME,
+  RUN_LAGOPUS_BME280_NAME,
+  RUN_LAGOPUS_MLX90614_NAME,
+  RUN_LAGOPUS_TMP102_NAME,
+  RUN_LAGOPUS_VL53L1X_NAME,
 };
 
 
@@ -438,11 +448,11 @@ COMMAND(cmdI2C)
   cr.println(F("ACC              (%02x) %hhu"), I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
   cr.println(F("BME280           (%02x) %hhu"), I2C_ADDRESS_Lemming_BME280, I2C.scan(I2C_ADDRESS_Lemming_BME280));
 
+  cr.println(F("LAGOPUS AS726X   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
   cr.println(F("LAGOPUS BME280   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
+  cr.println(F("LAGOPUS MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
   cr.println(F("LAGOPUS TMP102   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_TMP102, I2C.scan(I2C_ADDRESS_LAGOPUS_TMP102));
   cr.println(F("LAGOPUS VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
-  cr.println(F("LAGOPUS MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
-  cr.println(F("LAGOPUS AS726X   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
 
   cr.println(F("0=success 1=no-state ..."));
   return cmd_quiet;
@@ -698,7 +708,6 @@ COMMAND(cmdRead)
   // Check input
   if (sscanf(str, "%10s", &name) != 1) { return cmd_bad_input; }
   value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-  if (value != 1 && (value < 6 || value > 8)) { return cmd_bad_input; }
 
   // Do
   if (value == 1)
@@ -717,12 +726,27 @@ COMMAND(cmdRead)
   else if (value == 7)
   {
     float temperature, humidity, pressure;
-    UIO.readBME280(temperature, humidity, pressure);
+    if (UIO.readBME280(temperature, humidity, pressure))
+    {
+      return cmd_error;
+    }
   }
   else if (value == 8)
   {
     uint16_t median, sd;
     UIO.readMaxbotixSerial(median, sd, 5);
+  }
+  else if (value == 11)
+  {
+    float temperature, humidity, pressure;
+    if (UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280))
+    {
+      return cmd_error;
+    }
+  }
+  else
+  {
+    return cmd_bad_input;
   }
 
   return cmd_ok;
