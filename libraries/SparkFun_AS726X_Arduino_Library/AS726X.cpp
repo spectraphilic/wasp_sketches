@@ -1,5 +1,4 @@
 #include "AS726X.h"
-#include "Arduino.h"
 //Sets up the sensor for constant read
 //Returns the sensor version (AS7262 or AS7263)
 
@@ -8,16 +7,15 @@ AS726X::AS726X()
 	
 }
 
-void AS726X::begin(TwoWire &wirePort, byte gain, byte measurementMode)
+void AS726X::begin(byte gain, byte measurementMode)
 {
-	_i2cPort = &wirePort;
-	_i2cPort->begin();
-	Serial.begin(115200);
+	I2C.begin();
+	//Serial.begin(115200);
 	_sensorVersion = virtualReadRegister(AS726x_HW_VERSION);
 	if (_sensorVersion != 0x3E && _sensorVersion != 0x3F) //HW version for AS7262 and AS7263
 	{
-		Serial.print("ID (should be 0x3E or 0x3F): 0x");
-		Serial.println(_sensorVersion, HEX);
+		USB.print("ID (should be 0x3E or 0x3F): 0x");
+		USB.println(_sensorVersion, HEX);
 	}
 
 	setBulbCurrent(0b00); //Set to 12.5mA (minimum)
@@ -35,12 +33,12 @@ void AS726X::begin(TwoWire &wirePort, byte gain, byte measurementMode)
 
 	if (_sensorVersion == 0)
 	{
-		Serial.println("Sensor failed to respond. Check wiring.");
+		USB.println("Sensor failed to respond. Check wiring.");
 		while (1); //Freeze!
 	}
 
-	if (_sensorVersion == SENSORTYPE_AS7262) Serial.println("AS7262 online!");
-	if (_sensorVersion == SENSORTYPE_AS7263) Serial.println("AS7263 online!");
+	if (_sensorVersion == SENSORTYPE_AS7262) USB.println("AS7262 online!");
+	if (_sensorVersion == SENSORTYPE_AS7263) USB.println("AS7263 online!");
 }
 
 //Sets the measurement mode
@@ -108,41 +106,41 @@ void AS726X::printMeasurements()
 	if (_sensorVersion == SENSORTYPE_AS7262)
 	{
 		//Visible readings
-		Serial.print(" Reading: V[");
-		Serial.print(getCalibratedViolet(), 2);
-		Serial.print("] B[");
-		Serial.print(getCalibratedBlue(), 2);
-		Serial.print("] G[");
-		Serial.print(getCalibratedGreen(), 2);
-		Serial.print("] Y[");
-		Serial.print(getCalibratedYellow(), 2);
-		Serial.print("] O[");
-		Serial.print(getCalibratedOrange(), 2);
-		Serial.print("] R[");
-		Serial.print(getCalibratedRed(), 2);
+		USB.print(" Reading: V[");
+		USB.print(getCalibratedViolet(), 2);
+		USB.print("] B[");
+		USB.print(getCalibratedBlue(), 2);
+		USB.print("] G[");
+		USB.print(getCalibratedGreen(), 2);
+		USB.print("] Y[");
+		USB.print(getCalibratedYellow(), 2);
+		USB.print("] O[");
+		USB.print(getCalibratedOrange(), 2);
+		USB.print("] R[");
+		USB.print(getCalibratedRed(), 2);
 	}
 	else if (_sensorVersion == SENSORTYPE_AS7263)
 	{
 		//Near IR readings
-		Serial.print(" Reading: R[");
-		Serial.print(getCalibratedR(), 2);
-		Serial.print("] S[");
-		Serial.print(getCalibratedS(), 2);
-		Serial.print("] T[");
-		Serial.print(getCalibratedT(), 2);
-		Serial.print("] U[");
-		Serial.print(getCalibratedU(), 2);
-		Serial.print("] V[");
-		Serial.print(getCalibratedV(), 2);
-		Serial.print("] W[");
-		Serial.print(getCalibratedW(), 2);
+		USB.print(" Reading: R[");
+		USB.print(getCalibratedR(), 2);
+		USB.print("] S[");
+		USB.print(getCalibratedS(), 2);
+		USB.print("] T[");
+		USB.print(getCalibratedT(), 2);
+		USB.print("] U[");
+		USB.print(getCalibratedU(), 2);
+		USB.print("] V[");
+		USB.print(getCalibratedV(), 2);
+		USB.print("] W[");
+		USB.print(getCalibratedW(), 2);
 	}
 
-	Serial.print("] tempF[");
-	Serial.print(tempF, 1);
-	Serial.print("]");
+	USB.print("] tempF[");
+	USB.print(tempF, 1);
+	USB.print("]");
 
-	Serial.println();
+	USB.println();
 }
 
 void AS726X::printUncalibratedMeasurements()
@@ -152,41 +150,41 @@ void AS726X::printUncalibratedMeasurements()
 	if (_sensorVersion == SENSORTYPE_AS7262)
 	{
 		//Visible readings
-		Serial.print(" Reading: V[");
-		Serial.print(getViolet());
-		Serial.print("] B[");
-		Serial.print(getBlue());
-		Serial.print("] G[");
-		Serial.print(getGreen());
-		Serial.print("] Y[");
-		Serial.print(getYellow());
-		Serial.print("] O[");
-		Serial.print(getOrange());
-		Serial.print("] R[");
-		Serial.print(getRed());
+		USB.print(" Reading: V[");
+		USB.print(getViolet());
+		USB.print("] B[");
+		USB.print(getBlue());
+		USB.print("] G[");
+		USB.print(getGreen());
+		USB.print("] Y[");
+		USB.print(getYellow());
+		USB.print("] O[");
+		USB.print(getOrange());
+		USB.print("] R[");
+		USB.print(getRed());
 	}
 	else if (_sensorVersion == SENSORTYPE_AS7263)
 	{
 		//Near IR readings
-		Serial.print(" Reading: R[");
-		Serial.print(getR());
-		Serial.print("] S[");
-		Serial.print(getS());
-		Serial.print("] T[");
-		Serial.print(getT());
-		Serial.print("] U[");
-		Serial.print(getU());
-		Serial.print("] V[");
-		Serial.print(getV());
-		Serial.print("] W[");
-		Serial.print(getW());
+		USB.print(" Reading: R[");
+		USB.print(getR());
+		USB.print("] S[");
+		USB.print(getS());
+		USB.print("] T[");
+		USB.print(getT());
+		USB.print("] U[");
+		USB.print(getU());
+		USB.print("] V[");
+		USB.print(getV());
+		USB.print("] W[");
+		USB.print(getW());
 	}
 
-	Serial.print("] tempF[");
-	Serial.print(tempF, 1);
-	Serial.print("]");
+	USB.print("] tempF[");
+	USB.print(tempF, 1);
+	USB.print("]");
 
-	Serial.println();
+	USB.println();
 }
 
 //Tells IC to take measurements and polls for data ready flag
@@ -396,7 +394,7 @@ byte AS726X::virtualReadRegister(byte virtualAddr)
 	status = readRegister(AS72XX_SLAVE_STATUS_REG);
 	if ((status & AS72XX_SLAVE_RX_VALID) != 0) //There is data to be read
 	{
-		//Serial.println("Premptive read");
+		//USB.println("Premptive read");
 		byte incoming = readRegister(AS72XX_SLAVE_READ_REG); //Read the byte but do nothing with it
 	}
 
@@ -454,25 +452,18 @@ void AS726X::virtualWriteRegister(byte virtualAddr, byte dataToWrite)
 //Reads from a give location from the AS726x
 byte AS726X::readRegister(byte addr)
 {
-	_i2cPort->beginTransmission(AS726X_ADDR);
-	_i2cPort->write(addr);
-	_i2cPort->endTransmission();
+	uint8_t data;
 
-	_i2cPort->requestFrom(AS726X_ADDR, 1);
-	if (_i2cPort->available()) {
-		return (_i2cPort->read());
-	}
-	else {
-		Serial.println("I2C Error");
+	if (I2C.read(AS726X_ADDR, addr, &data, 1))
+	{
 		return (0xFF); //Error
 	}
+
+	return data;
 }
 
 //Write a value to a spot in the AS726x
 void AS726X::writeRegister(byte addr, byte val)
 {
-	_i2cPort->beginTransmission(AS726X_ADDR);
-	_i2cPort->write(addr);
-	_i2cPort->write(val);
-	_i2cPort->endTransmission();
+	I2C.write(AS726X_ADDR, addr, val);
 }

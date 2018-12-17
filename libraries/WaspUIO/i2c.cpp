@@ -1,5 +1,39 @@
 #include "WaspUIO.h"
+#include "AS726X.h"
 #include "SparkFun_VL53L1X_Arduino_Library.h"
+
+
+/** readAS726X
+ *
+ * Returns: bool      - 0 if success, 1 if error
+ */
+
+bool WaspUIO::readAS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w)
+{
+  AS726X sensor;
+
+  sensor.begin();
+  sensor.takeMeasurements();
+
+  temp = sensor.getTemperatureF();
+  r = sensor.getCalibratedR();
+  s = sensor.getCalibratedS();
+  t = sensor.getCalibratedT();
+  u = sensor.getCalibratedU();
+  v = sensor.getCalibratedV();
+  w = sensor.getCalibratedW();
+
+  char str[20];
+  debug(F("AS7263 temp=%s"), Utils.float2String(temp, str, 2));
+  debug(F("AS7263 r=%s"), Utils.float2String(r, str, 2));
+  debug(F("AS7263 s=%s"), Utils.float2String(s, str, 2));
+  debug(F("AS7263 t=%s"), Utils.float2String(t, str, 2));
+  debug(F("AS7263 u=%s"), Utils.float2String(u, str, 2));
+  debug(F("AS7263 v=%s"), Utils.float2String(v, str, 2));
+  debug(F("AS7263 w=%s"), Utils.float2String(w, str, 2));
+
+  return 0;
+}
 
 
 /** readBME280

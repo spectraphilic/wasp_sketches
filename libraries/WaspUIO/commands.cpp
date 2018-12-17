@@ -45,7 +45,7 @@ const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encry
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: "
-                                    "bat(tery) ds1820 bme(280) mb l-bme(280) l-vl(53l1x)";
+                                    "bat(tery) ds1820 bme(280) mb l-as(726x) l-bme(280) l-vl(53l1x)";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
 const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
                                     "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
@@ -736,6 +736,14 @@ COMMAND(cmdRead)
   {
     uint16_t median, sd;
     UIO.readMaxbotixSerial(median, sd, 5);
+  }
+  else if (value == 10)
+  {
+    float temp, r, s, t, u, v, w;
+    if (UIO.readAS7263(temp, r, s, t, u, v, w))
+    {
+      return cmd_error;
+    }
   }
   else if (value == 11)
   {
