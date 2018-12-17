@@ -67,14 +67,13 @@ uint8_t configBlock[] = {
 //Check to see if sensor is responding
 //Set sensor up for 2.8/3.3V I2C
 //Return true if succesful
-boolean VL53L1X::begin(uint8_t deviceAddress, TwoWire &wirePort)
+boolean VL53L1X::begin(uint8_t deviceAddress)
 {
   _deviceAddress = deviceAddress; //If provided, store the I2C address from user
-  _i2cPort = &wirePort; //Grab which port the user wants us to use
 
   //We expect caller to begin their I2C port, with the speed of their choice external to the library
   //But if they forget, we start the hardware here.
-  _i2cPort->begin();
+  I2C.begin();
 
   //Check the device ID
   uint16_t modelID = readRegister16(VL53L1_IDENTIFICATION__MODEL_ID);
@@ -119,15 +118,7 @@ void VL53L1X::startMeasurement(uint8_t offset)
     uint16_t toSend = I2C_BUFFER_LENGTH - 2; //Max I2C buffer on Arduino is 32, and we need 2 bytes for address
     if (toSend > leftToSend) toSend = leftToSend;
 
-    _i2cPort->beginTransmission(_deviceAddress);
-
-    _i2cPort->write(0); //We're only in lower address space. No MSB needed.
-    _i2cPort->write(address);
-
-    for (byte x = 0 ; x < toSend ; x++)
-      _i2cPort->write(configBlock[address + x - 1 - offset]);
-
-    _i2cPort->endTransmission();
+    I2C.write(_deviceAddress, (uint16_t)address, configBlock + address - 1 - offset, toSend);
 
     leftToSend -= toSend;
     address += toSend;
@@ -402,61 +393,41 @@ uint8_t VL53L1X::getRangeStatus()
 //Returns zero on error
 uint8_t VL53L1X::readRegister(uint16_t addr)
 {
-  _i2cPort->beginTransmission(_deviceAddress);
-  _i2cPort->write(addr >> 8); //MSB
-  _i2cPort->write(addr & 0xFF); //LSB
-  if (_i2cPort->endTransmission() != 0) //Send a restart command. Do not release bus.
-    return (0); //Sensor did not ACK
+  uint8_t data;
 
-  _i2cPort->requestFrom((uint8_t)_deviceAddress, (uint8_t)1);
-  if (_i2cPort->available())
-    return (_i2cPort->read());
+  if (I2C.read(_deviceAddress, addr, &data, 1))
+  {
+    return 0;
+  }
 
-  return (0); //Error: Sensor did not respond
+  return data;
 }
 
 //Reads two consecutive bytes from a given location
 //Returns zero on error
 uint16_t VL53L1X::readRegister16(uint16_t addr)
 {
-  _i2cPort->beginTransmission(_deviceAddress);
-  _i2cPort->write(addr >> 8); //MSB
-  _i2cPort->write(addr & 0xFF); //LSB
-  if (_i2cPort->endTransmission() != 0) //Send a restart command. Do not release bus.
-    return (0); //Sensor did not ACK
+  uint8_t data[2];
 
-  _i2cPort->requestFrom((uint8_t)_deviceAddress, (uint8_t)2);
-  if (_i2cPort->available())
+  if (I2C.read(_deviceAddress, addr, data, 2))
   {
-    uint8_t msb = _i2cPort->read();
-    uint8_t lsb = _i2cPort->read();
-    return ((uint16_t)msb << 8 | lsb);
+    return 0;
   }
 
-  return (0); //Error: Sensor did not respond
+  return ((uint16_t)data[0] << 8 | data[1]);
 }
 
 //Write a byte to a spot
-boolean VL53L1X::writeRegister(uint16_t addr, uint8_t val)
+uint8_t VL53L1X::writeRegister(uint16_t addr, uint8_t val)
 {
-  _i2cPort->beginTransmission(_deviceAddress);
-  _i2cPort->write(addr >> 8); //MSB
-  _i2cPort->write(addr & 0xFF); //LSB
-  _i2cPort->write(val);
-  if (_i2cPort->endTransmission() != 0)
-    return (0); //Error: Sensor did not ACK
-  return (1); //All done!
+  return I2C.write(_deviceAddress, addr, &val, 1);
 }
 
 //Write two bytes to a spot
-boolean VL53L1X::writeRegister16(uint16_t addr, uint16_t val)
+uint8_t VL53L1X::writeRegister16(uint16_t addr, uint16_t val)
 {
-  _i2cPort->beginTransmission(_deviceAddress);
-  _i2cPort->write(addr >> 8); //MSB
-  _i2cPort->write(addr & 0xFF); //LSB
-  _i2cPort->write(val >> 8); //MSB
-  _i2cPort->write(val & 0xFF); //LSB
-  if (_i2cPort->endTransmission() != 0)
-    return (0); //Error: Sensor did not ACK
-  return (1); //All done!
+  // AVR is little endian, but data is sent in big endian
+  uint8_t reversed[2] = {(uint8_t)(val >> 8), (uint8_t)(val & 0xFF)};
+
+  return I2C.write(_deviceAddress, addr, reversed, 2);
 }

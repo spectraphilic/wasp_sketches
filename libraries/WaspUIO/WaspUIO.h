@@ -317,6 +317,7 @@ int getMaxbotixSample();
 bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 uint8_t readDS18B20(int values[], uint8_t max);
 bool readBME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
+bool readVL53L1X(uint16_t &distance);
 
 // Utils
 int8_t index(const char* const list[], size_t size, const char* str);

@@ -39,13 +39,7 @@
 #ifndef SPARKFUN_VL53L1X_ARDUINO_LIBRARY_H
 #define SPARKFUN_VL53L1X_ARDUINO_LIBRARY_H
 
-#if (ARDUINO >= 100)
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-
-#include <Wire.h>
+#include <WaspClasses.h>
 
 #include "vl53l1_register_map.h"
 const byte defaultAddress_VL53L1X = 0x29; //The default I2C address for the VL53L1X on the SparkFun breakout is 0x29.
@@ -90,7 +84,7 @@ const byte defaultAddress_VL53L1X = 0x29; //The default I2C address for the VL53
 class VL53L1X {
   public:
 
-    boolean begin(uint8_t deviceAddress = defaultAddress_VL53L1X, TwoWire &wirePort = Wire); //By default use the default I2C address, and use Wire port
+    boolean begin(uint8_t deviceAddress = defaultAddress_VL53L1X); //By default use the default I2C address, and use Wire port
 
     void softReset(); //Reset the sensor via software
     void startMeasurement(uint8_t offset = 0); //Write a block of bytes to the sensor to configure it to take a measurement
@@ -103,8 +97,8 @@ class VL53L1X {
 
     uint8_t readRegister(uint16_t addr); //Read a byte from a 16-bit address
     uint16_t readRegister16(uint16_t addr); //Read two bytes from a 16-bit address
-    boolean writeRegister(uint16_t addr, uint8_t val); //Write a byte to a spot
-    boolean writeRegister16(uint16_t addr, uint16_t val); //Write two bytes to a spot
+    uint8_t writeRegister(uint16_t addr, uint8_t val); //Write a byte to a spot
+    uint8_t writeRegister16(uint16_t addr, uint16_t val); //Write two bytes to a spot
 	
 	void setUserRoi(UserRoi*);  //Set custom sensor zones
 	void setCenter(uint8_t centerX, uint8_t centerY);  //Set the center of a custom zone
@@ -114,7 +108,6 @@ class VL53L1X {
   private:
 
     //Variables
-    TwoWire *_i2cPort; //The generic connection to user's chosen I2C hardware
 	uint8_t _deviceAddress;
     uint8_t _distanceMode = 0;
 };

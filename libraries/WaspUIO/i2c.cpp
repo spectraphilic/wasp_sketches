@@ -1,4 +1,5 @@
 #include "WaspUIO.h"
+#include "SparkFun_VL53L1X_Arduino_Library.h"
 
 
 /** readBME280
@@ -32,6 +33,34 @@ bool WaspUIO::readBME280(float &temperature, float &humidity, float &pressure, u
   debug(F("BME-280 Humidity   : %s %%RH"), aux);
   Utils.float2String(pressure, aux, 2);
   debug(F("BME-280 Pressure   : %s Pa"), aux);
+
+  return 0;
+}
+
+
+/** readVL53L1X
+ *
+ * Returns: bool      - 0 if success, 1 if error
+ *
+ * This code is derived from
+ * https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library/tree/master/examples/Example1_ReadDistance
+ */
+
+bool WaspUIO::readVL53L1X(uint16_t &distance)
+{
+  VL53L1X distanceSensor;
+
+  if (distanceSensor.begin() == false)
+  {
+    return 1;
+  }
+
+  // Poll for completion of measurement. Takes 40-50ms.
+  while (distanceSensor.newDataReady() == false)
+    delay(5);
+
+  distance = distanceSensor.getDistance();
+  debug(F("Distance(mm): %u"), distance);
 
   return 0;
 }
