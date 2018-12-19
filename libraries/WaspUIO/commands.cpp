@@ -45,7 +45,7 @@ const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encry
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
 const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: "
-                                    "bat(tery) ds1820 bme(280) mb l-as(726x) l-bme(280) l-vl(53l1x)";
+                                    "bat(tery) ds1820 bme(280) mb l-as(726x) l-bme(280) l-mlx(90614) l-vl(53l1x)";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
 const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
                                     "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
@@ -90,21 +90,21 @@ const Command commands[] PROGMEM = {
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
 
-const char RUN_NETWORK_NAME [] PROGMEM = "net";            // 0
-const char RUN_BATTERY_NAME [] PROGMEM = "bat";
-const char RUN_GPS_NAME     [] PROGMEM = "gps";            // 2
+const char RUN_NETWORK_NAME [] PROGMEM = "net";            // 0 network
+const char RUN_BATTERY_NAME [] PROGMEM = "bat";            // 1 battery
+const char RUN_GPS_NAME     [] PROGMEM = "gps";            // 2 gps
 const char RUN_FREE_1_NAME  [] PROGMEM = "";
-const char RUN_CTD10_NAME   [] PROGMEM = "ctd";            // 4
-const char RUN_DS2_NAME     [] PROGMEM = "ds2";
-const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";         // 6
-const char RUN_BME280_NAME  [] PROGMEM = "bme";
-const char RUN_MB_NAME      [] PROGMEM = "mb";             // 8
-const char RUN_WS100_NAME   [] PROGMEM = "ws100";
-const char RUN_LAGOPUS_AS726X_NAME   [] PROGMEM = "l-as";  // 10
-const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "l-bme";
-const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "l-mlx"; // 12
-const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "l-tmp";
-const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "l-vl";  // 14
+const char RUN_CTD10_NAME   [] PROGMEM = "ctd";            // 4 water
+const char RUN_DS2_NAME     [] PROGMEM = "ds2";            // 5 wind
+const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";         // 6 temperature string
+const char RUN_BME280_NAME  [] PROGMEM = "bme";            // 7 atmospheric (internal)
+const char RUN_MB_NAME      [] PROGMEM = "mb";             // 8 sonar
+const char RUN_WS100_NAME   [] PROGMEM = "ws100";          // 9 rain
+const char RUN_LAGOPUS_AS726X_NAME   [] PROGMEM = "l-as";  // 10 spectrum
+const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "l-bme"; // 11 atmospheric
+const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "l-mlx"; // 12 infrared thermometer
+const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "l-tmp"; // 13 digital temperature
+const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "l-vl";  // 14 distance
 
 const char* const run_names[] PROGMEM = {
   RUN_NETWORK_NAME,
@@ -749,6 +749,14 @@ COMMAND(cmdRead)
   {
     float temperature, humidity, pressure;
     if (UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280))
+    {
+      return cmd_error;
+    }
+  }
+  else if (value == 12)
+  {
+    float object, ambient;
+    if (UIO.readMLX90614(object, ambient))
     {
       return cmd_error;
     }

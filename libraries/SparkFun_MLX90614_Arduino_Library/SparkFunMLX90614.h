@@ -17,8 +17,7 @@ SparkFun IR Thermometer Evaluation Board - MLX90614
 #ifndef SPARKFUNMLX90164_H
 #define SPARKFUNMLX90164_H
 
-#include <Arduino.h>
-#include <Wire.h>
+#include <WaspClasses.h>
 
 //////////////////////////////////
 // MLX90614 Default I2C Address //

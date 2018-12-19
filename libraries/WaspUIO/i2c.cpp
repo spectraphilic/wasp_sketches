@@ -1,5 +1,6 @@
 #include "WaspUIO.h"
 #include "AS726X.h"
+#include "SparkFunMLX90614.h"
 #include "SparkFun_VL53L1X_Arduino_Library.h"
 
 
@@ -67,6 +68,34 @@ bool WaspUIO::readBME280(float &temperature, float &humidity, float &pressure, u
   debug(F("BME-280 Humidity   : %s %%RH"), aux);
   Utils.float2String(pressure, aux, 2);
   debug(F("BME-280 Pressure   : %s Pa"), aux);
+
+  return 0;
+}
+
+
+/** readMLX90614
+ *
+ * Returns: bool      - 0 if success, 1 if error
+ */
+bool WaspUIO::readMLX90614(float &object, float &ambient)
+{
+  IRTherm therm;
+
+  therm.begin();
+  therm.setUnit(TEMP_F);
+
+  if (therm.read())
+  {
+    return 1;
+  }
+
+  object = therm.object();
+  ambient = therm.ambient();
+
+  // Debug
+  char str[20];
+  debug(F("MLX 90614 object=%s"), Utils.float2String(object, str, 2));
+  debug(F("MLX 90614 ambient=%s"), Utils.float2String(ambient, str, 2));
 
   return 0;
 }
