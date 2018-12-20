@@ -319,6 +319,7 @@ uint8_t readDS18B20(int values[], uint8_t max);
 bool readAS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w);
 bool readBME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
 bool readMLX90614(float &object, float &ambient);
+bool readTMP102(float &temperature);
 bool readVL53L1X(uint16_t &distance);
 
 // Utils

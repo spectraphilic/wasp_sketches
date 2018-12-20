@@ -20,12 +20,11 @@ local, and you've found our code helpful, please buy us a round!
 Distributed as-is; no warranty is given.
 ******************************************************************************/
 #include "SparkFunTMP102.h"
-#include <Wire.h>
 
-#define TEMPERATURE_REGISTER 0x00
-#define CONFIG_REGISTER 0x01
-#define T_LOW_REGISTER 0x02
-#define T_HIGH_REGISTER 0x03
+#define TEMPERATURE_REGISTER (uint8_t)0x00
+#define CONFIG_REGISTER (uint8_t)0x01
+#define T_LOW_REGISTER (uint8_t)0x02
+#define T_HIGH_REGISTER (uint8_t)0x03
 
 
 
@@ -36,27 +35,7 @@ TMP102::TMP102(uint8_t address)
 
 void TMP102::begin(void)
 {
-  Wire.begin();  // Join I2C bus
-}
-
-
-void TMP102::openPointerRegister(uint8_t pointerReg)
-{ 
-  Wire.beginTransmission(_address); // Connect to TMP102
-  Wire.write(pointerReg); // Open specified register
-  Wire.endTransmission(); // Close communication with TMP102
-}
-
-
-uint8_t TMP102::readRegister(bool registerNumber){  
-  uint8_t registerByte[2];	// We'll store the data from the registers here
-  
-  // Read current configuration register value
-  Wire.requestFrom(_address, 2); 	// Read two bytes from TMP102
-  registerByte[0] = (Wire.read());	// Read first byte
-  registerByte[1] = (Wire.read());	// Read second byte
-  
-  return registerByte[registerNumber];
+  I2C.begin();  // Join I2C bus
 }
 
 
@@ -66,11 +45,7 @@ float TMP102::readTempC(void)
   int16_t digitalTemp;  // Temperature stored in TMP102 register
   
   // Read Temperature
-  // Change pointer address to temperature register (0)
-  openPointerRegister(TEMPERATURE_REGISTER);
-  // Read from temperature register
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, TEMPERATURE_REGISTER, registerByte, 2);
 
   // Bit 0 of second byte will always be 0 in 12-bit readings and 1 in 13-bit
   if(registerByte[1]&0x01)	// 13 bit mode
@@ -111,23 +86,14 @@ void TMP102::setConversionRate(uint8_t rate)
   uint8_t registerByte[2]; // Store the data from the register here
   rate = rate&0x03; // Make sure rate is not set higher than 3.
   
-  // Change pointer address to configuration register (0x01)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
 
   // Load new conversion rate
   registerByte[1] &= 0x3F;  // Clear CR0/1 (bit 6 and 7 of second byte)
   registerByte[1] |= rate<<6;	// Shift in new conversion rate
 
   // Set configuration registers
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER); 	// Point to configuration register
-  Wire.write(registerByte[0]);  // Write first byte
-  Wire.write(registerByte[1]);  // Write second byte
-  Wire.endTransmission();  		// Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte, 2);
 }
 
 
@@ -135,23 +101,14 @@ void TMP102::setExtendedMode(bool mode)
 {
   uint8_t registerByte[2]; // Store the data from the register here
 
-  // Change pointer address to configuration register (0x01)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
 
   // Load new value for extention mode
   registerByte[1] &= 0xEF;		// Clear EM (bit 4 of second byte)
   registerByte[1] |= mode<<4;	// Shift in new exentended mode bit
 
   // Set configuration registers
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER);	// Point to configuration register
-  Wire.write(registerByte[0]);	// Write first byte
-  Wire.write(registerByte[1]); 	// Write second byte
-  Wire.endTransmission(); 		// Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte, 2);
 }
 
 
@@ -159,19 +116,12 @@ void TMP102::sleep(void)
 {
   uint8_t registerByte; // Store the data from the register here
 
-  // Change pointer address to configuration register (0x01)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte = readRegister(0);
+  I2C.read(_address, CONFIG_REGISTER, &registerByte, 1);
 
   registerByte |= 0x01;	// Set SD (bit 0 of first byte)
 
   // Set configuration register
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER);	// Point to configuration register
-  Wire.write(registerByte);     // Write first byte
-  Wire.endTransmission(); 	    // Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte);
 }
 
 
@@ -179,19 +129,12 @@ void TMP102::wakeup(void)
 {
   uint8_t registerByte; // Store the data from the register here
 
-  // Change pointer address to configuration register (1)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte = readRegister(0);
+  I2C.read(_address, CONFIG_REGISTER, &registerByte, 1);
 
   registerByte &= 0xFE;	// Clear SD (bit 0 of first byte)
 
   // Set configuration registers
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER);	// Point to configuration register
-  Wire.write(registerByte);	    // Write first byte
-  Wire.endTransmission(); 	    // Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte);
 }
 
 
@@ -199,21 +142,14 @@ void TMP102::setAlertPolarity(bool polarity)
 {
   uint8_t registerByte; // Store the data from the register here
 
-  // Change pointer address to configuration register (1)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte = readRegister(0);
+  I2C.read(_address, CONFIG_REGISTER, &registerByte, 1);
 
   // Load new value for polarity
   registerByte &= 0xFB; // Clear POL (bit 2 of registerByte)
   registerByte |= polarity<<2;  // Shift in new POL bit
 
   // Set configuration register
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER);	// Point to configuration register
-  Wire.write(registerByte);	    // Write first byte
-  Wire.endTransmission(); 	    // Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte);
 }
 
 
@@ -221,11 +157,7 @@ bool TMP102::alert(void)
 {
   uint8_t registerByte; // Store the data from the register here
 
-  // Change pointer address to configuration register (1)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, &registerByte, 1);
   
   registerByte &= 0x20;	// Clear everything but the alert bit (bit 5)
   return registerByte>>5;
@@ -248,11 +180,7 @@ void TMP102::setLowTempC(float temperature)
   }
   
   //Check if temperature should be 12 or 13 bits
-  openPointerRegister(CONFIG_REGISTER);	// Read configuration register settings
-  
-  // Read current configuration register value
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
   extendedMode = (registerByte[1]&0x10)>>4;	// 0 - temp data will be 12 bits
                                             // 1 - temp data will be 13 bits
 
@@ -272,11 +200,7 @@ void TMP102::setLowTempC(float temperature)
   }
   
   // Write to T_LOW Register
-  Wire.beginTransmission(_address);
-  Wire.write(T_LOW_REGISTER); 	// Point to T_LOW
-  Wire.write(registerByte[0]);  // Write first byte
-  Wire.write(registerByte[1]);  // Write second byte
-  Wire.endTransmission();  		// Close communication with TMP102
+  I2C.write(_address, T_LOW_REGISTER, registerByte, 2);
 }
 
 
@@ -296,11 +220,7 @@ void TMP102::setHighTempC(float temperature)
   }
   
   // Check if temperature should be 12 or 13 bits
-  openPointerRegister(CONFIG_REGISTER);	// Read configuration register settings
-  
-  // Read current configuration register value
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
   extendedMode = (registerByte[1]&0x10)>>4;	// 0 - temp data will be 12 bits
                                             // 1 - temp data will be 13 bits
 
@@ -320,11 +240,7 @@ void TMP102::setHighTempC(float temperature)
   }
   
   // Write to T_HIGH Register
-  Wire.beginTransmission(_address);
-  Wire.write(T_HIGH_REGISTER); 	// Point to T_HIGH register
-  Wire.write(registerByte[0]);  // Write first byte
-  Wire.write(registerByte[1]);  // Write second byte
-  Wire.endTransmission();  		// Close communication with TMP102
+  I2C.write(_address, T_HIGH_REGISTER, registerByte, 2);
 }
 
 
@@ -350,15 +266,10 @@ float TMP102::readLowTempC(void)
   float temperature;	// Store the analog temperature value here
   
   // Check if temperature should be 12 or 13 bits
-  openPointerRegister(CONFIG_REGISTER);	// Read configuration register settings
-  // Read current configuration register value
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
   extendedMode = (registerByte[1]&0x10)>>4;	// 0 - temp data will be 12 bits
                                             // 1 - temp data will be 13 bits
-  openPointerRegister(T_LOW_REGISTER);
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, T_LOW_REGISTER, registerByte, 2);
   
   if(extendedMode)	// 13 bit mode
   {
@@ -395,15 +306,10 @@ float TMP102::readHighTempC(void)
   float temperature;	// Store the analog temperature value here
   
   // Check if temperature should be 12 or 13 bits
-  openPointerRegister(CONFIG_REGISTER);	// read configuration register settings
-  // Read current configuration register value
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
   extendedMode = (registerByte[1]&0x10)>>4;	// 0 - temp data will be 12 bits
 											// 1 - temp data will be 13 bits
-  openPointerRegister(T_HIGH_REGISTER);
-  registerByte[0] = readRegister(0);
-  registerByte[1] = readRegister(1);
+  I2C.read(_address, T_HIGH_REGISTER, registerByte, 2);
   
   if(extendedMode)	// 13 bit mode
   {
@@ -450,21 +356,14 @@ void TMP102::setFault(uint8_t faultSetting)
 
   faultSetting = faultSetting&3; // Make sure rate is not set higher than 3.
   
-  // Change pointer address to configuration register (0x01)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte = readRegister(0);
+  I2C.read(_address, CONFIG_REGISTER, &registerByte, 1);
 
   // Load new conversion rate
   registerByte &= 0xE7;  // Clear F0/1 (bit 3 and 4 of first byte)
   registerByte |= faultSetting<<3;	// Shift new fault setting
 
   // Set configuration registers
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER); 	// Point to configuration register
-  Wire.write(registerByte);     // Write byte to register
-  Wire.endTransmission();       // Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte);
 }
 
 
@@ -472,19 +371,12 @@ void TMP102::setAlertMode(bool mode)
 {
   uint8_t registerByte; // Store the data from the register here
   
-  // Change pointer address to configuration register (1)
-  openPointerRegister(CONFIG_REGISTER);
-  
-  // Read current configuration register value
-  registerByte = readRegister(0);
+  I2C.read(_address, CONFIG_REGISTER, &registerByte, 1);
 
   // Load new conversion rate
   registerByte &= 0xFD;	// Clear old TM bit (bit 1 of first byte)
   registerByte |= mode<<1;	// Shift in new TM bit
 
   // Set configuration registers
-  Wire.beginTransmission(_address);
-  Wire.write(CONFIG_REGISTER); 	// Point to configuration register
-  Wire.write(registerByte);     // Write byte to register
-  Wire.endTransmission();       // Close communication with TMP102
+  I2C.write(_address, CONFIG_REGISTER, registerByte);
 }

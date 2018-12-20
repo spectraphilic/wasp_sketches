@@ -1,6 +1,8 @@
 #include "WaspUIO.h"
+
 #include "AS726X.h"
 #include "SparkFunMLX90614.h"
+#include "SparkFunTMP102.h"
 #include "SparkFun_VL53L1X_Arduino_Library.h"
 
 
@@ -96,6 +98,27 @@ bool WaspUIO::readMLX90614(float &object, float &ambient)
   char str[20];
   debug(F("MLX 90614 object=%s"), Utils.float2String(object, str, 2));
   debug(F("MLX 90614 ambient=%s"), Utils.float2String(ambient, str, 2));
+
+  return 0;
+}
+
+
+/** readTMP102
+ *
+ * Returns: bool      - 0 if success, 1 if error
+ */
+bool WaspUIO::readTMP102(float &temperature)
+{
+  TMP102 sensor0(I2C_ADDRESS_LAGOPUS_TMP102);
+
+  sensor0.begin();  // Join I2C bus
+  sensor0.wakeup();
+  temperature = sensor0.readTempC();
+  sensor0.sleep();
+
+  // Debug
+  char str[20];
+  debug(F("TMP102 %s Celsius"), Utils.float2String(temperature, str, 2));
 
   return 0;
 }

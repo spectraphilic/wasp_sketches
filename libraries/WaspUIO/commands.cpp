@@ -705,6 +705,7 @@ COMMAND(cmdRead)
 {
   char name[11];
   int8_t value;
+  bool error;
 
   // Check input
   if (sscanf(str, "%10s", &name) != 1) { return cmd_bad_input; }
@@ -723,55 +724,51 @@ COMMAND(cmdRead)
     uint8_t max = 99;
     int values[max];
     UIO.readDS18B20(values, max);
+    error = false;
   }
   else if (value == 7)
   {
     float temperature, humidity, pressure;
-    if (UIO.readBME280(temperature, humidity, pressure))
-    {
-      return cmd_error;
-    }
+    error = UIO.readBME280(temperature, humidity, pressure);
   }
   else if (value == 8)
   {
     uint16_t median, sd;
-    UIO.readMaxbotixSerial(median, sd, 5);
+    error = UIO.readMaxbotixSerial(median, sd, 5);
   }
   else if (value == 10)
   {
     float temp, r, s, t, u, v, w;
-    if (UIO.readAS7263(temp, r, s, t, u, v, w))
-    {
-      return cmd_error;
-    }
+    error = UIO.readAS7263(temp, r, s, t, u, v, w);
   }
   else if (value == 11)
   {
     float temperature, humidity, pressure;
-    if (UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280))
-    {
-      return cmd_error;
-    }
+    error = UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
   }
   else if (value == 12)
   {
     float object, ambient;
-    if (UIO.readMLX90614(object, ambient))
-    {
-      return cmd_error;
-    }
+    error = UIO.readMLX90614(object, ambient);
+  }
+  else if (value == 13)
+  {
+    float temperature;
+    error = UIO.readTMP102(temperature);
   }
   else if (value == 14)
   {
     uint16_t distance;
-    if (UIO.readVL53L1X(distance))
-    {
-      return cmd_error;
-    }
+    error = UIO.readVL53L1X(distance);
   }
   else
   {
     return cmd_bad_input;
+  }
+
+  if (error)
+  {
+    return cmd_error;
   }
 
   return cmd_ok;

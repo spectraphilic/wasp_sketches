@@ -20,12 +20,7 @@ Distributed as-is; no warranty is given.
 #ifndef TMP102_h
 #define TMP102_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-#include <Wire.h>
+#include <WaspClasses.h>
 class TMP102
 {
 	public:
@@ -76,8 +71,6 @@ class TMP102
 		
 	private:
 		int _address; // Address of Temperature sensor (0x48,0x49,0x4A,0x4B)
-		void openPointerRegister(byte pointerReg); // Changes the pointer register
-		byte readRegister(bool registerNumber);	// reads 1 byte of from register
 };
 
 
