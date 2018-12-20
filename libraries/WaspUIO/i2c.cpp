@@ -12,6 +12,7 @@
 
 void WaspUIO::i2c_scan()
 {
+  I2C.begin();
   cr.println(F("EEPROM   (%02x) %hhu"), I2C_ADDRESS_EEPROM, I2C.scan(I2C_ADDRESS_EEPROM));
   cr.println(F("RTC      (%02x) %hhu"), I2C_ADDRESS_WASP_RTC, I2C.scan(I2C_ADDRESS_WASP_RTC));
   cr.println(F("ACC      (%02x) %hhu"), I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
@@ -22,7 +23,7 @@ void WaspUIO::i2c_scan()
   cr.println(F("MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
   cr.println(F("TMP102   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_TMP102, I2C.scan(I2C_ADDRESS_LAGOPUS_TMP102));
   cr.println(F("VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
-  cr.println(F("0=success 1=no-state ..."));
+  cr.println(F("0=success 1=no-state ... 255=operation-in-progress"));
 }
 
 

@@ -48,7 +48,6 @@ uint8_t WaspI2C::scanSlaves()
     !scan(I2C_ADDRESS_LAGOPUS_MLX90614) ||
     !scan(I2C_ADDRESS_LAGOPUS_AS726X)
   );
-  cr.println(F("_slavePresent=%d"), _slavePresent);
   return _slavePresent;
 }
 
