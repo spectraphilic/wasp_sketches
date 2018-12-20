@@ -316,6 +316,9 @@ void deepSleep();
 int getMaxbotixSample();
 bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
 uint8_t readDS18B20(int values[], uint8_t max);
+
+// I2C
+void i2c_scan();
 bool readAS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w);
 bool readBME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
 bool readMLX90614(float &object, float &ambient);

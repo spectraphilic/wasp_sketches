@@ -33,7 +33,8 @@ const char CMD_EXIT    [] PROGMEM = "exit             - Exit the command line in
 const char CMD_FORMAT  [] PROGMEM = "format           - Format SD card";
 const char CMD_GPS     [] PROGMEM = "gps              - Gets position from GPS";
 const char CMD_HELP    [] PROGMEM = "help             - Prints the list of commands";
-const char CMD_I2C     [] PROGMEM = "i2c              - Scan I2C slaves";
+const char CMD_I2C     [] PROGMEM = "i2c [NAME]       - Scan I2C bus or read values from NAME: "
+                                    "as bme bm76 mlx tmp vl";
 const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE   - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls               - List files in SD card";
@@ -44,8 +45,7 @@ const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors
 const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: "
-                                    "bat(tery) ds1820 bme(280) mb l-as(726x) l-bme(280) l-mlx(90614) l-vl(53l1x)";
+const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: bat(tery) ds1820 mb";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
 const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
                                     "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
@@ -97,14 +97,15 @@ const char RUN_FREE_1_NAME  [] PROGMEM = "";
 const char RUN_CTD10_NAME   [] PROGMEM = "ctd";            // 4 water
 const char RUN_DS2_NAME     [] PROGMEM = "ds2";            // 5 wind
 const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";         // 6 temperature string
-const char RUN_BME280_NAME  [] PROGMEM = "bme";            // 7 atmospheric (internal)
 const char RUN_MB_NAME      [] PROGMEM = "mb";             // 8 sonar
 const char RUN_WS100_NAME   [] PROGMEM = "ws100";          // 9 rain
-const char RUN_LAGOPUS_AS726X_NAME   [] PROGMEM = "l-as";  // 10 spectrum
-const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "l-bme"; // 11 atmospheric
-const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "l-mlx"; // 12 infrared thermometer
-const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "l-tmp"; // 13 digital temperature
-const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "l-vl";  // 14 distance
+// I2C
+const char RUN_BME280_NAME  [] PROGMEM = "bme76";        // 7 atmospheric (internal)
+const char RUN_LAGOPUS_AS726X_NAME   [] PROGMEM = "as";  // 10 spectrum
+const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme"; // 11 atmospheric
+const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx"; // 12 infrared thermometer
+const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp"; // 13 digital temperature
+const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";  // 14 distance
 
 const char* const run_names[] PROGMEM = {
   RUN_NETWORK_NAME,
@@ -444,19 +445,60 @@ COMMAND(cmdHelp)
 
 COMMAND(cmdI2C)
 {
-  cr.println(F("EEPROM           (%02x) %hhu"), I2C_ADDRESS_EEPROM, I2C.scan(I2C_ADDRESS_EEPROM));
-  cr.println(F("RTC              (%02x) %hhu"), I2C_ADDRESS_WASP_RTC, I2C.scan(I2C_ADDRESS_WASP_RTC));
-  cr.println(F("ACC              (%02x) %hhu"), I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
-  cr.println(F("BME280           (%02x) %hhu"), I2C_ADDRESS_Lemming_BME280, I2C.scan(I2C_ADDRESS_Lemming_BME280));
+  // Parse command line
+  char name[20];
+  int n = sscanf(str, "%19s", name);
+  if (n != -1 && n != 1) { return cmd_bad_input; }
 
-  cr.println(F("LAGOPUS AS726X   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
-  cr.println(F("LAGOPUS BME280   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
-  cr.println(F("LAGOPUS MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
-  cr.println(F("LAGOPUS TMP102   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_TMP102, I2C.scan(I2C_ADDRESS_LAGOPUS_TMP102));
-  cr.println(F("LAGOPUS VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
+  // Power ON
+  UIO.i2c(1);
 
-  cr.println(F("0=success 1=no-state ..."));
-  return cmd_quiet;
+  // Scan
+  if (n == -1)
+  {
+    UIO.i2c_scan();
+    return cmd_quiet;
+  }
+
+  // Read
+  bool error;
+  int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
+  if (value == 7)
+  {
+    float temperature, humidity, pressure;
+    error = UIO.readBME280(temperature, humidity, pressure);
+  }
+  else if (value == 10)
+  {
+    float temp, r, s, t, u, v, w;
+    error = UIO.readAS7263(temp, r, s, t, u, v, w);
+  }
+  else if (value == 11)
+  {
+    float temperature, humidity, pressure;
+    error = UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
+  }
+  else if (value == 12)
+  {
+    float object, ambient;
+    error = UIO.readMLX90614(object, ambient);
+  }
+  else if (value == 13)
+  {
+    float temperature;
+    error = UIO.readTMP102(temperature);
+  }
+  else if (value == 14)
+  {
+    uint16_t distance;
+    error = UIO.readVL53L1X(distance);
+  }
+  else
+  {
+    return cmd_bad_input;
+  }
+
+  return (error)? cmd_error: cmd_quiet;
 }
 
 /**
@@ -726,40 +768,10 @@ COMMAND(cmdRead)
     UIO.readDS18B20(values, max);
     error = false;
   }
-  else if (value == 7)
-  {
-    float temperature, humidity, pressure;
-    error = UIO.readBME280(temperature, humidity, pressure);
-  }
   else if (value == 8)
   {
     uint16_t median, sd;
     error = UIO.readMaxbotixSerial(median, sd, 5);
-  }
-  else if (value == 10)
-  {
-    float temp, r, s, t, u, v, w;
-    error = UIO.readAS7263(temp, r, s, t, u, v, w);
-  }
-  else if (value == 11)
-  {
-    float temperature, humidity, pressure;
-    error = UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
-  }
-  else if (value == 12)
-  {
-    float object, ambient;
-    error = UIO.readMLX90614(object, ambient);
-  }
-  else if (value == 13)
-  {
-    float temperature;
-    error = UIO.readTMP102(temperature);
-  }
-  else if (value == 14)
-  {
-    uint16_t distance;
-    error = UIO.readVL53L1X(distance);
   }
   else
   {
