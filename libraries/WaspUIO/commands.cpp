@@ -23,7 +23,7 @@ typedef struct {
 const char CMD_4G      [] PROGMEM = "4g               - Test 4G data connection";
 const char CMD_ACK     [] PROGMEM = ""; // Hidden command
 const char CMD_APN     [] PROGMEM = "apn [APN]        - Set 4G Access Point Name (APN)";
-const char CMD_BATTERY [] PROGMEM = "bat VALUE        - Choose the battery type: 1=lithium 2=lead";
+const char CMD_BATTERY [] PROGMEM = "bat [TYPE]       - Read battery or change type: 1=lithium 2=lead";
 const char CMD_BOARD   [] PROGMEM = "board VALUE      - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT     [] PROGMEM = "cat FILENAME     - Print FILENAME contents to USB";
 const char CMD_CATX    [] PROGMEM = "catx FILENAME    - Print FILENAME contents in hexadecimal to USB";
@@ -45,7 +45,7 @@ const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors
 const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
 const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: bat(tery) ds1820 mb";
+const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: ds1820 mb";
 const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
 const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
                                     "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
@@ -60,7 +60,7 @@ const Command commands[] PROGMEM = {
   {"4g",        &cmd4G,       CMD_4G},
   {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
   {"apn",       &cmdAPN,      CMD_APN},
-  {"bat ",      &cmdBattery,  CMD_BATTERY},
+  {"bat",       &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
   {"catx ",     &cmdCatx,     CMD_CATX},
@@ -329,13 +329,22 @@ COMMAND(cmdAPN)
  */
 COMMAND(cmdBattery)
 {
+  // Parse command line
   uint8_t value;
+  int n = sscanf(str, "%hhu", &value);
+  if (n != -1 && n != 1) { return cmd_bad_input; }
 
-  // Check input
-  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
+  // Read
+  if (n == -1)
+  {
+    char buffer[25];
+    UIO.readBattery();
+    cr.println(F("%s"), UIO.pprintBattery(buffer, sizeof buffer));
+    return cmd_quiet;
+  }
+
+  // Change type
   if (value >= BATTERY_LEN) { return cmd_bad_input; }
-
-  // Do
   if (! UIO.updateEEPROM(EEPROM_UIO_BATTERY_TYPE, value)) { return cmd_error; }
   UIO.batteryType = (battery_type_t) value;
   UIO.readBattery();
@@ -466,32 +475,32 @@ COMMAND(cmdI2C)
   if (value == 7)
   {
     float temperature, humidity, pressure;
-    error = UIO.readBME280(temperature, humidity, pressure);
+    error = UIO.i2c_BME280(temperature, humidity, pressure);
   }
   else if (value == 10)
   {
     float temp, r, s, t, u, v, w;
-    error = UIO.readAS7263(temp, r, s, t, u, v, w);
+    error = UIO.i2c_AS7263(temp, r, s, t, u, v, w);
   }
   else if (value == 11)
   {
     float temperature, humidity, pressure;
-    error = UIO.readBME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
+    error = UIO.i2c_BME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
   }
   else if (value == 12)
   {
     float object, ambient;
-    error = UIO.readMLX90614(object, ambient);
+    error = UIO.i2c_MLX90614(object, ambient);
   }
   else if (value == 13)
   {
     float temperature;
-    error = UIO.readTMP102(temperature);
+    error = UIO.i2c_TMP102(temperature);
   }
   else if (value == 14)
   {
     uint16_t distance;
-    error = UIO.readVL53L1X(distance);
+    error = UIO.i2c_VL53L1X(distance);
   }
   else
   {
@@ -754,14 +763,7 @@ COMMAND(cmdRead)
   value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
 
   // Do
-  if (value == 1)
-  {
-    char buffer[25];
-    UIO.readBattery();
-    cr.println(F("%s"), UIO.pprintBattery(buffer, sizeof buffer));
-    return cmd_quiet;
-  }
-  else if (value == 6)
+  if (value == 6)
   {
     uint8_t max = 99;
     int values[max];

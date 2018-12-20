@@ -31,7 +31,6 @@
 #include <Wasp4G.h>
 #endif
 
-#include <BME280.h>
 #include <SDI12.h>
 
 
@@ -319,11 +318,11 @@ uint8_t readDS18B20(int values[], uint8_t max);
 
 // I2C
 void i2c_scan();
-bool readAS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w);
-bool readBME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
-bool readMLX90614(float &object, float &ambient);
-bool readTMP102(float &temperature);
-bool readVL53L1X(uint16_t &distance);
+bool i2c_AS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w);
+bool i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
+bool i2c_MLX90614(float &object, float &ambient);
+bool i2c_TMP102(float &temperature);
+bool i2c_VL53L1X(uint16_t &distance);
 
 // Utils
 int8_t index(const char* const list[], size_t size, const char* str);

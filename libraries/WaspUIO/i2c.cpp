@@ -1,5 +1,9 @@
 #include "WaspUIO.h"
 
+// From Libelium
+#include <BME280.h>
+
+// Forks of SparkFun libraries
 #include "AS726X.h"
 #include "SparkFunMLX90614.h"
 #include "SparkFunTMP102.h"
@@ -23,12 +27,12 @@ void WaspUIO::i2c_scan()
 
 
 
-/** readAS726X
+/** i2c_AS726X
  *
  * Returns: bool      - 0 if success, 1 if error
  */
 
-bool WaspUIO::readAS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w)
+bool WaspUIO::i2c_AS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w)
 {
   AS726X sensor;
 
@@ -56,12 +60,12 @@ bool WaspUIO::readAS7263(float &temp, float &r, float &s, float &t, float &u, fl
 }
 
 
-/** readBME280
+/** i2c_BME280
  *
  * Returns: bool      - 0 if success, 1 if error
  */
 
-bool WaspUIO::readBME280(float &temperature, float &humidity, float &pressure, uint8_t address)
+bool WaspUIO::i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address)
 {
   BME280 bme(address);
 
@@ -89,11 +93,11 @@ bool WaspUIO::readBME280(float &temperature, float &humidity, float &pressure, u
 }
 
 
-/** readMLX90614
+/** i2c_MLX90614
  *
  * Returns: bool      - 0 if success, 1 if error
  */
-bool WaspUIO::readMLX90614(float &object, float &ambient)
+bool WaspUIO::i2c_MLX90614(float &object, float &ambient)
 {
   IRTherm therm;
 
@@ -117,11 +121,11 @@ bool WaspUIO::readMLX90614(float &object, float &ambient)
 }
 
 
-/** readTMP102
+/** i2c_TMP102
  *
  * Returns: bool      - 0 if success, 1 if error
  */
-bool WaspUIO::readTMP102(float &temperature)
+bool WaspUIO::i2c_TMP102(float &temperature)
 {
   TMP102 sensor0(I2C_ADDRESS_LAGOPUS_TMP102);
 
@@ -138,7 +142,7 @@ bool WaspUIO::readTMP102(float &temperature)
 }
 
 
-/** readVL53L1X
+/** i2c_VL53L1X
  *
  * Returns: bool      - 0 if success, 1 if error
  *
@@ -146,7 +150,7 @@ bool WaspUIO::readTMP102(float &temperature)
  * https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library/tree/master/examples/Example1_ReadDistance
  */
 
-bool WaspUIO::readVL53L1X(uint16_t &distance)
+bool WaspUIO::i2c_VL53L1X(uint16_t &distance)
 {
   VL53L1X distanceSensor;
 

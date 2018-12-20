@@ -256,7 +256,7 @@ CR_TASK(taskI2C)
   float temperature, humidity, pressure;
 
   UIO.i2c(1);
-  UIO.readBME280(temperature, humidity, pressure);
+  UIO.i2c_BME280(temperature, humidity, pressure);
   UIO.i2c(0);
 
   // Frame
