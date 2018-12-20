@@ -249,6 +249,7 @@ bool v33(bool new_state);
 bool v5(bool new_state);
 bool v12(bool new_state);
 bool leadVoltage(bool new_state);
+void setSensorPower(uint8_t type, uint8_t mode);
 // Sensor board
 void startSensorBoard();
 bool maxbotix(bool new_state);

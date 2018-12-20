@@ -120,7 +120,7 @@ bool WaspUIO::v33(bool new_state)
   // Lithium
   bool old_state = WaspRegister & REG_3V3;
   if (new_state == old_state) { return old_state; }
-  PWR.setSensorPower(SENS_3V3, new_state ? SENS_ON : SENS_OFF);
+  setSensorPower(SENS_3V3, new_state ? SENS_ON : SENS_OFF);
   return old_state;
 }
 
@@ -135,7 +135,7 @@ bool WaspUIO::v5(bool new_state)
   // Lithium
   bool old_state = WaspRegister & REG_5V;
   if (new_state == old_state) { return old_state; }
-  PWR.setSensorPower(SENS_5V, new_state ? SENS_ON : SENS_OFF);
+  setSensorPower(SENS_5V, new_state ? SENS_ON : SENS_OFF);
   return old_state;
 }
 
@@ -149,6 +149,11 @@ bool WaspUIO::leadVoltage(bool new_state)
 
   return false;
 }
+
+
+/*
+ * Buses: i2c, sdi-12, etc.
+ */
 
 bool WaspUIO::maxbotix(bool new_state)
 {
