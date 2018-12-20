@@ -34,7 +34,7 @@ const char CMD_FORMAT  [] PROGMEM = "format           - Format SD card";
 const char CMD_GPS     [] PROGMEM = "gps              - Gets position from GPS";
 const char CMD_HELP    [] PROGMEM = "help             - Prints the list of commands";
 const char CMD_I2C     [] PROGMEM = "i2c [NAME]       - Scan I2C bus or read values from NAME: "
-                                    "as bme bm76 mlx tmp vl";
+                                    "as7263 as7265 bme bm76 mlx tmp vl";
 const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE   - Sets the log level: "
                                     "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS      [] PROGMEM = "ls               - List files in SD card";
@@ -101,11 +101,12 @@ const char RUN_MB_NAME      [] PROGMEM = "mb";             // 8 sonar
 const char RUN_WS100_NAME   [] PROGMEM = "ws100";          // 9 rain
 // I2C
 const char RUN_BME280_NAME  [] PROGMEM = "bme76";        // 7 atmospheric (internal)
-const char RUN_LAGOPUS_AS726X_NAME   [] PROGMEM = "as";  // 10 spectrum
-const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme"; // 11 atmospheric
-const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx"; // 12 infrared thermometer
-const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp"; // 13 digital temperature
-const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";  // 14 distance
+const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263";  // 10 spectrum
+const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265";  // 11 spectrum
+const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme"; // 12 atmospheric
+const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx"; // 13 infrared thermometer
+const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp"; // 14 digital temperature
+const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";  // 15 distance
 
 const char* const run_names[] PROGMEM = {
   RUN_NETWORK_NAME,
@@ -118,7 +119,8 @@ const char* const run_names[] PROGMEM = {
   RUN_BME280_NAME,
   RUN_MB_NAME,
   RUN_WS100_NAME,
-  RUN_LAGOPUS_AS726X_NAME,
+  RUN_LAGOPUS_AS7263_NAME,
+  RUN_LAGOPUS_AS7265_NAME,
   RUN_LAGOPUS_BME280_NAME,
   RUN_LAGOPUS_MLX90614_NAME,
   RUN_LAGOPUS_TMP102_NAME,
@@ -479,25 +481,32 @@ COMMAND(cmdI2C)
   }
   else if (value == 10)
   {
-    float temp, r, s, t, u, v, w;
+    uint8_t temp;
+    float r, s, t, u, v, w;
     error = UIO.i2c_AS7263(temp, r, s, t, u, v, w);
   }
   else if (value == 11)
   {
+    uint8_t temp;
+    float A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W;
+    error = UIO.i2c_AS7265(temp, A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W);
+  }
+  else if (value == 12)
+  {
     float temperature, humidity, pressure;
     error = UIO.i2c_BME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
   }
-  else if (value == 12)
+  else if (value == 13)
   {
     float object, ambient;
     error = UIO.i2c_MLX90614(object, ambient);
   }
-  else if (value == 13)
+  else if (value == 14)
   {
     float temperature;
     error = UIO.i2c_TMP102(temperature);
   }
-  else if (value == 14)
+  else if (value == 15)
   {
     uint16_t distance;
     error = UIO.i2c_VL53L1X(distance);

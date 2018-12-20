@@ -24,8 +24,7 @@
 
 #ifndef _SPARKFUN_AS7265X_H
 #define _SPARKFUN_AS7265X_H
-#include "Arduino.h"
-#include "Wire.h"
+#include <WaspClasses.h>
 
 #define AS7265X_ADDR 0x49 //7-bit unshifted default I2C Address
 
@@ -109,7 +108,7 @@ class AS7265X {
   public:
     AS7265X();
 
-    boolean begin(TwoWire &wirePort = Wire);
+    boolean begin();
     boolean isConnected(); //Checks if sensor ack's the I2C request
 	
 	uint8_t getDeviceType();
@@ -189,7 +188,6 @@ class AS7265X {
     uint16_t getW();
 
   private:
-    TwoWire *_i2cPort;
     uint16_t getChannel(uint8_t channelRegister, uint8_t device);
     float getCalibratedValue(uint8_t calAddress, uint8_t device);
     float convertBytesToFloat(uint32_t myLong);

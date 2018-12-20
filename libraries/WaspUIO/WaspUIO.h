@@ -319,7 +319,12 @@ uint8_t readDS18B20(int values[], uint8_t max);
 
 // I2C
 void i2c_scan();
-bool i2c_AS7263(float &temp, float &r, float &s, float &t, float &u, float &v, float &w);
+bool i2c_AS7263(byte &temp, float &r, float &s, float &t, float &u, float &v, float &w);
+bool i2c_AS7265(
+  uint8_t &temp,
+  float &A, float &B, float &C, float &D, float &E, float &F,
+  float &G, float &H, float &I, float &J, float &K, float &L,
+  float &R, float &S, float &T, float &U, float &V, float &W);
 bool i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
 bool i2c_MLX90614(float &object, float &ambient);
 bool i2c_TMP102(float &temperature);

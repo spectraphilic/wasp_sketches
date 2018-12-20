@@ -23,7 +23,6 @@
 */
 
 #include "SparkFun_AS7265X.h"
-#include "Arduino.h"
 
 //Constructor
 AS7265X::AS7265X()
@@ -33,10 +32,9 @@ AS7265X::AS7265X()
 
 //Initializes the sensor with basic settings
 //Returns false if sensor is not detected
-boolean AS7265X::begin(TwoWire &wirePort)
+boolean AS7265X::begin()
 {
-  _i2cPort = &wirePort;
-  _i2cPort->begin(); //This resets any setClock() the user may have done
+  I2C.begin(); //This resets any setClock() the user may have done
 
   if (isConnected() == false) return (false); //Check for sensor presence
 
@@ -103,8 +101,8 @@ uint8_t AS7265X::getBuildFirmwareVersion()
 //Returns true if I2C device ack's
 boolean AS7265X::isConnected()
 {
-  _i2cPort->beginTransmission((uint8_t)AS7265X_ADDR);
-  if (_i2cPort->endTransmission() != 0)
+  uint8_t error = I2C.write(AS7265X_ADDR, (uint8_t*)NULL, 0);
+  if (error)
     return (false); //Sensor did not ACK
   return (true);
 }
@@ -536,32 +534,22 @@ void AS7265X::virtualWriteRegister(uint8_t virtualAddr, uint8_t dataToWrite)
 //Reads from a give location from the AS726x
 uint8_t AS7265X::readRegister(uint8_t addr)
 {
-  _i2cPort->beginTransmission(AS7265X_ADDR);
-  _i2cPort->write(addr);
-  if (_i2cPort->endTransmission() != 0)
+  uint8_t data;
+  uint8_t error = I2C.read(AS7265X_ADDR, addr, &data, 1);
+  if (error)
   {
-    //Serial.println("No ack!");
-    return (0); //Device failed to ack
+    return (0);
   }
 
-  _i2cPort->requestFrom((uint8_t)AS7265X_ADDR, (uint8_t)1);
-  if (_i2cPort->available()) {
-    return (_i2cPort->read());
-  }
-
-  //Serial.println("No ack!");
-  return (0); //Device failed to respond
+  return data;
 }
 
 //Write a value to a spot in the AS726x
 boolean AS7265X::writeRegister(uint8_t addr, uint8_t val)
 {
-  _i2cPort->beginTransmission(AS7265X_ADDR);
-  _i2cPort->write(addr);
-  _i2cPort->write(val);
-  if (_i2cPort->endTransmission() != 0)
+  uint8_t error = I2C.write(AS7265X_ADDR, addr, val);
+  if (error)
   {
-    //Serial.println("No ack!");
     return (false); //Device failed to ack
   }
 
