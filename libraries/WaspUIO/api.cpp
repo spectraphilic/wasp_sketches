@@ -33,3 +33,23 @@ void WaspFrame::getID(char* moteID)
 {
   memset( _waspmoteID, 0x00, sizeof(_waspmoteID) );
 }
+
+
+/*
+ * We have a number of I2C sensors (without isolators) different than those
+ * from upstream waspmote.
+ */
+
+uint8_t WaspI2C::scanSlaves()
+{
+  _slavePresent = (
+    !scan(I2C_ADDRESS_Lemming_BME280) ||
+    !scan(I2C_ADDRESS_LAGOPUS_BME280) ||
+    !scan(I2C_ADDRESS_LAGOPUS_TMP102) ||
+    !scan(I2C_ADDRESS_LAGOPUS_VL53L1X) ||
+    !scan(I2C_ADDRESS_LAGOPUS_MLX90614) ||
+    !scan(I2C_ADDRESS_LAGOPUS_AS726X)
+  );
+  cr.println(F("_slavePresent=%d"), _slavePresent);
+  return _slavePresent;
+}
