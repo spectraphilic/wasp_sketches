@@ -8,13 +8,7 @@
  * Includes
  ******************************************************************************/
 
-// Features (unfortunately required to reduce sketch size)
-#define WITH_XBEE TRUE
-#define WITH_4G FALSE
-
-// Pins
-#define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
-#define PIN_SDI12 DIGITAL8 // Use DIGITAL8 as default (protoboard)
+#include "config.h"
 
 #include <inttypes.h>
 #include <Coroutines.h>
@@ -31,7 +25,6 @@
 #include <Wasp4G.h>
 #endif
 
-#include <SDI12.h>
 
 
 /******************************************************************************
@@ -330,6 +323,11 @@ bool i2c_MLX90614(float &object, float &ambient);
 bool i2c_TMP102(float &temperature);
 bool i2c_VL53L1X(uint16_t &distance);
 
+// SDI-12
+const char* sdi_identify(uint8_t address);
+char sdi_read_address();
+uint8_t sdi_set_address(char current_address, char new_address);
+
 // Utils
 int8_t index(const char* const list[], size_t size, const char* str);
 void sort_uint16(uint16_t* array, uint8_t size);
@@ -340,7 +338,6 @@ uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 
 extern WaspUIO UIO;
-extern WaspSDI12 sdi12;
 
 
 void vlog(loglevel_t level, const char* message, va_list args);

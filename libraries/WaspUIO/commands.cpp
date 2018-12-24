@@ -57,9 +57,13 @@ const char CMD_XBEE    [] PROGMEM = "xbee VALUE       - Choose xbee network: "
                                     "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
+#if WITH_4G
   {"4g",        &cmd4G,       CMD_4G},
+#endif
   {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
+#if WITH_4G
   {"apn",       &cmdAPN,      CMD_APN},
+#endif
   {"bat",       &cmdBattery,  CMD_BATTERY},
   {"board ",    &cmdBoard,    CMD_BOARD},
   {"cat ",      &cmdCat,      CMD_CAT},
@@ -68,13 +72,19 @@ const Command commands[] PROGMEM = {
   {"enable ",   &cmdEnable,   CMD_ENABLE},
   {"exit",      &cmdExit,     CMD_EXIT},
   {"format",    &cmdFormat,   CMD_FORMAT},
+#if WITH_GPS
   {"gps",       &cmdGPS,      CMD_GPS},
+#endif
   {"help",      &cmdHelp,     CMD_HELP},
+#if WITH_I2C
   {"i2c",       &cmdI2C,      CMD_I2C},
+#endif
   {"loglevel ", &cmdLogLevel, CMD_LOGLEVEL},
   {"ls",        &cmdLs,       CMD_LS},
   {"name",      &cmdName,     CMD_NAME},
+#if WITH_1WIRE
   {"onewire ",  &cmdOneWire,  CMD_ONEWIRE},
+#endif
   {"network ",  &cmdNetwork,  CMD_NETWORK},
   {"password ", &cmdPassword, CMD_PASSWORD},
   {"pin ",      &cmdPin,      CMD_PIN},
@@ -82,10 +92,14 @@ const Command commands[] PROGMEM = {
   {"read ",     &cmdRead,     CMD_READ},
   {"rm ",       &cmdRm,       CMD_RM},
   {"run ",      &cmdRun,      CMD_RUN},
+#if WITH_SDI
   {"sdi",       &cmdSDI12,    CMD_SDI12},
+#endif
   {"tail",      &cmdTail,     CMD_TAIL},
   {"time ",     &cmdTime,     CMD_TIME},
+#if WITH_XBEE
   {"xbee ",     &cmdXBee,     CMD_XBEE},
+#endif
 };
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
@@ -209,7 +223,6 @@ COMMAND(exeCommand)
 
 COMMAND(cmd4G)
 {
-#if WITH_4G
   uint8_t err = UIO._4GStart();
   if (err)
   {
@@ -218,10 +231,6 @@ COMMAND(cmd4G)
 
   UIO._4GStop();
   return cmd_ok;
-#else
-  error(F("4G not enabled, define WITH_4G TRUE"));
-  return cmd_error;
-#endif
 }
 
 
@@ -298,9 +307,9 @@ exit:
 /**
  * Set APN (Access Point Name) for 4G module
  */
+#if WITH_4G
 COMMAND(cmdAPN)
 {
-#if WITH_4G
   char apn[30];
 
   // Check input
@@ -320,11 +329,8 @@ COMMAND(cmdAPN)
   }
 
   return cmd_ok;
-#else
-  error(F("4G not enabled, define WITH_4G TRUE"));
-  return cmd_error;
-#endif
 }
+#endif
 
 /**
  * Choose battery type.
@@ -740,17 +746,16 @@ COMMAND(cmdPrint)
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
 
+#if WITH_XBEE
   if (UIO.networkType == NETWORK_XBEE)
-  {
-    cr.println(F("XBee      : %s"), UIO.pprintXBee(buffer, size));
-  }
-  else if (UIO.networkType == NETWORK_4G)
-  {
-    cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size));
-  }
+  { cr.println(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
+#endif
+#if WITH_4G
+  if (UIO.networkType == NETWORK_4G)
+  { cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
+#endif
 
   cr.println(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
-
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
@@ -837,15 +842,15 @@ COMMAND(cmdSDI12)
   UIO.sdi12(1);
   if (n <= 0)
   {
-    sdi12.read_address();
+    UIO.sdi_read_address();
   }
   else if (n == 1)
   {
-    sdi12.identify(address);
+    UIO.sdi_identify(address);
   }
   else if (n == 2)
   {
-    sdi12.set_address(address, new_address);
+    UIO.sdi_set_address(address, new_address);
   }
   UIO.sdi12(0);
 

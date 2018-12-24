@@ -35,39 +35,71 @@ CR_TASK(taskHealthFrame)
 
 CR_TASK(taskSensors)
 {
-  bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
-  bool one = UIO.action(1, RUN_DS1820); // One Wire
-  bool i2c = UIO.action(1, RUN_BME280);
-  bool ttl = UIO.action(1, RUN_MB);
-  bool ext = UIO.action(1, RUN_WS100); // Externally powered devices
   static tid_t sdi_id, one_id, i2c_id, ttl_id, ext_id;
+#if WITH_SDI
+  bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
+  bool ext = UIO.action(1, RUN_WS100); // Externally powered
+#endif
+#if WITH_1WIRE
+  bool one = UIO.action(1, RUN_DS1820); // One Wire
+#endif
+#if WITH_I2C
+  bool i2c = UIO.action(1, RUN_BME280);
+#endif
+#if WITH_MB
+  bool ttl = UIO.action(1, RUN_MB);
+#endif
 
   CR_BEGIN;
 
   // Power On
   UIO.saveState();
+#if WITH_SDI
   if (sdi) { UIO.sdi12(1); }
-  if (one) { UIO.onewire(1); }
-  if (i2c) { UIO.i2c(1); }
-  if (ttl) { UIO.maxbotix(1); }
   if (ext) {}
+#endif
+#if WITH_1WIRE
+  if (one) { UIO.onewire(1); }
+#endif
+#if WITH_I2C
+  if (i2c) { UIO.i2c(1); }
+#endif
+#if WITH_MB
+  if (ttl) { UIO.maxbotix(1); }
+#endif
 
   // Wait for power to stabilize
   CR_DELAY(500);
 
   // Spawn tasks to take measures
+#if WITH_SDI
   if (sdi) { CR_SPAWN2(taskSdi, sdi_id); }
-  if (one) { CR_SPAWN2(task1Wire, one_id); }
-  if (i2c) { CR_SPAWN2(taskI2C, i2c_id); }
-  if (ttl) { CR_SPAWN2(taskTTL, ttl_id); }
   if (ext) { CR_SPAWN2(taskExt, ext_id); }
+#endif
+#if WITH_1WIRE
+  if (one) { CR_SPAWN2(task1Wire, one_id); }
+#endif
+#if WITH_I2C
+  if (i2c) { CR_SPAWN2(taskI2C, i2c_id); }
+#endif
+#if WITH_MB
+  if (ttl) { CR_SPAWN2(taskTTL, ttl_id); }
+#endif
 
   // Wait for tasks to complete
+#if WITH_SDI
   if (sdi) { CR_JOIN(sdi_id); }
-  if (one) { CR_JOIN(one_id); }
-  if (i2c) { CR_JOIN(i2c_id); }
-  if (ttl) { CR_JOIN(ttl_id); }
   if (ext) { CR_JOIN(ext_id); }
+#endif
+#if WITH_1WIRE
+  if (one) { CR_JOIN(one_id); }
+#endif
+#if WITH_I2C
+  if (i2c) { CR_JOIN(i2c_id); }
+#endif
+#if WITH_MB
+  if (ttl) { CR_JOIN(ttl_id); }
+#endif
 
   // Power Off
   UIO.loadState();
@@ -75,152 +107,6 @@ CR_TASK(taskSensors)
   CR_END;
 }
 
-
-/**
- * SDI-12
- */
-
-CR_TASK(taskSdi)
-{
-  static tid_t tid;
-
-  CR_BEGIN;
-  UIO.sdi12(1);
-
-  // XXX There are 2 incompatible strategies to improve this:
-  // - Use the Concurrent command
-  // - Use service requests
-
-  // CTD-10
-  if (UIO.action(1, RUN_CTD10))
-  {
-    CR_SPAWN2(taskSdiCtd10, tid);
-    CR_JOIN(tid);
-  }
-
-  // DS-2
-  if (UIO.action(1, RUN_DS2))
-  {
-    CR_SPAWN2(taskSdiDs2, tid);
-    CR_JOIN(tid);
-  }
-
-  UIO.sdi12(0);
-  CR_END;
-}
-
-CR_TASK(taskSdiCtd10)
-{
-  int ttt;
-
-  CR_BEGIN;
-
-  // Send the measure command
-  ttt = sdi12.measure(0);
-  if (ttt < 0) { CR_ERROR; }
-
-  // TODO We could listen every n ms for a "Service Request" from the sensor
-  if (ttt > 0) { CR_DELAY(ttt * 1000); }
-
-  // Send the data command
-  if (sdi12.data(0) == NULL) { CR_ERROR; }
-
-  // Frame. The result looks like 0+167+17.5+103
-  char *next;
-  double a, b, c;
-
-  a = strtod(sdi12.buffer+1, &next);
-  b = strtod(next, &next);
-  c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_CTD10, a, b, c);
-
-  // Success
-  CR_END;
-}
-
-CR_TASK(taskSdiDs2)
-{
-  CR_BEGIN;
-
-  // Send the measure command
-  if (sdi12.sendCommand(1, "M6") == NULL)
-  {
-    CR_ERROR;
-  }
-
-  // XXX In theory we should wait for the time returned by the M command. But
-  // tests show it returns 1, probably because 1s is all it needs to return an
-  // instantaneous value. But we want averages, so we have to wait >10s.
-  CR_DELAY(11000);
-
-  // Wind speed&direction, air temp
-  if (sdi12.sendCommand(1, "D0") == NULL)
-  {
-    CR_ERROR;
-  }
-
-  // Frame. The result looks like 1+1.04+347+25.2+1.02-0.24+2.05
-  char *next;
-  double a, b, c, d, e, f;
-
-  a = strtod(sdi12.buffer+1, &next);
-  b = strtod(next, &next);
-  c = strtod(next, &next);
-  d = strtod(next, &next);
-  e = strtod(next, &next);
-  f = strtod(next, &next);
-  ADD_SENSOR(SENSOR_DS2, a, b, c, d, e, f);
-
-  CR_END;
-}
-
-CR_TASK(taskExt)
-{
-  static tid_t tid;
-
-  CR_BEGIN;
-
-  // WS100
-  if (UIO.action(1, RUN_WS100))
-  {
-    CR_SPAWN2(taskSdiWS100, tid);
-    CR_JOIN(tid);
-  }
-
-  CR_END;
-}
-
-CR_TASK(taskSdiWS100)
-{
-  CR_BEGIN;
-
-  uint8_t retries = 3;
-  while (retries > 0 && sdi12.sendCommand(2, "") == NULL)
-  {
-    retries--;
-    delay(100);
-  }
-  if (retries == 0)
-  {
-    CR_ERROR;
-  }
-
-  if (sdi12.sendCommand(2, "R0") == NULL)
-  {
-    CR_ERROR;
-  }
-
-  // Frame. The result looks like 2+23.5+0.2+3.2+60
-  char *next;
-  float a = strtod(sdi12.buffer+1, &next);
-  float b = strtod(next, &next);
-  float c = strtod(next, &next);
-  uint8_t d = (uint8_t) strtoul(next, &next, 10);
-  float e = strtod(next, &next);
-  ADD_SENSOR(SENSOR_WS100, a, b, c, d, e);
-
-  CR_END;
-}
 
 /**
  * OneWire

@@ -4,7 +4,6 @@
 const char* WaspUIO::pprint4G(char* dst, size_t size)
 {
   // XXX Print some info from the module with _4G.getInfo(...) ??
-#if WITH_4G
   if (pin == 0 || pin > 9999)
   {
     strncpy_F(dst, F("disabled, set pin"), size);
@@ -14,9 +13,6 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
     //snprintf_F(dst, size, F("pin=%u"), pin);
     strncpy_F(dst, F("pin=XXXX"), size);
   }
-#else
-  snprintf_F(dst, size, F("4G not enabled, define WITH_4G TRUE"));
-#endif
 
   return dst;
 }
@@ -24,18 +20,15 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
 
 const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name)
 {
-  uint16_t value;
-  uint8_t hours, minutes;
-  size_t len;
+  uint16_t value = actions[action];
 
-  value = actions[action];
   if (value) {
-    len = strlen(dst);
+    size_t len = strlen(dst);
     snprintf_F(dst + len, size - len, name);
     len = strlen(dst);
 
-    hours = value / 60;
-    minutes = value % 60;
+    uint8_t hours = value / 60;
+    uint8_t minutes = value % 60;
     if (hours == 0) {
       snprintf_F(dst + len, size - len, F("=%hhum "), minutes);
     }
@@ -53,8 +46,6 @@ const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t action, const 
 const char* WaspUIO::pprintActions(char* dst, size_t size)
 {
   dst[0] = '\0';
-  uint16_t value;
-  uint8_t hours, minutes;
 
   pprintAction(dst, size, RUN_NETWORK, F("Network"));
   pprintAction(dst, size, RUN_BATTERY, F("Battery"));

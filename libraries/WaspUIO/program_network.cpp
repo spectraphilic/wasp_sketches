@@ -1,11 +1,15 @@
 #include "WaspUIO.h"
 
 
+#if WITH_4G
 CR_TASK(taskNetwork4G)
 {
+  uint8_t err;
+  int size;
+  uint32_t t0;
+
   CR_BEGIN;
 
-#if WITH_4G
   if (UIO._4GStart())
   {
     CR_ERROR;
@@ -17,7 +21,7 @@ CR_TASK(taskNetwork4G)
   {
     t0 = millis();
 
-    int size = UIO.readFrame();
+    size = UIO.readFrame();
     if (size < 0)
     {
       err = true;
@@ -66,15 +70,12 @@ CR_TASK(taskNetwork4G)
     CR_ERROR;
   }
 
-#else
-  error(F("4G not enabled, define WITH_4G TRUE"));
-  CR_ERROR;
-#endif
-
   CR_END;
 }
+#endif
 
 
+#if WITH_XBEE
 CR_TASK(taskNetworkXBee)
 {
   static tid_t tid;
@@ -91,7 +92,6 @@ CR_TASK(taskNetworkXBee)
 
   CR_BEGIN;
 
-#if WITH_XBEE
   if (!xbeeDM.XBee_ON)
   {
     if (xbeeDM.ON())
@@ -132,17 +132,12 @@ CR_TASK(taskNetworkXBee)
     xbeeDM.OFF();
     info(F("Network stopped"));
   }
-#else
-  error(F("XBee not enabled, define WITH_XBEE TRUE"));
-  CR_ERROR;
-#endif
 
   CR_END;
 }
 
 CR_TASK(taskNetworkSend)
 {
-#if WITH_XBEE
   uint32_t t0;
   bool err = false;
   static unsigned long sent;
@@ -205,15 +200,10 @@ CR_TASK(taskNetworkSend)
   }
 
   CR_END;
-#else
-  error(F("XBee not enabled, define WITH_XBEE TRUE"));
-  return CR_TASK_ERROR;
-#endif
 }
 
 CR_TASK(taskNetworkReceive)
 {
-#if WITH_XBEE
   char sourceMAC[17];
   cmd_status_t status;
 
@@ -246,8 +236,5 @@ CR_TASK(taskNetworkReceive)
   }
 
   CR_END;
-#else
-  error(F("XBee not enabled, define WITH_XBEE TRUE"));
-  return CR_TASK_ERROR;
-#endif
 }
+#endif

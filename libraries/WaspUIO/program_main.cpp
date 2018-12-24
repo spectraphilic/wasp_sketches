@@ -20,14 +20,18 @@ CR_TASK(taskMain)
   // network because we need it to be run in a predictable time.
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
   {
+#if WITH_XBEE
     if (UIO.networkType == NETWORK_XBEE)
     {
       CR_SPAWN2(taskNetworkXBee, network_id);
     }
-    else if (UIO.networkType == NETWORK_4G)
+#endif
+#if WITH_4G
+    if (UIO.networkType == NETWORK_4G)
     {
       CR_SPAWN2(taskNetwork4G, network_id);
     }
+#endif
     CR_JOIN(network_id);
   }
 
@@ -41,11 +45,13 @@ CR_TASK(taskMain)
   // The RTC is DS1337C (v15), its accuracy is not enough for our networking
   // requirements, so we have to sync it once in a while.
   // http://hycamp.org/private-area/waspmote-rtc/
+#if WITH_GPS
   if (UIO.hasGPS && UIO.action(1, RUN_GPS))
   {
     CR_SPAWN2(taskGps, gps_id);
     CR_JOIN(gps_id);
   }
+#endif
 
   // Save the last frame, if there is something to save
   if (frame.numFields > 1)
