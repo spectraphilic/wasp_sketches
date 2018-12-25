@@ -20,126 +20,93 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_4G      [] PROGMEM = "4g               - Test 4G data connection";
-const char CMD_ACK     [] PROGMEM = ""; // Hidden command
-const char CMD_APN     [] PROGMEM = "apn [APN]        - Set 4G Access Point Name (APN)";
-const char CMD_BATTERY [] PROGMEM = "bat [TYPE]       - Read battery or change type: 1=lithium 2=lead";
-const char CMD_BOARD   [] PROGMEM = "board VALUE      - Choose the sensor board: 0=none 1=lemming";
-const char CMD_CAT     [] PROGMEM = "cat FILENAME     - Print FILENAME contents to USB";
-const char CMD_CATX    [] PROGMEM = "catx FILENAME    - Print FILENAME contents in hexadecimal to USB";
-const char CMD_DISABLE [] PROGMEM = "disable FLAG     - Disables a feature: 0=log_sd 1=log_usb";
-const char CMD_ENABLE  [] PROGMEM = "enable FLAG      - Enables a feature: 0=log_sd 1=log_usb";
-const char CMD_EXIT    [] PROGMEM = "exit             - Exit the command line interface";
-const char CMD_FORMAT  [] PROGMEM = "format           - Format SD card";
-const char CMD_GPS     [] PROGMEM = "gps              - Gets position from GPS";
-const char CMD_HELP    [] PROGMEM = "help             - Prints the list of commands";
-const char CMD_I2C     [] PROGMEM = "i2c [NAME]       - Scan I2C bus or read values from NAME: "
-                                    "as7263 as7265 bme bm76 mlx tmp vl";
-const char CMD_LOGLEVEL[] PROGMEM = "loglevel VALUE   - Sets the log level: "
-                                    "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char CMD_LS      [] PROGMEM = "ls               - List files in SD card";
-const char CMD_NAME    [] PROGMEM = "name             - Give a name to the mote (max 16 chars)";
-const char CMD_NETWORK [] PROGMEM = "network VALUE    - Choose network type: 0=xbee 1=4g";
-const char CMD_ONEWIRE [] PROGMEM = "onewire pin(s)   - Identify OneWire sensors attached to the given pins,"
-                                    "saves to onewire.txt";
-const char CMD_PASSWORD[] PROGMEM = "password VALUE   - password for frame encryption";
-const char CMD_PIN     [] PROGMEM = "pin VALUE        - set pin for the 4G module (0=disabled)";
-const char CMD_PRINT   [] PROGMEM = "print            - Print configuration and other information";
-const char CMD_READ    [] PROGMEM = "read NAME        - Read sensor: ds1820 mb";
-const char CMD_RM      [] PROGMEM = "rm FILENAME      - Remove file";
-const char CMD_RUN     [] PROGMEM = "run NAME H M     - Run every hours and minutes: "
-                                    "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
-const char CMD_SDI12   [] PROGMEM = "sdi [ADDR] [NEW] - Identify SDI-12 sensors";
-const char CMD_TAIL    [] PROGMEM = "tail N FILENAME  - Print last N lines of FILENAME to USB";
-const char CMD_TIME    [] PROGMEM = "time VALUE       - Sets time, value can be 'network', 'gps', yy:mm:dd:hh:mm:ss "
-                                    "or epoch";
-const char CMD_XBEE    [] PROGMEM = "xbee VALUE       - Choose xbee network: "
-                                    "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
+const char CMD_4G        [] PROGMEM = "4g                - Test 4G data connection";
+const char CMD_ACK       [] PROGMEM = ""; // Hidden command
+const char CMD_APN       [] PROGMEM = "apn [APN]         - Set 4G Access Point Name (APN)";
+const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]        - Read battery or change type: 1=lithium 2=lead";
+const char CMD_BOARD     [] PROGMEM = "board VALUE       - Choose the sensor board: 0=none 1=lemming";
+const char CMD_CAT       [] PROGMEM = "cat FILENAME      - Print FILENAME contents to USB";
+const char CMD_CATX      [] PROGMEM = "catx FILENAME     - Print FILENAME contents in hexadecimal to USB";
+const char CMD_DISABLE   [] PROGMEM = "disable FLAG      - Disables a feature: 0=log_sd 1=log_usb";
+const char CMD_ENABLE    [] PROGMEM = "enable FLAG       - Enables a feature: 0=log_sd 1=log_usb";
+const char CMD_EXIT      [] PROGMEM = "exit              - Exit the command line interface";
+const char CMD_FORMAT    [] PROGMEM = "format            - Format SD card";
+const char CMD_GPS       [] PROGMEM = "gps               - Gets position from GPS";
+const char CMD_HELP      [] PROGMEM = "help              - Prints the list of commands";
+const char CMD_I2C       [] PROGMEM = "i2c [NAME]        - Scan I2C bus or read values from NAME: "
+                                      "as7263 as7265 bme bm76 mlx tmp vl";
+const char CMD_LOGLEVEL  [] PROGMEM = "loglevel VALUE    - Sets the log level: "
+                                      "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
+const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
+const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
+const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
+const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g";
+const char CMD_1WIRE_READ[] PROGMEM = "onewire read      - Read DS18B20 string";
+const char CMD_1WIRE_SCAN[] PROGMEM = "onewire scan PIN+ - Identify DS18B20 string attached to the given pins,"
+                                      "saves to onewire.txt";
+const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
+const char CMD_PIN       [] PROGMEM = "pin VALUE         - set pin for the 4G module (0=disabled)";
+const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
+const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
+const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes: "
+                                      "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
+const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 sensors";
+const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
+const char CMD_TIME      [] PROGMEM = "time VALUE        - Sets time, value can be 'network', 'gps', "
+                                      "yy:mm:dd:hh:mm:ss or epoch";
+const char CMD_XBEE      [] PROGMEM = "xbee VALUE        - Choose xbee network: "
+                                      "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
 #if WITH_4G
-  {"4g",        &cmd4G,       CMD_4G},
+  {"4g",            &cmd4G,        CMD_4G},
 #endif
-  {"ack",       &cmdAck,      CMD_ACK}, // Internal use only
+  {"ack",           &cmdAck,       CMD_ACK}, // Internal use only
 #if WITH_4G
-  {"apn",       &cmdAPN,      CMD_APN},
+  {"apn",           &cmdAPN,       CMD_APN},
 #endif
-  {"bat",       &cmdBattery,  CMD_BATTERY},
-  {"board ",    &cmdBoard,    CMD_BOARD},
-  {"cat ",      &cmdCat,      CMD_CAT},
-  {"catx ",     &cmdCatx,     CMD_CATX},
-  {"disable ",  &cmdDisable,  CMD_DISABLE},
-  {"enable ",   &cmdEnable,   CMD_ENABLE},
-  {"exit",      &cmdExit,     CMD_EXIT},
-  {"format",    &cmdFormat,   CMD_FORMAT},
+  {"bat",           &cmdBattery,   CMD_BATTERY},
+  {"board ",        &cmdBoard,     CMD_BOARD},
+  {"cat ",          &cmdCat,       CMD_CAT},
+  {"catx ",         &cmdCatx,      CMD_CATX},
+  {"disable ",      &cmdDisable,   CMD_DISABLE},
+  {"enable ",       &cmdEnable,    CMD_ENABLE},
+  {"exit",          &cmdExit,      CMD_EXIT},
+  {"format",        &cmdFormat,    CMD_FORMAT},
 #if WITH_GPS
-  {"gps",       &cmdGPS,      CMD_GPS},
+  {"gps",           &cmdGPS,       CMD_GPS},
 #endif
-  {"help",      &cmdHelp,     CMD_HELP},
+  {"help",          &cmdHelp,      CMD_HELP},
 #if WITH_I2C
-  {"i2c",       &cmdI2C,      CMD_I2C},
+  {"i2c",           &cmdI2C,       CMD_I2C},
 #endif
-  {"loglevel ", &cmdLogLevel, CMD_LOGLEVEL},
-  {"ls",        &cmdLs,       CMD_LS},
-  {"name",      &cmdName,     CMD_NAME},
+  {"loglevel ",     &cmdLogLevel,  CMD_LOGLEVEL},
+  {"ls",            &cmdLs,        CMD_LS},
+#if WITH_MB
+  {"mb",            &cmdMB,        CMD_MB},
+#endif
+  {"name",          &cmdName,      CMD_NAME},
 #if WITH_1WIRE
-  {"onewire ",  &cmdOneWire,  CMD_ONEWIRE},
+  {"onewire read",  &cmd1WireRead, CMD_1WIRE_READ},
+  {"onewire scan ", &cmd1WireScan, CMD_1WIRE_SCAN},
 #endif
-  {"network ",  &cmdNetwork,  CMD_NETWORK},
-  {"password ", &cmdPassword, CMD_PASSWORD},
-  {"pin ",      &cmdPin,      CMD_PIN},
-  {"print",     &cmdPrint,    CMD_PRINT},
-  {"read ",     &cmdRead,     CMD_READ},
-  {"rm ",       &cmdRm,       CMD_RM},
-  {"run ",      &cmdRun,      CMD_RUN},
+  {"network ",      &cmdNetwork,   CMD_NETWORK},
+  {"password ",     &cmdPassword,  CMD_PASSWORD},
+  {"pin ",          &cmdPin,       CMD_PIN},
+  {"print",         &cmdPrint,     CMD_PRINT},
+  {"rm ",           &cmdRm,        CMD_RM},
+  {"run ",          &cmdRun,       CMD_RUN},
 #if WITH_SDI
-  {"sdi",       &cmdSDI12,    CMD_SDI12},
+  {"sdi",           &cmdSDI12,     CMD_SDI12},
 #endif
-  {"tail",      &cmdTail,     CMD_TAIL},
-  {"time ",     &cmdTime,     CMD_TIME},
+  {"tail",          &cmdTail,      CMD_TAIL},
+  {"time ",         &cmdTime,      CMD_TIME},
 #if WITH_XBEE
-  {"xbee ",     &cmdXBee,     CMD_XBEE},
+  {"xbee ",         &cmdXBee,      CMD_XBEE},
 #endif
 };
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
-
-const char RUN_NETWORK_NAME [] PROGMEM = "net";            // 0 network
-const char RUN_BATTERY_NAME [] PROGMEM = "bat";            // 1 battery
-const char RUN_GPS_NAME     [] PROGMEM = "gps";            // 2 gps
-const char RUN_FREE_1_NAME  [] PROGMEM = "";
-const char RUN_CTD10_NAME   [] PROGMEM = "ctd";            // 4 water
-const char RUN_DS2_NAME     [] PROGMEM = "ds2";            // 5 wind
-const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";         // 6 temperature string
-const char RUN_MB_NAME      [] PROGMEM = "mb";             // 8 sonar
-const char RUN_WS100_NAME   [] PROGMEM = "ws100";          // 9 rain
-// I2C
-const char RUN_BME280_NAME  [] PROGMEM = "bme76";        // 7 atmospheric (internal)
-const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263";  // 10 spectrum
-const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265";  // 11 spectrum
-const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme"; // 12 atmospheric
-const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx"; // 13 infrared thermometer
-const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp"; // 14 digital temperature
-const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";  // 15 distance
-
-const char* const run_names[] PROGMEM = {
-  RUN_NETWORK_NAME,
-  RUN_BATTERY_NAME,
-  RUN_GPS_NAME,
-  RUN_FREE_1_NAME,
-  RUN_CTD10_NAME,
-  RUN_DS2_NAME,
-  RUN_DS1820_NAME,
-  RUN_BME280_NAME,
-  RUN_MB_NAME,
-  RUN_WS100_NAME,
-  RUN_LAGOPUS_AS7263_NAME,
-  RUN_LAGOPUS_AS7265_NAME,
-  RUN_LAGOPUS_BME280_NAME,
-  RUN_LAGOPUS_MLX90614_NAME,
-  RUN_LAGOPUS_TMP102_NAME,
-  RUN_LAGOPUS_VL53L1X_NAME,
-};
 
 
 /*
@@ -457,75 +424,6 @@ COMMAND(cmdHelp)
 }
 
 /**
- * Scan I2C slaves
- */
-
-COMMAND(cmdI2C)
-{
-  // Parse command line
-  char name[20];
-  int n = sscanf(str, "%19s", name);
-  if (n != -1 && n != 1) { return cmd_bad_input; }
-
-  // Power ON
-  UIO.i2c(1);
-
-  // Scan
-  if (n == -1)
-  {
-    UIO.i2c_scan();
-    return cmd_quiet;
-  }
-
-  // Read
-  bool error;
-  int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-  if (value == 7)
-  {
-    float temperature, humidity, pressure;
-    error = UIO.i2c_BME280(temperature, humidity, pressure);
-  }
-  else if (value == 10)
-  {
-    uint8_t temp;
-    float r, s, t, u, v, w;
-    error = UIO.i2c_AS7263(temp, r, s, t, u, v, w);
-  }
-  else if (value == 11)
-  {
-    uint8_t temp;
-    float A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W;
-    error = UIO.i2c_AS7265(temp, A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W);
-  }
-  else if (value == 12)
-  {
-    float temperature, humidity, pressure;
-    error = UIO.i2c_BME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
-  }
-  else if (value == 13)
-  {
-    float object, ambient;
-    error = UIO.i2c_MLX90614(object, ambient);
-  }
-  else if (value == 14)
-  {
-    float temperature;
-    error = UIO.i2c_TMP102(temperature);
-  }
-  else if (value == 15)
-  {
-    uint16_t distance;
-    error = UIO.i2c_VL53L1X(distance);
-  }
-  else
-  {
-    return cmd_bad_input;
-  }
-
-  return (error)? cmd_error: cmd_quiet;
-}
-
-/**
  * Sets log level.
  */
 
@@ -583,104 +481,6 @@ COMMAND(cmdNetwork)
   UIO.networkInit();
 
   return cmd_ok;
-}
-
-
-/**
- * Autodetect sensors attached to the given OneWire pin
- */
-
-uint8_t _getPin(uint8_t pin)
-{
-  // 0 - 8
-  if (pin == 0) return DIGITAL0;
-  if (pin == 1) return DIGITAL1;
-  if (pin == 2) return DIGITAL2;
-  if (pin == 3) return DIGITAL3;
-  if (pin == 4) return DIGITAL4;
-  if (pin == 5) return DIGITAL5;
-  if (pin == 6) return DIGITAL6;
-  if (pin == 7) return DIGITAL7;
-  if (pin == 8) return DIGITAL8;
-
-  return 255;
-}
-
-COMMAND(cmdOneWire)
-{
-  uint8_t npins;
-  uint8_t pins[] = {255, 255, 255};
-  uint8_t pin;
-  uint8_t addr[8];
-  char addr_str[17];
-  uint8_t crc;
-  SdFile file;
-  bool has_file = false;
-  size_t size = 20;
-  char buffer[size];
-
-  // Check input
-  npins = sscanf(str, "%hhu %hhu %hhu", &pins[0], &pins[1], &pins[2]);
-  if (npins < 1) { return cmd_bad_input; }
-
-  // ON
-  if (UIO.hasSD)
-  {
-    if (SD.openFile("onewire.txt", &file, O_WRITE | O_CREAT | O_TRUNC))
-    {
-      has_file = true;
-    }
-    else
-    {
-      cr.print(F("Error opening onewire.txt"));
-    }
-  }
-
-  if (! UIO.onewire(1)) { delay(750); }
-
-  for (uint8_t i = 0; i < npins; i++)
-  {
-    pin = _getPin(pins[i]);
-    if (pin == 255) continue;
-
-    snprintf_F(buffer, size, F("%hhu"), pins[i]);
-    USB.print(buffer); if (has_file) file.write(buffer);
-    WaspOneWire oneWire(pin);
-
-    // For now we only support the DS1820, so here just read that directly
-    // We assume we have a chain of DS1820 sensors, and read all of them.
-    if (! oneWire.reset())
-    {
-      cr.print(F(" nothing"));
-      goto next;
-    }
-
-    // Search
-    oneWire.reset_search();
-    while (oneWire.search(addr))
-    {
-      Utils.hex2str(addr, addr_str, 8);
-      snprintf_F(buffer, size, F(" %s"), addr_str);
-      USB.print(buffer); if (has_file) file.write(buffer);
-
-      // Check address CRC
-      crc = oneWire.crc8(addr, 7);
-      if (crc != addr[7]) { cr.print(F("(crc error)")); continue; }
-
-      // Only DS18B20 is supported for now
-      if (addr[0] != 0x28) { cr.print(F("(not DS18B20)")); continue; }
-    }
-
-next:
-    oneWire.depower();
-    USB.println(); if (has_file) file.write("\n");
-  }
-
-  // OFF
-  UIO.onewire(0);
-  if (has_file) { file.close(); }
-
-  return cmd_quiet;
 }
 
 
@@ -763,46 +563,6 @@ COMMAND(cmdPrint)
 }
 
 /**
- * Read sensor now
- */
-
-COMMAND(cmdRead)
-{
-  char name[11];
-  int8_t value;
-  bool error;
-
-  // Check input
-  if (sscanf(str, "%10s", &name) != 1) { return cmd_bad_input; }
-  value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-
-  // Do
-  if (value == 6)
-  {
-    uint8_t max = 99;
-    int values[max];
-    UIO.readDS18B20(values, max);
-    error = false;
-  }
-  else if (value == 8)
-  {
-    uint16_t median, sd;
-    error = UIO.readMaxbotixSerial(median, sd, 5);
-  }
-  else
-  {
-    return cmd_bad_input;
-  }
-
-  if (error)
-  {
-    return cmd_error;
-  }
-
-  return cmd_ok;
-}
-
-/**
  * Running things at time intervals.
  */
 
@@ -827,34 +587,6 @@ COMMAND(cmdRun)
   UIO.actions[value] = (hours * 60) + minutes;
 
   return cmd_ok;
-}
-
-/**
- * SDI-12
- */
-
-COMMAND(cmdSDI12)
-{
-  uint8_t address, new_address;
-
-  int n = sscanf(str, "%hhu %hhu", &address, &new_address);
-
-  UIO.sdi12(1);
-  if (n <= 0)
-  {
-    UIO.sdi_read_address();
-  }
-  else if (n == 1)
-  {
-    UIO.sdi_identify(address);
-  }
-  else if (n == 2)
-  {
-    UIO.sdi_set_address(address, new_address);
-  }
-  UIO.sdi12(0);
-
-  return cmd_quiet;
 }
 
 
