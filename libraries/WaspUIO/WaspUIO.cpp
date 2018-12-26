@@ -28,8 +28,6 @@ void WaspUIO::boot()
 void WaspUIO::onSetup()
 {
   /*** 1. Read configuration from EEPROM ***/
-  char apn[30];
-
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
@@ -42,6 +40,7 @@ void WaspUIO::onSetup()
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
+#if WITH_CRYPTO
   // Frame encryption
   UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
   size_t len = strlen(password);
@@ -49,18 +48,22 @@ void WaspUIO::onSetup()
   {
     password[0] = '\0';
   }
+#endif
 
+#if WITH_4G
   // 4G network
+  char apn[30];
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
   UIO.readEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
-#if WITH_4G
   _4G.set_APN(apn);
 #endif
 
+#if WITH_XBEE
   // XBee network
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);
   if (panid_low >= xbee_len) { panid_low = 2; } // Default
   memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
+#endif
 
   // Read run table
   for (uint8_t i=0; i < RUN_LEN; i++)
@@ -85,8 +88,10 @@ void WaspUIO::onSetup()
   }
   SD.OFF();
 
+#if WITH_GPS
   hasGPS = GPS.ON();
   GPS.OFF();
+#endif
 
   // USB autodetect
   // Cannot be done with ATMega1281 but it can be with ATmega328P

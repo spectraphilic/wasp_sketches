@@ -223,7 +223,7 @@ unsigned long start;     // millis taken at epochTime
 
 // Autodetect
 bool hasSD;
-bool hasGPS;
+bool hasGPS = false;
 
 // SD
 const char* archive_dir = "/data";
@@ -252,17 +252,27 @@ int8_t walk(SdBaseFile &root,
 
 // Network
 void networkInit();
-void OTA_communication(int OTA_duration); // TODO
+
+#if WITH_XBEE
 // Network: Xbee
+void OTA_communication(int OTA_duration); // TODO
 XBee xbee;
 void xbeeInit();
 const char* BROADCAST_ADDRESS = "000000000000FFFF";
+#endif
+
+#if WITH_4G
 // Network: 4G
 uint16_t pin; // Pin for 4G module
-char password[33]; // To encrypt frames
 void _4GInit();
 uint8_t _4GStart();
 uint8_t _4GStop();
+#endif
+
+#if WITH_CRYPTO
+// Crypto
+char password[33]; // To encrypt frames
+#endif
 
 // Power
 // (power) state management
@@ -400,9 +410,10 @@ uint8_t _getPin(uint8_t);
 
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
-COMMAND(cmd4G);
+COMMAND(cmd4G_APN);
+COMMAND(cmd4G_Pin);
+COMMAND(cmd4G_Test);
 COMMAND(cmdAck);
-COMMAND(cmdAPN);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);
@@ -422,7 +433,6 @@ COMMAND(cmdNetwork);
 COMMAND(cmd1WireRead);
 COMMAND(cmd1WireScan);
 COMMAND(cmdPassword);
-COMMAND(cmdPin);
 COMMAND(cmdPrint);
 COMMAND(cmdRm);
 COMMAND(cmdRun);

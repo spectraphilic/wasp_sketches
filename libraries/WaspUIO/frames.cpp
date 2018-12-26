@@ -386,20 +386,24 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
+  uint16_t size = 255; // Default
+
   // TODO Set size always to 255, then use frame fragmentation if needed
 
+#if WITH_XBEE
   if (networkType == NETWORK_XBEE)
   {
     // We don't call frame.getMaxSizeForXBee to save memory, and because we
     // know already the value.
     // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, encryption);
-    frame.setFrameSize(strlen(password) == 0 ? 73 : 48);
+    size = 73;
+#if WITH_CRYPTO
+    if (strlen(password) > 0) { size = 48; }
+#endif
   }
-  else // 4G
-  {
-    // XXX Likely less if encryption enabled
-    frame.setFrameSize(255);
-  }
+#endif
+
+  frame.setFrameSize(size);
 }
 
 
@@ -639,9 +643,9 @@ uint8_t WaspUIO::frame2Sd()
 
   // TODO Fragmentation
 
+#if WITH_CRYPTO
   // Encrypt frame
-  //if (strlen(password) != 0)
-  if (false)
+  if (strlen(password) > 0)
   {
     frame.encryptFrame(AES_128, password);
     if (flags & FLAG_LOG_USB)
@@ -649,6 +653,7 @@ uint8_t WaspUIO::frame2Sd()
       frame.showFrame();
     }
   }
+#endif
 
   // Start SD
   if (! hasSD) { return 1; }

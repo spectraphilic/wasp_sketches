@@ -20,9 +20,10 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_4G        [] PROGMEM = "4g                - Test 4G data connection";
+const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]      - Set 4G Access Point Name (APN)";
+const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - set pin for the 4G module (0=disabled)";
+const char CMD_4G_TEST   [] PROGMEM = "4g test           - Test 4G data connection";
 const char CMD_ACK       [] PROGMEM = ""; // Hidden command
-const char CMD_APN       [] PROGMEM = "apn [APN]         - Set 4G Access Point Name (APN)";
 const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]        - Read battery or change type: 1=lithium 2=lead";
 const char CMD_BOARD     [] PROGMEM = "board VALUE       - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT       [] PROGMEM = "cat FILENAME      - Print FILENAME contents to USB";
@@ -42,10 +43,8 @@ const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
 const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g";
 const char CMD_1WIRE_READ[] PROGMEM = "onewire read      - Read DS18B20 string";
-const char CMD_1WIRE_SCAN[] PROGMEM = "onewire scan PIN+ - Identify DS18B20 string attached to the given pins,"
-                                      "saves to onewire.txt";
+const char CMD_1WIRE_SCAN[] PROGMEM = "onewire scan PIN+ - Scan DS18B20 in the given pins, save to onewire.txt";
 const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
-const char CMD_PIN       [] PROGMEM = "pin VALUE         - set pin for the 4G module (0=disabled)";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
 const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes: "
@@ -58,13 +57,16 @@ const char CMD_XBEE      [] PROGMEM = "xbee VALUE        - Choose xbee network: 
                                       "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
+#if WITH_1WIRE
+  {"1wire read",    &cmd1WireRead, CMD_1WIRE_READ},
+  {"1wire scan ",   &cmd1WireScan, CMD_1WIRE_SCAN},
+#endif
 #if WITH_4G
-  {"4g",            &cmd4G,        CMD_4G},
+  {"4g apn",        &cmd4G_APN,    CMD_4G_APN},
+  {"4g pin ",       &cmd4G_Pin,    CMD_4G_PIN},
+  {"4g test",       &cmd4G_Test,   CMD_4G_TEST},
 #endif
   {"ack",           &cmdAck,       CMD_ACK}, // Internal use only
-#if WITH_4G
-  {"apn",           &cmdAPN,       CMD_APN},
-#endif
   {"bat",           &cmdBattery,   CMD_BATTERY},
   {"board ",        &cmdBoard,     CMD_BOARD},
   {"cat ",          &cmdCat,       CMD_CAT},
@@ -86,13 +88,10 @@ const Command commands[] PROGMEM = {
   {"mb",            &cmdMB,        CMD_MB},
 #endif
   {"name",          &cmdName,      CMD_NAME},
-#if WITH_1WIRE
-  {"onewire read",  &cmd1WireRead, CMD_1WIRE_READ},
-  {"onewire scan ", &cmd1WireScan, CMD_1WIRE_SCAN},
-#endif
   {"network ",      &cmdNetwork,   CMD_NETWORK},
+#if WITH_CRYPTO
   {"password ",     &cmdPassword,  CMD_PASSWORD},
-  {"pin ",          &cmdPin,       CMD_PIN},
+#endif
   {"print",         &cmdPrint,     CMD_PRINT},
   {"rm ",           &cmdRm,        CMD_RM},
   {"run ",          &cmdRun,       CMD_RUN},
@@ -184,11 +183,48 @@ COMMAND(exeCommand)
 }
 
 
+#if WITH_4G
 /**
- * Test 4G data connection
+ * Set APN (Access Point Name) for 4G module
  */
+COMMAND(cmd4G_APN)
+{
+  char apn[30];
 
-COMMAND(cmd4G)
+  // Check input
+  int n = sscanf(str, "%29s", apn);
+  if (n == -1) // Suprisingly it returns -1 instead of 0
+  {
+    _4G.show_APN();
+  }
+  else if (n == 1)
+  {
+    UIO.writeEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
+    _4G.set_APN(apn);
+  }
+  else
+  {
+    return cmd_bad_input;
+  }
+
+  return cmd_ok;
+}
+
+COMMAND(cmd4G_Pin)
+{
+  unsigned int pin;
+
+  if (sscanf(str, "%u", &pin) != 1) { return cmd_bad_input; }
+  if (pin > 9999) { return cmd_bad_input; }
+
+  if (! UIO.updateEEPROM(EEPROM_UIO_PIN, pin)) { return cmd_error; }
+  UIO.pin = pin;
+
+  return cmd_ok;
+}
+
+/* Test 4G data connection */
+COMMAND(cmd4G_Test)
 {
   uint8_t err = UIO._4GStart();
   if (err)
@@ -199,7 +235,7 @@ COMMAND(cmd4G)
   UIO._4GStop();
   return cmd_ok;
 }
-
+#endif
 
 /**
  * Internal: ack frame
@@ -270,34 +306,6 @@ exit:
   UIO.queueFile.close();
   return status;
 }
-
-/**
- * Set APN (Access Point Name) for 4G module
- */
-#if WITH_4G
-COMMAND(cmdAPN)
-{
-  char apn[30];
-
-  // Check input
-  int n = sscanf(str, "%29s", apn);
-  if (n == -1) // Suprisingly it returns -1 instead of 0
-  {
-    _4G.show_APN();
-  }
-  else if (n == 1)
-  {
-    UIO.writeEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
-    _4G.set_APN(apn);
-  }
-  else
-  {
-    return cmd_bad_input;
-  }
-
-  return cmd_ok;
-}
-#endif
 
 /**
  * Choose battery type.
@@ -484,10 +492,7 @@ COMMAND(cmdNetwork)
 }
 
 
-/**
- * 4G configuration
- */
-
+#if WITH_CRYPTO
 COMMAND(cmdPassword)
 {
   char value[33];
@@ -513,20 +518,7 @@ COMMAND(cmdPassword)
 
   return cmd_ok;
 }
-
-
-COMMAND(cmdPin)
-{
-  unsigned int pin;
-
-  if (sscanf(str, "%u", &pin) != 1) { return cmd_bad_input; }
-  if (pin > 9999) { return cmd_bad_input; }
-
-  if (! UIO.updateEEPROM(EEPROM_UIO_PIN, pin)) { return cmd_error; }
-  UIO.pin = pin;
-
-  return cmd_ok;
-}
+#endif
 
 
 /**
@@ -641,6 +633,7 @@ COMMAND(cmdTime)
   return cmd_ok;
 }
 
+#if WITH_GPS
 /**
  * Sets time. Accepts two formats:
  *
@@ -648,7 +641,6 @@ COMMAND(cmdTime)
  * - time=<seconds since the epoch>
  *
  */
-
 COMMAND(cmdGPS)
 {
   // Check feature availability
@@ -661,12 +653,13 @@ COMMAND(cmdGPS)
 
   return cmd_ok;
 }
+#endif
 
 
+#if WITH_XBEE
 /**
  * Choose Xbee network
  */
-
 COMMAND(cmdXBee)
 {
   uint8_t value;
@@ -686,3 +679,4 @@ COMMAND(cmdXBee)
 
   return cmd_ok;
 }
+#endif

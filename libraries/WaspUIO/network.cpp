@@ -2,24 +2,23 @@
 
 void WaspUIO::networkInit()
 {
-  if (networkType == NETWORK_XBEE)
-  {
-    xbeeInit();
-  }
-  else if (networkType == NETWORK_4G)
-  {
-    _4GInit();
-  }
+#if WITH_XBEE
+  if (networkType == NETWORK_XBEE) { xbeeInit(); }
+#endif
+
+#if WITH_4G
+  if (networkType == NETWORK_4G) { _4GInit(); }
+#endif
 }
 
 
 /*
- * XBeee
+ * XBee
  */
 
+#if WITH_XBEE
 void WaspUIO::xbeeInit()
 {
-#if WITH_XBEE
   const __FlashStringHelper * error = NULL;
 
   // init XBee
@@ -77,9 +76,6 @@ exit:
   {
     cr.println(error, xbeeDM.error_AT);
   }
-#else
-  cr.println(F("XBee not enabled, define WITH_XBEE TRUE"));
-#endif
 }
 
 
@@ -90,7 +86,6 @@ exit:
 */
 void WaspUIO::OTA_communication(int OTA_duration)
 {
-#if WITH_XBEE
   unsigned long start;
   unsigned long duration_ms;
 
@@ -113,23 +108,21 @@ void WaspUIO::OTA_communication(int OTA_duration)
       }
     }
   } while (! cr.timeout(start, duration_ms));
-#else
-  error(F("XBee not enabled, define WITH_XBEE TRUE"));
-#endif
 }
+#endif
 
 
 /*
  * 4G
  */
 
+#if WITH_4G
 void WaspUIO::_4GInit()
 {
 }
 
 uint8_t WaspUIO::_4GStart()
 {
-#if WITH_4G
   uint8_t err, status;
   char pin_str[5];
 
@@ -195,19 +188,11 @@ uint8_t WaspUIO::_4GStart()
   }
 
   return err;
-#else
-  error(F("4G not enabled, define WITH_4G TRUE"));
-  return 1;
-#endif
 }
 
 uint8_t WaspUIO::_4GStop()
 {
-#if WITH_4G
   _4G.OFF();
   return 0;
-#else
-  error(F("4G not enabled, define WITH_4G TRUE"));
-  return 1;
-#endif
 }
+#endif

@@ -2,11 +2,12 @@
 #define WITH_XBEE TRUE
 #define WITH_4G FALSE
 #define WITH_GPS TRUE
+#define WITH_CRYPTO FALSE
 
 #define WITH_I2C TRUE
 #define WITH_SDI TRUE
-#define WITH_1WIRE FALSE
-#define WITH_MB FALSE
+#define WITH_1WIRE TRUE
+#define WITH_MB TRUE
 
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)

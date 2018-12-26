@@ -1,6 +1,7 @@
 #include "WaspUIO.h"
 
 
+#if WITH_4G
 const char* WaspUIO::pprint4G(char* dst, size_t size)
 {
   // XXX Print some info from the module with _4G.getInfo(...) ??
@@ -16,6 +17,7 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
 
   return dst;
 }
+#endif
 
 
 const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name)
@@ -90,15 +92,15 @@ const char* WaspUIO::pprintBoard(char* dst, size_t size)
 
 const char* WaspUIO::pprintFrames(char* dst, size_t size)
 {
-  if (strlen(password) == 0)
-  {
-    snprintf_F(dst, size, F("size=%u encryption=disabled"), frame.getFrameSize());
-  }
-  else
+#if WITH_CRYPTO
+  if (strlen(password) > 0)
   {
     snprintf_F(dst, size, F("size=%u encryption=enabled"), frame.getFrameSize());
+    return dst;
   }
+#endif
 
+  snprintf_F(dst, size, F("size=%u encryption=disabled"), frame.getFrameSize());
   return dst;
 }
 
@@ -117,7 +119,7 @@ const char* WaspUIO::pprintSerial(char* dst, size_t size)
   if (_boot_version < 'H')
   {
     for (uint8_t i=0; i < 4; i++) { serial[i] = _serial_id[7-i]; }
-    sprintf(dst, "%lu", * (uint32_t*) serial);
+    sprintf(dst, "%lu", * (unsigned long*) serial);
   }
   else
   {
@@ -128,6 +130,7 @@ const char* WaspUIO::pprintSerial(char* dst, size_t size)
   return dst;
 }
 
+#if WITH_XBEE
 const char* WaspUIO::pprintXBee(char* dst, size_t size)
 {
   char hw[5];
@@ -136,16 +139,13 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   char macL[9];
   char name[20];
 
-#if WITH_XBEE
   Utils.hex2str(xbeeDM.hardVersion, hw, 2);
   Utils.hex2str(xbeeDM.softVersion, sw, 4);
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
   snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\""), macH, macL, hw, sw, name);
-#else
-  snprintf_F(dst, size, F("XBee not enabled, define WITH_XBEE TRUE"));
-#endif
 
   return dst;
 }
+#endif
