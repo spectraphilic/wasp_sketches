@@ -259,6 +259,12 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   uint8_t len = 0;
   uint16_t start;
 
+  if (frame.numFields >= max_fields)
+  {
+    error(F("Max number of fields reached!"));
+    return -2;
+  }
+
   // Read format from program memory
   char format[10];
   strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
