@@ -51,6 +51,15 @@ uint8_t WaspI2C::scanSlaves()
   return _slavePresent;
 }
 
+/*
+ * Our version of I2C.secureBegin is a one-liner
+ */
+
+void WaspI2C::secureBegin()
+{
+  UIO.i2c(1);
+}
+
 
 /*
  * Override PWR.setSensorPower to support power and sensor boards.
