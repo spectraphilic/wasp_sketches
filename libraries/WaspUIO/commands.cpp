@@ -20,6 +20,8 @@ typedef struct {
   const char* help;
 } Command;
 
+const char CMD_1WIRE_READ[] PROGMEM = "1wire read        - Read DS18B20 string";
+const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+   - Scan DS18B20 in the given pins, save to onewire.txt";
 const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]      - Set 4G Access Point Name (APN)";
 const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - set pin for the 4G module (0=disabled)";
 const char CMD_4G_TEST   [] PROGMEM = "4g test           - Test 4G data connection";
@@ -42,13 +44,11 @@ const char CMD_LS        [] PROGMEM = "ls                - List files in SD card
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
 const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g";
-const char CMD_1WIRE_READ[] PROGMEM = "onewire read      - Read DS18B20 string";
-const char CMD_1WIRE_SCAN[] PROGMEM = "onewire scan PIN+ - Scan DS18B20 in the given pins, save to onewire.txt";
 const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
 const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes: "
-                                      "net(work) bat(tery) gps ctd(10) ds2 ds1820 bme(280) mb ws100";
+                                      "net bat gps ctd ds2 ds1820 mb ws100 bme76 as7263 as7265 bme mlx tmp vl";
 const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 sensors";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
 const char CMD_TIME      [] PROGMEM = "time VALUE        - Sets time, value can be 'network', 'gps', "

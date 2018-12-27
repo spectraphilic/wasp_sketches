@@ -49,15 +49,13 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
 {
   dst[0] = '\0';
 
-  pprintAction(dst, size, RUN_NETWORK, F("Network"));
-  pprintAction(dst, size, RUN_BATTERY, F("Battery"));
-  pprintAction(dst, size, RUN_GPS, F("GPS"));
-  pprintAction(dst, size, RUN_CTD10, F("CTD10"));
-  pprintAction(dst, size, RUN_DS2, F("DS2"));
-  pprintAction(dst, size, RUN_DS1820, F("DS1820"));
-  pprintAction(dst, size, RUN_BME280, F("BME280"));
-  pprintAction(dst, size, RUN_MB, F("MB7389"));
-  pprintAction(dst, size, RUN_WS100, F("WS100"));
+  for (uint8_t i=0; i < RUN_LEN; i++)
+  {
+    const char* name = (const char*)pgm_read_word(&(run_names[i]));
+    if (strcmp_P("", name) == 0)
+      continue;
+    pprintAction(dst, size, i, (__FlashStringHelper*)name);
+  }
 
   if (! dst[0]) strncpy_F(dst, F("(none)"), size);
 
