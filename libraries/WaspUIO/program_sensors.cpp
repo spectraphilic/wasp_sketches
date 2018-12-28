@@ -44,7 +44,9 @@ CR_TASK(taskSensors)
   bool one = UIO.action(1, RUN_DS1820); // One Wire
 #endif
 #if WITH_I2C
-  bool i2c = UIO.action(1, RUN_BME280);
+  bool i2c = UIO.action(7, RUN_BME280, RUN_LAGOPUS_AS7263, RUN_LAGOPUS_AS7265,
+                        RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
+                        RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X);
 #endif
 #if WITH_MB
   bool ttl = UIO.action(1, RUN_MB);
@@ -124,10 +126,7 @@ CR_TASK(task1Wire)
 
   CR_BEGIN;
 
-  UIO.onewire(1);
   n = UIO.readDS18B20(values, max);
-  UIO.onewire(0);
-
   if (n > 0) { ADD_SENSOR(SENSOR_DS18B20, n, values); }
 
   CR_END;
@@ -139,11 +138,41 @@ CR_TASK(task1Wire)
 
 CR_TASK(taskI2C)
 {
-  float temperature, humidity, pressure;
+  static tid_t bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp_id, vl_id;
+  bool bme280_76 = UIO.action(1, RUN_BME280);
+  bool as7263 = UIO.action(1, RUN_LAGOPUS_AS7263);
+  bool as7265 = UIO.action(1, RUN_LAGOPUS_AS7265);
+  bool bme280 = UIO.action(1, RUN_LAGOPUS_BME280);
+  bool mlx = UIO.action(1, RUN_LAGOPUS_MLX90614);
+  bool tmp = UIO.action(1, RUN_LAGOPUS_TMP102);
+  bool vl = UIO.action(1, RUN_LAGOPUS_VL53L1X);
 
-  UIO.i2c(1);
-  UIO.i2c_BME280(temperature, humidity, pressure);
-  UIO.i2c(0);
+  CR_BEGIN;
+
+  if (bme280_76) { CR_SPAWN2(taskI2C_BME280_76, bme280_76_id); }
+  if (as7263)    { CR_SPAWN2(taskI2C_AS7263, as7263_id); }
+  if (as7265)    { CR_SPAWN2(taskI2C_AS7265, as7265_id); }
+  if (bme280)    { CR_SPAWN2(taskI2C_BME280, bme280_id); }
+  if (mlx)       { CR_SPAWN2(taskI2C_MLX90614, mlx_id); }
+  if (tmp)       { CR_SPAWN2(taskI2C_TMP102, tmp_id); }
+  if (vl)        { CR_SPAWN2(taskI2C_VL53L1X, vl_id); }
+
+  if (bme280_76) { CR_JOIN(bme280_76_id); }
+  if (as7263)    { CR_JOIN(as7263_id); }
+  if (as7265)    { CR_JOIN(as7265_id); }
+  if (bme280)    { CR_JOIN(bme280_id); }
+  if (mlx)       { CR_JOIN(mlx_id); }
+  if (tmp)       { CR_JOIN(tmp_id); }
+  if (vl)        { CR_JOIN(vl_id); }
+
+  CR_END;
+}
+
+CR_TASK(taskI2C_BME280_76)
+{
+  float temperature, humidity, pressure;
+  bool err = UIO.i2c_BME280(temperature, humidity, pressure);
+  if (err) { return CR_TASK_ERROR; }
 
   // Frame
   ADD_SENSOR(SENSOR_BME_TC, temperature);
@@ -152,6 +181,63 @@ CR_TASK(taskI2C)
 
   return CR_TASK_STOP;
 }
+
+CR_TASK(taskI2C_AS7263)
+{
+  uint8_t temp;
+  float r, s, t, u, v, w;
+  bool err = UIO.i2c_AS7263(temp, r, s, t, u, v, w);
+  if (err) { return CR_TASK_ERROR; }
+  // TODO Frame
+  return CR_TASK_STOP;
+}
+
+CR_TASK(taskI2C_AS7265)
+{
+  uint8_t temp;
+  float A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W;
+  bool err = UIO.i2c_AS7265(temp, A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W);
+  if (err) { return CR_TASK_ERROR; }
+  // TODO Frame
+  return CR_TASK_STOP;
+}
+
+CR_TASK(taskI2C_BME280)
+{
+  float temperature, humidity, pressure;
+  bool err = UIO.i2c_BME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
+  if (err) { return CR_TASK_ERROR; }
+  // TODO Frame
+  return CR_TASK_STOP;
+}
+
+CR_TASK(taskI2C_MLX90614)
+{
+  float object, ambient;
+  bool err = UIO.i2c_MLX90614(object, ambient);
+  if (err) { return CR_TASK_ERROR; }
+  // TODO Frame
+  return CR_TASK_STOP;
+}
+
+CR_TASK(taskI2C_TMP102)
+{
+  float temperature;
+  bool err = UIO.i2c_TMP102(temperature);
+  if (err) { return CR_TASK_ERROR; }
+  // TODO Frame
+  return CR_TASK_STOP;
+}
+
+CR_TASK(taskI2C_VL53L1X)
+{
+  uint16_t distance;
+  bool err = UIO.i2c_VL53L1X(distance);
+  if (err) { return CR_TASK_ERROR; }
+  // TODO Frame
+  return CR_TASK_STOP;
+}
+
 
 /**
  * TTL Serial.
@@ -162,10 +248,7 @@ CR_TASK(taskI2C)
 CR_TASK(taskTTL)
 {
   uint16_t median, sd;
-
-  UIO.maxbotix(1);
   if (UIO.readMaxbotixSerial(median, sd, 5)) { return CR_TASK_ERROR; }
-  UIO.maxbotix(0);
 
   ADD_SENSOR(SENSOR_MB73XX, (uint32_t) median, (uint32_t) sd);
 

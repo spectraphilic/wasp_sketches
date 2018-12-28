@@ -47,8 +47,8 @@ const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 
 const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
-const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes: "
-                                      "net bat gps ctd ds2 ds1820 mb ws100 bme76 as7263 as7265 bme mlx tmp vl";
+const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes, type just run to see "
+                                      "the available names";
 const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 sensors";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
 const char CMD_TIME      [] PROGMEM = "time VALUE        - Sets time, value can be 'network', 'gps', "
@@ -561,24 +561,43 @@ COMMAND(cmdPrint)
 COMMAND(cmdRun)
 {
   char name[11];
-  int8_t value;
   uint8_t hours;
   uint8_t minutes;
 
   // Check input
-  if (sscanf(str, "%10s %hhu %hhu", &name, &hours, &minutes) != 3) { return cmd_bad_input; }
-  value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-  if (value == -1) { return cmd_bad_input; }
+  int n = sscanf(str, "%10s %hhu %hhu", &name, &hours, &minutes);
 
-  if (minutes > 59) { return cmd_bad_input; }
+  // Print names
+  if (n == -1)
+  {
+    for (uint8_t i=0; i < RUN_LEN; i++)
+    {
+      const char* name = (const char*)pgm_read_word(&(run_names[i]));
+      if (strcmp_P("", name) == 0)
+        continue;
+      cr.println((__FlashStringHelper*)name);
+    }
+    return cmd_quiet;
+  }
 
-  // Do
-  uint16_t base = EEPROM_UIO_RUN + (value * 2);
-  if (! UIO.updateEEPROM(base, hours)) { return cmd_error; }
-  if (! UIO.updateEEPROM(base + 1, minutes)) { return cmd_error; }
-  UIO.actions[value] = (hours * 60) + minutes;
+  // Run
+  if (n == 3)
+  {
+    int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
+    if (value == -1) { return cmd_bad_input; }
 
-  return cmd_ok;
+    if (minutes > 59) { return cmd_bad_input; }
+
+    // Do
+    uint16_t base = EEPROM_UIO_RUN + (value * 2);
+    if (! UIO.updateEEPROM(base, hours)) { return cmd_error; }
+    if (! UIO.updateEEPROM(base + 1, minutes)) { return cmd_error; }
+    UIO.actions[value] = (hours * 60) + minutes;
+
+    return cmd_ok;
+  }
+
+  return cmd_bad_input;
 }
 
 
