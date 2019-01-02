@@ -75,7 +75,6 @@ void setup()
 
 void loop()
 {
-  UIO.saveTimeToSD();
   UIO.deepSleep();
   UIO.onLoop();
 

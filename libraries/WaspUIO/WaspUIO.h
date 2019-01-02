@@ -195,6 +195,8 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
+uint16_t nloops;
+
 /// public methods and attributes ////////////
 public:
 

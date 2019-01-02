@@ -15,6 +15,8 @@
  */
 void WaspUIO::boot()
 {
+  nloops = 0;
+
   RTC.ON();
   cr.print(F("."));
   UIO.onSetup();
@@ -195,24 +197,11 @@ int WaspUIO::nextAlarm(char* alarmTime)
 
 void WaspUIO::deepSleep()
 {
-  UIO.stopSD();
+  saveTimeToSD();
 
   // Clear interruption flag & pin
   intFlag = 0;
   PWR.clearInterruptionPin();
-
-  // Get next alarm time
-  char alarmTime[12]; // "00:00:00:00"
-  int next = nextAlarm(alarmTime);
-
-  // Reset watchdog
-  if (next < 59) // XXX Maximum is 59
-  {
-    if (_boot_version >= 'H')
-    {
-      RTC.setWatchdog(next + 1);
-    }
-  }
 
   // Turn off sensor & power boards
   if (boardType == BOARD_LEMMING)
@@ -224,8 +213,32 @@ void WaspUIO::deepSleep()
     leadVoltage(0); v33(0); v5(0); v12(0);
   }
 
+  // For robustness sake, reboot once in a while
+  if (nloops >= MAX_LOOPS)
+  {
+    info(F("Rebooting after %u loops"), nloops);
+    UIO.stopSD();
+    PWR.reboot();
+  }
+
+  UIO.stopSD();
+
+  // Get next alarm time
+  char alarmTime[12]; // "00:00:00:00"
+  int next = nextAlarm(alarmTime);
+
+  // Reset watchdog
+  if (_boot_version >= 'H')
+  {
+    if (next < 59) // XXX Maximum is 59
+    {
+      RTC.setWatchdog(next + 1);
+    }
+  }
+
   // Enable RTC interruption and sleep
   PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
+  nloops++;
 
   // Awake: Reset if stuck for 4 minutes
   if (_boot_version >= 'H')
