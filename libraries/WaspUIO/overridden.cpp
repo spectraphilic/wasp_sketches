@@ -25,7 +25,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
   char buffer[size];
   size_t max = size - 1;
   size_t len;
-  uint32_t seconds;
+  unsigned long seconds;
   uint16_t ms;
 
   // (1) Prepare message
@@ -56,7 +56,6 @@ void vlog(loglevel_t level, const char* message, va_list args)
   // (3) Print to log file
   if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD))
   {
-    UIO.startSD();
     if (UIO.openFile(UIO.logFilename, UIO.logFile, O_WRITE | O_CREAT | O_APPEND))
     {
       cr.println(F("%s"), cr.last_error);

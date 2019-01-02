@@ -657,7 +657,6 @@ uint8_t WaspUIO::frame2Sd()
 
   // Start SD
   if (! hasSD) { return 1; }
-  startSD();
 
   // (1) Get the date
   year = RTC.year;
@@ -729,7 +728,7 @@ int WaspUIO::readFrame()
   int size;
 
   // Open files
-  startSD();
+  if (! hasSD) { return -1; }
   if (openFile(qstartFilename, qstartFile, O_READ)) { return -1; }
   if (openFile(queueFilename, queueFile, O_READ)) { return -1; }
 

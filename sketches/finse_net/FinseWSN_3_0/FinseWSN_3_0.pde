@@ -76,10 +76,7 @@ void setup()
 void loop()
 {
   UIO.saveTimeToSD();
-  UIO.stopSD();
   UIO.deepSleep();
-
-  RTC.ON(); // This fixes a bug with Maxbotix & SD card in some motes
   UIO.onLoop();
 
   char buffer[50];

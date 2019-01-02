@@ -118,9 +118,6 @@ void WaspUIO::clint()
   //char out[150];
   size_t size = sizeof(buffer);
 
-  // Turn ON
-  UIO.startSD();
-
   // Print info
   cr.println();
   cmdPrint(NULL);
@@ -150,9 +147,6 @@ void WaspUIO::clint()
   }
 
   cr.println();
-
-  // Turn OFF
-  UIO.stopSD();
 }
 
 
@@ -254,7 +248,6 @@ COMMAND(cmdAck)
   }
 
   // Open files
-  UIO.startSD();
   if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_RDWR))
   {
     error(cr.last_error);

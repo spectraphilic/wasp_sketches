@@ -133,7 +133,6 @@ COMMAND(cmd1WireScan)
   char addr_str[17];
   uint8_t crc;
   SdFile file;
-  bool has_file = false;
   size_t size = 20;
   char buffer[size];
 
@@ -141,17 +140,13 @@ COMMAND(cmd1WireScan)
   npins = sscanf(str, "%hhu %hhu %hhu", &pins[0], &pins[1], &pins[2]);
   if (npins < 1) { return cmd_bad_input; }
 
+  if (! UIO.hasSD) { return cmd_unavailable; }
+
   // ON
-  if (UIO.hasSD)
+  if (! SD.openFile("onewire.txt", &file, O_WRITE | O_CREAT | O_TRUNC))
   {
-    if (SD.openFile("onewire.txt", &file, O_WRITE | O_CREAT | O_TRUNC))
-    {
-      has_file = true;
-    }
-    else
-    {
-      cr.print(F("Error opening onewire.txt"));
-    }
+    cr.print(F("Error opening onewire.txt"));
+    return cmd_error;
   }
 
   if (! UIO.onewire(1)) { delay(750); }
@@ -162,7 +157,7 @@ COMMAND(cmd1WireScan)
     if (pin == 255) continue;
 
     snprintf_F(buffer, size, F("%hhu"), pins[i]);
-    USB.print(buffer); if (has_file) file.write(buffer);
+    USB.print(buffer); file.write(buffer);
     WaspOneWire oneWire(pin);
 
     // For now we only support the DS1820, so here just read that directly
@@ -179,7 +174,7 @@ COMMAND(cmd1WireScan)
     {
       Utils.hex2str(addr, addr_str, 8);
       snprintf_F(buffer, size, F(" %s"), addr_str);
-      USB.print(buffer); if (has_file) file.write(buffer);
+      USB.print(buffer); file.write(buffer);
 
       // Check address CRC
       crc = oneWire.crc8(addr, 7);
@@ -191,12 +186,12 @@ COMMAND(cmd1WireScan)
 
 next:
     oneWire.depower();
-    USB.println(); if (has_file) file.write("\n");
+    USB.println(); file.write("\n");
   }
 
   // OFF
   UIO.onewire(0);
-  if (has_file) { file.close(); }
+  file.close();
 
   return cmd_quiet;
 }

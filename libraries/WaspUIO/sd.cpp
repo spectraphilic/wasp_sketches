@@ -1,6 +1,43 @@
 #include "WaspUIO.h"
 
 
+/**
+ * Functions to start and stop SD. Open and closes required files.
+ */
+
+void WaspUIO::startSD()
+{
+  if (WaspRegister & REG_SD)
+    return;
+
+  hasSD = SD.ON();
+  if (! hasSD)
+  {
+    cr.println(F("SD.ON() failed flag=%u"), SD.flag);
+    return;
+  }
+
+  baselayout();
+}
+
+void WaspUIO::stopSD()
+{
+  if (SPI.isSD)
+  {
+    // Close files
+    if (logFile.isOpen()) { logFile.close(); }
+    if (queueFile.isOpen()) { queueFile.close(); }
+    if (qstartFile.isOpen()) { qstartFile.close(); }
+    // Off
+    SD.OFF();
+  }
+}
+
+
+/*
+ * Create/Open
+ */
+
 int WaspUIO::createFile(const char* name)
 {
   SdFile file;
@@ -106,8 +143,6 @@ int WaspUIO::write(SdFile &file, const void* buf, size_t size)
  */
 int WaspUIO::append(SdFile &file, const void* buf, size_t size)
 {
-  int n;
-
   if (file.seekEnd() == false)
   {
     cr.set_last_error(F("append seekEnd failed"));

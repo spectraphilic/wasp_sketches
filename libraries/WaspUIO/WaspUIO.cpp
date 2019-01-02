@@ -81,13 +81,6 @@ void WaspUIO::onSetup()
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
   /*** 2. Autodetect hardware ***/
-  hasSD = SD.ON();
-  if (! hasSD)
-  {
-    cr.println(F("SD.ON() failed flag=%u"), SD.flag);
-  }
-  SD.OFF();
-
 #if WITH_GPS
   hasGPS = GPS.ON();
   GPS.OFF();
@@ -102,42 +95,14 @@ void WaspUIO::onLoop()
   cr.sleep_time = 0;
   state = 0;
 
+  RTC.ON(); // SD calls the RTC to set file/dir time
   loadTime();
+  UIO.startSD();
 
   if (batteryType == BATTERY_LEAD) { startPowerBoard(); }
   if (boardType == BOARD_LEMMING) { startSensorBoard(); }
 
   readBattery();
-}
-
-
-/**
- * Functions to start and stop SD. Open and closes required files.
- */
-
-void WaspUIO::startSD()
-{
-  if (hasSD)
-  {
-    if (! (WaspRegister & REG_SD))
-    {
-      SD.ON();
-      baselayout();
-    }
-  }
-}
-
-void WaspUIO::stopSD()
-{
-  if (SPI.isSD)
-  {
-    // Close files
-    if (logFile.isOpen()) { logFile.close(); }
-    if (queueFile.isOpen()) { queueFile.close(); }
-    if (qstartFile.isOpen()) { qstartFile.close(); }
-    // Off
-    SD.OFF();
-  }
 }
 
 
@@ -230,6 +195,8 @@ int WaspUIO::nextAlarm(char* alarmTime)
 
 void WaspUIO::deepSleep()
 {
+  UIO.stopSD();
+
   // Clear interruption flag & pin
   intFlag = 0;
   PWR.clearInterruptionPin();
