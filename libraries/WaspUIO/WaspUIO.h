@@ -195,10 +195,10 @@ class WaspUIO
 /// private methods //////////////////////////
 private:
 
-uint16_t nloops;
-
 /// public methods and attributes ////////////
 public:
+
+uint16_t nloops;
 
 // Like Arduino's EEPROM.update, it writes the given value only if different
 // from the value already saved.

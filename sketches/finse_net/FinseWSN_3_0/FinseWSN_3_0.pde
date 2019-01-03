@@ -80,15 +80,14 @@ void loop()
 
   char buffer[50];
 
+  info(F("*** Loop %u battery=%s"), UIO.nloops, UIO.pprintBattery(buffer, sizeof buffer));
+
   // Low battery level: do nothing
   if (UIO.battery == BATTERY_LOW)
   {
-    debug(F("*** Loop skip (%s)"), UIO.pprintBattery(buffer, sizeof buffer));
+    debug(F("*** Low battery: skip"));
     return;
   }
-
-  // Logging starts here
-  info(F("*** Loop start (%s)"), UIO.pprintBattery(buffer, sizeof buffer));
 
   // Check RTC interruption
   if (intFlag & RTC_INT)

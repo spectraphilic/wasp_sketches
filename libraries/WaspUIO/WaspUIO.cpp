@@ -70,10 +70,18 @@ void WaspUIO::onSetup()
   // Read run table
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    uint16_t base = EEPROM_UIO_RUN + (i * 2);
-    uint8_t hours = Utils.readEEPROM(base);
-    uint8_t minutes = Utils.readEEPROM(base + 1);
-    actions[i] = (hours * 60) + minutes;
+    const char* name = (const char*)pgm_read_word(&(run_names[i]));
+    if (strcmp_P("", name) == 0)
+    {
+      actions[i] = 0;
+    }
+    else
+    {
+      uint16_t base = EEPROM_UIO_RUN + (i * 2);
+      uint8_t hours = Utils.readEEPROM(base);
+      uint8_t minutes = Utils.readEEPROM(base + 1);
+      actions[i] = (hours * 60) + minutes;
+    }
   }
 
   // Frames

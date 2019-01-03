@@ -55,10 +55,13 @@ uint8_t WaspI2C::scanSlaves()
  * Our version of I2C.secureBegin is a one-liner
  */
 
+// FIXME This produces an infinite loop
+/*
 void WaspI2C::secureBegin()
 {
   UIO.i2c(1);
 }
+*/
 
 
 /*
