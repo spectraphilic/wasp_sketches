@@ -192,7 +192,10 @@ bool WaspUIO::i2c(bool new_state)
   if (new_state == old_state) { return old_state; }
 
   // Requires 3V3
-  v33(1);
+  if (new_state)
+  {
+    v33(1);
+  }
 
   if (boardType == BOARD_LEMMING)
   {

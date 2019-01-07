@@ -207,30 +207,22 @@ void WaspUIO::deepSleep()
 {
   saveTimeToSD();
 
+  // For robustness sake, reboot once in a while
+  bool reboot = (nloops >= MAX_LOOPS);
+  if (reboot)
+  {
+    info(F("Rebooting after %u loops"), nloops);
+  }
+  UIO.stopSD();
+
   // Clear interruption flag & pin
   intFlag = 0;
   PWR.clearInterruptionPin();
 
-  // Turn off sensor & power boards
-  if (boardType == BOARD_LEMMING)
-  {
-    i2c(0); maxbotix(0); onewire(0); sdi12(0);
-  }
-  if (batteryType == BATTERY_LEAD)
-  {
-    leadVoltage(0); v33(0); v5(0); v12(0);
-  }
+  // Reboot
+  if (reboot) { PWR.reboot(); }
 
-  // For robustness sake, reboot once in a while
-  if (nloops >= MAX_LOOPS)
-  {
-    info(F("Rebooting after %u loops"), nloops);
-    UIO.stopSD();
-    PWR.reboot();
-  }
-
-  UIO.stopSD();
-
+  // Sleep
   // Get next alarm time
   char alarmTime[12]; // "00:00:00:00"
   int next = nextAlarm(alarmTime);
@@ -244,7 +236,12 @@ void WaspUIO::deepSleep()
     }
   }
 
-  // Enable RTC interruption and sleep
+  // Power off and Sleep
+  //i2c(0); maxbotix(0); onewire(0); sdi12(0); v33(0); v5(0);
+  if (batteryType == BATTERY_LEAD)
+  {
+    leadVoltage(0); v12(0);
+  }
   PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
   nloops++;
 

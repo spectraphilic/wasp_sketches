@@ -56,12 +56,11 @@ uint8_t WaspI2C::scanSlaves()
  */
 
 // FIXME This produces an infinite loop
-/*
 void WaspI2C::secureBegin()
 {
+  UIO.v33(1);
   UIO.i2c(1);
 }
-*/
 
 
 /*
@@ -84,7 +83,8 @@ void WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 
 /*
  * This is copy/paste from upstream WaspPWR::setSensorPower
-*/
+ * Power sensors when using lithium battery
+ */
 void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
 {
 	pinMode(SENS_PW_3V3,OUTPUT);

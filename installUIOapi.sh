@@ -19,10 +19,10 @@ git clone git@github.com:spectraphilic/wasp_sketches.git
 
 # Download Waspmote IDE, and install it
 printf "Downloading Waspmote IDE, and installing it ...\n"
-mkdir waspmote-pro-ide-v06.08
-cd waspmote-pro-ide-v06.08
-wget http://downloads.libelium.com/waspmote-pro-ide-v06.08-linux64.zip
-unzip waspmote-pro-ide-v06.08-linux64.zip
+mkdir waspmote-pro-ide-v06.12
+cd waspmote-pro-ide-v06.12
+wget http://downloads.libelium.com/waspmote-pro-ide-v06.12-linux64.zip
+unzip waspmote-pro-ide-v06.12-linux64.zip
 ./install.sh
 
 # create simulink to our own copy of the librayr API
