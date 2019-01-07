@@ -21,5 +21,7 @@
 #define I2C_ADDRESS_LAGOPUS_MLX90614   0x5A // Surface temperature
 #define I2C_ADDRESS_LAGOPUS_AS726X     0x49 // Spectral Sensor
 
+#define TWI_SPEED_HZ                   80000 // Max I2C clock speed is 100000 for MLX sesnor       
+
 // Reboot every N loops
 #define MAX_LOOPS 5000
