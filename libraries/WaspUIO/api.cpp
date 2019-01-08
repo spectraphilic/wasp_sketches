@@ -40,15 +40,26 @@ void WaspFrame::getID(char* moteID)
 
 uint8_t WaspI2C::scanSlaves()
 {
-  _slavePresent = (
-    !scan(I2C_ADDRESS_Lemming_BME280) ||
-    !scan(I2C_ADDRESS_LAGOPUS_BME280) ||
-    !scan(I2C_ADDRESS_LAGOPUS_TMP102) ||
-    !scan(I2C_ADDRESS_LAGOPUS_VL53L1X) ||
-    !scan(I2C_ADDRESS_LAGOPUS_MLX90614) ||
-    !scan(I2C_ADDRESS_LAGOPUS_AS726X)
-  );
-  return _slavePresent;
+  uint8_t addresses[] = {
+    I2C_ADDRESS_Lemming_BME280,
+    I2C_ADDRESS_LAGOPUS_BME280,
+    I2C_ADDRESS_LAGOPUS_TMP102,
+    I2C_ADDRESS_LAGOPUS_VL53L1X,
+    I2C_ADDRESS_LAGOPUS_MLX90614,
+    I2C_ADDRESS_LAGOPUS_AS726X,
+  };
+
+  for (uint8_t i=0; i < sizeof addresses; i++)
+  {
+    uint8_t status = scan(addresses[i]);
+    cr.println(F("scanSlaves(): %02x = %hhu"), addresses[i], status);
+    if (status == 0)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
 }
 
 /*
