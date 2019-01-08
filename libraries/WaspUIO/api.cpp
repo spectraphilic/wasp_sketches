@@ -49,17 +49,19 @@ uint8_t WaspI2C::scanSlaves()
     I2C_ADDRESS_LAGOPUS_AS726X,
   };
 
+  _slavePresent = false;
   for (uint8_t i=0; i < sizeof addresses; i++)
   {
     uint8_t status = scan(addresses[i]);
     cr.println(F("scanSlaves(): %02x = %hhu"), addresses[i], status);
     if (status == 0)
     {
-      return 1;
+      _slavePresent = true;
+      break;
     }
   }
 
-  return 0;
+  return _slavePresent;
 }
 
 /*
