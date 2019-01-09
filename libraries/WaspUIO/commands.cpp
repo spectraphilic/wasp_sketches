@@ -94,7 +94,7 @@ const Command commands[] PROGMEM = {
 #endif
   {"print",         &cmdPrint,     CMD_PRINT},
   {"rm ",           &cmdRm,        CMD_RM},
-  {"run ",          &cmdRun,       CMD_RUN},
+  {"run",           &cmdRun,       CMD_RUN},
 #if WITH_SDI
   {"sdi",           &cmdSDI12,     CMD_SDI12},
 #endif
