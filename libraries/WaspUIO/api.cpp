@@ -80,75 +80,14 @@ uint8_t WaspI2C::scanSlaves()
 }
 
 /*
- * Our version of I2C.secureBegin is a one-liner
- */
-
-// FIXME This produces an infinite loop
-void WaspI2C::secureBegin()
-{
-  UIO.v33(1);
-  UIO.i2c(1);
-  delay(50); // time for power to stabalize
-}
-
-
-/*
  * Override PWR.setSensorPower to support power and sensor boards.
  */
 
-void WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
+bool WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 {
   bool new_state = (mode == SENS_ON)? true: false;
 
-  if (type == SENS_3V3)
-  {
-    UIO.v33(new_state);
-  }
-  else if (type == SENS_5V)
-  {
-    UIO.v5(new_state);
-  }
-}
-
-/*
- * This is copy/paste from upstream WaspPWR::setSensorPower
- * Power sensors when using lithium battery
- */
-void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
-{
-	pinMode(SENS_PW_3V3,OUTPUT);
-	pinMode(SENS_PW_5V,OUTPUT);
-	
-	switch (type)
-	{
-		case SENS_3V3: 	
-						if (mode == SENS_ON) 
-						{
-							WaspRegister |= REG_3V3;
-							digitalWrite(SENS_PW_3V3,HIGH);
-						}
-						else if (mode == SENS_OFF) 
-						{
-							WaspRegister &= ~REG_3V3;
-							digitalWrite(SENS_PW_3V3,LOW);
-							
-						}						
-						break;
-						
-		case SENS_5V:	
-						if (mode == SENS_ON) 
-						{
-							WaspRegister |= REG_5V;
-							digitalWrite(SENS_PW_5V,HIGH);
-							delay(1);
-						}
-						else if (mode == SENS_OFF) 
-						{
-							WaspRegister &= ~REG_5V;
-							digitalWrite(SENS_PW_5V,LOW);
-						}
-						break;
-						
-		default:		break;
-	}
+  if (type == SENS_3V3) { return UIO.v33(new_state); }
+  if (type == SENS_5V)  { return UIO.v5(new_state); }
+  if (type == SENS_I2C) { return UIO.i2c(new_state); }
 }

@@ -40,7 +40,7 @@ void WaspUIO::loadState()
   // Shortcut
   if (saved_state == state && saved_WaspRegister == WaspRegister) { return; }
 
-  // Turn stuff off
+  // Switch stuff off
   if (! (saved_state & UIO_MAXB))  { maxbotix(0); }
   if (! (saved_state & UIO_I2C))   { i2c(0); }
   if (! (saved_state & UIO_1WIRE)) { onewire(0); }
@@ -58,7 +58,7 @@ void WaspUIO::loadState()
     if (! (saved_WaspRegister & REG_5V)) { v5(0); }
   }
 
-  // Turn stuff on
+  // Switch stuff on
   if (batteryType == BATTERY_LEAD)
   {
     if (saved_state & UIO_12V) { v12(1); }
@@ -111,6 +111,13 @@ bool WaspUIO::v12(bool new_state)
 
 bool WaspUIO::v33(bool new_state)
 {
+  // First Switch off stuff that requires v33
+  if (! new_state)
+  {
+    i2c(new_state);
+    // XXX maxbotix and 1wire
+  }
+
   if (batteryType == BATTERY_LEAD)
   {
     if (new_state && ! v12(1)) {} // Switch V12 on if needed
@@ -126,6 +133,13 @@ bool WaspUIO::v33(bool new_state)
 
 bool WaspUIO::v5(bool new_state)
 {
+  // First Switch off stuff that requires v5
+  if (! new_state)
+  {
+    sdi12(new_state);
+    // XXX maxbotix and 1wire
+  }
+
   if (batteryType == BATTERY_LEAD)
   {
     if (new_state && ! v12(1)) {} // Switch V12 on if needed
@@ -316,13 +330,56 @@ float WaspUIO::getLeadBatteryVolts()
   float volts;
   char volts_str[15];
 
-  if (! leadVoltage(1)) { delay(100); } // Turn on, let power to stabilize
+  if (! leadVoltage(1)) { delay(100); } // Switch on, let power to stabilize
   analog5 = analogRead(ANALOG5);   // Analog output (0 - 3.3V): from 0 to 1023
-  leadVoltage(0);                  // Turn off
+  leadVoltage(0);                  // Switch off
 
   volts = analog5  * (R1 + R2) / R2 * 3.3 / 1023 ;
   Utils.float2String(volts, volts_str, 2);
   debug(F("Lead acid battery analog5=%d volts=%s"), analog5, volts_str);
 
   return volts;
+}
+
+/*
+ * This is copy/paste from upstream WaspPWR::setSensorPower
+ * Power sensors when using lithium battery
+ */
+void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
+{
+	pinMode(SENS_PW_3V3,OUTPUT);
+	pinMode(SENS_PW_5V,OUTPUT);
+
+	switch (type)
+	{
+		case SENS_3V3:
+						if (mode == SENS_ON)
+						{
+							WaspRegister |= REG_3V3;
+							digitalWrite(SENS_PW_3V3,HIGH);
+						}
+						else if (mode == SENS_OFF)
+						{
+							WaspRegister &= ~REG_3V3;
+							digitalWrite(SENS_PW_3V3,LOW);
+
+						}
+						break;
+
+		case SENS_5V:
+						if (mode == SENS_ON)
+						{
+							WaspRegister |= REG_5V;
+							digitalWrite(SENS_PW_5V,HIGH);
+							delay(1);
+						}
+						else if (mode == SENS_OFF)
+						{
+							WaspRegister &= ~REG_5V;
+							digitalWrite(SENS_PW_5V,LOW);
+						}
+						break;
+
+		default:		break;
+	}
 }
