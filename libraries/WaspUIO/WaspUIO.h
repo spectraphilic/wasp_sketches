@@ -280,7 +280,7 @@ char password[33]; // To encrypt frames
 
 // Power
 // (power) state management
-uint8_t state;
+uint8_t state = 0;
 uint8_t saved_state;
 uint16_t saved_WaspRegister;
 void saveState();

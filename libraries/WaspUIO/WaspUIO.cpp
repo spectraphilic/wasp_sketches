@@ -104,7 +104,6 @@ void WaspUIO::onSetup()
 void WaspUIO::onLoop()
 {
   cr.sleep_time = 0;
-  state = 0;
 
   RTC.ON(); // SD calls the RTC to set file/dir time
   loadTime();
