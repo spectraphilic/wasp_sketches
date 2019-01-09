@@ -16,6 +16,7 @@
 void WaspUIO::boot()
 {
   nloops = 0;
+  SdFile::dateTimeCallback(WaspUIO::dateTime);
 
   RTC.ON();
   cr.print(F("."));

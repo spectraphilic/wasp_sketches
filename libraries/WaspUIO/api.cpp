@@ -4,6 +4,21 @@
  * In this file we override fuctions from Libellium's api library.
  */
 
+/*
+ * We don't need to call RTC to know the time
+ */
+void WaspUIO::dateTime(uint16_t* date, uint16_t* time)
+{
+  timestamp_t ts;
+  uint32_t epoch = UIO.getEpochTime();
+
+  RTC.breakTimeAbsolute(epoch, &ts);
+  *date = FAT_DATE(ts.year+2000, ts.month, ts.date);
+  *time = FAT_TIME(ts.hour, ts.minute, ts.second);
+}
+
+void WaspSD::setFileDate() {}
+
 
 /*
  * The upstream code is written in such a way that it sends the mote name (id)

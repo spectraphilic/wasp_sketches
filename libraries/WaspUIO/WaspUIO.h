@@ -252,6 +252,7 @@ int8_t walk(SdBaseFile &root,
             bool (*before_cb)(SdBaseFile &me, char* name),
             bool (*file_cb)(SdBaseFile &parent, char* name),
             bool (*after_cb)(SdBaseFile &me, char* name));
+static void dateTime(uint16_t* date, uint16_t* time);
 
 // Network
 void networkInit();
