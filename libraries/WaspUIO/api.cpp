@@ -73,6 +73,7 @@ void WaspI2C::secureBegin()
 {
   UIO.v33(1);
   UIO.i2c(1);
+  delay(50); // time for power to stabalize
 }
 
 
