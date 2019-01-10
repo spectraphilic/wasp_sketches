@@ -21,7 +21,6 @@ int WaspUIO::getMaxbotixSample()
   const uint8_t bytes = 4; // Number of bytes to read
   char buffer[bytes]; // Store serial data
   int8_t i = -1;
-  int sample;
   uint32_t t0 = millis();
 
   //return rand() % 5000;
@@ -54,7 +53,7 @@ int WaspUIO::getMaxbotixSample()
 
   if (i == 4)
   {
-    sample = atoi(buffer);
+    int sample = atoi(buffer);
     return (sample > 300 && sample < 5000)? sample: -1;
   }
 
@@ -78,12 +77,11 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t nsample
 {
   const uint8_t port = 1;
   uint8_t max = nsamples * 2; // max number of readings, to avoid infinite loop
-  int sample; // Store each sample
   uint16_t samples[nsamples];
   uint8_t i, j;
 
   // ON Sensor needs 3.3 voltage
-  if (! maxbotix(1)) { } // delay(1000);
+  if (! pwr_mb(1)) { } // delay(1000);
 
   Utils.setMuxAux1(); // check the manual to find out where you connect the sensor
   beginSerial(9600, port); // set baud rate to 9600
@@ -91,7 +89,7 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t nsample
   // Get samples
   for (i=0, j=0; (i < max) && (j < nsamples); i++)
   {
-    sample = getMaxbotixSample();
+    int sample = getMaxbotixSample();
     if (sample < 0)
     {
       delay(10);
@@ -107,7 +105,7 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t nsample
   // OFF
   closeSerial(port);
   Utils.muxOFF1();
-  maxbotix(0);
+  pwr_mb(0);
 
   // Error
   if (j < nsamples)

@@ -57,17 +57,17 @@ CR_TASK(taskSensors)
   // Power On
   UIO.saveState();
 #if WITH_SDI
-  if (sdi) { UIO.sdi12(1); }
+  if (sdi) { UIO.pwr_sdi12(1); }
   if (ext) {}
 #endif
 #if WITH_1WIRE
-  if (one) { UIO.onewire(1); }
+  if (one) { UIO.pwr_1wire(1); }
 #endif
 #if WITH_I2C
-  if (i2c) { UIO.i2c(1); }
+  if (i2c) { UIO.pwr_i2c(1); }
 #endif
 #if WITH_MB
-  if (ttl) { UIO.maxbotix(1); }
+  if (ttl) { UIO.pwr_mb(1); }
 #endif
 
   // Wait for power to stabilize

@@ -131,15 +131,6 @@ const char* const run_names[] PROGMEM = {
 #define FLAG_LOG_USB 1
 #define FLAG_LOG_SD  4
 
-#define UIO_12V 1
-#define UIO_5V 2
-#define UIO_3V3 4
-#define UIO_LEAD_VOLTAGE 8
-#define UIO_MAXB 16
-#define UIO_I2C 32
-#define UIO_1WIRE 64
-#define UIO_SDI12 128
-
 #define ADD_SENSOR(type, ...) \
   if (UIO.addSensor(type, ## __VA_ARGS__) == -1)\
   {\
@@ -210,8 +201,8 @@ char* readEEPROM(int address, char* dst, size_t size);
 
 // Configuration variables
 uint8_t flags;
-board_type_t boardType;
-battery_type_t batteryType;
+board_type_t boardType = BOARD_LEN; // Defaults to undefined
+battery_type_t batteryType = BATTERY_LEN; // Defaults to undefined
 network_type_t networkType;
 uint16_t actions[RUN_LEN];
 
@@ -280,26 +271,32 @@ char password[33]; // To encrypt frames
 
 // Power
 // (power) state management
-uint8_t state = 0;
-uint8_t saved_state;
-uint16_t saved_WaspRegister;
+const uint8_t PWR_MAIN = 1;
+const uint8_t PWR_3V3 = 2;
+const uint8_t PWR_5V = 4;
+const uint8_t PWR_LEAD_VOLTAGE = 8;
+const uint8_t PWR_MB = 16;
+const uint8_t PWR_I2C = 32;
+const uint8_t PWR_1WIRE = 64;
+const uint8_t PWR_SDI12 = 128;
+
+uint8_t pwr_state = 0;
+uint8_t pwr_saved_state;
 void saveState();
 void loadState();
 bool _setState(uint8_t device, bool new_state);
 // Power board
-void startPowerBoard();
-bool _powerBoardSwitch(uint8_t device, uint8_t pin, bool new_state);
-bool v33(bool new_state);
-bool v5(bool new_state);
-bool v12(bool new_state);
-bool leadVoltage(bool new_state);
+bool pwr_switch(uint8_t device, uint8_t pin, bool new_state);
+bool pwr_main(bool new_state);
+bool pwr_3v3(bool new_state);
+bool pwr_5v(bool new_state);
+bool pwr_leadVoltage(bool new_state);
 void setSensorPower(uint8_t type, uint8_t mode);
 // Sensor board
-void startSensorBoard();
-bool maxbotix(bool new_state);
-bool i2c(bool new_state);
-bool onewire(bool new_state);
-bool sdi12(bool new_state);
+bool pwr_mb(bool new_state);
+bool pwr_i2c(bool new_state);
+bool pwr_1wire(bool new_state);
+bool pwr_sdi12(bool new_state);
 // Battery
 void readBattery();
 float getBatteryVolts();

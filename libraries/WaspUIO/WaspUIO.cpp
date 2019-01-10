@@ -34,12 +34,6 @@ void WaspUIO::onSetup()
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
-  boardType = (board_type_t) Utils.readEEPROM(EEPROM_UIO_BOARD_TYPE);
-  if (boardType >= BOARD_LEN) { boardType = BOARD_NONE; }
-
-  batteryType = (battery_type_t) Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
-  if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }
-
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
@@ -105,12 +99,12 @@ void WaspUIO::onLoop()
 {
   cr.sleep_time = 0;
 
-  RTC.ON(); // SD calls the RTC to set file/dir time
+  RTC.ON(); // XXX Do we need this?
   loadTime();
   UIO.startSD();
 
-  if (batteryType == BATTERY_LEAD) { startPowerBoard(); }
-  if (boardType == BOARD_LEMMING) { startSensorBoard(); }
+  pinMode(PIN_1WIRE, INPUT);
+  pinMode(PIN_SDI12, INPUT);
 
   readBattery();
 }
@@ -220,7 +214,11 @@ void WaspUIO::deepSleep()
   PWR.clearInterruptionPin();
 
   // Reboot
-  if (reboot) { PWR.reboot(); }
+  if (reboot)
+  {
+    PWR.switchesOFF(ALL_OFF);
+    PWR.reboot();
+  }
 
   // Sleep
   // Get next alarm time
@@ -237,11 +235,6 @@ void WaspUIO::deepSleep()
   }
 
   // Power off and Sleep
-  //i2c(0); maxbotix(0); onewire(0); sdi12(0); v33(0); v5(0);
-  if (batteryType == BATTERY_LEAD)
-  {
-    leadVoltage(0); v12(0);
-  }
   PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
   nloops++;
 

@@ -34,7 +34,7 @@ CR_TASK(taskSdi)
   static tid_t tid;
 
   CR_BEGIN;
-  UIO.sdi12(1);
+  UIO.pwr_sdi12(1);
 
   // XXX There are 2 incompatible strategies to improve this:
   // - Use the Concurrent command
@@ -54,7 +54,7 @@ CR_TASK(taskSdi)
     CR_JOIN(tid);
   }
 
-  UIO.sdi12(0);
+  UIO.pwr_sdi12(0);
   CR_END;
 }
 

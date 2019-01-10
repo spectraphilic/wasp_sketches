@@ -13,7 +13,7 @@ COMMAND(cmdI2C)
   if (n != -1 && n != 1) { return cmd_bad_input; }
 
   // Power ON
-  UIO.i2c(1);
+  UIO.pwr_i2c(1);
 
   // Scan
   if (n == -1)
@@ -149,12 +149,13 @@ COMMAND(cmd1WireScan)
     return cmd_error;
   }
 
-  if (! UIO.onewire(1)) { delay(750); }
+  if (! UIO.pwr_1wire(1)) { delay(750); }
 
   for (uint8_t i = 0; i < npins; i++)
   {
     pin = _getPin(pins[i]);
     if (pin == 255) continue;
+    pinMode(pin, INPUT);
 
     snprintf_F(buffer, size, F("%hhu"), pins[i]);
     USB.print(buffer); file.write(buffer);
@@ -190,7 +191,7 @@ next:
   }
 
   // OFF
-  UIO.onewire(0);
+  UIO.pwr_1wire(0);
   file.close();
 
   return cmd_quiet;
@@ -207,7 +208,7 @@ COMMAND(cmdSDI12)
 
   int n = sscanf(str, "%hhu %hhu", &address, &new_address);
 
-  UIO.sdi12(1);
+  UIO.pwr_sdi12(1);
   if (n <= 0)
   {
     UIO.sdi_read_address();
@@ -220,7 +221,7 @@ COMMAND(cmdSDI12)
   {
     UIO.sdi_set_address(address, new_address);
   }
-  UIO.sdi12(0);
+  UIO.pwr_sdi12(0);
 
   return cmd_quiet;
 }

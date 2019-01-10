@@ -79,8 +79,4 @@ void beforeSleep()
 
 void afterSleep()
 {
-  if (UIO.state & UIO_SDI12)
-  {
-    //sdi12.forceHold(); // XXX
-  }
 }
