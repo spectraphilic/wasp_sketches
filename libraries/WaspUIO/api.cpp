@@ -68,6 +68,7 @@ uint8_t WaspI2C::scanSlaves()
   for (uint8_t i=0; i < sizeof addresses; i++)
   {
     uint8_t status = scan(addresses[i]);
+    cr.println(F("scanSlaves(): %02x = %hhu"), addresses[i], status);
     if (status == 0)
     {
       _slavePresent = true;
