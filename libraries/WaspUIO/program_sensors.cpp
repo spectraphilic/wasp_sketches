@@ -170,15 +170,11 @@ CR_TASK(taskI2C)
 
 CR_TASK(taskI2C_BME280_76)
 {
+  // Internal, directly attached to the lemming board
   float temperature, humidity, pressure;
   bool err = UIO.i2c_BME280(temperature, humidity, pressure);
   if (err) { return CR_TASK_ERROR; }
-
-  // Frame
-  ADD_SENSOR(SENSOR_BME_TC, temperature);
-  ADD_SENSOR(SENSOR_BME_HUM, humidity);
-  ADD_SENSOR(SENSOR_BME_PRES, pressure);
-
+  ADD_SENSOR(SENSOR_BME_76, temperature, humidity, pressure);
   return CR_TASK_STOP;
 }
 
@@ -204,10 +200,11 @@ CR_TASK(taskI2C_AS7265)
 
 CR_TASK(taskI2C_BME280)
 {
+  // External (air), installed in the lagopus shield
   float temperature, humidity, pressure;
   bool err = UIO.i2c_BME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
   if (err) { return CR_TASK_ERROR; }
-  // TODO Frame
+  ADD_SENSOR(SENSOR_BME_77, temperature, humidity, pressure);
   return CR_TASK_STOP;
 }
 

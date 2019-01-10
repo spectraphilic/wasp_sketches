@@ -40,10 +40,10 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 06x
   // 07x
   null, null, null, null,
-  frame_format_f,                                             // 74 BME temperature
+  null,                                                       // 74 Reserved, was BME temperature
   null,
-  frame_format_f,                                             // 76 BME humidity
-  frame_format_f,                                             // 77 BME pressure
+  null,                                                       // 76 Reserved, was BME humidity
+  null,                                                       // 77 Reserved, was BME pressure
   null, null,
   null, null, null, null, null, null, null, null, null, null, // 08x
   // 09x
@@ -73,26 +73,27 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_f,     // 206 Battery Volts
   frame_format_fffuf, // 207 WS100-UMB
   frame_format_ffffff,// 208 DS-2
+  frame_format_fff,   // 209 BME 0x76
+  frame_format_fff,   // 210 BME 0x77
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";
 const char frame_name_gps      [] PROGMEM = "GPS";
-//const char frame_name_in_temp  [] PROGMEM = "IN TEMP";
-const char frame_name_bme_tc   [] PROGMEM = "BME TC";
-const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
-const char frame_name_bme_pres [] PROGMEM = "BME PRES";
+const char frame_name_rssi     [] PROGMEM = "RSSI";
+//const char frame_name_bme_tc   [] PROGMEM = "BME TC";
+//const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
+//const char frame_name_bme_pres [] PROGMEM = "BME PRES";
+const char frame_name_altitude [] PROGMEM = "ALT";
 const char frame_name_tst      [] PROGMEM = "TST";
 const char frame_name_ctd10    [] PROGMEM = "CTD10";
-//const char frame_name_ds2_1    [] PROGMEM = "DS2 1";
-//const char frame_name_ds2_2    [] PROGMEM = "DS2 2";
 const char frame_name_ds18b20  [] PROGMEM = "DS18B20";
 const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
 const char frame_name_gps_stats[] PROGMEM = "GPS STATS";
 const char frame_name_bat_volts[] PROGMEM = "BAT VOLTS";
 const char frame_name_ws100    [] PROGMEM = "WS100";
 const char frame_name_ds2      [] PROGMEM = "DS-2";
-const char frame_name_rssi     [] PROGMEM = "RSSI";
-const char frame_name_altitude [] PROGMEM = "ALT";
+const char frame_name_bme76    [] PROGMEM = "BME int";
+const char frame_name_bme77    [] PROGMEM = "BME ext";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -110,10 +111,10 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null, null, null, null, null, null, null, null, null, null, // 06x
   // 07x
   null, null, null, null,
-  frame_name_bme_tc,                                          // 74 BME temperature
+  null,                                                       // 74 Reserved, was BME temperature
   null,
-  frame_name_bme_hum,                                         // 76 BME humidity
-  frame_name_bme_pres,                                        // 77 BME pressure
+  null,                                                       // 76 Reserved, was BME humidity
+  null,                                                       // 77 Reserved, was BME pressure
   null, null,
   null, null, null, null, null, null, null, null, null, null, // 08x
   // 09x
@@ -143,6 +144,8 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_bat_volts,                                       // 206 Battery Volts
   frame_name_ws100,                                           // 207 WS100-UMB
   frame_name_ds2,                                             // 208 DS-2
+  frame_name_bme76,                                           // 209 BME 0x76
+  frame_name_bme77,                                           // 210 BME 0x77
 };
 
 /**

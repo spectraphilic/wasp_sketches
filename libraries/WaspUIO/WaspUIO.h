@@ -529,9 +529,9 @@ CR_TASK(taskSlow);
 
 #define SENSOR_BAT        52
 #define SENSOR_GPS        53
-#define SENSOR_BME_TC     74
-#define SENSOR_BME_HUM    76
-#define SENSOR_BME_PRES   77
+//#define SENSOR_BME_TC     74
+//#define SENSOR_BME_HUM    76
+//#define SENSOR_BME_PRES   77
 #define SENSOR_TST       123
 #define SENSOR_CTD10     200
 //#define SENSOR_DS2_1     201
@@ -542,5 +542,7 @@ CR_TASK(taskSlow);
 #define SENSOR_VOLTS     206
 #define SENSOR_WS100     207
 #define SENSOR_DS2       208
+#define SENSOR_BME_76    209
+#define SENSOR_BME_77    210
 
 #endif
