@@ -75,6 +75,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_ffffff,// 208 DS-2
   frame_format_fff,   // 209 BME 0x76
   frame_format_fff,   // 210 BME 0x77
+  //frame_format_f,     // 211 VL53L1X 0x29
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";
@@ -94,6 +95,7 @@ const char frame_name_ws100    [] PROGMEM = "WS100";
 const char frame_name_ds2      [] PROGMEM = "DS-2";
 const char frame_name_bme76    [] PROGMEM = "BME int";
 const char frame_name_bme77    [] PROGMEM = "BME ext";
+//const char frame_name_vl       [] PROGMEM = "VL";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -146,6 +148,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_ds2,                                             // 208 DS-2
   frame_name_bme76,                                           // 209 BME 0x76
   frame_name_bme77,                                           // 210 BME 0x77
+  //frame_name_vl,                                            // 211 VL53L1X 0x29
 };
 
 /**

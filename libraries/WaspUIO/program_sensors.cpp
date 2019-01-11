@@ -232,6 +232,7 @@ CR_TASK(taskI2C_VL53L1X)
   bool err = UIO.i2c_VL53L1X(distance);
   if (err) { return CR_TASK_ERROR; }
   // TODO Frame
+  //ADD_SENSOR(SENSOR_VL, distance);
   return CR_TASK_STOP;
 }
 
