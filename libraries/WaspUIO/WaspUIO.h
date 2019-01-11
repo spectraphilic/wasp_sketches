@@ -355,7 +355,7 @@ void deepSleep();
 
 // Sensors
 int getMaxbotixSample();
-bool readMaxbotixSerial(uint16_t &median, uint16_t &sd, uint8_t samples=5);
+bool readMaxbotixSerial(uint16_t &mean, uint16_t &sd, uint8_t samples=5);
 uint8_t readDS18B20(int values[], uint8_t max);
 
 // I2C
@@ -380,6 +380,7 @@ uint8_t sdi_set_address(char current_address, char new_address);
 int8_t index(const char* const list[], size_t size, const char* str);
 void sort_uint16(uint16_t* array, uint8_t size);
 uint16_t median_uint16(uint16_t* array, uint8_t size);
+uint16_t mean_uint16(uint16_t* array, uint8_t size);
 uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 };

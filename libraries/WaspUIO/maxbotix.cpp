@@ -73,7 +73,7 @@ int WaspUIO::getMaxbotixSample()
  * Returns: bool      - 0 if success, 1 if error
  */
 
-bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &mean, uint16_t &sd, uint8_t nsamples)
+bool WaspUIO::readMaxbotixSerial(uint16_t &mean, uint16_t &sd, uint8_t nsamples)
 {
   const uint8_t port = 1;
   uint8_t max = nsamples * 2; // max number of readings, to avoid infinite loop
@@ -120,10 +120,9 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &mean, uint16_t &sd,
     debug(F("readMaxbotixSerial: sample=%d"), samples[j]);
   }
 
-  median = median_uint16(samples, nsamples);
   mean = mean_uint16(samples, nsamples);
   sd = sd_uint16(samples, nsamples, mean);
-  info(F("readMaxbotixSerial: median=%d, mean=%d, sd=%d"), median, mean, sd);
+  info(F("readMaxbotixSerial: mean=%d, sd=%d"), mean, sd);
 
   return 0;
 }

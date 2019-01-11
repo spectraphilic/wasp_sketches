@@ -7,7 +7,7 @@
 #define WITH_I2C TRUE
 #define WITH_SDI TRUE
 #define WITH_1WIRE FALSE
-#define WITH_MB FALSE
+#define WITH_MB TRUE
 
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
