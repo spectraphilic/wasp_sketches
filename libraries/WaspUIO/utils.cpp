@@ -55,6 +55,15 @@ uint16_t WaspUIO::median_uint16(uint16_t* array, uint8_t size)
   }
 }
 
+uint16_t WaspUIO::mean_uint16(uint16_t* array, uint8_t size){
+  uint32_t sum = 0;
+  for (int i=0; i<size; i++)
+  {
+    sum += array[i];
+  }
+  return (uint16_t) sum / size;
+}
+
 /* Return standard deviation of the given array to the given value. */
 uint16_t WaspUIO::sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
 {
