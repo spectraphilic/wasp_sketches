@@ -296,6 +296,14 @@ void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
 						{
 							WaspRegister |= REG_3V3;
 							digitalWrite(SENS_PW_3V3,HIGH);
+							if (type == i2c)
+							{
+								// Ask MLX90614 to switch from PWM to SMBus, set SCL to LOW for more
+								// than 1.44ms
+								pinMode(I2C_SCL, OUTPUT);
+								digitalWrite(I2C_SCL, LOW);
+								delay(2);
+							}
 						}
 						else if (mode == SENS_OFF)
 						{
