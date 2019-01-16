@@ -183,6 +183,7 @@ bool WaspUIO::pwr_i2c(bool new_state)
   if (new_state == old_state) { return old_state; }   // noop
   if (new_state) 
 	{ 
+	pwr_3v3(1);                      				  // on
 
 	// Ask MLX90614 to switch from PWM to SMBus, set SCL to LOW for more
 	// than 1.44ms
