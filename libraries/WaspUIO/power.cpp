@@ -181,7 +181,15 @@ bool WaspUIO::pwr_i2c(bool new_state)
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
-  if (new_state) { pwr_3v3(1); }                      // on
+  if (new_state) 
+	{ 
+
+	// Ask MLX90614 to switch from PWM to SMBus, set SCL to LOW for more
+	// than 1.44ms
+	pinMode(I2C_SCL, OUTPUT);
+	digitalWrite(I2C_SCL, LOW);
+	delay(2);
+	}
   else {}                                             // off
   return pwr_switch(device, pin, new_state);          // switch
 }
@@ -296,14 +304,6 @@ void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
 						{
 							WaspRegister |= REG_3V3;
 							digitalWrite(SENS_PW_3V3,HIGH);
-							if (type == SENS_I2C)
-							{
-								// Ask MLX90614 to switch from PWM to SMBus, set SCL to LOW for more
-								// than 1.44ms
-								pinMode(I2C_SCL, OUTPUT);
-								digitalWrite(I2C_SCL, LOW);
-								delay(2);
-							}
 						}
 						else if (mode == SENS_OFF)
 						{
