@@ -35,76 +35,64 @@ CR_TASK(taskHealthFrame)
 
 CR_TASK(taskSensors)
 {
-  static tid_t sdi_id, one_id, i2c_id, ttl_id, ext_id;
-#if WITH_SDI
-  bool sdi = UIO.action(2, RUN_CTD10, RUN_DS2);
-  bool ext = UIO.action(1, RUN_WS100); // Externally powered
-#endif
-#if WITH_1WIRE
-  bool one = UIO.action(1, RUN_DS1820); // One Wire
-#endif
-#if WITH_I2C
-  bool i2c = UIO.action(7, RUN_BME280, RUN_LAGOPUS_AS7263, RUN_LAGOPUS_AS7265,
-                        RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
-                        RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X);
-#endif
-#if WITH_MB
-  bool ttl = UIO.action(1, RUN_MB);
-#endif
+  static tid_t id;
 
   CR_BEGIN;
 
-  // Power On
-  UIO.saveState();
-#if WITH_SDI
-  if (sdi) { UIO.pwr_sdi12(1); }
-  if (ext) {}
-#endif
-#if WITH_1WIRE
-  if (one) { UIO.pwr_1wire(1); }
-#endif
+  // I2C
 #if WITH_I2C
-  if (i2c) { UIO.pwr_i2c(1); }
-#endif
-#if WITH_MB
-  if (ttl) { UIO.pwr_mb(1); }
+  if (UIO.action(7, RUN_BME280, RUN_LAGOPUS_AS7263, RUN_LAGOPUS_AS7265,
+		 RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614, RUN_LAGOPUS_TMP102,
+		 RUN_LAGOPUS_VL53L1X))
+  {
+    UIO.pwr_i2c(1);
+    CR_DELAY(100);
+    CR_SPAWN2(taskI2C, id);
+    CR_JOIN(id);
+    UIO.pwr_i2c(0);
+  }
 #endif
 
-  // Wait for power to stabilize
-  CR_DELAY(500);
-
-  // Spawn tasks to take measures
+  // SDI-12
 #if WITH_SDI
-  if (sdi) { CR_SPAWN2(taskSdi, sdi_id); }
-  if (ext) { CR_SPAWN2(taskExt, ext_id); }
-#endif
-#if WITH_1WIRE
-  if (one) { CR_SPAWN2(task1Wire, one_id); }
-#endif
-#if WITH_I2C
-  if (i2c) { CR_SPAWN2(taskI2C, i2c_id); }
-#endif
-#if WITH_MB
-  if (ttl) { CR_SPAWN2(taskTTL, ttl_id); }
-#endif
-
-  // Wait for tasks to complete
-#if WITH_SDI
-  if (sdi) { CR_JOIN(sdi_id); }
-  if (ext) { CR_JOIN(ext_id); }
-#endif
-#if WITH_1WIRE
-  if (one) { CR_JOIN(one_id); }
-#endif
-#if WITH_I2C
-  if (i2c) { CR_JOIN(i2c_id); }
-#endif
-#if WITH_MB
-  if (ttl) { CR_JOIN(ttl_id); }
+  if (UIO.action(2, RUN_CTD10, RUN_DS2))
+  {
+    UIO.pwr_sdi12(1);
+    CR_DELAY(500); // FIXME Reduce as much as possible
+    CR_SPAWN2(taskSdi, id);
+    CR_JOIN(id);
+    UIO.pwr_sdi12(0);
+  }
+  if (UIO.action(1, RUN_WS100)) // Externally powered
+  {
+    CR_SPAWN2(taskExt, id);
+    CR_JOIN(id);
+  }
 #endif
 
-  // Power Off
-  UIO.loadState();
+  // OneWire
+#if WITH_1WIRE
+  if (UIO.action(1, RUN_DS1820))
+  {
+    UIO.pwr_1wire(1);
+    CR_DELAY(500); // FIXME Reduce as much as possible
+    CR_SPAWN2(task1Wire, id);
+    CR_JOIN(id);
+    UIO.pwr_1wire(0);
+  }
+#endif
+
+  // Maxbotix
+#if WITH_MB
+  if (UIO.action(1, RUN_MB))
+  {
+    UIO.pwr_mb(1);
+    CR_DELAY(500); // FIXME Reduce as much as possible
+    CR_SPAWN2(taskTTL, id);
+    CR_JOIN(id);
+    UIO.pwr_mb(0);
+  }
+#endif
 
   CR_END;
 }
