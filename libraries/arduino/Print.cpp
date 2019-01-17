@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "Arduino.h"
+#include <WaspClasses.h>
 
 #include "Print.h"
 
@@ -118,10 +118,12 @@ size_t Print::println(const __FlashStringHelper *ifsh)
   return n;
 }
 
+/*
 size_t Print::print(const Printable& x)
 {
   return x.printTo(*this);
 }
+*/
 
 size_t Print::println(void)
 {

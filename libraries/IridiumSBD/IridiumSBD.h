@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <WString.h> // for FlashString
 #include <Stream.h> // for Stream
-#include "Arduino.h"
+#include <WaspClasses.h>
 
 #define ISBD_LIBRARY_REVISION           2
 #define ISBD_DEFAULT_AT_TIMEOUT         30
