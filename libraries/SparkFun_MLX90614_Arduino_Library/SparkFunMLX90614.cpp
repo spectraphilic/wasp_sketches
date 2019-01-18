@@ -32,7 +32,7 @@ uint8_t IRTherm::begin(uint8_t address)
 {
 	_deviceAddress = address; // Store the address in a private member
 	
-	I2C.begin(); // Initialize I2C
+	Wire.begin(); // Initialize I2C
 	//! TODO: read a register, return success only if the register
 	//! produced a known-good value.
 	return 1; // Return success
@@ -267,31 +267,33 @@ uint8_t IRTherm::sleep(void)
 	crc = crc8(crc, MLX90614_REGISTER_SLEEP);
 	
 	// Manually send the sleep command:
-	I2C.write(_deviceAddress, MLX90614_REGISTER_SLEEP, crc);
+	Wire.beginTransmission(_deviceAddress);
+	Wire.write(MLX90614_REGISTER_SLEEP);
+	Wire.write(crc);
+	Wire.endTransmission(true);
 	
 	// Set the SCL pin LOW, and SDA pin HIGH (should be pulled up)
-	I2C.close();
-//	pinMode(I2C_SCL, OUTPUT);
-//	digitalWrite(I2C_SCL, LOW);
-//	pinMode(I2C_SDA, INPUT);
+	pinMode(SCL, OUTPUT);
+	digitalWrite(SCL, LOW);
+	pinMode(SDA, INPUT);
 }
 
 uint8_t IRTherm::wake(void)
 {
 	// Wake operation from datasheet
-	//Wire.end(); // stop i2c bus to send wake up request via digital pins
-	pinMode(I2C_SCL, INPUT); // SCL high
-	pinMode(I2C_SDA, OUTPUT);
-	digitalWrite(I2C_SDA, LOW); // SDA low
+	Wire.end(); // stop i2c bus to send wake up request via digital pins
+	pinMode(SCL, INPUT); // SCL high
+	pinMode(SDA, OUTPUT);
+	digitalWrite(SDA, LOW); // SDA low
 	delay(50); // delay at least 33ms
-	pinMode(I2C_SDA, INPUT); // SDA high
+	pinMode(SDA, INPUT); // SDA high
 	delay(250);
 	// PWM to SMBus mode:
-	pinMode(I2C_SCL, OUTPUT);
-	digitalWrite(I2C_SCL, LOW); // SCL low
+	pinMode(SCL, OUTPUT);
+	digitalWrite(SCL, LOW); // SCL low
 	delay(10); // Delay at least 1.44ms
-	pinMode(I2C_SCL, INPUT); // SCL high
-	I2C.begin();
+	pinMode(SCL, INPUT); // SCL high
+	Wire.begin();
 }
 
 int16_t IRTherm::calcRawTemp(float calcTemp)
@@ -353,12 +355,15 @@ float IRTherm::calcTemperature(int16_t rawTemp)
 
 uint8_t IRTherm::I2CReadWord(byte reg, int16_t * dest)
 {
-	uint8_t data[3];
-	I2C.read(_deviceAddress, reg, data, 3);
-
-	uint8_t lsb = data[0];
-	uint8_t msb = data[1];
-	uint8_t pec = data[2];
+	Wire.beginTransmission(_deviceAddress);
+	Wire.write(reg);
+	
+	Wire.endTransmission(false); // Send restart
+	Wire.requestFrom(_deviceAddress, (uint8_t) 3);
+	
+	uint8_t lsb = Wire.read();
+	uint8_t msb = Wire.read();
+	uint8_t pec = Wire.read();
 	
 	uint8_t crc = crc8(0, (_deviceAddress << 1));
 	crc = crc8(crc, reg);
@@ -404,8 +409,12 @@ uint8_t IRTherm::I2CWriteWord(byte reg, int16_t data)
 	crc = crc8(crc, lsb);
 	crc = crc8(crc, msb);
 	
-	uint8_t bytes[3] = {lsb, msb, crc};
-	return I2C.write(_deviceAddress, reg, bytes, 3);
+	Wire.beginTransmission(_deviceAddress);
+	Wire.write(reg);
+	Wire.write(lsb);
+	Wire.write(msb);
+	Wire.write(crc);
+	return Wire.endTransmission(true);
 }
 
 uint8_t IRTherm::crc8 (uint8_t inCrc, uint8_t inData)
