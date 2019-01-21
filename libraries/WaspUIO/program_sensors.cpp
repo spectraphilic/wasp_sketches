@@ -106,7 +106,6 @@ CR_TASK(task1Wire)
 {
   uint8_t max = 99;
   int values[max];
-  uint8_t n;
 
   // TODO
   // - spawn 1 task per pin
@@ -114,8 +113,19 @@ CR_TASK(task1Wire)
 
   CR_BEGIN;
 
-  n = UIO.readDS18B20(values, max);
-  if (n > 0) { ADD_SENSOR(SENSOR_DS18B20, n, values); }
+  // Read
+  uint8_t total = UIO.readDS18B20(values, max);
+
+  // Frame(s)
+  uint8_t max_n = 30;
+  uint8_t done = 0;
+  while (done < total)
+  {
+    uint8_t todo = total - done;
+    uint8_t n = (todo <= max_n)? todo: max_n;
+    ADD_SENSOR(SENSOR_DS18B20, n, &(values[done]));
+    done += n;
+  }
 
   CR_END;
 }

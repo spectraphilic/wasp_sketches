@@ -363,7 +363,7 @@ exit:
   {
     if (err == -1)
     {
-      warn(F("No space left in frame"));
+      info(F("No space left in frame"));
     }
 
     frame.length = start;
@@ -445,7 +445,6 @@ void WaspUIO::showFrame(uint8_t *p)
 {
    uint8_t nbytes;
    char buffer[17];
-   uint8_t i;
    char c;
    uint8_t nfields;
    uint8_t len;
@@ -489,7 +488,7 @@ void WaspUIO::showFrame(uint8_t *p)
    cr.println(F("Serial ID: 0x%s"), buffer);
 
    // Waspmote ID
-   for (i = 0; i < 17 ; i++)
+   for (uint8_t i = 0; i < 17 ; i++)
    {
      c = (char) *p++;
      nbytes--;
@@ -532,10 +531,10 @@ void WaspUIO::showFrame(uint8_t *p)
      // Values
      for (int i=0; i < strlen(format); i++)
      {
-       char c = format[i];
+       c = format[i];
        if (c == 'f')
        {
-         Utils.float2String(*(float *)p, value_str, 4);
+         Utils.float2String(*(float*)(void*)p, value_str, 4);
          cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
          p += 4; nbytes -= 4;
        }

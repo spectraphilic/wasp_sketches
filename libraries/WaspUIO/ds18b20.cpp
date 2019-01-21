@@ -88,14 +88,14 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
 
             // Debug
             temp_f = (float) temp / 16;
-            Utils.float2String(temp_f, temp_str, 2);
-            debug(F("OneWire(%hhu) %s  : %s"), pin, word, temp_str);
+            Utils.float2String(temp_f, temp_str, 3);
+            debug(F("OneWire(%hhu) %s=%d (%s)"), pin, word, temp, temp_str);
           }
           else
           {
             temp = INT_MIN;
             Utils.hex2str(data, data_str, 8);
-            warn(F("OneWire(%hhu) %s bad data, CRC failed: %s %02X"), pin, word, data_str, crc);
+            warn(F("OneWire(%hhu) %s=%d (CRC failed: %s %02X)"), pin, temp, word, data_str, crc);
           }
           values[n++] = temp;
         }
