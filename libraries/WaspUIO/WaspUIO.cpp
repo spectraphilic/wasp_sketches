@@ -167,19 +167,21 @@ WaspUIO UIO = WaspUIO();
  * Return the string of the next alarm.
  *
  */
-int WaspUIO::nextAlarm(char* alarmTime)
+uint32_t WaspUIO::nextAlarm(char* alarmTime)
 {
-  int next = INT_MAX;
-
+  uint32_t next = ULONG_MAX / 60; // max posible value of minutes since epoch
   uint32_t epoch = getEpochTime();
-  uint32_t minutes = (epoch / 60); // minutes since epoch
 
+  // Add 5s safeguard, this means we've 5s before going to sleep
+  epoch += 5;
+
+  uint32_t minutes = (epoch / 60); // minutes since epoch
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    uint16_t value = actions[i] * cooldown;
+    uint32_t value = actions[i] * cooldown;
     if (value > 0)
     {
-      value = (minutes / value + 1) * value - minutes;
+      value = (minutes / value + 1) * value;
       if (value < next)
       {
         next = value;
@@ -187,14 +189,12 @@ int WaspUIO::nextAlarm(char* alarmTime)
     }
   }
 
-  // Format relative time to string, to be passed to deepSleep
-  int days = next / (24 * 60);
-  int left = next - (days * 24 * 60);
-  int hours = left / 60;
-  left = left - (hours * 60);
-
-  sprintf(alarmTime, "%02d:%02d:%02d:00", days, hours, left);
-  return next;
+  // Format time to string, to be passed to deepSleep
+  timestamp_t ts;
+  RTC.breakTimeAbsolute(next * 60, &ts);
+  sprintf(alarmTime, "00:%02d:%02d:00", ts.hour, ts.minute);
+  //sprintf(alarmTime, "%02d:%02d:%02d:00", ts.date, ts.hour, ts.minute);
+  return next - minutes;
 }
 
 void WaspUIO::deepSleep()
@@ -207,6 +207,13 @@ void WaspUIO::deepSleep()
   {
     info(F("Rebooting after %u loops"), nloops);
   }
+
+  // Get next alarm time
+  char alarmTime[12]; // "00:00:00:00"
+  uint32_t next = nextAlarm(alarmTime);
+  debug(F("Next alarm at %s in %lu minutes"), alarmTime, next);
+
+  // Stop SD, logging ends here
   UIO.stopSD();
 
   // Clear interruption flag & pin
@@ -220,11 +227,6 @@ void WaspUIO::deepSleep()
     PWR.reboot();
   }
 
-  // Sleep
-  // Get next alarm time
-  char alarmTime[12]; // "00:00:00:00"
-  int next = nextAlarm(alarmTime);
-
   // Reset watchdog
   if (_boot_version >= 'H')
   {
@@ -235,7 +237,8 @@ void WaspUIO::deepSleep()
   }
 
   // Power off and Sleep
-  PWR.deepSleep(alarmTime, RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
+  // XXX Using MODE3 instead of MODE2 to not sleep for more than 1 day
+  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
   nloops++;
 
   // Awake: Reset if stuck for 4 minutes

@@ -52,8 +52,6 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
     const char* name = (const char*)pgm_read_word(&(run_names[i]));
-    if (strcmp_P("", name) == 0)
-      continue;
     pprintAction(dst, size, i, (__FlashStringHelper*)name);
   }
 
