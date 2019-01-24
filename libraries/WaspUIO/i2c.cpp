@@ -166,7 +166,7 @@ bool WaspUIO::i2c_MLX90614(float &object, float &ambient)
   therm.begin();
   therm.setUnit(TEMP_C);
 
-  if (therm.read())
+  if (! therm.read())
   {
     return 1;
   }
