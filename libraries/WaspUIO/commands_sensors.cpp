@@ -14,6 +14,7 @@ COMMAND(cmdI2C)
 
   // Power ON
   UIO.pwr_i2c(1);
+  RTC.ON();
 
   // Scan
   if (n == -1)
@@ -64,9 +65,11 @@ COMMAND(cmdI2C)
   }
   else
   {
+    RTC.OFF();
     return cmd_bad_input;
   }
 
+  RTC.OFF();
   return (err)? cmd_error: cmd_quiet;
 }
 
