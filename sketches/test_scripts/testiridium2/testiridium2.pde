@@ -20,10 +20,8 @@ void loop()
   USB.println("loop");
   char buffer[100];
 
-  serialWrite('A', UART1);
-  serialWrite('T', UART1);
-  serialWrite('\r', UART1);
-  delay(1);
+  printString("AT+CGSN\r", UART1);
+  delay(50);
 
   uint8_t i = 0;
   while (serialAvailable(UART1))
@@ -39,7 +37,7 @@ void loop()
   buffer[i] = '\0';
 
   USB.println(buffer);
-  delay(1000);
+  delay(2000);
 
 //closeSerial(UART1); // close UART
 //Utils.setMux(LOW, LOW); // Disable UART1's multiplexer
