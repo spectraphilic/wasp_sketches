@@ -14,6 +14,19 @@ bool ISBDCallback()
   return true; // Return false to cancel
 }
 
+// These ones are required, even if they do nothing, otherwise I get an
+// infinite reboot loop
+void ISBDConsoleCallback(IridiumSBD *device, char c)
+{
+  //USB.print(c);
+}
+
+void ISBDDiagsCallback(IridiumSBD *device, char c)
+{
+  //USB.print(c);
+}
+
+
 int WaspUIO::iridium_start()
 {
   Utils.setMuxAux2();
@@ -24,10 +37,6 @@ int WaspUIO::iridium_start()
   {
     cr.println(F("ERROR iridium.begin() error=%d"), status);
     iridium_stop();
-  }
-  else
-  {
-    //delay(500); // XXX Do we need this?
   }
 
   return status;
