@@ -19,7 +19,7 @@
  * SCL/SDA:  I2C data
  *
  * DIGITAL3: Relay switch on/off (DGPS etc...)
- * 
+ *
  * Iridium9603
  * DIGITAL4: Iridium sleep switch (grey)
  * 2RX:      Iridium RXD (yellow)
@@ -189,16 +189,7 @@ bool WaspUIO::pwr_i2c(bool new_state)
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
-  if (new_state) 
-	{ 
-	pwr_3v3(1);                      				  // on
-
-	// Ask MLX90614 to switch from PWM to SMBus, set SCL to LOW for more
-	// than 1.44ms
-	pinMode(I2C_SCL, OUTPUT);
-	digitalWrite(I2C_SCL, LOW);
-	delay(2);
-	}
+  if (new_state) { pwr_3v3(1); }                      // on
   else {}                                             // off
   return pwr_switch(device, pin, new_state);          // switch
 }
