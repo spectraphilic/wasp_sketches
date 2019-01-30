@@ -43,7 +43,7 @@ const char CMD_LOGLEVEL  [] PROGMEM = "loglevel VALUE    - Sets the log level: "
 const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
-const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g";
+const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g 2=iridium";
 const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
@@ -538,6 +538,10 @@ COMMAND(cmdPrint)
 #if WITH_4G
   if (UIO.networkType == NETWORK_4G)
   { cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
+#endif
+#if WITH_IRIDIUM
+  if (UIO.networkType == NETWORK_IRIDIUM)
+  { cr.println(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
 #endif
 
   cr.println(F("Frames    : %s"), UIO.pprintFrames(buffer, size));

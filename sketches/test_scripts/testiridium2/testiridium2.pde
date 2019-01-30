@@ -41,7 +41,7 @@ void loop()
 
 //closeSerial(UART1); // close UART
 //Utils.setMux(LOW, LOW); // Disable UART1's multiplexer
-//muxOFF1();
+//Utils.muxOFF1();
 }
 
 

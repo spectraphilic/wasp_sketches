@@ -25,6 +25,10 @@
 #include <Wasp4G.h>
 #endif
 
+#if WITH_IRIDIUM
+#include "IridiumSBD.h"
+#include "HardwareSerial.h"
+#endif
 
 
 /******************************************************************************
@@ -267,6 +271,8 @@ uint8_t _4GStop();
 
 #if WITH_IRIDIUM
 void iridiumInit();
+int iridium_start();
+int iridium_stop();
 #endif
 
 #if WITH_CRYPTO
@@ -339,6 +345,7 @@ const char* pprintActions(char* dst, size_t size);
 const char* pprintBattery(char* dst, size_t size);
 const char* pprintBoard(char* dst, size_t size);
 const char* pprintFrames(char* dst, size_t size);
+const char* pprintIridium(char* dst, size_t size);
 const char* pprintLog(char* dst, size_t size);
 const char* pprintSerial(char* str, size_t size);
 const char* pprintXBee(char* dst, size_t size);
@@ -392,6 +399,9 @@ uint16_t std_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 
 extern WaspUIO UIO;
+#if WITH_IRIDIUM
+extern IridiumSBD iridium;
+#endif
 
 
 void vlog(loglevel_t level, const char* message, va_list args);
