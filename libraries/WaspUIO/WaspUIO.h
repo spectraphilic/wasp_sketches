@@ -386,7 +386,7 @@ int8_t index(const char* const list[], size_t size, const char* str);
 void sort_uint16(uint16_t* array, uint8_t size);
 uint16_t median_uint16(uint16_t* array, uint8_t size);
 uint16_t mean_uint16(uint16_t* array, uint8_t size);
-uint16_t sd_uint16(uint16_t* array, uint8_t size, uint16_t mean);
+uint16_t std_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 };
 
