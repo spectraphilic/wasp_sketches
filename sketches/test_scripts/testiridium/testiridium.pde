@@ -1,6 +1,6 @@
 #include <WaspUIO.h>
 #include "IridiumSBD.h"
-#include "SoftwareSerial.h"
+#include "HardwareSerial.h"
 #include <time.h>
 
 
@@ -19,26 +19,27 @@ void ISBDDiagsCallback(IridiumSBD *device, char c)
   USB.print(c);
 }
 
-SoftwareSerial ssIridium(18, 19); // RockBLOCK serial port on RX=18 TX=19
-IridiumSBD modem(ssIridium); // SLEEP and RING pins not connected
+IridiumSBD modem(Serial1, DIGITAL4); // RING pins not connected
 
 void setup()
 {
   int status;
   char version[10];
 
-  UIO.pwr_5v(1);
-  delay(200);
+  Utils.setMuxAux2();
+  beginSerial(19200, UART1);
 
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);
-
   status = modem.begin(); // Wake up the 9602 and prepare it for communications.
-
   cr.println(F("begin status=%d"), status);
-  status = modem.getFirmwareVersion(version, sizeof version);
-  cr.println(F("firmware status=%d"), status);
+  delay(500);
+
   if (status == ISBD_SUCCESS) {
-    cr.println(F("firmware=%s"), version);
+    status = modem.getFirmwareVersion(version, sizeof version);
+    cr.println(F("firmware status=%d"), status);
+    if (status == ISBD_SUCCESS) {
+      cr.println(F("firmware=%s"), version);
+    }
   }
 }
 
