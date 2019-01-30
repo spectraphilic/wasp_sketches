@@ -21,47 +21,60 @@
 #define HardwareSerial_h
 
 #include <inttypes.h>
+#include <Stream.h>
 
-#define DEC 10
-#define HEX 16
-#define OCT 8
-#define BIN 2
-#define BYTE 0
-
-class HardwareSerial
+class HardwareSerial : public Stream
 {
   private:
     uint8_t _uart;
-    void printNumber(unsigned long, uint8_t, uint8_t);
-    void printFloat(double, uint8_t, uint8_t);
+    void printNumber(unsigned long, uint8_t);
+    void printFloat(double, uint8_t);
   public:
-    HardwareSerial(uint8_t);
-    void begin(long, uint8_t);
-    uint8_t available(uint8_t);
-    int read(uint8_t);
-    void flush(uint8_t);
-    void print(char, uint8_t);
-    void print(const char[], uint8_t);
-    void print(uint8_t, uint8_t);
-    void print(int, uint8_t);
-    void print(unsigned int, uint8_t);
-    void print(long, uint8_t);
-    void print(unsigned long, uint8_t);
-    void print(long, int, uint8_t);
-    void print(double, uint8_t);
+    explicit HardwareSerial(uint8_t);
+    void begin(long);
+
+    // XXX Commented functions are those defined in Arduino, implement to have
+    // 100% compatibility with Arduino
+
+    //void begin(unsigned long baud) { begin(baud, SERIAL_8N1); }
+    //void begin(unsigned long, uint8_t);
+    //void end();
+    virtual int available();
+    virtual int peek();
+    virtual int read();
+    //virtual int availableForWrite(void);
+    virtual void flush();
+    virtual size_t write(uint8_t);
+    inline size_t write(unsigned long n) { return write((uint8_t)n); }
+    inline size_t write(long n) { return write((uint8_t)n); }
+    inline size_t write(unsigned int n) { return write((uint8_t)n); }
+    inline size_t write(int n) { return write((uint8_t)n); }
+    using Print::write; // pull in write(str) and write(buf, size) from Print
+    operator bool() { return true; }
+
+    // XXX These come from Waspmote v010, probably should remove as not needed
+    // for compatibility with Arduino
+    void print(char);
+    void print(const char[]);
+    void print(uint8_t);
+    void print(int);
+    void print(unsigned int);
+    void print(long);
+    void print(unsigned long);
+    void print(long, int);
+    void print(double);
+    void println();
+    void println(char);
+    void println(const char[]);
     void println(uint8_t);
-    void println(char, uint8_t);
-    void println(const char[], uint8_t);
-    void println(uint8_t, uint8_t);
-    void println(int, uint8_t);
-    void println(long, uint8_t);
-    void println(unsigned long, uint8_t);
-    void println(long, int, uint8_t);
-    void println(double, uint8_t);
+    void println(int);
+    void println(long);
+    void println(unsigned long);
+    void println(long, int);
+    void println(double);
 };
 
-extern HardwareSerial Serial;
+//extern HardwareSerial Serial;
 extern HardwareSerial Serial1;
 
 #endif
-

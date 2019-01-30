@@ -5,18 +5,18 @@
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
  *  (at your option) any later version.
-   
+
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
-  
+
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-  
-  
+
+
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -37,147 +37,158 @@ HardwareSerial::HardwareSerial(uint8_t uart)
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-void HardwareSerial::begin(long speed, uint8_t portNum)
+void HardwareSerial::begin(long speed)
 {
-  beginSerial(speed, portNum);
+  beginSerial(speed, _uart);
 }
 
-uint8_t HardwareSerial::available(uint8_t portNum)
+int HardwareSerial::available()
 {
-  return serialAvailable(portNum);
+  return serialAvailable(_uart);
 }
 
-int HardwareSerial::read(uint8_t portNum)
+int HardwareSerial::read()
 {
-  return serialRead(portNum);
+  return serialRead(_uart);
 }
 
-void HardwareSerial::flush(uint8_t portNum)
+int HardwareSerial::peek()
 {
-  serialFlush(portNum);
+  return serialPeek(_uart);
 }
 
-void HardwareSerial::print(char c, uint8_t portNum)
+void HardwareSerial::flush()
 {
-  printByte(c, portNum);
+  serialFlush(_uart);
 }
 
-void HardwareSerial::print(const char c[], uint8_t portNum)
+size_t HardwareSerial::write(uint8_t c)
 {
-  printString(c, portNum);
+  printByte(c, _uart);
+  return 1;
 }
 
-void HardwareSerial::print(uint8_t b, uint8_t portNum)
+void HardwareSerial::print(char c)
 {
-  printByte(b, portNum);
+  printByte(c, _uart);
 }
 
-void HardwareSerial::print(int n, uint8_t portNum)
+void HardwareSerial::print(const char c[])
 {
-  print((long) n, portNum);
+  printString(c, _uart);
 }
 
-void HardwareSerial::print(unsigned int n, uint8_t portNum)
+void HardwareSerial::print(uint8_t b)
 {
-  print((unsigned long) n, portNum);
+  printByte(b, _uart);
 }
 
-void HardwareSerial::print(long n, uint8_t portNum)
+void HardwareSerial::print(int n)
+{
+  print((long) n);
+}
+
+void HardwareSerial::print(unsigned int n)
+{
+  print((unsigned long) n);
+}
+
+void HardwareSerial::print(long n)
 {
   if (n < 0) {
-    print('-', portNum);
+    print('-');
     n = -n;
   }
-  printNumber(n, 10, portNum);
+  printNumber(n, 10);
 }
 
-void HardwareSerial::print(unsigned long n, uint8_t portNum)
+void HardwareSerial::print(unsigned long n)
 {
-  printNumber(n, 10, portNum);
+  printNumber(n, 10);
 }
 
-void HardwareSerial::print(long n, int base, uint8_t portNum)
+void HardwareSerial::print(long n, int base)
 {
   if (base == 0)
-    print((char) n, portNum);
+    print((char) n);
   else if (base == 10)
-    print(n, portNum);
+    print(n);
   else
-    printNumber(n, base, portNum);
+    printNumber(n, base);
 }
 
-void HardwareSerial::print(double n, uint8_t portNum)
+void HardwareSerial::print(double n)
 {
-  printFloat(n, 2, portNum);
+  printFloat(n, 2);
 }
 
-void HardwareSerial::println(uint8_t portNum)
+void HardwareSerial::println()
 {
-  print('\r', portNum);
-  print('\n', portNum);  
+  print('\r');
+  print('\n');
 }
 
-void HardwareSerial::println(char c, uint8_t portNum)
+void HardwareSerial::println(char c)
 {
-  print(c, portNum);
-  println(portNum);  
+  print(c);
+  println();
 }
 
-void HardwareSerial::println(const char c[], uint8_t portNum)
+void HardwareSerial::println(const char c[])
 {
-  print(c, portNum);
-  println(portNum);
+  print(c);
+  println();
 }
 
-void HardwareSerial::println(uint8_t b, uint8_t portNum)
+void HardwareSerial::println(uint8_t b)
 {
-  print(b, portNum);
-  println(portNum);
+  print(b);
+  println();
 }
 
-void HardwareSerial::println(int n, uint8_t portNum)
+void HardwareSerial::println(int n)
 {
-  print(n, portNum);
-  println(portNum);
+  print(n);
+  println();
 }
 
-void HardwareSerial::println(long n, uint8_t portNum)
+void HardwareSerial::println(long n)
 {
-  print(n, portNum);
-  println(portNum);  
+  print(n);
+  println();
 }
 
-void HardwareSerial::println(unsigned long n, uint8_t portNum)
+void HardwareSerial::println(unsigned long n)
 {
-  print(n, portNum);
-  println(portNum);  
+  print(n);
+  println();
 }
 
-void HardwareSerial::println(long n, int base, uint8_t portNum)
+void HardwareSerial::println(long n, int base)
 {
-  print(n, base, portNum);
-  println(portNum);
+  print(n, base);
+  println();
 }
 
-void HardwareSerial::println(double n, uint8_t portNum)
+void HardwareSerial::println(double n)
 {
-  print(n, portNum);
-  println(portNum);
+  print(n);
+  println();
 }
 
 // Private Methods /////////////////////////////////////////////////////////////
 
-void HardwareSerial::printNumber(unsigned long n, uint8_t base, uint8_t portNum)
+void HardwareSerial::printNumber(unsigned long n, uint8_t base)
 {
-  printIntegerInBase(n, base, portNum);
+  printIntegerInBase(n, base, _uart);
 }
 
-void HardwareSerial::printFloat(double number, uint8_t digits, uint8_t portNum) 
-{ 
+void HardwareSerial::printFloat(double number, uint8_t digits)
+{
   // Handle negative numbers
   if (number < 0.0)
   {
-     print('-', portNum);
+     print('-');
      number = -number;
   }
 
@@ -185,30 +196,30 @@ void HardwareSerial::printFloat(double number, uint8_t digits, uint8_t portNum)
   double rounding = 0.5;
   for (uint8_t i=0; i<digits; ++i)
     rounding /= 10.0;
-  
+
   number += rounding;
 
   // Extract the integer part of the number and print it
   unsigned long int_part = (unsigned long)number;
   double remainder = number - (double)int_part;
-  print(int_part,portNum);
+  print(int_part);
 
   // Print the decimal point, but only if there are digits beyond
   if (digits > 0)
-    print(".",portNum); 
+    print(".");
 
   // Extract digits from the remainder one at a time
   while (digits-- > 0)
   {
     remainder *= 10.0;
     int toPrint = int(remainder);
-    print(toPrint,portNum);
-    remainder -= toPrint; 
-  } 
+    print(toPrint);
+    remainder -= toPrint;
+  }
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
-HardwareSerial Serial = HardwareSerial(0);
+//HardwareSerial Serial = HardwareSerial(0);
 HardwareSerial Serial1 = HardwareSerial(1);
 
