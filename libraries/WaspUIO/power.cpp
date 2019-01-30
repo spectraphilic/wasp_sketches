@@ -2,22 +2,30 @@
 
 /*
  * Power board:
- * 14     : 3V3 switch
- * 15     : 5V switch
- * 16     : 12V switch
- * 17     : Lead-Acid meassurement switch
- * ANALOG5: Lead-Acid measurement input line
+ * 14 (ANALOG1): 3V3 switch
+ * 15 (ANALOG2): 5V switch
+ * 16 (ANALOG3): 12V switch
+ * 17 (ANALOG4): Lead-Acid meassurement switch
+ * ANALOG5     : Lead-Acid measurement input line
  *
  * Sensor board (lemming):
  * DIGITAL1: Maxbotix power switch
  * DIGITAL2: I2C power switch
  * DIGITAL5: OneWire power switch
  * DIGITAL7: SDI-12 power switch
- *
  * DIGITAL6: OneWire data line
  * DIGITAL8: SDI-12 data line
- * : 1RX Maxbotix
- * : SCL/SDA I2C
+ * 1RX:      Maxbotix data
+ * SCL/SDA:  I2C data
+ *
+ * DIGITAL3: Relay switch on/off (DGPS etc...)
+ *
+ * Iridium9603
+ * DIGITAL4: Iridium sleep switch (grey)
+ * 2RX:      Iridium RXD (yellow)
+ * 2TX:      Iridium TXD (orange)
+ * BATTERY:  Iridium Li-Ion (white)
+ * GND:      Iridium GND (black)
  */
 
 /*
@@ -181,16 +189,7 @@ bool WaspUIO::pwr_i2c(bool new_state)
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
-  if (new_state) 
-	{ 
-	pwr_3v3(1);                      				  // on
-
-	// Ask MLX90614 to switch from PWM to SMBus, set SCL to LOW for more
-	// than 1.44ms
-	pinMode(I2C_SCL, OUTPUT);
-	digitalWrite(I2C_SCL, LOW);
-	delay(2);
-	}
+  if (new_state) { pwr_3v3(1); }                      // on
   else {}                                             // off
   return pwr_switch(device, pin, new_state);          // switch
 }

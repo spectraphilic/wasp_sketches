@@ -9,6 +9,10 @@ void WaspUIO::networkInit()
 #if WITH_4G
   if (networkType == NETWORK_4G) { _4GInit(); }
 #endif
+
+#if WITH_IRIDIUM
+  if (networkType == NETWORK_IRIDIUM) { iridiumInit(); }
+#endif
 }
 
 
@@ -194,5 +198,16 @@ uint8_t WaspUIO::_4GStop()
 {
   _4G.OFF();
   return 0;
+}
+#endif
+
+
+/*
+ * Iridium
+ */
+
+#if WITH_IRIDIUM
+void WaspUIO::iridiumInit()
+{
 }
 #endif

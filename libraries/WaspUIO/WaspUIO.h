@@ -67,6 +67,7 @@ enum battery_t {
 enum network_type_t {
   NETWORK_XBEE,
   NETWORK_4G,
+  NETWORK_IRIDIUM,
   NETWORK_LEN
 };
 
@@ -262,6 +263,10 @@ uint16_t pin; // Pin for 4G module
 void _4GInit();
 uint8_t _4GStart();
 uint8_t _4GStop();
+#endif
+
+#if WITH_IRIDIUM
+void iridiumInit();
 #endif
 
 #if WITH_CRYPTO
