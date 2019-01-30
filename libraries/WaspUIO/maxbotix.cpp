@@ -73,12 +73,13 @@ int WaspUIO::getMaxbotixSample()
  * Returns: bool      - 0 if success, 1 if error
  */
 
-bool WaspUIO::readMaxbotixSerial(uint16_t &mean, uint16_t &sd, uint8_t nsamples)
+bool WaspUIO::readMaxbotixSerial(uint16_t &median, uint16_t &std, uint8_t nsamples)
 {
   const uint8_t port = 1;
   uint8_t max = nsamples * 2; // max number of readings, to avoid infinite loop
   uint16_t samples[nsamples];
   uint8_t i, j;
+  uint16_t mean;
 
   // ON Sensor needs 3.3 voltage
   if (! pwr_mb(1)) { } // delay(1000);
@@ -120,9 +121,10 @@ bool WaspUIO::readMaxbotixSerial(uint16_t &mean, uint16_t &sd, uint8_t nsamples)
     debug(F("readMaxbotixSerial: sample=%d"), samples[j]);
   }
 
+  median = median_uint16(samples, nsamples);
   mean = mean_uint16(samples, nsamples);
-  sd = sd_uint16(samples, nsamples, mean);
-  info(F("readMaxbotixSerial: mean=%d, sd=%d"), mean, sd);
+  std = std_uint16(samples, nsamples, mean);
+  info(F("readMaxbotixSerial: median=%d, std=%d"), median, std);
 
   return 0;
 }

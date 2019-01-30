@@ -8,6 +8,10 @@ float ambient;
 
 void setup() 
 {
+  pinMode(DIGITAL2, OUTPUT);
+  digitalWrite(DIGITAL2, HIGH);
+  delay(100);
+  
   PWR.setSensorPower(SENS_3V3, SENS_ON);
   delay(100);
 

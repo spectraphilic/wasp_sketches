@@ -5,7 +5,7 @@
 #define WITH_CRYPTO FALSE
 
 #define WITH_I2C TRUE
-#define WITH_SDI TRUE
+#define WITH_SDI FALSE
 #define WITH_1WIRE FALSE
 #define WITH_MB TRUE
 

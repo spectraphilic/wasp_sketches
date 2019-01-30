@@ -36,11 +36,11 @@ boolean AS7265X::begin()
 {
   I2C.begin(); //This resets any setClock() the user may have done
 
-  if (isConnected() == false) return (false); //Check for sensor presence
+  //if (isConnected() == false) return (false); //Check for sensor presence
 
   //Check to see if both slaves are detected
-  uint8_t value = virtualReadRegister(AS7265X_DEV_SELECT_CONTROL);
-  if ( (value & 0b00110000) == 0) return (false); //Test if Slave1 and 2 are detected. If not, bail.
+  //uint8_t value = virtualReadRegister(AS7265X_DEV_SELECT_CONTROL);
+  //if ( (value & 0b00110000) == 0) return (false); //Test if Slave1 and 2 are detected. If not, bail.
 
   setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_WHITE);
   setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_IR);

@@ -355,7 +355,7 @@ void deepSleep();
 
 // Sensors
 int getMaxbotixSample();
-bool readMaxbotixSerial(uint16_t &mean, uint16_t &sd, uint8_t samples=5);
+bool readMaxbotixSerial(uint16_t &median, uint16_t &std, uint8_t samples=5);
 uint8_t readDS18B20(int values[], uint8_t max);
 
 // I2C

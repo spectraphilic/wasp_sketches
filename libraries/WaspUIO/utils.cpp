@@ -65,7 +65,7 @@ uint16_t WaspUIO::mean_uint16(uint16_t* array, uint8_t size){
 }
 
 /* Return standard deviation of the given array to the given value. */
-uint16_t WaspUIO::sd_uint16(uint16_t* array, uint8_t size, uint16_t mean)
+uint16_t WaspUIO::std_uint16(uint16_t* array, uint8_t size, uint16_t mean)
 {
   uint32_t sd = 0;
 
