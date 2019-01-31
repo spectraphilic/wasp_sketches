@@ -9,6 +9,7 @@
 #include "WaspUIO.h"
 
 
+#if WITH_IRIDIUM
 bool ISBDCallback()
 {
   return true; // Return false to cancel
@@ -57,3 +58,4 @@ int WaspUIO::iridium_stop()
 
   return status;
 }
+#endif

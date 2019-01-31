@@ -14,26 +14,20 @@ CR_TASK(taskMain)
   // Create the first frame
   UIO.createFrame(true);
 
-  // Network
-  // First the network, then the sensors. This is to avoid interferences as I
-  // have found between receiving frames and the SDI-12 bus.  We do first the
-  // network because we need it to be run in a predictable time.
+  // XBee network. We do this one first to run it as predictable as possible,
+  // to improve the chances for neighbor motes to be awake at the same time.
+  // Do not use network and sensors at the same time, we have observed issues
+  // in the past with SDI-12.
+#if WITH_XBEE
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
   {
-#if WITH_4G
-    if (UIO.networkType == NETWORK_4G)
-    { CR_SPAWN2(taskNetwork4G, network_id); }
-#endif
-#if WITH_IRIDIUM
-    if (UIO.networkType == NETWORK_IRIDIUM)
-    { CR_SPAWN2(taskNetworkIridium, network_id); }
-#endif
-#if WITH_XBEE
     if (UIO.networkType == NETWORK_XBEE)
-    { CR_SPAWN2(taskNetworkXBee, network_id); }
-#endif
-    CR_JOIN(network_id);
+    {
+      CR_SPAWN2(taskNetworkXBee, network_id);
+      CR_JOIN(network_id);
+    }
   }
+#endif
 
   // Sensors
   CR_SPAWN2(taskHealthFrame, health_id);
@@ -54,11 +48,34 @@ CR_TASK(taskMain)
 #endif
 
   // Save the last frame, if there is something to save
-  if (frame.numFields > 1)
-  {
-    UIO.frame2Sd();
-  }
+  if (frame.numFields > 1) { UIO.frame2Sd(); }
 
+
+  // Networks that don't require mote syncrhonization run last.
+  // They are often slower, specially satellite netwokrs (iridium), so they
+  // may disturb sensor sampling if run earlier.
+#if WITH_4G
+  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
+  {
+    if (UIO.networkType == NETWORK_4G)
+    {
+      CR_SPAWN2(taskNetwork4G, network_id);
+      CR_JOIN(network_id);
+    }
+  }
+#endif
+#if WITH_IRIDIUM
+  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
+  {
+    if (UIO.networkType == NETWORK_IRIDIUM)
+    {
+      CR_SPAWN2(taskNetworkIridium, network_id);
+      CR_JOIN(network_id);
+    }
+  }
+#endif
+
+  // Uncomment this to verify the watchdog works
   //CR_SPAWN(taskSlow);
 
   CR_END;
