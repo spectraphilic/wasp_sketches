@@ -677,7 +677,7 @@ uint8_t WaspUIO::frame2Sd()
   }
   size = dataFile.fileSize();
 
-  if (append(dataFile, frame.buffer, frame.length))
+  if (sd_append(dataFile, frame.buffer, frame.length))
   {
     error(cr.last_error);
     return 1;
@@ -706,7 +706,7 @@ uint8_t WaspUIO::frame2Sd()
   item[2] = date;
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
-  if (append(queueFile, item, 8))
+  if (sd_append(queueFile, item, 8))
   {
     error(cr.last_error);
     return 2;

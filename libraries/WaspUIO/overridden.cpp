@@ -62,7 +62,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
     }
     else
     {
-      if (UIO.append(UIO.logFile, buffer, strlen(buffer)))
+      if (sd_append(UIO.logFile, buffer, strlen(buffer)))
       {
         cr.println(F("%s"), cr.last_error);
 	UIO.logFile.close();

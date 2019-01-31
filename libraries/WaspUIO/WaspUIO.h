@@ -8,10 +8,11 @@
  * Includes
  ******************************************************************************/
 
-#include "config.h"
-
 #include <inttypes.h>
 #include <Coroutines.h>
+#include <Queue.h>
+
+#include "config.h"
 
 #include <WaspFrame.h>
 #include <WaspGPS.h>
@@ -227,14 +228,15 @@ bool hasGPS = false;
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-const char* qstartFilename = "QSTART.BIN";
-const char* queueFilename = "TMP.TXT"; // TODO Rename to QUEUE.BIN
-const char* timeFilename = "TIME.TXT"; //
-SdFile logFile;
+
+const char* qstartFilename = "QSTART.BIN"; // TODO Rename to FSTART.BIN
+const char* queueFilename = "TMP.TXT"; // TODO Rename to FIFO.BIN
 SdFile queueFile;
 SdFile qstartFile;
+
+const char* timeFilename = "TIME.TXT"; //
+SdFile logFile;
 bool ack_wait;
-int createFile(const char*);
 int createDir(const char*);
 int openFile(const char* filename, SdFile &file, uint8_t mode);
 int baselayout();
@@ -242,8 +244,6 @@ void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
 void stopSD();
 int readline(SdFile &file);
-int write(SdFile &file, const void* buf, size_t nbyte);
-int append(SdFile &file, const void* buf, size_t nbyte);
 int8_t walk(SdBaseFile &root,
             bool (*before_cb)(SdBaseFile &me, char* name),
             bool (*file_cb)(SdBaseFile &parent, char* name),
@@ -400,6 +400,7 @@ uint16_t std_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
 
 extern WaspUIO UIO;
+extern FIFO fifo;
 #if WITH_IRIDIUM
 extern IridiumSBD iridium;
 #endif

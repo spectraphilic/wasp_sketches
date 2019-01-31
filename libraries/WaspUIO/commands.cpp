@@ -284,7 +284,7 @@ COMMAND(cmdAck)
 
   // Update offset
   UIO.qstartFile.seekSet(0);
-  if (UIO.write(UIO.qstartFile, (void*)(&offset), 4))
+  if (sd_write(UIO.qstartFile, (void*)(&offset), 4))
   {
     error(F("sendFrames: error updating offset"));
     status = cmd_error;
