@@ -32,10 +32,11 @@ int WaspUIO::iridium_start()
   Utils.setMuxAux2();
   beginSerial(19200, UART1);
   iridium.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);
+  iridium.adjustSendReceiveTimeout(180);
   int status = iridium.begin(); // Wake up the 9602 and prepare it for communications.
   if (status != ISBD_SUCCESS)
   {
-    cr.println(F("ERROR iridium.begin() error=%d"), status);
+    error(F("ERROR iridium.begin() error=%d"), status);
     iridium_stop();
   }
 
@@ -47,7 +48,7 @@ int WaspUIO::iridium_stop()
   int status = iridium.sleep();
   if (status != ISBD_SUCCESS)
   {
-    cr.println(F("ERROR iridium.sleep() error=%d"), status);
+    error(F("ERROR iridium.sleep() error=%d"), status);
   }
 
   closeSerial(UART1);

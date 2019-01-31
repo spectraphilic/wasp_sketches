@@ -20,17 +20,17 @@ CR_TASK(taskMain)
   // network because we need it to be run in a predictable time.
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
   {
-#if WITH_XBEE
-    if (UIO.networkType == NETWORK_XBEE)
-    {
-      CR_SPAWN2(taskNetworkXBee, network_id);
-    }
-#endif
 #if WITH_4G
     if (UIO.networkType == NETWORK_4G)
-    {
-      CR_SPAWN2(taskNetwork4G, network_id);
-    }
+    { CR_SPAWN2(taskNetwork4G, network_id); }
+#endif
+#if WITH_IRIDIUM
+    if (UIO.networkType == NETWORK_IRIDIUM)
+    { CR_SPAWN2(taskNetworkIridium, network_id); }
+#endif
+#if WITH_XBEE
+    if (UIO.networkType == NETWORK_XBEE)
+    { CR_SPAWN2(taskNetworkXBee, network_id); }
 #endif
     CR_JOIN(network_id);
   }

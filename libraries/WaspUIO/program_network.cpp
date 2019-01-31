@@ -4,47 +4,38 @@
 #if WITH_4G
 CR_TASK(taskNetwork4G)
 {
-  uint8_t err;
   int size;
   uint32_t t0;
+  uint8_t status;
 
   CR_BEGIN;
 
   if (UIO._4GStart())
   {
+    error(F("_4GStart() failed"));
     CR_ERROR;
   }
 
   // Send frames
-  debug(F("4G Sending frames..."));
+  debug(F("Sending frames..."));
   while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
   {
     t0 = millis();
 
+    // Read
     size = UIO.readFrame();
-    if (size < 0)
-    {
-      err = true;
-      break;
-    }
-    if (size == 0)
-    {
-      break;
-    }
+    if (size <= 0) { break; }
 
-    // Send the frame
-    err = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
-    if (err)
+    // Send
+    status = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
+    if (status)
     {
-      cr.set_last_error(F("_4G.sendFrameToMeshlium error=%d %d"), err, _4G._errorCode);
+      warn(F("_4G.sendFrameToMeshlium error=%d %d"), status, _4G._errorCode);
       break;
     }
-
-    // Check HTTP status code of the response
-    if (_4G._httpCode != 200)
+    if (_4G._httpCode != 200) // Check HTTP status code of the response
     {
-      cr.set_last_error(F("Unexpect HTTP code %d"), _4G._httpCode);
-      err = 1;
+      error(F("Unexpect HTTP code %d"), _4G._httpCode);
       break;
     }
 
@@ -52,7 +43,6 @@ CR_TASK(taskNetwork4G)
     UIO.qstartFile.close(); // Close files
     UIO.queueFile.close();
     debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
-
     UIO.ack_wait = true;
     cmdAck(""); // Move to the next frame
 
@@ -64,11 +54,75 @@ CR_TASK(taskNetwork4G)
   if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
   if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
-  if (err)
+  CR_END;
+}
+#endif
+
+
+#if WITH_IRIDIUM
+CR_TASK(taskNetworkIridium)
+{
+  int size;
+  uint32_t t0;
+  int status;
+  int quality;
+
+  CR_BEGIN;
+
+  status = UIO.iridium_start(); // This takes ~700ms
+  if (status != ISBD_SUCCESS)
   {
-    error(cr.last_error);
+    error(F("iridium_start() error=%d"), status);
     CR_ERROR;
   }
+
+  // Check signal quality, informational
+  status = iridium.getSignalQuality(quality); // This takes ~4s
+  if (status != ISBD_SUCCESS)
+  {
+    error(F("iridium.getSignalQuality(..) error=%d"), status);
+    UIO.iridium_stop();
+    CR_ERROR;
+  }
+  debug(F("Iridium signal quality %d"), quality);
+  if (quality == 0)
+  {
+    UIO.iridium_stop();
+    CR_ERROR;
+  }
+
+  // Send frames
+  debug(F("Sending frames..."));
+  while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
+  {
+    t0 = millis();
+
+    // Read
+    size = UIO.readFrame();
+    if (size <= 0) { break; }
+
+    // Send
+    status = iridium.sendSBDBinary((uint8_t*)SD.buffer, size);
+    if (status != ISBD_SUCCESS)
+    {
+      warn(F("iridium.sendSBDBinary(..) error=%d"), status);
+      break;
+    }
+
+    // Next
+    UIO.qstartFile.close(); // Close files
+    UIO.queueFile.close();
+    debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
+    UIO.ack_wait = true;
+    cmdAck(""); // Move to the next frame
+
+    CR_DELAY(50); // Give control back
+  }
+
+  // Switch off and close files
+  UIO.iridium_stop();
+  if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
+  if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
   CR_END;
 }
@@ -103,12 +157,12 @@ CR_TASK(taskNetworkXBee)
   info(F("Network started"));
 
   // Spawn first the receive task
-  CR_SPAWN(taskNetworkReceive);
+  CR_SPAWN(taskNetworkXBeeReceive);
 
   // Schedule sending frames
   if (send)
   {
-    CR_SPAWN2(taskNetworkSend, tid);
+    CR_SPAWN2(taskNetworkXBeeSend, tid);
   }
 
   CR_DELAY(8000); // Keep the network open at least for 8s
@@ -136,10 +190,9 @@ CR_TASK(taskNetworkXBee)
   CR_END;
 }
 
-CR_TASK(taskNetworkSend)
+CR_TASK(taskNetworkXBeeSend)
 {
   uint32_t t0;
-  bool err = false;
   static unsigned long sent;
 
   CR_BEGIN;
@@ -152,30 +205,23 @@ CR_TASK(taskNetworkSend)
     {
       t0 = millis();
 
+      // Read
       int size = UIO.readFrame();
-      if (size < 0)
-      {
-        err = true;
-        break;
-      }
-      if (size == 0)
-      {
-        break;
-      }
+      if (size <= 0) { break; }
 
       // Send the frame
       if (xbeeDM.send((char*)UIO.xbee.rx_address, (uint8_t*)SD.buffer, size) == 1)
       {
-        warn(F("sendFrames: Send failure"));
+        warn(F("xbeeDM.send(..) failure"));
         break;
       }
-      UIO.ack_wait = true;
       sent = millis();
 
       // Next
       UIO.qstartFile.close(); // Close files
       UIO.queueFile.close();
       debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
+      UIO.ack_wait = true;
     }
     else
     {
@@ -193,16 +239,10 @@ CR_TASK(taskNetworkSend)
   if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
   if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
-  if (err)
-  {
-    error(cr.last_error);
-    CR_ERROR;
-  }
-
   CR_END;
 }
 
-CR_TASK(taskNetworkReceive)
+CR_TASK(taskNetworkXBeeReceive)
 {
   char sourceMAC[17];
   cmd_status_t status;

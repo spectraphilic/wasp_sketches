@@ -270,6 +270,7 @@ uint8_t _4GStop();
 #endif
 
 #if WITH_IRIDIUM
+char iridium_fw[9]; // firmware version
 void iridiumInit();
 int iridium_start();
 int iridium_stop();
@@ -534,9 +535,10 @@ CR_TASK(taskI2C_VL53L1X);
 CR_TASK(taskTTL);
 // Network
 CR_TASK(taskNetwork4G);
+CR_TASK(taskNetworkIridium);
 CR_TASK(taskNetworkXBee);
-CR_TASK(taskNetworkSend);
-CR_TASK(taskNetworkReceive);
+CR_TASK(taskNetworkXBeeSend);
+CR_TASK(taskNetworkXBeeReceive);
 // GPS
 CR_TASK(taskGps);
 // For testing purposes

@@ -103,30 +103,7 @@ const char* WaspUIO::pprintFrames(char* dst, size_t size)
 #if WITH_IRIDIUM
 const char* WaspUIO::pprintIridium(char* dst, size_t size)
 {
-  int status;
-  char version[10];
-
-  // ON
-  status = iridium_start();
-  if (status != ISBD_SUCCESS)
-  {
-    snprintf_F(dst, size, F("error=%d"), status);
-  }
-  else
-  {
-    status = iridium.getFirmwareVersion(version, sizeof version);
-    if (status != ISBD_SUCCESS)
-    {
-      snprintf_F(dst, size, F("error=%d"), status);
-    }
-    else
-    {
-      snprintf_F(dst, size, F("firmware=%s"), version);
-    }
-  }
-
-  iridium_stop();
-
+  snprintf_F(dst, size, F("fw=%s"), iridium_fw);
   return dst;
 }
 #endif

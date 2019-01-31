@@ -207,7 +207,28 @@ uint8_t WaspUIO::_4GStop()
  */
 
 #if WITH_IRIDIUM
+/*
+ * Read the firmware version
+ */
 void WaspUIO::iridiumInit()
 {
+  int status;
+  uint8_t size = sizeof iridium_fw;
+
+  status = iridium_start();
+  if (status != ISBD_SUCCESS)
+  {
+    snprintf_F(iridium_fw, size, F("err %d"), status);
+  }
+  else
+  {
+    status = iridium.getFirmwareVersion(iridium_fw, size);
+    if (status != ISBD_SUCCESS)
+    {
+      snprintf_F(iridium_fw, size, F("err %d"), status);
+    }
+  }
+
+  iridium_stop();
 }
 #endif

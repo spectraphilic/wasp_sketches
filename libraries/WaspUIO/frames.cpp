@@ -697,7 +697,7 @@ uint8_t WaspUIO::frame2Sd()
   if (offset != 0)
   {
     queueFile.truncate(queueFile.fileSize() - offset);
-    warn(F("sendFrames: wrong file size (%s), truncated"), queueFilename);
+    warn(F("frame2Sd() wrong file size (%s), truncated"), queueFilename);
   }
 
   // Append record
@@ -740,7 +740,7 @@ int WaspUIO::readFrame()
   // Read offset
   if (qstartFile.read(item, 4) != 4)
   {
-    cr.set_last_error(F("sendFrames (%s): read error"), qstartFilename);
+    error(F("sendFrames (%s): read error"), qstartFilename);
     return -1;
   }
   offset = *(uint32_t *)item;
@@ -753,7 +753,7 @@ int WaspUIO::readFrame()
   queueFile.seekSet(offset);
   if (queueFile.read(item, 8) != 8)
   {
-    cr.set_last_error(F("sendFrames (%s): read error"), queueFilename);
+    error(F("sendFrames (%s): read error"), queueFilename);
     return -1;
   }
 
@@ -761,7 +761,7 @@ int WaspUIO::readFrame()
   getDataFilename(dataFilename, item[0], item[1], item[2]);
   if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
   {
-    cr.set_last_error(F("sendFrames: fail to open %s"), dataFilename);
+    error(F("readFrame() fail to open %s"), dataFilename);
     return -1;
   }
   dataFile.seekSet(*(uint32_t *)(item + 3));
@@ -770,7 +770,7 @@ int WaspUIO::readFrame()
 
   if (size < 0 || size != (int) item[7])
   {
-    cr.set_last_error(F("sendFrames: fail to read frame from disk %s"), dataFilename);
+    error(F("readFrame() fail to read frame from disk %s"), dataFilename);
     return -1;
   }
 
