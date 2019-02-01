@@ -670,7 +670,7 @@ uint8_t WaspUIO::frame2Sd()
   getDataFilename(dataFilename, year, month, date);
 
   // (2) Store frame in archive file
-  if (openFile(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
+  if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
   {
     error(cr.last_error);
     return 1;
@@ -685,7 +685,7 @@ uint8_t WaspUIO::frame2Sd()
   dataFile.close();
 
   // (3) Append to queue
-  if (openFile(queueFilename, queueFile, O_RDWR | O_CREAT))
+  if (sd_open(queueFilename, queueFile, O_RDWR | O_CREAT))
   {
     error(cr.last_error);
     return 2;
@@ -734,8 +734,8 @@ int WaspUIO::readFrame()
 
   // Open files
   if (! hasSD) { return -1; }
-  if (openFile(qstartFilename, qstartFile, O_READ)) { return -1; }
-  if (openFile(queueFilename, queueFile, O_READ)) { return -1; }
+  if (sd_open(qstartFilename, qstartFile, O_READ)) { return -1; }
+  if (sd_open(queueFilename, queueFile, O_READ)) { return -1; }
 
   // Read offset
   if (qstartFile.read(item, 4) != 4)

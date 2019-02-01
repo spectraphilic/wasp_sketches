@@ -35,37 +35,6 @@ void WaspUIO::stopSD()
 
 
 /*
- * Create/Open
- */
-
-int WaspUIO::createDir(const char* name)
-{
-  switch (SD.isDir(name))
-  {
-    case 0: // file
-      return 1;
-    case -1: // error
-      if (SD.mkdir((char*)name) == false) { return 1; }
-  }
-  return 0;
-}
-
-
-int WaspUIO::openFile(const char* filename, SdFile &file, uint8_t mode)
-{
-  if (! file.isOpen())
-  {
-    if (SD.openFile((char*)filename, &file, mode) == 0)
-    {
-      cr.set_last_error(F("openFile(%s) failed"), filename);
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-/*
  * Create basic filesystem layout. To be called just after format and when
  * booting, to be sure the filesystem is good.
  */
@@ -73,9 +42,9 @@ int WaspUIO::baselayout()
 {
   int error = 0;
 
-  if (createDir(archive_dir))  { error = 1; } // Data directory
-  if (createFile(logFilename)) { error = 1; } // Log file
-  if (fifo.touch()) { error = 1; }            // Fifo files
+  if (sd_mkdir(archive_dir))  { error = 1; } // Data directory
+  if (sd_mkfile(logFilename)) { error = 1; } // Log file
+  if (fifo.make()) { error = 1; }            // Fifo files
 
   return error;
 }

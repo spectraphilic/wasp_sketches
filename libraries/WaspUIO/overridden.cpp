@@ -56,7 +56,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
   // (3) Print to log file
   if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD))
   {
-    if (UIO.openFile(UIO.logFilename, UIO.logFile, O_WRITE | O_CREAT | O_APPEND))
+    if (sd_open(UIO.logFilename, UIO.logFile, O_WRITE | O_CREAT | O_APPEND))
     {
       cr.println(F("%s"), cr.last_error);
     }

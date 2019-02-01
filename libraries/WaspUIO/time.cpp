@@ -31,7 +31,7 @@ uint8_t WaspUIO::saveTimeToSD()
 {
   SdFile file;
 
-  if (openFile(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC))
+  if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC))
   {
     warn(F("saveTimeToSD: Opening TIME.TXT failed"));
     return 1;
@@ -88,7 +88,7 @@ void WaspUIO::loadTime()
   {
     startSD();
     warn(F("Wrong time detected"));
-    if (openFile(timeFilename, file, O_READ))
+    if (sd_open(timeFilename, file, O_READ))
     {
        warn(F("Opening TIME.TXT failed"));
     }

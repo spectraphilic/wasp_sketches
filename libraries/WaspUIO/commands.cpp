@@ -237,67 +237,19 @@ COMMAND(cmd4G_Test)
 
 COMMAND(cmdAck)
 {
-  uint8_t item[4];
-  uint32_t offset;
-  cmd_status_t status = cmd_ok;
-
   if (UIO.ack_wait == false)
   {
     warn(F("unexpected ack command"));
     return cmd_quiet;
   }
 
-  // Open files
-  if (UIO.openFile(UIO.qstartFilename, UIO.qstartFile, O_RDWR))
+  if (fifo.drop())
   {
-    error(cr.last_error);
-    return cmd_error;
-  }
-  if (UIO.openFile(UIO.queueFilename, UIO.queueFile, O_RDWR))
-  {
-    UIO.qstartFile.close();
-    error(cr.last_error);
     return cmd_error;
   }
 
-  // Read offset
-  if (UIO.qstartFile.read(item, 4) != 4)
-  {
-    error(F("ack (%s): read error"), UIO.qstartFilename);
-    status = cmd_error;
-    goto exit;
-  }
-  offset = *(uint32_t *)item;
-
-  // Truncate (pop)
-  offset += 8;
-  if (offset >= UIO.queueFile.fileSize())
-  {
-    offset = 0;
-    if (UIO.queueFile.truncate(0) == false)
-    {
-      error(F("ack: error in queueFile.truncate"));
-      status = cmd_error;
-      goto exit;
-    }
-  }
-
-  // Update offset
-  UIO.qstartFile.seekSet(0);
-  if (sd_write(UIO.qstartFile, (void*)(&offset), 4))
-  {
-    error(F("sendFrames: error updating offset"));
-    status = cmd_error;
-    goto exit;
-  }
-
-  // Ready for next frame!
-  UIO.ack_wait = false;
-
-exit:
-  UIO.qstartFile.close();
-  UIO.queueFile.close();
-  return status;
+  UIO.ack_wait = false; // Ready for next frame!
+  return cmd_ok;
 }
 
 /**

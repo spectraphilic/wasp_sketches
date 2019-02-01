@@ -237,8 +237,6 @@ SdFile qstartFile;
 const char* timeFilename = "TIME.TXT"; //
 SdFile logFile;
 bool ack_wait;
-int createDir(const char*);
-int openFile(const char* filename, SdFile &file, uint8_t mode);
 int baselayout();
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();

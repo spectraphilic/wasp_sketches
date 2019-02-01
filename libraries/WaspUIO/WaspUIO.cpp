@@ -159,7 +159,7 @@ void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8
 
 /// Preinstantiate Objects /////////////////////////////////////////////////////
 WaspUIO UIO = WaspUIO();
-FIFO fifo = FIFO(UIO.queueFilename, UIO.qstartFilename, 7);
+FIFO fifo = FIFO(UIO.queueFilename, UIO.qstartFilename, 8);
 #if WITH_IRIDIUM
 IridiumSBD iridium(Serial1, DIGITAL4); // RING pins not connected
 #endif
