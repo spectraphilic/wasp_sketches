@@ -42,7 +42,7 @@ int FIFO::close()
   return QUEUE_OK;
 }
 
-int FIFO::read()
+int FIFO::read_state()
 {
   queue_size = queue.fileSize();
   uint8_t item[4];
@@ -60,7 +60,7 @@ int FIFO::drop()
   if (open(O_RDWR)) { return QUEUE_ERROR; }
 
   // Read offset
-  int status = read();
+  int status = read_state();
   if (status)
   {
     close();
@@ -97,7 +97,7 @@ int FIFO::peek(uint8_t *item)
   if (open(O_READ)) { return QUEUE_ERROR; }
 
   // Read offset
-  int status = read();
+  int status = read_state();
   if (status)
   {
     close();
@@ -108,6 +108,7 @@ int FIFO::peek(uint8_t *item)
   queue.seekSet(offset);
   if (queue.read(item, item_size) != item_size)
   {
+    close();
     return QUEUE_ERROR;
   }
 
@@ -126,10 +127,10 @@ int FIFO::push(uint8_t *item)
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
   queue_size = queue.fileSize();
-  uint32_t end = queue_size % item_size;
-  if (end != 0)
+  uint32_t mod = queue_size % item_size;
+  if (mod != 0)
   {
-    queue.truncate(queue_size - offset);
+    queue.truncate(queue_size - mod);
   }
 
   // Append record
