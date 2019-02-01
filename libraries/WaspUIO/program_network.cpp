@@ -40,8 +40,6 @@ CR_TASK(taskNetwork4G)
     }
 
     // Next
-    UIO.qstartFile.close(); // Close files
-    UIO.queueFile.close();
     debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
     UIO.ack_wait = true;
     cmdAck(""); // Move to the next frame
@@ -49,10 +47,8 @@ CR_TASK(taskNetwork4G)
     CR_DELAY(50); // Give control back
   }
 
-  // Switch off and close files
+  // Switch off
   UIO._4GStop();
-  if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
-  if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
   CR_END;
 }
@@ -110,8 +106,6 @@ CR_TASK(taskNetworkIridium)
     }
 
     // Next
-    UIO.qstartFile.close(); // Close files
-    UIO.queueFile.close();
     debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
     UIO.ack_wait = true;
     cmdAck(""); // Move to the next frame
@@ -119,10 +113,8 @@ CR_TASK(taskNetworkIridium)
     CR_DELAY(50); // Give control back
   }
 
-  // Switch off and close files
+  // Switch off
   UIO.iridium_stop();
-  if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
-  if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
   CR_END;
 }
@@ -218,8 +210,6 @@ CR_TASK(taskNetworkXBeeSend)
       sent = millis();
 
       // Next
-      UIO.qstartFile.close(); // Close files
-      UIO.queueFile.close();
       debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
       UIO.ack_wait = true;
     }
@@ -234,10 +224,6 @@ CR_TASK(taskNetworkXBeeSend)
 
     CR_DELAY(50); // Give control back
   }
-
-  // Close files
-  if (UIO.qstartFile.isOpen()) { UIO.qstartFile.close(); }
-  if (UIO.queueFile.isOpen())  { UIO.queueFile.close(); }
 
   CR_END;
 }

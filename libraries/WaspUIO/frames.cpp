@@ -685,30 +685,13 @@ uint8_t WaspUIO::frame2Sd()
   dataFile.close();
 
   // (3) Append to queue
-  if (sd_open(queueFilename, queueFile, O_RDWR | O_CREAT))
-  {
-    error(cr.last_error);
-    return 2;
-  }
-
-  // Security check, the file size must be a multiple of 8. If it is not we
-  // consider there has been a write error, and we trunctate the file.
-  uint32_t offset = queueFile.fileSize() % 8;
-  if (offset != 0)
-  {
-    queueFile.truncate(queueFile.fileSize() - offset);
-    warn(F("frame2Sd() wrong file size (%s), truncated"), queueFilename);
-  }
-
-  // Append record
   item[0] = year;
   item[1] = month;
   item[2] = date;
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
-  if (sd_append(queueFile, item, 8))
+  if (fifo.push(item))
   {
-    error(cr.last_error);
     return 2;
   }
 
@@ -726,7 +709,6 @@ uint8_t WaspUIO::frame2Sd()
  */
 int WaspUIO::readFrame()
 {
-  static uint32_t offset;
   uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
   SdFile dataFile;
@@ -734,26 +716,15 @@ int WaspUIO::readFrame()
 
   // Open files
   if (! hasSD) { return -1; }
-  if (sd_open(qstartFilename, qstartFile, O_READ)) { return -1; }
-  if (sd_open(queueFilename, queueFile, O_READ)) { return -1; }
 
-  // Read offset
-  if (qstartFile.read(item, 4) != 4)
+  int status = fifo.peek(item);
+  if (status == QUEUE_EMPTY)
   {
-    error(F("sendFrames (%s): read error"), qstartFilename);
-    return -1;
+    return 0;
   }
-  offset = *(uint32_t *)item;
-  if (offset >= queueFile.fileSize())
+  else if (status)
   {
-    return 0; // Nothing to do
-  }
-
-  // Read the record
-  queueFile.seekSet(offset);
-  if (queueFile.read(item, 8) != 8)
-  {
-    error(F("sendFrames (%s): read error"), queueFilename);
+    error(F("readFrame() failure"));
     return -1;
   }
 

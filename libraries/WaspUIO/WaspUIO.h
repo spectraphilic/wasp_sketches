@@ -228,12 +228,6 @@ bool hasGPS = false;
 // SD
 const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
-
-const char* qstartFilename = "QSTART.BIN"; // TODO Rename to FSTART.BIN
-const char* queueFilename = "TMP.TXT"; // TODO Rename to FIFO.BIN
-SdFile queueFile;
-SdFile qstartFile;
-
 const char* timeFilename = "TIME.TXT"; //
 SdFile logFile;
 bool ack_wait;
