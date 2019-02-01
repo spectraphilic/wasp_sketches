@@ -1,4 +1,5 @@
 #include <WaspSD.h>
+#include <Coroutines.h>
 
 
 /* Utils */
@@ -48,7 +49,7 @@ class Queue
  * Last-In-First-Out queue (LIFO)
  */
 
-class LIFO : Queue
+class LIFO : public Queue
 {
   private:
     int read_state();
@@ -59,7 +60,6 @@ class LIFO : Queue
     int close();
     int drop();
     int peek(uint8_t *);
-    int push(uint8_t *);
 };
 
 
@@ -67,7 +67,7 @@ class LIFO : Queue
  * First-In-First-Out queue (FIFO)
  */
 
-class FIFO : Queue
+class FIFO : public Queue
 {
   private:
     int read_state();
@@ -86,5 +86,4 @@ class FIFO : Queue
     int close();
     int drop();
     int peek(uint8_t *);
-    int push(uint8_t *);
 };
