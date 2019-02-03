@@ -395,6 +395,7 @@ extern WaspUIO UIO;
 extern FIFO fifo;
 #if WITH_IRIDIUM
 extern IridiumSBD iridium;
+extern LIFO lifo;
 #endif
 
 

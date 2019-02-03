@@ -27,3 +27,8 @@
 
 // Reboot every N loops
 #define MAX_LOOPS 5000
+
+// Iridium specific
+// Save frames to lifo instead of fifo every n loops. If a loop is 5min a value
+// of 120 will save to lifo once every 6h.
+#define SAVE_TO_LIFO 120

@@ -55,6 +55,8 @@ class LIFO : public Queue
     int read_state();
 
   public:
+    LIFO(const char* _queue, uint8_t _size) : Queue(_queue, _size) {}
+
     int make();
     int open(uint8_t mode);
     int close();

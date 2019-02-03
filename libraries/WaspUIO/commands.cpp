@@ -243,10 +243,11 @@ COMMAND(cmdAck)
     return cmd_quiet;
   }
 
-  if (fifo.drop())
-  {
-    return cmd_error;
-  }
+#if WITH_IRIDIUM
+  if (lifo.drop()) { return cmd_error; }
+#else
+  if (fifo.drop()) { return cmd_error; }
+#endif
 
   UIO.ack_wait = false; // Ready for next frame!
   return cmd_ok;

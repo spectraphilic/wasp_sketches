@@ -690,10 +690,18 @@ uint8_t WaspUIO::frame2Sd()
   item[2] = date;
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
-  if (fifo.push(item))
+#if WITH_IRIDIUM
+  if ((nloops % SAVE_TO_LIFO) == 0)
   {
-    return 2;
+    if (lifo.push(item)) { return 2; }
   }
+  else
+  {
+    if (fifo.push(item)) { return 2; }
+  }
+#else
+  if (fifo.push(item)) { return 2; }
+#endif
 
   return 0;
 }
@@ -717,7 +725,11 @@ int WaspUIO::readFrame()
   // Open files
   if (! hasSD) { return -1; }
 
+#if WITH_IRIDIUM
+  int status = lifo.peek(item);
+#else
   int status = fifo.peek(item);
+#endif
   if (status == QUEUE_EMPTY)
   {
     return 0;
