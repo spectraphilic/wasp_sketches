@@ -10,6 +10,7 @@ int LIFO::make()
 
 int LIFO::open(uint8_t mode)
 {
+  // TODO Create if doesn't exist
   if (sd_open(qname, queue, mode))
   {
     return QUEUE_ERROR;

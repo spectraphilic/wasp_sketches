@@ -27,6 +27,9 @@ void WaspUIO::stopSD()
     // Close files
     if (logFile.isOpen()) { logFile.close(); }
     fifo.close();
+#if WITH_IRIDIUM
+    lifo.close();
+#endif
     // Off
     SD.OFF();
   }
@@ -43,7 +46,11 @@ int WaspUIO::baselayout()
 
   if (sd_mkdir(archive_dir))  { error = 1; } // Data directory
   if (sd_mkfile(logFilename)) { error = 1; } // Log file
-  if (fifo.make()) { error = 1; }            // Fifo files
+  // Queue
+  if (fifo.make()) { error = 1; }
+#if WITH_IRIDIUM
+  if (lifo.make()) { error = 1; }
+#endif
 
   return error;
 }
