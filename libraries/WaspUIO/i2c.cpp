@@ -28,6 +28,46 @@ void WaspUIO::i2c_scan()
 }
 
 
+/*
+ * Built-in accelerometer
+ * IS3331LDH, by STMicroelectronics
+ * H3LIS331DL ??
+ */
+
+bool WaspUIO::i2c_acc(int &x, int &y, int &z)
+{
+  bool err = 0;
+
+  ACC.ON(FS_2G);
+  //ACC.boot();
+  //ACC.getStatus();
+
+  // The high-pass filter is by default 00, controlled by CTRL2
+  //cr.println(F("CTRL2 %d"), ACC.getCTRL2());
+  //delay(100); // Needed for the accelerometers high-pass filter
+
+  // Check
+  if (ACC.check() != 0x32)
+  {
+    err = 1;
+    error(F("ACC.check() failure"));
+    goto exit;
+  }
+
+  // Read (XXX Check ACC.flag?)
+  x = ACC.getX();
+  y = ACC.getY();
+  z = ACC.getZ();
+  info(F("ACC x=%d, y=%d, z=%d"), x, y, z);
+
+exit:
+  // Off
+  // Modes: ON, POWER_DOWN, LOW_POWER_{1-5}
+  ACC.setMode(ACC_POWER_DOWN); // .OFF closes I2C as well, we don't want that
+  return err;
+}
+
+
 
 /** i2c_AS726X
  *

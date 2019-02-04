@@ -26,7 +26,12 @@ COMMAND(cmdI2C)
   // Read
   bool err;
   int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-  if (value == 7)
+  if (value == 3)
+  {
+    int x, y, z;
+    err = UIO.i2c_acc(x, y, z);
+  }
+  else if (value == 7)
   {
     float temperature, humidity, pressure;
     err = UIO.i2c_BME280(temperature, humidity, pressure);

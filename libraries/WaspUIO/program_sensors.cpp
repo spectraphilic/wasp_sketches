@@ -41,9 +41,9 @@ CR_TASK(taskSensors)
 
   // I2C
 #if WITH_I2C
-  if (UIO.action(7, RUN_BME280, RUN_LAGOPUS_AS7263, RUN_LAGOPUS_AS7265,
-		 RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614, RUN_LAGOPUS_TMP102,
-		 RUN_LAGOPUS_VL53L1X))
+  if (UIO.action(8, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
+                 RUN_LAGOPUS_AS7265, RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
+                 RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X))
   {
     UIO.pwr_i2c(1);
     CR_DELAY(100);
@@ -136,7 +136,8 @@ CR_TASK(task1Wire)
 
 CR_TASK(taskI2C)
 {
-  static tid_t bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp_id, vl_id;
+  static tid_t acc_id, bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp_id, vl_id;
+  bool acc = UIO.action(1, RUN_ACC);
   bool bme280_76 = UIO.action(1, RUN_BME280);
   bool as7263 = UIO.action(1, RUN_LAGOPUS_AS7263);
   bool as7265 = UIO.action(1, RUN_LAGOPUS_AS7265);
@@ -147,6 +148,8 @@ CR_TASK(taskI2C)
 
   CR_BEGIN;
 
+  USB.ON();
+  if (acc)       { CR_SPAWN2(taskI2C_ACC, acc_id); }
   if (bme280_76) { CR_SPAWN2(taskI2C_BME280_76, bme280_76_id); }
   if (as7263)    { CR_SPAWN2(taskI2C_AS7263, as7263_id); }
   if (as7265)    { CR_SPAWN2(taskI2C_AS7265, as7265_id); }
@@ -155,6 +158,7 @@ CR_TASK(taskI2C)
   if (tmp)       { CR_SPAWN2(taskI2C_TMP102, tmp_id); }
   if (vl)        { CR_SPAWN2(taskI2C_VL53L1X, vl_id); }
 
+  if (acc)       { CR_JOIN(acc_id); }
   if (bme280_76) { CR_JOIN(bme280_76_id); }
   if (as7263)    { CR_JOIN(as7263_id); }
   if (as7265)    { CR_JOIN(as7265_id); }
@@ -164,6 +168,16 @@ CR_TASK(taskI2C)
   if (vl)        { CR_JOIN(vl_id); }
 
   CR_END;
+}
+
+CR_TASK(taskI2C_ACC)
+{
+  // Internal, directly attached to the lemming board
+  int x, y, z;
+  bool err = UIO.i2c_acc(x, y, z);
+  if (err) { return CR_TASK_ERROR; }
+  ADD_SENSOR(SENSOR_ACC, x, y, z);
+  return CR_TASK_STOP;
 }
 
 CR_TASK(taskI2C_BME280_76)

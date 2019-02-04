@@ -80,7 +80,7 @@ enum run_t {
   RUN_NETWORK,
   RUN_BATTERY,
   RUN_GPS,
-  RUN_FREE_1, // Available
+  RUN_ACC,
   RUN_CTD10, // SDI-12
   RUN_DS2,
   RUN_DS1820, // OneWire
@@ -99,7 +99,7 @@ enum run_t {
 const char RUN_NETWORK_NAME [] PROGMEM = "net";            // 0 network
 const char RUN_BATTERY_NAME [] PROGMEM = "bat";            // 1 battery
 const char RUN_GPS_NAME     [] PROGMEM = "gps";            // 2 gps
-const char RUN_FREE_1_NAME  [] PROGMEM = "";
+const char RUN_ACC_NAME     [] PROGMEM = "acc";            // 3 accelerometer
 const char RUN_CTD10_NAME   [] PROGMEM = "ctd";            // 4 water
 const char RUN_DS2_NAME     [] PROGMEM = "ds2";            // 5 wind
 const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";         // 6 temperature string
@@ -118,7 +118,7 @@ const char* const run_names[] PROGMEM = {
   RUN_NETWORK_NAME,
   RUN_BATTERY_NAME,
   RUN_GPS_NAME,
-  RUN_FREE_1_NAME,
+  RUN_ACC_NAME,
   RUN_CTD10_NAME,
   RUN_DS2_NAME,
   RUN_DS1820_NAME,
@@ -365,6 +365,7 @@ uint8_t readDS18B20(int values[], uint8_t max);
 
 // I2C
 void i2c_scan();
+bool i2c_acc(int &x, int &y, int &z);
 bool i2c_AS7263(byte &temp, float &r, float &s, float &t, float &u, float &v, float &w);
 bool i2c_AS7265(
   uint8_t &temp,
@@ -518,6 +519,7 @@ CR_TASK(taskSdiWS100); // Uses SDI-12
 // 3V3
 CR_TASK(task1Wire);
 CR_TASK(taskI2C);
+CR_TASK(taskI2C_ACC);
 CR_TASK(taskI2C_BME280_76);
 CR_TASK(taskI2C_AS7263);
 CR_TASK(taskI2C_AS7265);

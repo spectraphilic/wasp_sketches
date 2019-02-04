@@ -15,6 +15,7 @@
 
 const char null               [] PROGMEM = "";
 const char frame_format_j     [] PROGMEM = "j";
+const char frame_format_jjj   [] PROGMEM = "jjj";
 const char frame_format_u     [] PROGMEM = "u";
 const char frame_format_w     [] PROGMEM = "w";
 const char frame_format_ww    [] PROGMEM = "ww";
@@ -37,7 +38,10 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_ff,                                            // 53 GPS
   frame_format_j,                                             // 54 RSSI
   null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null, // 06x
+  // 06x
+  null, null, null,
+  frame_format_jjj,                                           // 63 Accelerometer
+  null, null, null, null, null, null,
   // 07x
   null, null, null, null,
   null,                                                       // 74 Reserved, was BME temperature
@@ -81,6 +85,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
 const char frame_name_bat      [] PROGMEM = "BAT";
 const char frame_name_gps      [] PROGMEM = "GPS";
 const char frame_name_rssi     [] PROGMEM = "RSSI";
+const char frame_name_acc      [] PROGMEM = "ACC";
 //const char frame_name_bme_tc   [] PROGMEM = "BME TC";
 //const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
 //const char frame_name_bme_pres [] PROGMEM = "BME PRES";
@@ -110,7 +115,10 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_gps,                                             // 53 GPS
   frame_name_rssi,                                            // 54 RSSI
   null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null, // 06x
+  // 06x
+  null, null, null,
+  frame_name_acc,                                             // 63 Accelerometer
+  null, null, null, null, null, null,
   // 07x
   null, null, null, null,
   null,                                                       // 74 Reserved, was BME temperature
