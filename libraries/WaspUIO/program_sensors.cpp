@@ -46,7 +46,6 @@ CR_TASK(taskSensors)
                  RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X))
   {
     UIO.pwr_i2c(1);
-    CR_DELAY(100);
     CR_SPAWN2(taskI2C, id);
     CR_JOIN(id);
     UIO.pwr_i2c(0);
@@ -58,7 +57,6 @@ CR_TASK(taskSensors)
   if (UIO.action(2, RUN_CTD10, RUN_DS2))
   {
     UIO.pwr_sdi12(1);
-    CR_DELAY(500); // FIXME Reduce as much as possible
     CR_SPAWN2(taskSdi, id);
     CR_JOIN(id);
     UIO.pwr_sdi12(0);
@@ -75,7 +73,6 @@ CR_TASK(taskSensors)
   if (UIO.action(1, RUN_DS1820))
   {
     UIO.pwr_1wire(1);
-    CR_DELAY(500); // FIXME Reduce as much as possible
     CR_SPAWN2(task1Wire, id);
     CR_JOIN(id);
     UIO.pwr_1wire(0);
@@ -87,7 +84,6 @@ CR_TASK(taskSensors)
   if (UIO.action(1, RUN_MB))
   {
     UIO.pwr_mb(1);
-    CR_DELAY(500); // FIXME Reduce as much as possible
     CR_SPAWN2(taskTTL, id);
     CR_JOIN(id);
     UIO.pwr_mb(0);

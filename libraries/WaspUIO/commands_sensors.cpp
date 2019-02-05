@@ -157,7 +157,7 @@ COMMAND(cmd1WireScan)
     return cmd_error;
   }
 
-  if (! UIO.pwr_1wire(1)) { delay(750); }
+  UIO.pwr_1wire(1);
 
   for (uint8_t i = 0; i < npins; i++)
   {
@@ -199,7 +199,6 @@ next:
   }
 
   // OFF
-  UIO.pwr_1wire(0);
   file.close();
 
   return cmd_quiet;
@@ -229,7 +228,6 @@ COMMAND(cmdSDI12)
   {
     UIO.sdi_set_address(address, new_address);
   }
-  UIO.pwr_sdi12(0);
 
   return cmd_quiet;
 }

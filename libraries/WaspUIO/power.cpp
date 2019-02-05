@@ -179,7 +179,9 @@ bool WaspUIO::pwr_mb(bool new_state)
     else { pwr_3v3(1); }
   }
   else {}                                             // off
-  return pwr_switch(device, pin, new_state);          // switch
+  pwr_switch(device, pin, new_state);                 // switch
+  if (old_state == 0) { delay(200); }                 // delay
+  return old_state;
 }
 
 bool WaspUIO::pwr_i2c(bool new_state)
@@ -191,7 +193,9 @@ bool WaspUIO::pwr_i2c(bool new_state)
   if (new_state == old_state) { return old_state; }   // noop
   if (new_state) { pwr_3v3(1); }                      // on
   else {}                                             // off
-  return pwr_switch(device, pin, new_state);          // switch
+  pwr_switch(device, pin, new_state);                 // switch
+  if (old_state == 0) { delay(100); }                 // delay
+  return old_state;
 }
 
 bool WaspUIO::pwr_1wire(bool new_state)
@@ -207,7 +211,9 @@ bool WaspUIO::pwr_1wire(bool new_state)
     else { pwr_3v3(1); }
   }
   else {}                                             // off
-  return pwr_switch(device, pin, new_state);          // switch
+  pwr_switch(device, pin, new_state);                 // switch
+  if (old_state == 0) { delay(100); }                 // delay
+  return old_state;
 }
 
 bool WaspUIO::pwr_sdi12(bool new_state)
@@ -217,12 +223,11 @@ bool WaspUIO::pwr_sdi12(bool new_state)
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
-  if (new_state)                                      // on
-  {
-    if (pwr_5v(1) == 0) { delay(500); };
-  }
+  if (new_state) { pwr_5v(1); }                       // on
   else {}                                             // off
-  return pwr_switch(device, pin, new_state);          // switch
+  pwr_switch(device, pin, new_state);                 // switch
+  if (old_state == 0) { delay(500); }                 // delay
+  return old_state;
 }
 
 

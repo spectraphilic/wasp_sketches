@@ -31,7 +31,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
     return 0;
   }
 
-  if (! pwr_1wire(1)) { }
+  bool old_state = pwr_1wire(1);
 
   while ((len = file.fgets(word, sizeof(word), (char*)" \n")) > 0)
   {
@@ -104,7 +104,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
     }
   }
 
-  pwr_1wire(0);
+  pwr_1wire(old_state);
 
   file.close();
   if (len == -2)
