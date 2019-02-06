@@ -17,6 +17,7 @@ const char null               [] PROGMEM = "";
 const char frame_format_j     [] PROGMEM = "j";
 const char frame_format_jjj   [] PROGMEM = "jjj";
 const char frame_format_u     [] PROGMEM = "u";
+const char frame_format_v     [] PROGMEM = "v";
 const char frame_format_w     [] PROGMEM = "w";
 const char frame_format_ww    [] PROGMEM = "ww";
 const char frame_format_f     [] PROGMEM = "f";
@@ -77,9 +78,11 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_f,     // 206 Battery Volts
   frame_format_fffuf, // 207 WS100-UMB
   frame_format_ffffff,// 208 DS-2
-  frame_format_fff,   // 209 BME 0x76
+  frame_format_fff,   // 209 BME 0x76 (internal)
   frame_format_fff,   // 210 BME 0x77
-  //frame_format_f,     // 211 VL53L1X 0x29
+  frame_format_ff,    // 211 MLX90614
+  frame_format_f,     // 212 TMP102
+  frame_format_v,     // 213 VL53L1X
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";
@@ -100,7 +103,9 @@ const char frame_name_ws100    [] PROGMEM = "WS100";
 const char frame_name_ds2      [] PROGMEM = "DS-2";
 const char frame_name_bme76    [] PROGMEM = "BME int";
 const char frame_name_bme77    [] PROGMEM = "BME ext";
-//const char frame_name_vl       [] PROGMEM = "VL";
+const char frame_name_mlx      [] PROGMEM = "MLX";
+const char frame_name_tmp      [] PROGMEM = "TMP";
+const char frame_name_vl       [] PROGMEM = "VL";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -156,7 +161,9 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_ds2,                                             // 208 DS-2
   frame_name_bme76,                                           // 209 BME 0x76
   frame_name_bme77,                                           // 210 BME 0x77
-  //frame_name_vl,                                            // 211 VL53L1X 0x29
+  frame_name_mlx,                                             // 211 MLX90614
+  frame_name_tmp,                                             // 212 TMP102
+  frame_name_vl,                                              // 213 VL53L1X
 };
 
 /**

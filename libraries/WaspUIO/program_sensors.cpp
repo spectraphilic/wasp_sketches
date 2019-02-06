@@ -221,7 +221,7 @@ CR_TASK(taskI2C_MLX90614)
   float object, ambient;
   bool err = UIO.i2c_MLX90614(object, ambient);
   if (err) { return CR_TASK_ERROR; }
-  // TODO Frame
+  ADD_SENSOR(SENSOR_MLX90614, object, ambient);
   return CR_TASK_STOP;
 }
 
@@ -230,7 +230,7 @@ CR_TASK(taskI2C_TMP102)
   float temperature;
   bool err = UIO.i2c_TMP102(temperature);
   if (err) { return CR_TASK_ERROR; }
-  // TODO Frame
+  ADD_SENSOR(SENSOR_TMP102, temperature);
   return CR_TASK_STOP;
 }
 
@@ -239,8 +239,7 @@ CR_TASK(taskI2C_VL53L1X)
   uint16_t distance;
   bool err = UIO.i2c_VL53L1X(distance);
   if (err) { return CR_TASK_ERROR; }
-  // TODO Frame
-  //ADD_SENSOR(SENSOR_VL, distance);
+  ADD_SENSOR(SENSOR_VL53L1X, distance);
   return CR_TASK_STOP;
 }
 
