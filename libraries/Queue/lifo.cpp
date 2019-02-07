@@ -43,7 +43,7 @@ int LIFO::drop()
     close();
     return status;
   }
-  //cr.println(F("** lifo.drop(): %lu %lu"), offset, queue_size);
+  //cr.println(F("** lifo.drop(): %lu"), queue_size);
 
   // Truncate (pop)
   if (queue.truncate(queue_size - item_size) == false)
@@ -68,7 +68,7 @@ int LIFO::peek(uint8_t *item)
     close();
     return status;
   }
-  //cr.println(F("** lifo.peek(): %lu %lu"), offset, queue_size);
+  //cr.println(F("** lifo.peek(): %lu"), queue_size);
 
   // Read the record
   queue.seekEnd(-item_size);

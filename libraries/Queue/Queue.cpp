@@ -10,7 +10,6 @@ int Queue::push(uint8_t *item)
   // Security check, the file size must be a multiple of 8. If it is not we
   // consider there has been a write error, and we trunctate the file.
   queue_size = queue.fileSize();
-  //cr.println(F("** push(): %lu"), queue_size);
   uint32_t mod = queue_size % item_size;
   if (mod != 0)
   {
@@ -24,6 +23,7 @@ int Queue::push(uint8_t *item)
     return QUEUE_ERROR;
   }
 
+  //cr.println(F("** push(): %lu"), queue.fileSize());
   queue.close();
   return QUEUE_OK;
 }
