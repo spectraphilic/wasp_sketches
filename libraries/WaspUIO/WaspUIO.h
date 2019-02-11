@@ -250,7 +250,8 @@ void networkInit();
 void OTA_communication(int OTA_duration); // TODO
 XBee xbee;
 void xbeeInit();
-const char* BROADCAST_ADDRESS = "000000000000FFFF";
+int xbee_ping(int &rssi);
+//const char* BROADCAST_ADDRESS = "000000000000FFFF";
 #endif
 
 #if WITH_4G
@@ -266,6 +267,7 @@ char iridium_fw[9]; // firmware version
 void iridiumInit();
 int iridium_start();
 int iridium_stop();
+int iridium_ping();
 #endif
 
 #if WITH_CRYPTO
@@ -445,6 +447,7 @@ COMMAND(cmdNetwork);
 COMMAND(cmd1WireRead);
 COMMAND(cmd1WireScan);
 COMMAND(cmdPassword);
+COMMAND(cmdPing);
 COMMAND(cmdPrint);
 COMMAND(cmdRm);
 COMMAND(cmdRun);

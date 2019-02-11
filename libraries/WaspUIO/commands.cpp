@@ -45,6 +45,7 @@ const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
 const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g 2=iridium";
 const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
+const char CMD_PING      [] PROGMEM = "ping              - send a test message";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
 const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes, type just run to see "
@@ -92,6 +93,7 @@ const Command commands[] PROGMEM = {
 #if WITH_CRYPTO
   {"password ",     &cmdPassword,  CMD_PASSWORD},
 #endif
+  {"ping",          &cmdPing,      CMD_PING},
   {"print",         &cmdPrint,     CMD_PRINT},
   {"rm ",           &cmdRm,        CMD_RM},
   {"run",           &cmdRun,       CMD_RUN},
@@ -176,60 +178,6 @@ COMMAND(exeCommand)
   return cmd_bad_input;
 }
 
-
-#if WITH_4G
-/**
- * Set APN (Access Point Name) for 4G module
- */
-COMMAND(cmd4G_APN)
-{
-  char apn[30];
-
-  // Check input
-  int n = sscanf(str, "%29s", apn);
-  if (n == -1) // Suprisingly it returns -1 instead of 0
-  {
-    _4G.show_APN();
-  }
-  else if (n == 1)
-  {
-    UIO.writeEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
-    _4G.set_APN(apn);
-  }
-  else
-  {
-    return cmd_bad_input;
-  }
-
-  return cmd_ok;
-}
-
-COMMAND(cmd4G_Pin)
-{
-  unsigned int pin;
-
-  if (sscanf(str, "%u", &pin) != 1) { return cmd_bad_input; }
-  if (pin > 9999) { return cmd_bad_input; }
-
-  if (! UIO.updateEEPROM(EEPROM_UIO_PIN, pin)) { return cmd_error; }
-  UIO.pin = pin;
-
-  return cmd_ok;
-}
-
-/* Test 4G data connection */
-COMMAND(cmd4G_Test)
-{
-  uint8_t err = UIO._4GStart();
-  if (err)
-  {
-    return cmd_error;
-  }
-
-  UIO._4GStop();
-  return cmd_ok;
-}
-#endif
 
 /**
  * Internal: ack frame
@@ -410,30 +358,6 @@ COMMAND(cmdName)
   if (strlen(value) == 0) { return cmd_bad_input; }
 
   Utils.setID(value);
-  return cmd_ok;
-}
-
-
-/**
- * Choose network type
- */
-
-COMMAND(cmdNetwork)
-{
-  uint8_t value;
-
-  // Check input
-  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
-  if (value >= NETWORK_LEN) { return cmd_bad_input; }
-
-  // Do
-  if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK_TYPE, value)) { return cmd_error; }
-  UIO.networkType = (network_type_t) value;
-
-  // Action
-  UIO.setFrameSize();
-  UIO.networkInit();
-
   return cmd_ok;
 }
 
@@ -619,32 +543,6 @@ COMMAND(cmdGPS)
   {
     return cmd_error;
   }
-
-  return cmd_ok;
-}
-#endif
-
-
-#if WITH_XBEE
-/**
- * Choose Xbee network
- */
-COMMAND(cmdXBee)
-{
-  uint8_t value;
-
-  // Check input
-  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
-  if (value >= xbee_len) { return cmd_bad_input; }
-
-  // Do
-  memcpy_P(&UIO.xbee, &xbees[value], sizeof UIO.xbee);
-  if (! UIO.updateEEPROM(EEPROM_UIO_XBEE, UIO.xbee.panid[0]) ||
-      ! UIO.updateEEPROM(EEPROM_UIO_XBEE+1, UIO.xbee.panid[1]))
-  {
-    return cmd_error;
-  }
-  UIO.xbeeInit();
 
   return cmd_ok;
 }

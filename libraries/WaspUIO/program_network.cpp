@@ -68,7 +68,6 @@ CR_TASK(taskNetworkIridium)
   status = UIO.iridium_start(); // This takes ~700ms
   if (status != ISBD_SUCCESS)
   {
-    error(F("iridium_start() error=%d"), status);
     CR_ERROR;
   }
 
