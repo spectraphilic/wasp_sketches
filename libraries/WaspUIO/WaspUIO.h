@@ -313,8 +313,6 @@ void boot();
 void onSetup();
 void onLoop();
 bool action(uint8_t n, ...);
-const uint8_t loop_timeout = 4; // minutes
-const uint32_t send_timeout = 3 * 60; // seconds
 
 // Frames
 void createFrame(bool discard=false);
