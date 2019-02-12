@@ -6,6 +6,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   const __FlashStringHelper * err = NULL;
 
   debug(F("GPS start"));
+  if (_boot_version >= 'J') { stopSD(); }
 
   // On
   if (GPS.ON() == 0)
@@ -13,8 +14,6 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     error(F("GPS.ON() failure"));
     return -1;
   }
-
-  debug(F("GPS ON Success")); // XXX Remove
 
   // Connect
   if (GPS.waitForSignal(150) == false) // 150s = 2m30s
@@ -40,6 +39,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   }
 
   GPS.OFF();
+  if (_boot_version >= 'J') { startSD(); }
 
   if (setTime)
   {
@@ -65,6 +65,7 @@ exit:
   if (err)
   {
     GPS.OFF();
+    if (_boot_version >= 'J') { startSD(); }
     error(err);
     return -1;
   }
