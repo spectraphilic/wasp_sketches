@@ -249,6 +249,6 @@ void WaspUIO::deepSleep()
   // Awake: Reset if stuck for 4 minutes
   if (_boot_version >= 'H')
   {
-    RTC.setWatchdog(UIO.loop_timeout);
+    RTC.setWatchdog(LOOP_TIMEOUT);
   }
 }

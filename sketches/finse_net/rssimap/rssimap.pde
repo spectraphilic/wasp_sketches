@@ -58,43 +58,6 @@ uint8_t getPowerLevel()
   }
 }
 
-uint8_t ping()
-{
-  bool success = false;
-
-  info(F("ping() ..."));
-  USB.OFF();
-
-  // Action
-  if (xbeeDM.ON() == 0)
-  {
-    if (xbeeDM.send((char*)UIO.xbee.rx_address, (char*)"ping") == 0)
-    {
-      if (xbeeDM.getRSSI() == 0)
-      {
-        rssi = xbeeDM.valueRSSI[0];
-        rssi *= -1;
-        success = true;
-      }
-    }
-  }
-  xbeeDM.OFF();
-
-  // Print
-  USB.ON();
-  USB.flush();
-  if (success)
-  {
-    info(F("RSSI(dBm) = %d"), rssi);
-    return 0;
-  }
-  else
-  {
-    error(F("ping() Error"));
-    return 1;
-  }
-}
-
 
 void setup()
 {
@@ -129,7 +92,8 @@ void loop()
 
   // Get data and create frame
   time = UIO.getEpochTime();
-  if (ping() == 0)
+  info(F("ping() ..."));
+  if (UIO.xbee_ping(rssi) == 0)
   {
     // Frame
     frame.createFrameBin(BINARY);

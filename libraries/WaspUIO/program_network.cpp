@@ -10,6 +10,13 @@ CR_TASK(taskNetwork4G)
 
   CR_BEGIN;
 
+  // Check we've at least 30s to send something
+  if (cr.timeout(UIO.start, SEND_TIMEOUT - 30000L))
+  {
+    warn(F("No time left to send anything"));
+    CR_RETURN;
+  }
+
   if (UIO._4GStart())
   {
     error(F("_4GStart() failed"));
@@ -18,7 +25,7 @@ CR_TASK(taskNetwork4G)
 
   // Send frames
   debug(F("Sending frames..."));
-  while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
+  while (!cr.timeout(UIO.start, SEND_TIMEOUT))
   {
     t0 = millis();
 
@@ -65,10 +72,16 @@ CR_TASK(taskNetworkIridium)
 
   CR_BEGIN;
 
+  // Check we've at least 1m30 to send something
+  if (cr.timeout(UIO.start, SEND_TIMEOUT - 90000L))
+  {
+    warn(F("No time left to send anything"));
+    CR_RETURN;
+  }
+
   status = UIO.iridium_start(); // This takes ~700ms
   if (status != ISBD_SUCCESS)
   {
-    error(F("iridium_start() error=%d"), status);
     CR_ERROR;
   }
 
@@ -89,7 +102,7 @@ CR_TASK(taskNetworkIridium)
 
   // Send frames
   debug(F("Sending frames..."));
-  while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
+  while (!cr.timeout(UIO.start, SEND_TIMEOUT))
   {
     t0 = millis();
 
@@ -191,7 +204,7 @@ CR_TASK(taskNetworkXBeeSend)
   UIO.ack_wait = false;
 
   // Send frames
-  while (!cr.timeout(UIO.start, UIO.send_timeout * 1000)) // 3min max sending frames
+  while (!cr.timeout(UIO.start, SEND_TIMEOUT))
   {
     if (UIO.ack_wait == false)
     {
