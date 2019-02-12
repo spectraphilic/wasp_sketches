@@ -448,6 +448,7 @@ COMMAND(cmd1WireScan);
 COMMAND(cmdPassword);
 COMMAND(cmdPing);
 COMMAND(cmdPrint);
+COMMAND(cmdReboot);
 COMMAND(cmdRm);
 COMMAND(cmdRun);
 COMMAND(cmdSDI12);

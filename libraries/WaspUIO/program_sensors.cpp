@@ -236,16 +236,15 @@ CR_TASK(taskI2C_TMP102)
 
 CR_TASK(taskI2C_VL53L1X)
 {
-  uint8_t nbsamples = 30;
   uint8_t done = 0;
-  int distances[nbsamples];
+  int distances[VL_SAMPLES];
 
   CR_BEGIN;
-  uint8_t total = UIO.i2c_VL53L1X(distances, nbsamples);
+  uint8_t total = UIO.i2c_VL53L1X(distances, VL_SAMPLES);
   while (done < total)
   {
     uint8_t todo = total - done;
-    uint8_t n = (todo < nbsamples)? todo: nbsamples;
+    uint8_t n = (todo < VL_SAMPLES)? todo: VL_SAMPLES;
     ADD_SENSOR(SENSOR_VL53L1X, n, &(distances[done]));
     done += n;
   }
@@ -263,12 +262,12 @@ CR_TASK(taskI2C_VL53L1X)
 
 CR_TASK(taskTTL)
 {
-  uint8_t nbsamples = 12;
+  
   uint8_t done = 0;
-  int distances[nbsamples];
+  int distances[MB_SAMPLES];
   
   CR_BEGIN;
-  uint8_t total = UIO.readMaxbotixSerial(distances, nbsamples);
+  uint8_t total = UIO.readMaxbotixSerial(distances, MB_SAMPLES);
   if(total==0){
     return CR_TASK_ERROR;
   }
@@ -276,7 +275,7 @@ CR_TASK(taskTTL)
   while (done < total)
   {
     uint8_t todo = total - done;
-    uint8_t n = (todo < nbsamples)? todo: nbsamples;
+    uint8_t n = (todo < MB_SAMPLES)? todo: MB_SAMPLES;
     ADD_SENSOR(SENSOR_MB73XX, n, &(distances[done]));
     done += n;
   }

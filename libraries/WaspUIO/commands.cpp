@@ -23,7 +23,7 @@ typedef struct {
 const char CMD_1WIRE_READ[] PROGMEM = "1wire read        - Read DS18B20 string";
 const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+   - Scan DS18B20 in the given pins, save to onewire.txt";
 const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]      - Set 4G Access Point Name (APN)";
-const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - set pin for the 4G module (0=disabled)";
+const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - Set pin for the 4G module (0=disabled)";
 const char CMD_4G_TEST   [] PROGMEM = "4g test           - Test 4G data connection";
 const char CMD_ACK       [] PROGMEM = ""; // Hidden command
 const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]        - Read battery or change type: 1=lithium 2=lead";
@@ -44,9 +44,10 @@ const char CMD_LS        [] PROGMEM = "ls                - List files in SD card
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
 const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g 2=iridium";
-const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - password for frame encryption";
-const char CMD_PING      [] PROGMEM = "ping              - send a test message";
+const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - Password for frame encryption";
+const char CMD_PING      [] PROGMEM = "ping              - Send a test message";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
+const char CMD_REBOOT    [] PROGMEM = "reboot            - Reboot waspmote";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
 const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes, type just run to see "
                                       "the available names";
@@ -95,6 +96,7 @@ const Command commands[] PROGMEM = {
 #endif
   {"ping",          &cmdPing,      CMD_PING},
   {"print",         &cmdPrint,     CMD_PRINT},
+  {"reboot",        &cmdReboot,    CMD_REBOOT},
   {"rm ",           &cmdRm,        CMD_RM},
   {"run",           &cmdRun,       CMD_RUN},
 #if WITH_SDI
@@ -547,3 +549,17 @@ COMMAND(cmdGPS)
   return cmd_ok;
 }
 #endif
+
+COMMAND(cmdReboot)
+{
+
+  cr.println(F("Waspmote will reboot in 2s ..."));
+  delay(2000);
+
+  PWR.reboot();
+  return cmd_ok;
+}
+
+
+  
+
