@@ -263,10 +263,24 @@ CR_TASK(taskI2C_VL53L1X)
 
 CR_TASK(taskTTL)
 {
-  uint16_t mean, sd;
-  if (UIO.readMaxbotixSerial(mean, sd, 5)) { return CR_TASK_ERROR; }
+  uint8_t nbsamples = 12;
+  uint8_t done = 0;
+  int distances[nbsamples];
+  
+  CR_BEGIN;
+  uint8_t total = UIO.readMaxbotixSerial(distances, nbsamples);
+  if(total==0){
+    return CR_TASK_ERROR;
+  }
 
-  ADD_SENSOR(SENSOR_MB73XX, (uint32_t) mean, (uint32_t) sd);
+  while (done < total)
+  {
+    uint8_t todo = total - done;
+    uint8_t n = (todo < nbsamples)? todo: nbsamples;
+    ADD_SENSOR(SENSOR_MB73XX, n, &(distances[done]));
+    done += n;
+  }
+  CR_END;
 
   return CR_TASK_STOP;
 }

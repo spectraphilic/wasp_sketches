@@ -94,14 +94,14 @@ COMMAND(cmdI2C)
 
 COMMAND(cmdMB)
 {
-  uint16_t median, sd;
-  bool err = UIO.readMaxbotixSerial(median, sd, 5);
-  if (err)
-  {
-    return cmd_error;
+  uint8_t nbsamples = 3;
+    int distance[nbsamples];
+  uint8_t total = UIO.readMaxbotixSerial(distance, nbsamples);
+  if(total==(nbsamples)){
+      return cmd_ok;
+    }else{
+      return cmd_error;
   }
-
-  return cmd_ok;
 }
 
 
