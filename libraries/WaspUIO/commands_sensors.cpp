@@ -64,9 +64,17 @@ COMMAND(cmdI2C)
     err = UIO.i2c_TMP102(temperature);
   }
   else if (value == 15)
-  {
-    uint16_t distance;
-    err = UIO.i2c_VL53L1X(distance);
+  { 
+    uint8_t nbsamples = 3;
+    int distance[nbsamples];
+    uint8_t total = UIO.i2c_VL53L1X(distance, nbsamples);
+    debug(F("Total = %u"), total);
+
+    if(total==(nbsamples)){
+      err=0;
+    }else{
+      err=1;
+    }
   }
   else
   {

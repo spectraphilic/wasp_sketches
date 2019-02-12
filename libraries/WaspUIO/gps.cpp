@@ -3,6 +3,7 @@
 
 int8_t WaspUIO::gps(bool setTime, bool getPosition)
 {
+  warn(F("enterGPS command"));
   // Check feature availability
   if (! UIO.hasGPS) { return -1; }
 

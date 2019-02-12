@@ -236,12 +236,23 @@ CR_TASK(taskI2C_TMP102)
 
 CR_TASK(taskI2C_VL53L1X)
 {
-  uint16_t distance;
-  bool err = UIO.i2c_VL53L1X(distance);
-  if (err) { return CR_TASK_ERROR; }
-  ADD_SENSOR(SENSOR_VL53L1X, distance);
-  return CR_TASK_STOP;
+  uint8_t nbsamples = 30;
+  uint8_t done = 0;
+  int distances[nbsamples];
+
+  CR_BEGIN;
+  uint8_t total = UIO.i2c_VL53L1X(distances, nbsamples);
+  while (done < total)
+  {
+    uint8_t todo = total - done;
+    uint8_t n = (todo < nbsamples)? todo: nbsamples;
+    ADD_SENSOR(SENSOR_VL53L1X, n, &(distances[done]));
+    done += n;
+  }
+  CR_END;
+
 }
+
 
 
 /**

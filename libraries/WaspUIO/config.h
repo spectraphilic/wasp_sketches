@@ -10,7 +10,7 @@
 // Sensors
 #define WITH_I2C TRUE
 #define WITH_SDI FALSE
-#define WITH_1WIRE TRUE
+#define WITH_1WIRE FALSE
 #define WITH_MB TRUE
 
 // Pins
@@ -31,4 +31,4 @@
 // Iridium specific
 // Save frames to lifo instead of fifo every n loops. If a loop is 5min a value
 // of 120 will save to lifo once every 6h.
-#define SAVE_TO_LIFO 120
+#define SAVE_TO_LIFO 3

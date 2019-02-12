@@ -252,21 +252,32 @@ bool WaspUIO::i2c_TMP102(float &temperature)
  * https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library/tree/master/examples/Example1_ReadDistance
  */
 
-bool WaspUIO::i2c_VL53L1X(uint16_t &distance)
+uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
 {
+
+  //modifying code to get multiple measurements (like in the case of ds18b10)
   VL53L1X distanceSensor;
+  uint8_t max_sample = 99;
+  uint8_t n = 0;
+  int16_t tmp;
 
   if (distanceSensor.begin() == false)
   {
     return 1;
   }
+  if(nbsample>=max_sample)
+  {
+    nbsample = max_sample;
+  }
 
-  // Poll for completion of measurement. Takes 40-50ms.
-  while (distanceSensor.newDataReady() == false)
-    delay(5);
+  while(n < nbsample){
+    // Poll for completion of measurement. Takes 40-50ms.
+    while (distanceSensor.newDataReady() == false)
+      delay(5);
 
-  distance = distanceSensor.getDistance();
-  debug(F("Distance(mm): %u"), distance);
-
-  return 0;
+      tmp = distanceSensor.getDistance();
+      debug(F("Distance %u (mm): %u"), n, tmp);
+      distances[n++] = tmp;
+  }
+  return n;
 }

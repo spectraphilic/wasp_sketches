@@ -82,7 +82,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_fff,   // 210 BME 0x77
   frame_format_ff,    // 211 MLX90614
   frame_format_f,     // 212 TMP102
-  frame_format_v,     // 213 VL53L1X
+  frame_format_n,     // 213 VL53L1X
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";

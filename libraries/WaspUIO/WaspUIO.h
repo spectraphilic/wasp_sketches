@@ -375,7 +375,8 @@ bool i2c_AS7265(
 bool i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
 bool i2c_MLX90614(float &object, float &ambient);
 bool i2c_TMP102(float &temperature);
-bool i2c_VL53L1X(uint16_t &distance);
+
+uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
 
 // SDI-12
 const char* sdi_identify(uint8_t address);
