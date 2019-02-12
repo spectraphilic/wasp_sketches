@@ -63,7 +63,7 @@ exit:
   if (err)
   {
     GPS.OFF();
-    error(err, xbeeDM.error_AT);
+    error(err);
     return -1;
   }
   return 0;
