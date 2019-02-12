@@ -182,10 +182,6 @@ class Loop
     uint32_t millisDiff(uint32_t t0) __attribute__((noinline));
     bool timeout(uint32_t t0, uint32_t timeout);
 
-    // Error handling
-    char last_error[150];
-    void set_last_error(const __FlashStringHelper *, ...);
-
     // Printing to USB done right. The print functions takes a formatted
     // string, either a regular string (char*) or one stored in the program
     // memory (F).  The println variant append a new line.
