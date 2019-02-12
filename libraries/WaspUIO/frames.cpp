@@ -687,14 +687,15 @@ uint8_t WaspUIO::frame2Sd()
   // (2) Store frame in archive file
   if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
   {
-    error(cr.last_error);
+    error(F("Open data file failure"));
     return 1;
   }
   size = dataFile.fileSize();
 
   if (sd_append(dataFile, frame.buffer, frame.length))
   {
-    error(cr.last_error);
+    dataFile.close();
+    error(F("Append to data file failure"));
     return 1;
   }
   dataFile.close();
