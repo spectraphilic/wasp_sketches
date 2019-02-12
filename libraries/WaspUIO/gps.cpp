@@ -14,6 +14,8 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     return -1;
   }
 
+  debug(F("GPS ON Success")); // XXX Remove
+
   // Connect
   if (GPS.waitForSignal(150) == false) // 150s = 2m30s
   {

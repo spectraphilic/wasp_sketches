@@ -64,7 +64,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
     {
       if (sd_append(UIO.logFile, buffer, strlen(buffer)))
       {
-        cr.println(F("Append to lof file failure"));
+        cr.println(F("Append to log file failure"));
 	UIO.logFile.close();
       }
     }
