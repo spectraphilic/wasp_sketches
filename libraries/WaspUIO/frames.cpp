@@ -380,7 +380,7 @@ exit:
   {
     if (err == -1)
     {
-      info(F("No space left in frame"));
+      debug(F("No space left in frame"));
     }
 
     frame.length = start;
@@ -720,6 +720,8 @@ uint8_t WaspUIO::frame2Sd()
 #else
   if (fifo.push(item)) { return 2; }
 #endif
+
+  info(F("Frame saved to SD (%d fields in %d bytes)"), frame.numFields, frame.length);
 
   return 0;
 }
