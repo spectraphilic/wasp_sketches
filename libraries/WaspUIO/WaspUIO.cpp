@@ -177,8 +177,8 @@ uint32_t WaspUIO::nextAlarm(char* alarmTime)
   uint32_t next = ULONG_MAX / 60; // max posible value of minutes since epoch
   uint32_t epoch = getEpochTime();
 
-  // Add 5s safeguard, this means we've 5s before going to sleep
-  epoch += 5;
+  // Add 2s safeguard, this means we've 2s before going to sleep
+  epoch += 2;
 
   uint32_t minutes = (epoch / 60); // minutes since epoch
   for (uint8_t i=0; i < RUN_LEN; i++)
@@ -235,10 +235,7 @@ void WaspUIO::deepSleep()
   // Reset watchdog
   if (_boot_version >= 'H')
   {
-    if (next < 59) // XXX Maximum is 59
-    {
-      RTC.setWatchdog(next + 1);
-    }
+    RTC.setWatchdog(next + 2); // Max is 43200 (30 days)
   }
 
   // Power off and Sleep
