@@ -73,7 +73,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null,               // 201 Reserved, do not reuse (was 201 DS-2 1)
   null,               // 202 Reserved, do not reuse (was 201 DS-2 2)
   frame_format_n,     // 203 DS18B20
-  frame_format_n,    // 204 MB73XX
+  frame_format_n,     // 204 MB73XX_old
   frame_format_ww,    // 205 GPS statistics
   frame_format_f,     // 206 Battery Volts
   frame_format_fffuf, // 207 WS100-UMB
@@ -83,6 +83,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_ff,    // 211 MLX90614
   frame_format_f,     // 212 TMP102
   frame_format_n,     // 213 VL53L1X
+  frame_format_n,     // 214 MB73XX
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";
@@ -96,7 +97,7 @@ const char frame_name_altitude [] PROGMEM = "ALT";
 const char frame_name_tst      [] PROGMEM = "TST";
 const char frame_name_ctd10    [] PROGMEM = "CTD10";
 const char frame_name_ds18b20  [] PROGMEM = "DS18B20";
-const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
+const char frame_name_mb73xx_old [] PROGMEM = "MB73XX_old";
 const char frame_name_gps_stats[] PROGMEM = "GPS STATS";
 const char frame_name_bat_volts[] PROGMEM = "BAT VOLTS";
 const char frame_name_ws100    [] PROGMEM = "WS100";
@@ -106,6 +107,7 @@ const char frame_name_bme77    [] PROGMEM = "BME ext";
 const char frame_name_mlx      [] PROGMEM = "MLX";
 const char frame_name_tmp      [] PROGMEM = "TMP";
 const char frame_name_vl       [] PROGMEM = "VL";
+const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -154,7 +156,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null,                                                       // 201 Reserved, do not reuse (was 201 DS-2 1)
   null,                                                       // 202 Reserved, do not reuse (was 201 DS-2 2)
   frame_name_ds18b20,                                         // 203 DS18B20
-  frame_name_mb73xx,                                          // 204 MB73XX
+  frame_name_mb73xx_old,                                      // 204 MB73XX_old
   frame_name_gps_stats,                                       // 205 GPS statistics
   frame_name_bat_volts,                                       // 206 Battery Volts
   frame_name_ws100,                                           // 207 WS100-UMB
@@ -164,6 +166,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_mlx,                                             // 211 MLX90614
   frame_name_tmp,                                             // 212 TMP102
   frame_name_vl,                                              // 213 VL53L1X
+  frame_name_mb73xx,                                          // 214 MB73XX
 };
 
 /**
