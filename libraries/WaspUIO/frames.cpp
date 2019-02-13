@@ -73,7 +73,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null,               // 201 Reserved, do not reuse (was 201 DS-2 1)
   null,               // 202 Reserved, do not reuse (was 201 DS-2 2)
   frame_format_n,     // 203 DS18B20
-  frame_format_n,     // 204 MB73XX_old
+  frame_format_ww,    // 204 MB73XX_old
   frame_format_ww,    // 205 GPS statistics
   frame_format_f,     // 206 Battery Volts
   frame_format_fffuf, // 207 WS100-UMB

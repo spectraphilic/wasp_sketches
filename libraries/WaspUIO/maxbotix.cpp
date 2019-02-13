@@ -89,7 +89,7 @@ uint8_t WaspUIO::readMaxbotixSerial(int samples[], uint8_t nsamples)
   // Get samples
   for (i=0, j=0; (i < max) && (j < nsamples); i++)
   {
-    int sample = getMaxbotixSample();
+    int16_t sample = getMaxbotixSample();
     if (sample < 0)
     {
       delay(10);
