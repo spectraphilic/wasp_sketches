@@ -278,6 +278,7 @@ uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
       tmp = distanceSensor.getDistance();
       debug(F("Distance %u (mm): %u"), n, tmp);
       distances[n++] = tmp;
+      delay(200);
   }
   return n;
 }

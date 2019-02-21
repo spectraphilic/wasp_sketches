@@ -9,7 +9,7 @@
 
 // Sensors
 #define WITH_I2C TRUE
-#define WITH_SDI FALSE
+#define WITH_SDI TRUE
 #define WITH_1WIRE FALSE
 #define WITH_MB TRUE
 
