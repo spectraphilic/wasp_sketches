@@ -99,7 +99,6 @@ void WaspUIO::onLoop()
 {
   cr.sleep_time = 0;
 
-  RTC.ON(); // XXX Do we need this?
   loadTime();
   UIO.startSD();
 
