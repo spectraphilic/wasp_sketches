@@ -10,14 +10,30 @@ void WaspUIO::startSD()
   if (WaspRegister & REG_SD)
     return;
 
-  hasSD = SD.ON();
-  if (! hasSD)
+  // This fixs a bug with J firmware, see
+  // https://github.com/spectraphilic/wasp_sketches/issues/52
+  SD.OFF();
+
+  // Apparently we don't really need to retry, the call to SD.OFF does the
+  // trick, but leaving this here for now
+  // TODO Remove it eventually
+  const uint8_t retries = 2;
+  for (uint8_t i=0; i < retries; i++)
   {
-    cr.println(F("SD.ON() failed flag=%u"), SD.flag);
-    return;
+    hasSD = SD.ON();
+    if (hasSD) break;
+    SD.OFF();
+    USB.print("x");
   }
 
-  baselayout();
+  if (hasSD)
+  {
+    baselayout();
+  }
+  else
+  {
+    cr.println(F("SD.ON() failed flag=%u %d"), SD.flag, SD.card.errorCode());
+  }
 }
 
 void WaspUIO::stopSD()
