@@ -19,7 +19,7 @@ char WaspUIO::sdi_read_address()
     return sdi.read_address();
 }
 
-uint8_t WaspUIO::sdi_set_address(char current_address, char new_address)
+uint8_t WaspUIO::sdi_set_address(uint8_t current_address, uint8_t new_address)
 {
     return sdi.set_address(current_address, new_address);
 }

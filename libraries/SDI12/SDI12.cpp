@@ -830,11 +830,11 @@ char WaspSDI12::read_address()
 }
 
 /* Changes the address of the sensor. */
-uint8_t WaspSDI12::set_address(char current_address, char new_address)
+uint8_t WaspSDI12::set_address(uint8_t current_address, uint8_t new_address)
 {
     char aux[5];
 
-    snprintf(aux, sizeof(aux), "%cA%c!", current_address, new_address);
+    snprintf(aux, sizeof(aux), "%dA%d!", current_address, new_address);
     sendCommand(aux);
 
     if (buffer == NULL)

@@ -112,7 +112,7 @@ class WaspSDI12
 		int measure(uint8_t address);
 		const char* data(uint8_t address);
 		char read_address();
-		uint8_t set_address(char current_address, char new_address);
+		uint8_t set_address(uint8_t current_address, uint8_t new_address);
 		
 		
 	private:

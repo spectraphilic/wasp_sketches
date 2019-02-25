@@ -379,9 +379,9 @@ bool i2c_TMP102(float &temperature);
 uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
 
 // SDI-12
-const char* sdi_identify(uint8_t address);
 char sdi_read_address();
-uint8_t sdi_set_address(char current_address, char new_address);
+const char* sdi_identify(uint8_t address);
+uint8_t sdi_set_address(uint8_t current_address, uint8_t new_address);
 
 // Utils
 int8_t index(const char* const list[], size_t size, const char* str);
