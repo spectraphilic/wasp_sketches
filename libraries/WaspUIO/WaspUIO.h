@@ -93,26 +93,29 @@ enum run_t {
   RUN_LAGOPUS_MLX90614,
   RUN_LAGOPUS_TMP102,
   RUN_LAGOPUS_VL53L1X,
+  RUN_ATMOS, // SDI-12
   RUN_LEN // Special value
 };
 
-const char RUN_NETWORK_NAME [] PROGMEM = "net";            // 0 network
-const char RUN_BATTERY_NAME [] PROGMEM = "bat";            // 1 battery
-const char RUN_GPS_NAME     [] PROGMEM = "gps";            // 2 gps
-const char RUN_ACC_NAME     [] PROGMEM = "acc";            // 3 accelerometer
-const char RUN_CTD10_NAME   [] PROGMEM = "ctd";            // 4 water
-const char RUN_DS2_NAME     [] PROGMEM = "ds2";            // 5 wind
-const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";         // 6 temperature string
-const char RUN_MB_NAME      [] PROGMEM = "mb";             // 8 sonar
-const char RUN_WS100_NAME   [] PROGMEM = "ws100";          // 9 rain
+const char RUN_NETWORK_NAME [] PROGMEM = "net";             // 0 network
+const char RUN_BATTERY_NAME [] PROGMEM = "bat";             // 1 battery
+const char RUN_GPS_NAME     [] PROGMEM = "gps";             // 2 gps
+const char RUN_ACC_NAME     [] PROGMEM = "acc";             // 3 accelerometer
+const char RUN_CTD10_NAME   [] PROGMEM = "ctd";             // 4 water
+const char RUN_DS2_NAME     [] PROGMEM = "ds2";             // 5 wind
+const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";          // 6 temperature string
+const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
+const char RUN_WS100_NAME   [] PROGMEM = "ws100";           // 9 rain
 // I2C
-const char RUN_BME280_NAME  [] PROGMEM = "bme76";        // 7 atmospheric (internal)
-const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263";  // 10 spectrum
-const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265";  // 11 spectrum
-const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme"; // 12 atmospheric
-const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx"; // 13 infrared thermometer
-const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp"; // 14 digital temperature
-const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";  // 15 distance
+const char RUN_BME280_NAME  [] PROGMEM = "bme76";           // 7 atmospheric (internal)
+const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
+const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265"; // 11 spectrum
+const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme";    // 12 atmospheric
+const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx";    // 13 infrared thermometer
+const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp";    // 14 digital temperature
+const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";     // 15 distance
+// More
+const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
 
 const char* const run_names[] PROGMEM = {
   RUN_NETWORK_NAME,
@@ -131,6 +134,7 @@ const char* const run_names[] PROGMEM = {
   RUN_LAGOPUS_MLX90614_NAME,
   RUN_LAGOPUS_TMP102_NAME,
   RUN_LAGOPUS_VL53L1X_NAME,
+  RUN_ATMOS_NAME,
 };
 
 // Flags available: 2 8 16 32 64 128
@@ -516,6 +520,7 @@ CR_TASK(taskSensors);
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
+CR_TASK(taskSdiAtmos);
 // Externally powered devices
 CR_TASK(taskExt);
 CR_TASK(taskSdiWS100); // Uses SDI-12
@@ -558,5 +563,6 @@ CR_TASK(taskSlow);
 #define SENSOR_TMP102    212
 #define SENSOR_VL53L1X   213
 #define SENSOR_MB73XX    214
+#define SENSOR_ATMOS     215
 
 #endif
