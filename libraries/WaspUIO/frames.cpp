@@ -26,6 +26,7 @@ const char frame_format_fff   [] PROGMEM = "fff";
 const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_fffuf [] PROGMEM = "fffuf";
 const char frame_format_ffffff[] PROGMEM = "ffffff";
+const char frame_format_fvffff[] PROGMEM = "fvffff";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -84,6 +85,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_f,     // 212 TMP102
   frame_format_n,     // 213 VL53L1X
   frame_format_n,     // 214 MB73XX
+  frame_format_fvffff // 215 ATMOS-22
 };
 
 const char frame_name_bat      [] PROGMEM = "BAT";
@@ -107,6 +109,7 @@ const char frame_name_mlx      [] PROGMEM = "MLX";
 const char frame_name_tmp      [] PROGMEM = "TMP";
 const char frame_name_vl       [] PROGMEM = "VL";
 const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
+const char frame_name_atmos    [] PROGMEM = "ATMOS";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -161,11 +164,13 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_ws100,                                           // 207 WS100-UMB
   frame_name_ds2,                                             // 208 DS-2
   frame_name_bme76,                                           // 209 BME 0x76
+  // 21x
   frame_name_bme77,                                           // 210 BME 0x77
   frame_name_mlx,                                             // 211 MLX90614
   frame_name_tmp,                                             // 212 TMP102
   frame_name_vl,                                              // 213 VL53L1X
   frame_name_mb73xx,                                          // 214 MB73XX
+  frame_name_atmos,                                           // 215 ATMOS-22
 };
 
 /**

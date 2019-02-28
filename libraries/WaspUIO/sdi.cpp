@@ -28,7 +28,6 @@ uint8_t WaspUIO::sdi_set_address(uint8_t current_address, uint8_t new_address)
  * Tasks
  */
 
-
 CR_TASK(taskSdi)
 {
   static tid_t tid;
@@ -53,8 +52,20 @@ CR_TASK(taskSdi)
     CR_JOIN(tid);
   }
 
+  // ATMOS
+  if (UIO.action(1, RUN_ATMOS))
+  {
+    CR_SPAWN2(taskSdiAtmos, tid);
+    CR_JOIN(tid);
+  }
+
   CR_END;
 }
+
+
+/*
+ * Tasks: CTD-10
+ */
 
 CR_TASK(taskSdiCtd10)
 {
@@ -85,41 +96,86 @@ CR_TASK(taskSdiCtd10)
   CR_END;
 }
 
+
+/*
+ * Tasks: DS-2
+ */
+
 CR_TASK(taskSdiDs2)
 {
+  char *next;
+
   CR_BEGIN;
 
-  // Send the measure command
-  if (sdi.sendCommand(1, "M6") == NULL)
-  {
-    CR_ERROR;
-  }
+  // aM6!
+  if (sdi.sendCommand(1, "M6") == NULL) { CR_ERROR; }
 
   // XXX In theory we should wait for the time returned by the M command. But
   // tests show it returns 1, probably because 1s is all it needs to return an
   // instantaneous value. But we want averages, so we have to wait >10s.
   CR_DELAY(11000);
 
-  // Wind speed&direction, air temp
-  if (sdi.sendCommand(1, "D0") == NULL)
-  {
-    CR_ERROR;
-  }
+  // aD0!
+  // Response example: 1+1.04+347+25.2+1.02-0.24+2.05
+  if (sdi.sendCommand(1, "D0") == NULL) { CR_ERROR; }
 
-  // Frame. The result looks like 1+1.04+347+25.2+1.02-0.24+2.05
-  char *next;
-  double a, b, c, d, e, f;
+  double speed = strtod(sdi.buffer+1, &next);
+  // TODO Change dir to uint16_t, will require new frame field, see ATMOS code
+  double dir = strtod(next, &next);
+  double temp = strtod(next, &next);
+  double meridional = strtod(next, &next);
+  double zonal = strtod(next, &next);
+  double gust = strtod(next, &next);
 
-  a = strtod(sdi.buffer+1, &next);
-  b = strtod(next, &next);
-  c = strtod(next, &next);
-  d = strtod(next, &next);
-  e = strtod(next, &next);
-  f = strtod(next, &next);
-  ADD_SENSOR(SENSOR_DS2, a, b, c, d, e, f);
+  // Frame
+  ADD_SENSOR(SENSOR_DS2, speed, dir, temp, meridional, zonal, gust);
 
   CR_END;
 }
+
+
+CR_TASK(taskSdiAtmos)
+{
+  char *next;
+
+  CR_BEGIN;
+
+  // aM!
+  if (sdi.sendCommand(2, "M") == NULL) { CR_ERROR; }
+
+  // XXX In theory we should wait for the time returned by the M command. But
+  // tests show it returns 1, probably because 1s is all it needs to return an
+  // instantaneous value. But we want averages, so we have to wait >10s.
+  CR_DELAY(11000);
+
+  // aD0: speed, direction and gust
+  if (sdi.sendCommand(2, "D0") == NULL) { CR_ERROR; }
+  double speed = strtod(sdi.buffer+1, &next);
+  unsigned long dir = strtoul(next, &next, 10);
+  double gust = strtod(next, &next);
+
+  // aD1: temperature
+  if (sdi.sendCommand(2, "D1") == NULL) { CR_ERROR; }
+  double temp = strtod(sdi.buffer+1, &next);
+
+  // aM1!
+  if (sdi.sendCommand(2, "M1") == NULL) { CR_ERROR; }
+  delay(1); // Don't use CR_DELAY here, otherwise we will lose local vars above
+  // aD0: x, y (orientation)
+  if (sdi.sendCommand(2, "D0") == NULL) { CR_ERROR; }
+  double x = strtod(sdi.buffer+1, &next);
+  double y = strtod(next, &next);
+
+  // Frame
+  ADD_SENSOR(SENSOR_ATMOS, speed, (uint16_t)dir, gust, temp, x, y);
+
+  CR_END;
+}
+
+
+/*
+ * Tasks: WS100
+ */
 
 CR_TASK(taskExt)
 {
