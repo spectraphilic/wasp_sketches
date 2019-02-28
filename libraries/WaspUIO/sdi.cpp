@@ -151,7 +151,8 @@ CR_TASK(taskSdiAtmos)
   // aD0: speed, direction and gust
   if (sdi.sendCommand(2, "D0") == NULL) { CR_ERROR; }
   double speed = strtod(sdi.buffer+1, &next);
-  unsigned long dir = strtoul(next, &next, 10);
+  double dir = strtoul(next, &next, 10);
+  //unsigned long dir = strtoul(next, &next, 10);
   double gust = strtod(next, &next);
 
   // aD1: temperature

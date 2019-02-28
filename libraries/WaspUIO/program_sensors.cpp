@@ -54,7 +54,7 @@ CR_TASK(taskSensors)
 
   // SDI-12
 #if WITH_SDI
-  if (UIO.action(2, RUN_CTD10, RUN_DS2))
+  if (UIO.action(3, RUN_CTD10, RUN_DS2, RUN_ATMOS))
   {
     UIO.pwr_sdi12(1);
     CR_SPAWN2(taskSdi, id);
