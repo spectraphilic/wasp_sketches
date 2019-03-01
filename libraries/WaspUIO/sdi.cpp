@@ -166,7 +166,7 @@ CR_TASK(taskSdiAtmos)
   double y = strtod(next, &next);
 
   // Frame
-  ADD_SENSOR(SENSOR_ATMOS, speed, (uint16_t)dir, gust, temp, x, y);
+  ADD_SENSOR(SENSOR_ATMOS, speed, dir, gust, temp, x, y);
 
   CR_END;
 }
