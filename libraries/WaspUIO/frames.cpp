@@ -26,7 +26,6 @@ const char frame_format_fff   [] PROGMEM = "fff";
 const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_fffuf [] PROGMEM = "fffuf";
 const char frame_format_ffffff[] PROGMEM = "ffffff";
-const char frame_format_fvffff[] PROGMEM = "fvffff";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
