@@ -2,7 +2,7 @@
  * Short Bus Data protocol (SBD)
  * Packet size (TX): 340bytes
  * Pins Iridium to Waspomote:
- * 5V (BATTERY) / Gnd / TX (2TX) / RX (2RX) / Sleep (DIGITAL) / RING (not use)
+ * 5V (BATTERY) / Gnd / TX (2TX) / RX (2RX) / Sleep (DIGITAL4) / RING (not use)
  * RX/TX to UART1 (19200 bauds)
  */
 
