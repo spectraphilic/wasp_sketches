@@ -25,7 +25,6 @@ const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+   - Scan DS18B20 in the g
 const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]      - Set 4G Access Point Name (APN)";
 const char CMD_4G_GPS    [] PROGMEM = "4g gps            - Get position from 4G's GPS";
 const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - Set pin for the 4G module (0=disabled)";
-const char CMD_4G_TEST   [] PROGMEM = "4g test           - Test 4G data connection";
 const char CMD_ACK       [] PROGMEM = ""; // Hidden command
 const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]        - Read battery or change type: 1=lithium 2=lead";
 const char CMD_BOARD     [] PROGMEM = "board VALUE       - Choose the sensor board: 0=none 1=lemming";
@@ -68,7 +67,6 @@ const Command commands[] PROGMEM = {
   {"4g apn",        &cmd4G_APN,    CMD_4G_APN},
   {"4g gps",        &cmd4G_GPS,    CMD_4G_GPS},
   {"4g pin ",       &cmd4G_Pin,    CMD_4G_PIN},
-  {"4g test",       &cmd4G_Test,   CMD_4G_TEST},
 #endif
   {"ack",           &cmdAck,       CMD_ACK}, // Internal use only
   {"bat",           &cmdBattery,   CMD_BATTERY},

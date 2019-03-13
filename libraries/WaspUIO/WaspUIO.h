@@ -265,6 +265,7 @@ void _4GInit();
 uint8_t _4GStart();
 uint8_t _4GStop();
 uint8_t _4GGPS();
+int _4GPing();
 #endif
 
 #if WITH_IRIDIUM
@@ -431,7 +432,6 @@ COMMAND(exeCommand);
 COMMAND(cmd4G_APN);
 COMMAND(cmd4G_GPS);
 COMMAND(cmd4G_Pin);
-COMMAND(cmd4G_Test);
 COMMAND(cmdAck);
 COMMAND(cmdBattery);
 COMMAND(cmdBoard);

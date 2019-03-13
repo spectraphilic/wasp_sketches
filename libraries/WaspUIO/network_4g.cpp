@@ -2,6 +2,23 @@
 
 
 #if WITH_4G
+const char _4G_GPRS [] PROGMEM = "GPRS";
+const char _4G_EGPRS [] PROGMEM = "EGPRS";
+const char _4G_WCDMA [] PROGMEM = "WCDMA";
+const char _4G_HSDPA [] PROGMEM = "HSDPA";
+const char _4G_LTE [] PROGMEM = "LTE";
+const char _4G_UNKNOWN [] PROGMEM = "UNKNOWN";
+
+const char* const _4G_networks[] PROGMEM = {
+  _4G_GPRS,
+  _4G_EGPRS,
+  _4G_WCDMA,
+  _4G_HSDPA,
+  _4G_LTE,
+  _4G_UNKNOWN,
+};
+
+
 void WaspUIO::_4GInit()
 {
 }
@@ -78,6 +95,56 @@ uint8_t WaspUIO::_4GStart()
 uint8_t WaspUIO::_4GStop()
 {
   _4G.OFF();
+  return 0;
+}
+
+
+/* Test 4G data connection */
+int WaspUIO::_4GPing()
+{
+  uint8_t err = UIO._4GStart();
+  if (err)
+  {
+    return 1;
+  }
+
+  // Network type
+  err = _4G.getNetworkType();
+  if (err == 0 && _4G._networkType < sizeof(_4G_networks) / sizeof(const char*))
+  {
+    char name[10];
+    strcpy_P(name, (char*)pgm_read_word(&(_4G_networks[_4G._networkType])));
+    cr.println(F("Network: %s"), name);
+  }
+  else
+  {
+    cr.println(F("Network: ERROR"));
+  }
+
+  // Operator
+  char operator_name[20] = {0};
+  err = _4G.getOperator(operator_name);
+  if (err == 0)
+  {
+    cr.println(F("Operator: %s"), operator_name);
+  }
+  else
+  {
+    cr.println(F("Operator: ERROR"));
+  }
+
+  // RSSI
+  err = _4G.getRSSI();
+  if (err == 0)
+  {
+    cr.println(F("RSSI: %d dBm"), _4G._rssi);
+  }
+  else
+  {
+    cr.println(F("RSSI: ERROR"));
+  }
+
+  UIO._4GStop();
   return 0;
 }
 
