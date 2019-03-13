@@ -47,6 +47,14 @@ CR_TASK(taskMain)
   }
 #endif
 
+#if WITH_4G
+  if (! UIO.hasGPS && UIO.action(1, RUN_GPS))
+  {
+    CR_SPAWN2(taskGPS4G, gps_id);
+    CR_JOIN(gps_id);
+  }
+#endif
+
   // Save the last frame, if there is something to save
   if (frame.numFields > 1) { UIO.frame2Sd(); }
 

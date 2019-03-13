@@ -546,6 +546,7 @@ CR_TASK(taskNetworkXBeeSend);
 CR_TASK(taskNetworkXBeeReceive);
 // GPS
 CR_TASK(taskGPS);
+CR_TASK(taskGPS4G);
 // For testing purposes
 CR_TASK(taskSlow);
 

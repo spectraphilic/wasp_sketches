@@ -188,11 +188,16 @@ uint8_t WaspUIO::_4GGPS()
     // Debug
     char lat_str[15];
     char lon_str[15];
+    char alt_str[15];
     Utils.float2String(lat, lat_str, 6);
     Utils.float2String(lon, lon_str, 6);
     debug(F("GPS latitude  %s %c => %s"), _4G._latitude, _4G._latitudeNS, lat_str);
     debug(F("GPS longitude %s %c => %s"), _4G._longitude, _4G._longitudeEW, lon_str);
-    debug(F("GPS altitude=%s course=%s speed=%s"), GPS.altitude, GPS.course, GPS.speed);
+    debug(F("GPS altitude=%s course=%s speed=%s"),
+      Utils.float2String(_4G._altitude, alt_str, 6),
+      _4G._courseOG,
+      _4G._speedOG
+    );
 
     // Frame
     ADD_SENSOR(SENSOR_GPS, lat, lon);
