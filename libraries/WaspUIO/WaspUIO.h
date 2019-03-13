@@ -264,6 +264,7 @@ uint16_t pin; // Pin for 4G module
 void _4GInit();
 uint8_t _4GStart();
 uint8_t _4GStop();
+uint8_t _4GGPS();
 #endif
 
 #if WITH_IRIDIUM
@@ -428,6 +429,7 @@ uint8_t _getPin(uint8_t);
 #define COMMAND(name) cmd_status_t name(const char* str)
 COMMAND(exeCommand);
 COMMAND(cmd4G_APN);
+COMMAND(cmd4G_GPS);
 COMMAND(cmd4G_Pin);
 COMMAND(cmd4G_Test);
 COMMAND(cmdAck);
@@ -543,7 +545,7 @@ CR_TASK(taskNetworkXBee);
 CR_TASK(taskNetworkXBeeSend);
 CR_TASK(taskNetworkXBeeReceive);
 // GPS
-CR_TASK(taskGps);
+CR_TASK(taskGPS);
 // For testing purposes
 CR_TASK(taskSlow);
 

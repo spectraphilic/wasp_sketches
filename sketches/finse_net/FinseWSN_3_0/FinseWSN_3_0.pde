@@ -49,7 +49,7 @@ void setup()
   if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
   {
     warn(F("Wrong time detected, updating from GPS"));
-    taskGps();
+    taskGPS();
   }
 #endif
 

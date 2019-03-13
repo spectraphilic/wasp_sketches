@@ -28,15 +28,36 @@ COMMAND(cmd4G_APN)
   return cmd_ok;
 }
 
+COMMAND(cmd4G_GPS)
+{
+  uint8_t err = UIO._4GGPS();
+  if (err)
+  {
+    return cmd_error;
+  }
+
+  return cmd_quiet;
+}
+
 COMMAND(cmd4G_Pin)
 {
   unsigned int pin;
 
-  if (sscanf(str, "%u", &pin) != 1) { return cmd_bad_input; }
-  if (pin > 9999) { return cmd_bad_input; }
-
-  if (! UIO.updateEEPROM(EEPROM_UIO_PIN, pin)) { return cmd_error; }
-  UIO.pin = pin;
+  int n = sscanf(str, "%u", &pin);
+  if (n == -1)
+  {
+    //cr.println(F("%u"), UIO.pin);
+  }
+  else if (n == 1)
+  {
+    if (pin > 9999) { return cmd_bad_input; }
+    if (! UIO.updateEEPROM(EEPROM_UIO_PIN, pin)) { return cmd_error; }
+    UIO.pin = pin;
+  }
+  else
+  {
+    return cmd_bad_input;
+  }
 
   return cmd_ok;
 }

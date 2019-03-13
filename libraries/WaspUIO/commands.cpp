@@ -23,6 +23,7 @@ typedef struct {
 const char CMD_1WIRE_READ[] PROGMEM = "1wire read        - Read DS18B20 string";
 const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+   - Scan DS18B20 in the given pins, save to onewire.txt";
 const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]      - Set 4G Access Point Name (APN)";
+const char CMD_4G_GPS    [] PROGMEM = "4g gps            - Get position from 4G's GPS";
 const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - Set pin for the 4G module (0=disabled)";
 const char CMD_4G_TEST   [] PROGMEM = "4g test           - Test 4G data connection";
 const char CMD_ACK       [] PROGMEM = ""; // Hidden command
@@ -34,11 +35,11 @@ const char CMD_DISABLE   [] PROGMEM = "disable FLAG      - Disables a feature: 0
 const char CMD_ENABLE    [] PROGMEM = "enable FLAG       - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT      [] PROGMEM = "exit              - Exit the command line interface";
 const char CMD_FORMAT    [] PROGMEM = "format            - Format SD card";
-const char CMD_GPS       [] PROGMEM = "gps               - Gets position from GPS";
+const char CMD_GPS       [] PROGMEM = "gps               - Get position from GPS";
 const char CMD_HELP      [] PROGMEM = "help              - Prints the list of commands";
 const char CMD_I2C       [] PROGMEM = "i2c [NAME]        - Scan I2C bus or read values from NAME: "
                                       "as7263 as7265 bme bm76 mlx tmp vl";
-const char CMD_LOGLEVEL  [] PROGMEM = "loglevel VALUE    - Sets the log level: "
+const char CMD_LOGLEVEL  [] PROGMEM = "loglevel VALUE    - Set the log level: "
                                       "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
@@ -53,7 +54,7 @@ const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and m
                                       "the available names";
 const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 sensors";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
-const char CMD_TIME      [] PROGMEM = "time VALUE        - Sets time, value can be 'network', 'gps', "
+const char CMD_TIME      [] PROGMEM = "time VALUE        - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";
 const char CMD_XBEE      [] PROGMEM = "xbee VALUE        - Choose xbee network: "
                                       "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
@@ -65,6 +66,7 @@ const Command commands[] PROGMEM = {
 #endif
 #if WITH_4G
   {"4g apn",        &cmd4G_APN,    CMD_4G_APN},
+  {"4g gps",        &cmd4G_GPS,    CMD_4G_GPS},
   {"4g pin ",       &cmd4G_Pin,    CMD_4G_PIN},
   {"4g test",       &cmd4G_Test,   CMD_4G_TEST},
 #endif

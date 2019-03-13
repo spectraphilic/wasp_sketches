@@ -42,7 +42,7 @@ CR_TASK(taskMain)
 #if WITH_GPS
   if (UIO.hasGPS && UIO.action(1, RUN_GPS))
   {
-    CR_SPAWN2(taskGps, gps_id);
+    CR_SPAWN2(taskGPS, gps_id);
     CR_JOIN(gps_id);
   }
 #endif
