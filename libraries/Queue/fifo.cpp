@@ -42,17 +42,15 @@ int FIFO::close()
   return QUEUE_OK;
 }
 
-int FIFO::read_state()
+int FIFO::read_offset()
 {
-  queue_size = queue.fileSize();
   uint8_t item[4];
   if (index.read(item, 4) != 4)
   {
     return QUEUE_ERROR;
   }
   offset = *(uint32_t *)item;
-
-  return (offset < queue_size)? QUEUE_OK: QUEUE_EMPTY;
+  return QUEUE_OK;
 }
 
 int FIFO::drop_first()
@@ -83,32 +81,6 @@ int FIFO::drop_first()
   // Update offset
   index.seekSet(0);
   if (sd_write(index, (void*)(&offset), 4))
-  {
-    close();
-    return QUEUE_ERROR;
-  }
-
-  close();
-  return QUEUE_OK;
-}
-
-
-int FIFO::peek_first(uint8_t *item)
-{
-  if (open(O_READ)) { return QUEUE_ERROR; }
-
-  // Read offset
-  int status = read_state();
-  if (status)
-  {
-    close();
-    return status;
-  }
-  //cr.println(F("** fifo.peek_first(): %lu %lu"), offset, queue_size);
-
-  // Read the record
-  queue.seekSet(offset);
-  if (queue.read(item, item_size) != item_size)
   {
     close();
     return QUEUE_ERROR;

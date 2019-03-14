@@ -26,10 +26,18 @@ int LIFO::close()
   return QUEUE_OK;
 }
 
+int LIFO::read_offset()
+{
+  offset = 0;
+  return QUEUE_OK;
+}
+
 int LIFO::read_state()
 {
   queue_size = queue.fileSize();
-  return (queue_size > 0)? QUEUE_OK: QUEUE_EMPTY;
+  if (read_offset() == QUEUE_ERROR) { return QUEUE_ERROR; }
+  nitems = (queue_size - offset) / item_size;
+  return (nitems == 0)? QUEUE_EMPTY: QUEUE_OK;
 }
 
 int LIFO::push(uint8_t *item)
@@ -85,7 +93,7 @@ int LIFO::drop_last()
 }
 
 
-int LIFO::peek_last(uint8_t *item)
+int LIFO::peek(uint8_t *item, int idx)
 {
   if (open(O_READ)) { return QUEUE_ERROR; }
 
@@ -96,10 +104,22 @@ int LIFO::peek_last(uint8_t *item)
     close();
     return status;
   }
-  //cr.println(F("** lifo.peek_last(): %lu"), queue_size);
+  //cr.println(F("** lifo.peek(%d): %lu"), idx, queue_size);
+
+  // Check index is within range
+  if (idx > nitems-1 || idx < -nitems)
+  {
+    return QUEUE_INDEX_ERROR;
+  }
+
+  // Seek
+  if (idx < 0)
+  {
+    idx = nitems + idx;
+  }
+  queue.seekSet(offset + idx * item_size);
 
   // Read the record
-  queue.seekEnd(-item_size);
   if (queue.read(item, item_size) != item_size)
   {
     close();
