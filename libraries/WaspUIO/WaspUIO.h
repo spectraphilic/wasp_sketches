@@ -323,6 +323,7 @@ bool action(uint8_t n, ...);
 // Frames
 void createFrame(bool discard=false);
 int8_t addSensor(uint8_t type, ...);
+bool checkSize(uint8_t size);
 uint8_t addSensorValue(float value);
 uint8_t addSensorValue(int8_t value);
 uint8_t addSensorValue(uint8_t value);

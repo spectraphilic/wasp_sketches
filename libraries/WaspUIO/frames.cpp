@@ -195,10 +195,16 @@ void WaspUIO::createFrame(bool discard)
  * upstream library.
  */
 
+bool WaspUIO::checkSize(uint8_t size)
+{
+  uint16_t new_size = frame.length + size;
+  return new_size <= frame.getFrameSize() and new_size <= 255;
+}
+
 uint8_t WaspUIO::addSensorValue(float value)
 {
   const uint8_t size = 4;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
@@ -210,7 +216,7 @@ uint8_t WaspUIO::addSensorValue(float value)
 uint8_t WaspUIO::addSensorValue(int8_t value)
 {
   const uint8_t size = 1;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
@@ -222,7 +228,7 @@ uint8_t WaspUIO::addSensorValue(int8_t value)
 uint8_t WaspUIO::addSensorValue(uint8_t value)
 {
   const uint8_t size = 1;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
@@ -234,7 +240,7 @@ uint8_t WaspUIO::addSensorValue(uint8_t value)
 uint8_t WaspUIO::addSensorValue(int16_t value)
 {
   const uint16_t size = 2;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
@@ -246,7 +252,7 @@ uint8_t WaspUIO::addSensorValue(int16_t value)
 uint8_t WaspUIO::addSensorValue(uint16_t value)
 {
   const uint16_t size = 2;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
@@ -258,7 +264,7 @@ uint8_t WaspUIO::addSensorValue(uint16_t value)
 uint8_t WaspUIO::addSensorValue(int32_t value)
 {
   const uint16_t size = 4;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
@@ -270,7 +276,7 @@ uint8_t WaspUIO::addSensorValue(int32_t value)
 uint8_t WaspUIO::addSensorValue(uint32_t value)
 {
   const uint16_t size = 4;
-  if (frame.length + size <= frame.getFrameSize())
+  if (checkSize(size))
   {
     memcpy(&(frame.buffer[frame.length]), &value, size);
     frame.length += size;
