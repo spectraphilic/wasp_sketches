@@ -187,19 +187,19 @@ COMMAND(exeCommand)
 
 COMMAND(cmdAck)
 {
-  if (UIO.ack_wait == false)
+  if (UIO.ack_wait == 0)
   {
     warn(F("unexpected ack command"));
     return cmd_quiet;
   }
 
 #if WITH_IRIDIUM
-  if (lifo.drop_last()) { return cmd_error; }
+  if (lifo.drop_end(UIO.ack_wait)) { return cmd_error; }
 #else
-  if (fifo.drop_first()) { return cmd_error; }
+  if (fifo.drop_begin(UIO.ack_wait)) { return cmd_error; }
 #endif
 
-  UIO.ack_wait = false; // Ready for next frame!
+  UIO.ack_wait = 0; // Ready for next frame!
   return cmd_ok;
 }
 

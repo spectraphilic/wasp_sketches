@@ -735,51 +735,78 @@ uint8_t WaspUIO::frame2Sd()
  * This function reads the next frame from the SD.
  *
  * - Loads the frame into SD.buffer
- * - Returns the size of the frame
+ * - Returns the size of the frame, and the number of frames read
  *
  * If there's an error returns -1, if there're no frames returns 0.
  */
-int WaspUIO::readFrame()
+int WaspUIO::readFrame(uint8_t &n)
 {
   uint8_t item[8];
   char dataFilename[18]; // /data/YYMMDD.txt
   SdFile dataFile;
-  int size;
 
-  // Open files
-  if (! hasSD) { return -1; }
+  if (! hasSD)
+  {
+    return -1;
+  }
+
+  uint16_t maxSize = frame.getFrameSize();
+  uint16_t totSize = 0;
+  n  = 0;
 
 #if WITH_IRIDIUM
-  int status = lifo.peek(item, -1);
+  int idx = -1;
 #else
-  int status = fifo.peek(item, 0);
+  int idx = 0;
 #endif
-  if (status == QUEUE_EMPTY)
+
+  while (true)
   {
-    return 0;
-  }
-  else if (status)
-  {
-    error(F("readFrame() failure"));
-    return -1;
+#if WITH_IRIDIUM
+    int status = lifo.peek(item, idx - n);
+#else
+    int status = fifo.peek(item, idx + n);
+#endif
+    if (status == QUEUE_EMPTY || status == QUEUE_INDEX_ERROR)
+    {
+      break;
+    }
+    else if (status)
+    {
+      error(F("readFrame peek(%d) failure"), idx);
+      return -1;
+    }
+
+    // Stop condition
+    int size = (int) item[7];
+    if (totSize + size > maxSize)
+    {
+      break;
+    }
+
+    // Read the frame
+    getDataFilename(dataFilename, item[0], item[1], item[2]);
+    if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
+    {
+      error(F("readFrame fail to open %s"), dataFilename);
+      return -1;
+    }
+    dataFile.seekSet(*(uint32_t *)(item + 3));
+    char *start = &(SD.buffer[totSize]);
+    int readSize = dataFile.read(start, (size_t) size);
+    dataFile.close();
+
+    if (readSize != size)
+    {
+      error(F("readFrame fail to read frame from disk %s"), dataFilename);
+      return -1;
+    }
+
+    debug(F("frame seq=%hhu size=%d"), UIO.getSequence((uint8_t*)start), size);
+
+    totSize += size;
+    n += 1;
   }
 
-  // Read the frame
-  getDataFilename(dataFilename, item[0], item[1], item[2]);
-  if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
-  {
-    error(F("readFrame() fail to open %s"), dataFilename);
-    return -1;
-  }
-  dataFile.seekSet(*(uint32_t *)(item + 3));
-  size = dataFile.read(SD.buffer, (size_t) item[7]);
-  dataFile.close();
-
-  if (size < 0 || size != (int) item[7])
-  {
-    error(F("readFrame() fail to read frame from disk %s"), dataFilename);
-    return -1;
-  }
-
-  return size;
+  return totSize;
 }

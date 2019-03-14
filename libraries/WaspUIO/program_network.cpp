@@ -7,6 +7,7 @@ CR_TASK(taskNetwork4G)
   int size;
   uint32_t t0;
   uint8_t status;
+  uint8_t n;
 
   CR_BEGIN;
 
@@ -30,7 +31,7 @@ CR_TASK(taskNetwork4G)
     t0 = millis();
 
     // Read
-    size = UIO.readFrame();
+    size = UIO.readFrame(n);
     if (size <= 0) { break; }
 
     // Send
@@ -47,8 +48,8 @@ CR_TASK(taskNetwork4G)
     }
 
     // Next
-    debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
-    UIO.ack_wait = true;
+    debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+    UIO.ack_wait = n;
     cmdAck(""); // Move to the next frame
 
     CR_DELAY(50); // Give control back
@@ -76,6 +77,7 @@ CR_TASK(taskNetworkIridium)
   uint32_t t0;
   int status;
   int quality;
+  uint8_t n;
 
   CR_BEGIN;
 
@@ -114,7 +116,7 @@ CR_TASK(taskNetworkIridium)
     t0 = millis();
 
     // Read
-    size = UIO.readFrame();
+    size = UIO.readFrame(n);
     if (size <= 0) { break; }
 
     // Send
@@ -126,8 +128,8 @@ CR_TASK(taskNetworkIridium)
     }
 
     // Next
-    debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
-    UIO.ack_wait = true;
+    debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+    UIO.ack_wait = n;
     cmdAck(""); // Move to the next frame
 
     CR_DELAY(50); // Give control back
@@ -206,19 +208,20 @@ CR_TASK(taskNetworkXBeeSend)
 {
   uint32_t t0;
   static unsigned long sent;
+  uint8_t n;
 
   CR_BEGIN;
-  UIO.ack_wait = false;
+  UIO.ack_wait = 0;
 
   // Send frames
   while (!cr.timeout(UIO.start, SEND_TIMEOUT))
   {
-    if (UIO.ack_wait == false)
+    if (UIO.ack_wait == 0)
     {
       t0 = millis();
 
       // Read
-      int size = UIO.readFrame();
+      int size = UIO.readFrame(n);
       if (size <= 0) { break; }
 
       // Send the frame
@@ -230,8 +233,8 @@ CR_TASK(taskNetworkXBeeSend)
       sent = millis();
 
       // Next
-      debug(F("Frame %hhu sent in %lu ms"), UIO.getSequence((uint8_t*)SD.buffer), cr.millisDiff(t0));
-      UIO.ack_wait = true;
+      debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+      UIO.ack_wait = n;
     }
     else
     {

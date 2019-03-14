@@ -68,7 +68,7 @@ int LIFO::push(uint8_t *item)
   return QUEUE_OK;
 }
 
-int LIFO::drop_last()
+int LIFO::drop_end(uint8_t n)
 {
   if (open(O_RDWR)) { return QUEUE_ERROR; }
 
@@ -79,10 +79,10 @@ int LIFO::drop_last()
     close();
     return status;
   }
-  //cr.println(F("** lifo.drop_last(): %lu"), queue_size);
+  //cr.println(F("** lifo.drop_end(): %lu"), queue_size);
 
   // Truncate (pop)
-  if (queue.truncate(queue_size - item_size) == false)
+  if (queue.truncate(queue_size - item_size * n) == false)
   {
     close();
     return QUEUE_ERROR;

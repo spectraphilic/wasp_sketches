@@ -53,7 +53,7 @@ int FIFO::read_offset()
   return QUEUE_OK;
 }
 
-int FIFO::drop_first()
+int FIFO::drop_begin(uint8_t n)
 {
   if (open(O_RDWR)) { return QUEUE_ERROR; }
 
@@ -64,10 +64,10 @@ int FIFO::drop_first()
     close();
     return status;
   }
-  //cr.println(F("** fifo.drop_first(): %lu %lu"), offset, queue_size);
+  //cr.println(F("** fifo.drop_begin(): %lu %lu"), offset, queue_size);
 
   // Truncate queue to zero
-  offset += item_size;
+  offset += item_size * n;
   if (offset >= queue_size)
   {
     offset = 0;

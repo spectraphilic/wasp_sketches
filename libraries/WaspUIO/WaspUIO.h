@@ -234,7 +234,7 @@ const char* archive_dir = "/data";
 const char* logFilename = "LOG.TXT";
 const char* timeFilename = "TIME.TXT"; //
 SdFile logFile;
-bool ack_wait;
+uint8_t ack_wait;
 int baselayout();
 void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
 void startSD();
@@ -333,7 +333,7 @@ uint8_t addSensorValue(uint32_t value);
 uint8_t getSequence(uint8_t *p);
 void showFrame(uint8_t *p);
 uint8_t frame2Sd();
-int readFrame();
+int readFrame(uint8_t &n);
 void setFrameSize();
 
 // Menu

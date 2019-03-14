@@ -47,7 +47,7 @@ class LIFO
     virtual int make();       // Create files if not done already
     virtual int open(uint8_t mode);
     virtual int close();
-    int drop_last();          // Remove the last item from the queue
+    int drop_end(uint8_t n);  // Remove the last n items from the queue
     int peek(uint8_t *, int); // Return the item in the given position
     int push(uint8_t *);
 };
@@ -73,5 +73,5 @@ class FIFO : public LIFO
     int make();
     int open(uint8_t mode);
     int close();
-    int drop_first();
+    int drop_begin(uint8_t n); // Remove the first n items from the queue
 };
