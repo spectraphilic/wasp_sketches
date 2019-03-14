@@ -45,6 +45,8 @@ int FIFO::close()
 int FIFO::read_offset()
 {
   uint8_t item[4];
+
+  index.seekSet(0);
   if (index.read(item, 4) != 4)
   {
     return QUEUE_ERROR;

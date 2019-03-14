@@ -413,9 +413,13 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
-  uint16_t size = 255; // Default
+  uint16_t size = 255;
 
-  // TODO Set size always to 255, then use frame fragmentation if needed
+#if WITH_4G
+  // This is probably not exact, the documentation says:
+  // "Depends on the protocol used"
+  if (networkType == NETWORK_4G) { size = 255; }
+#endif
 
 #if WITH_XBEE
   if (networkType == NETWORK_XBEE)
@@ -428,6 +432,12 @@ void WaspUIO::setFrameSize()
     if (strlen(password) > 0) { size = 48; }
 #endif
   }
+#endif
+
+#if WITH_IRIDIUM
+  // This is probably not exact, the documentation says:
+  // "Depends on the protocol used"
+  if (networkType == NETWORK_IRIDIUM) { size = 340; }
 #endif
 
   frame.setFrameSize(size);
@@ -792,7 +802,7 @@ int WaspUIO::readFrame(uint8_t &n)
       return -1;
     }
     dataFile.seekSet(*(uint32_t *)(item + 3));
-    char *start = &(SD.buffer[totSize]);
+    uint8_t *start = &(frame.buffer[totSize]);
     int readSize = dataFile.read(start, (size_t) size);
     dataFile.close();
 
@@ -802,7 +812,7 @@ int WaspUIO::readFrame(uint8_t &n)
       return -1;
     }
 
-    debug(F("frame seq=%hhu size=%d"), UIO.getSequence((uint8_t*)start), size);
+    debug(F("frame seq=%hhu size=%d"), UIO.getSequence(start), size);
 
     totSize += size;
     n += 1;

@@ -35,7 +35,7 @@ CR_TASK(taskNetwork4G)
     if (size <= 0) { break; }
 
     // Send
-    status = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
+    status = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, frame.buffer, size);
     if (status)
     {
       warn(F("_4G.sendFrameToMeshlium error=%d %d"), status, _4G._errorCode);
@@ -120,7 +120,7 @@ CR_TASK(taskNetworkIridium)
     if (size <= 0) { break; }
 
     // Send
-    status = iridium.sendSBDBinary((uint8_t*)SD.buffer, size);
+    status = iridium.sendSBDBinary(frame.buffer, size);
     if (status != ISBD_SUCCESS)
     {
       warn(F("iridium.sendSBDBinary(..) error=%d"), status);
@@ -225,7 +225,7 @@ CR_TASK(taskNetworkXBeeSend)
       if (size <= 0) { break; }
 
       // Send the frame
-      if (xbeeDM.send((char*)UIO.xbee.rx_address, (uint8_t*)SD.buffer, size) == 1)
+      if (xbeeDM.send((char*)UIO.xbee.rx_address, frame.buffer, size) == 1)
       {
         warn(F("xbeeDM.send(..) failure"));
         break;
