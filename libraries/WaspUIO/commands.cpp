@@ -194,9 +194,9 @@ COMMAND(cmdAck)
   }
 
 #if WITH_IRIDIUM
-  if (lifo.drop()) { return cmd_error; }
+  if (lifo.drop_last()) { return cmd_error; }
 #else
-  if (fifo.drop()) { return cmd_error; }
+  if (fifo.drop_first()) { return cmd_error; }
 #endif
 
   UIO.ack_wait = false; // Ready for next frame!

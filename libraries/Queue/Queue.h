@@ -18,7 +18,11 @@ int sd_append(SdFile &file, const void* buf, size_t nbyte);
 #define QUEUE_EMPTY 1
 #define QUEUE_ERROR 2
 
-class Queue
+/*
+ * Last-In-First-Out queue (LIFO)
+ */
+
+class LIFO
 {
   protected:
     // Input parameters
@@ -27,41 +31,22 @@ class Queue
 
     // State
     uint32_t queue_size;
-    virtual int read_state() = 0;
+    int read_state();
 
     // Open files
     SdFile queue;
 
   public:
     // Constructor
-    Queue(const char* _queue, uint8_t _size) : qname(_queue), item_size(_size) {}
+    LIFO(const char* _queue, uint8_t _size) : qname(_queue), item_size(_size) {}
 
-    virtual int make() = 0;          // Create files if not done already
-    virtual int open(uint8_t mode) = 0;
-    virtual int close() = 0;
-    virtual int drop() = 0;          // Remove one item from the queue
-    virtual int peek(uint8_t *) = 0; // Return one item from the queue
-    int push(uint8_t *);
-};
-
-
-/*
- * Last-In-First-Out queue (LIFO)
- */
-
-class LIFO : public Queue
-{
-  private:
-    int read_state();
-
-  public:
-    LIFO(const char* _queue, uint8_t _size) : Queue(_queue, _size) {}
-
-    int make();
+    int make();               // Create files if not done already
     int open(uint8_t mode);
     int close();
-    int drop();
-    int peek(uint8_t *);
+    int drop_last();          // Remove the last item from the queue
+    int peek_last(uint8_t *); // Return the last item from the queue
+
+    int push(uint8_t *);
 };
 
 
@@ -69,7 +54,7 @@ class LIFO : public Queue
  * First-In-First-Out queue (FIFO)
  */
 
-class FIFO : public Queue
+class FIFO : public LIFO
 {
   private:
     int read_state();
@@ -81,11 +66,11 @@ class FIFO : public Queue
   public:
     // Constructor
     FIFO(const char* _queue, const char* _index, uint8_t _size) :
-      Queue(_queue, _size), iname(_index) {}
+      LIFO(_queue, _size), iname(_index) {}
 
     int make();
     int open(uint8_t mode);
     int close();
-    int drop();
-    int peek(uint8_t *);
+    int drop_first();
+    int peek_first(uint8_t *);
 };

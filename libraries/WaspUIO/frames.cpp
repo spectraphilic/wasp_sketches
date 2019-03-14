@@ -750,9 +750,9 @@ int WaspUIO::readFrame()
   if (! hasSD) { return -1; }
 
 #if WITH_IRIDIUM
-  int status = lifo.peek(item);
+  int status = lifo.peek_last(item);
 #else
-  int status = fifo.peek(item);
+  int status = fifo.peek_first(item);
 #endif
   if (status == QUEUE_EMPTY)
   {

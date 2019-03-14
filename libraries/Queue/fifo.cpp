@@ -55,7 +55,7 @@ int FIFO::read_state()
   return (offset < queue_size)? QUEUE_OK: QUEUE_EMPTY;
 }
 
-int FIFO::drop()
+int FIFO::drop_first()
 {
   if (open(O_RDWR)) { return QUEUE_ERROR; }
 
@@ -66,7 +66,7 @@ int FIFO::drop()
     close();
     return status;
   }
-  //cr.println(F("** fifo.drop(): %lu %lu"), offset, queue_size);
+  //cr.println(F("** fifo.drop_first(): %lu %lu"), offset, queue_size);
 
   // Truncate queue to zero
   offset += item_size;
@@ -93,7 +93,7 @@ int FIFO::drop()
 }
 
 
-int FIFO::peek(uint8_t *item)
+int FIFO::peek_first(uint8_t *item)
 {
   if (open(O_READ)) { return QUEUE_ERROR; }
 
@@ -104,7 +104,7 @@ int FIFO::peek(uint8_t *item)
     close();
     return status;
   }
-  //cr.println(F("** fifo.peek(): %lu %lu"), offset, queue_size);
+  //cr.println(F("** fifo.peek_first(): %lu %lu"), offset, queue_size);
 
   // Read the record
   queue.seekSet(offset);
