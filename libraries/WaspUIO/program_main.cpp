@@ -39,21 +39,23 @@ CR_TASK(taskMain)
   // The RTC is DS1337C (v15), its accuracy is not enough for our networking
   // requirements, so we have to sync it once in a while.
   // http://hycamp.org/private-area/waspmote-rtc/
-#if WITH_GPS
-  if (UIO.hasGPS && UIO.action(1, RUN_GPS))
+  if (UIO.action(1, RUN_GPS))
   {
-    CR_SPAWN2(taskGPS, gps_id);
-    CR_JOIN(gps_id);
-  }
-#endif
-
 #if WITH_4G
-  if (! UIO.hasGPS && UIO.action(1, RUN_GPS))
-  {
-    CR_SPAWN2(taskGPS4G, gps_id);
-    CR_JOIN(gps_id);
-  }
+    if (UIO.hasGPS & GPS_4G)
+    {
+      CR_SPAWN2(taskGPS4G, gps_id);
+      CR_JOIN(gps_id);
+    }
 #endif
+#if WITH_GPS
+    if (UIO.hasGPS == GPS_YES)
+    {
+      CR_SPAWN2(taskGPS, gps_id);
+      CR_JOIN(gps_id);
+    }
+#endif
+  }
 
   // Save the last frame, if there is something to save
   if (frame.numFields > 1) { UIO.frame2Sd(); }

@@ -448,10 +448,10 @@ COMMAND(cmdRun)
   {
     for (uint8_t i=0; i < RUN_LEN; i++)
     {
-      const char* name = (const char*)pgm_read_word(&(run_names[i]));
-      if (strcmp_P("", name) == 0)
+      const char* xname = (const char*)pgm_read_word(&(run_names[i]));
+      if (strcmp_P("", xname) == 0)
         continue;
-      cr.println((__FlashStringHelper*)name);
+      cr.println((__FlashStringHelper*)xname);
     }
     return cmd_quiet;
   }
@@ -539,7 +539,7 @@ COMMAND(cmdTime)
 COMMAND(cmdGPS)
 {
   // Check feature availability
-  if (! UIO.hasGPS) { return cmd_unavailable; }
+  if (UIO.hasGPS & GPS_YES == 0) { return cmd_unavailable; }
 
   if (UIO.gps(false, true) == -1)
   {

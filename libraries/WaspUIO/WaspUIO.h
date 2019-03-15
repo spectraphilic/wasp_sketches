@@ -51,6 +51,10 @@
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
 #define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
 
+#define GPS_NO 0
+#define GPS_YES 1
+#define GPS_4G 2
+
 enum battery_type_t {
   BATTERY_LITHIUM = 1,
   BATTERY_LEAD,
@@ -227,7 +231,7 @@ unsigned long start;     // millis taken at epochTime
 
 // Autodetect
 bool hasSD;
-bool hasGPS = false;
+uint8_t hasGPS;
 
 // SD
 const char* archive_dir = "/data";

@@ -86,9 +86,20 @@ void WaspUIO::onSetup()
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
   /*** 2. Autodetect hardware ***/
+  hasGPS = GPS_NO;
+#if WITH_4G
+  if (_4G.ON() == 0)
+  {
+    hasGPS |= GPS_4G;
+    _4G.OFF();
+  }
+#endif
 #if WITH_GPS
-  hasGPS = GPS.ON();
-  GPS.OFF();
+  if (GPS.ON() == 1)
+  {
+    hasGPS |= GPS_YES;
+    GPS.OFF();
+  }
 #endif
 
   // USB autodetect
