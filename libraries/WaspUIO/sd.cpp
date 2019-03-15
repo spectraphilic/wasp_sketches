@@ -13,7 +13,9 @@ void WaspUIO::startSD()
   // This fixs a bug with J firmware, see
   // https://github.com/spectraphilic/wasp_sketches/issues/52
   SD.OFF();
+  hasSD = SD.ON();
 
+/*
   // Apparently we don't really need to retry, the call to SD.OFF does the
   // trick, but leaving this here for now
   // TODO Remove it eventually
@@ -25,6 +27,7 @@ void WaspUIO::startSD()
     SD.OFF();
     USB.print("x");
   }
+*/
 
   if (hasSD)
   {
@@ -42,10 +45,6 @@ void WaspUIO::stopSD()
   {
     // Close files
     if (logFile.isOpen()) { logFile.close(); }
-    fifo.close();
-#if WITH_IRIDIUM
-    lifo.close();
-#endif
 
     // There's already a delay(100) in SD.OFF()
     // With this extra dealy the SD will have 150ms to handle pending operations

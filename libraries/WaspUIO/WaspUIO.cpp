@@ -98,14 +98,13 @@ void WaspUIO::onSetup()
 void WaspUIO::onLoop()
 {
   cr.sleep_time = 0;
-
-  loadTime();
-  UIO.startSD();
+  readBattery();
 
   pinMode(PIN_1WIRE, INPUT);
   pinMode(PIN_SDI12, INPUT);
 
-  readBattery();
+  startSD();
+  loadTime();
 }
 
 

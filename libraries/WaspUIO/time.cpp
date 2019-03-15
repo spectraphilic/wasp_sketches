@@ -86,7 +86,6 @@ void WaspUIO::loadTime()
   // If it's an old time, read it from the SD
   if (epochTime < 1541030400) // 2018-11-01 A date in the past
   {
-    startSD();
     warn(F("Wrong time detected"));
     if (sd_open(timeFilename, file, O_READ))
     {
@@ -163,11 +162,11 @@ uint8_t WaspUIO::setTimeFromNetwork()
     if (err == 0)
     {
       err = _4G.setTimeFrom4G(true);
+      _4GStop();
       if (err == 0)
       {
         loadTime();
       }
-      _4GStop();
     }
 #else
     error(F("4G not enabled, define WITH_4G TRUE"));

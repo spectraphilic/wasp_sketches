@@ -10,18 +10,20 @@ int LIFO::make()
 
 int LIFO::open(uint8_t mode)
 {
+  //cr.println(F("LIFO::open(%d)"), mode);
   // TODO Create if doesn't exist
   if (sd_open(qname, queue, mode))
   {
     return QUEUE_ERROR;
   }
 
-  return QUEUE_OK;
+  return read_state();
 }
 
 
 int LIFO::close()
 {
+  //cr.println(F("LIFO::close()"));
   if (queue.isOpen()) { queue.close(); }
   return QUEUE_OK;
 }
@@ -70,46 +72,39 @@ int LIFO::push(uint8_t *item)
 
 int LIFO::drop_end(uint8_t n)
 {
-  if (open(O_RDWR)) { return QUEUE_ERROR; }
-
-  // Read offset
-  int status = read_state();
+  int status = open(O_RDWR);
   if (status)
   {
-    close();
-    return status;
+    goto exit;
   }
   //cr.println(F("** lifo.drop_end(): %lu"), queue_size);
 
   // Truncate (pop)
   if (queue.truncate(queue_size - item_size * n) == false)
   {
-    close();
-    return QUEUE_ERROR;
+    status = QUEUE_ERROR;
   }
 
+exit:
   close();
-  return QUEUE_OK;
+  return status;
 }
 
 
 int LIFO::peek(uint8_t *item, int idx)
 {
-  if (open(O_READ)) { return QUEUE_ERROR; }
-
-  // Read state
-  int status = read_state();
+  int status = open(O_READ);
   if (status)
   {
-    close();
-    return status;
+    goto exit;
   }
   //cr.println(F("** lifo.peek(%d): %lu"), idx, queue_size);
 
   // Check index is within range
   if (idx > nitems-1 || idx < -nitems)
   {
-    return QUEUE_INDEX_ERROR;
+    status = QUEUE_INDEX_ERROR;
+    goto exit;
   }
 
   // Seek
@@ -122,10 +117,10 @@ int LIFO::peek(uint8_t *item, int idx)
   // Read the record
   if (queue.read(item, item_size) != item_size)
   {
-    close();
-    return QUEUE_ERROR;
+    status = QUEUE_ERROR;
   }
 
+exit:
   close();
-  return QUEUE_OK;
+  return status;
 }

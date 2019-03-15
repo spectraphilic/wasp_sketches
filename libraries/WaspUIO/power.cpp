@@ -287,7 +287,6 @@ float WaspUIO::getLeadBatteryVolts()
 
   volts = analog5  * (R1 + R2) / R2 * 3.3 / 1023 ;
   Utils.float2String(volts, volts_str, 2);
-  debug(F("Lead acid battery analog5=%d volts=%s"), analog5, volts_str);
 
   return volts;
 }

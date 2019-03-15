@@ -35,11 +35,15 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   if (setTime)
   {
     GPS.setTimeFromGPS(); // Save time to RTC
-    UIO.loadTime(); // Set system time
   }
 
   GPS.OFF();
   if (_boot_version >= 'J') { startSD(); }
+  // Set system time. Do this here because we need the SD
+  if (setTime)
+  {
+    UIO.loadTime();
+  }
 
   if (setTime)
   {

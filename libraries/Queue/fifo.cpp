@@ -21,6 +21,7 @@ int FIFO::make()
 
 int FIFO::open(uint8_t mode)
 {
+  //cr.println(F("FIFO::open(%d)"), mode);
   if (sd_open(iname, index, mode))
   {
     return QUEUE_ERROR;
@@ -31,12 +32,13 @@ int FIFO::open(uint8_t mode)
     return QUEUE_ERROR;
   }
 
-  return QUEUE_OK;
+  return read_state();
 }
 
 
 int FIFO::close()
 {
+  //cr.println(F("FIFO::close()"));
   if (index.isOpen()) { index.close(); }
   if (queue.isOpen()) { queue.close(); }
   return QUEUE_OK;
@@ -57,14 +59,10 @@ int FIFO::read_offset()
 
 int FIFO::drop_begin(uint8_t n)
 {
-  if (open(O_RDWR)) { return QUEUE_ERROR; }
-
-  // Read offset
-  int status = read_state();
+  int status = open(O_RDWR);
   if (status)
   {
-    close();
-    return status;
+    goto exit;
   }
   //cr.println(F("** fifo.drop_begin(): %lu %lu"), offset, queue_size);
 
@@ -75,8 +73,9 @@ int FIFO::drop_begin(uint8_t n)
     offset = 0;
     if (queue.truncate(0) == false)
     {
-      close();
-      return QUEUE_ERROR;
+      //cr.println(F("TRUNCATE ERROR"));
+      status = QUEUE_ERROR;
+      goto exit;
     }
   }
 
@@ -84,10 +83,10 @@ int FIFO::drop_begin(uint8_t n)
   index.seekSet(0);
   if (sd_write(index, (void*)(&offset), 4))
   {
-    close();
-    return QUEUE_ERROR;
+    status = QUEUE_ERROR;
   }
 
+exit:
   close();
-  return QUEUE_OK;
+  return status;
 }
