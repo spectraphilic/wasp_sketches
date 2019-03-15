@@ -195,94 +195,52 @@ void WaspUIO::createFrame(bool discard)
  * upstream library.
  */
 
-bool WaspUIO::checkSize(uint8_t size)
+uint8_t WaspUIO::addSensorValue(uint8_t size, void* value)
 {
   uint16_t new_size = frame.length + size;
-  return new_size <= frame.getFrameSize() and new_size <= 255;
+  if (new_size > frame.getFrameSize() || new_size > 255)
+  {
+    return 0;
+  }
+
+  memcpy(&(frame.buffer[frame.length]), value, size);
+  frame.length += size;
+  return size;
 }
 
 uint8_t WaspUIO::addSensorValue(float value)
 {
-  const uint8_t size = 4;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(4, &value);
 }
 
 uint8_t WaspUIO::addSensorValue(int8_t value)
 {
-  const uint8_t size = 1;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(1, &value);
 }
 
 uint8_t WaspUIO::addSensorValue(uint8_t value)
 {
-  const uint8_t size = 1;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(1, &value);
 }
 
 uint8_t WaspUIO::addSensorValue(int16_t value)
 {
-  const uint16_t size = 2;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(2, &value);
 }
 
 uint8_t WaspUIO::addSensorValue(uint16_t value)
 {
-  const uint16_t size = 2;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(2, &value);
 }
 
 uint8_t WaspUIO::addSensorValue(int32_t value)
 {
-  const uint16_t size = 4;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(4, &value);
 }
 
 uint8_t WaspUIO::addSensorValue(uint32_t value)
 {
-  const uint16_t size = 4;
-  if (checkSize(size))
-  {
-    memcpy(&(frame.buffer[frame.length]), &value, size);
-    frame.length += size;
-    return size;
-  }
-  return 0;
+  return addSensorValue(4, &value);
 }
 
 int8_t WaspUIO::addSensor(uint8_t type, ...)
