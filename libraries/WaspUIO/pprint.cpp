@@ -91,12 +91,12 @@ const char* WaspUIO::pprintFrames(char* dst, size_t size)
 #if WITH_CRYPTO
   if (strlen(password) > 0)
   {
-    snprintf_F(dst, size, F("size=%u encryption=enabled"), frame.getFrameSize());
+    snprintf_F(dst, size, F("payload-size=%u frame-size=%u encryption=enabled"), payloadSize, frameSize);
     return dst;
   }
 #endif
 
-  snprintf_F(dst, size, F("size=%u encryption=disabled"), frame.getFrameSize());
+  snprintf_F(dst, size, F("payload-size=%u frame-size=%u encryption=disabled"), payloadSize, frameSize);
   return dst;
 }
 

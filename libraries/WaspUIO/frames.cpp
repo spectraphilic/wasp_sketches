@@ -198,7 +198,7 @@ void WaspUIO::createFrame(bool discard)
 uint8_t WaspUIO::addSensorValue(uint8_t size, void* value)
 {
   uint16_t new_size = frame.length + size;
-  if (new_size > frame.getFrameSize() || new_size > 255)
+  if (new_size > frameSize)
   {
     return 0;
   }
@@ -377,12 +377,9 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
-  uint16_t size = 255;
-
 #if WITH_4G
-  // This is probably not exact, the documentation says:
-  // "Depends on the protocol used"
-  if (networkType == NETWORK_4G) { size = 255; }
+  // XXX Documentation says "Depends on the protocol used"
+  if (networkType == NETWORK_4G) { payloadSize = 255; }
 #endif
 
 #if WITH_XBEE
@@ -391,20 +388,30 @@ void WaspUIO::setFrameSize()
     // We don't call frame.getMaxSizeForXBee to save memory, and because we
     // know already the value.
     // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, encryption);
-    size = 73;
+    payloadSize = 73;
 #if WITH_CRYPTO
-    if (strlen(password) > 0) { size = 48; }
+    if (strlen(password) > 0)
+    {
+      payloadSize = 48;
+    }
 #endif
   }
 #endif
 
 #if WITH_IRIDIUM
-  // This is probably not exact, the documentation says:
-  // "Depends on the protocol used"
-  if (networkType == NETWORK_IRIDIUM) { size = 340; }
+  if (networkType == NETWORK_IRIDIUM) { payloadSize = 340; }
 #endif
 
-  frame.setFrameSize(size);
+  if (payloadSize > 255)
+  {
+    frameSize = 255;
+  }
+  else
+  {
+    frameSize = (uint8_t) payloadSize;
+  }
+
+  frame.setFrameSize(frameSize); // XXX Do we need this?
 }
 
 
@@ -724,7 +731,7 @@ int WaspUIO::readFrame(uint8_t &n)
     return -1;
   }
 
-  uint16_t maxSize = frame.getFrameSize();
+  uint16_t maxSize = payloadSize;
   uint16_t totSize = 0;
   n  = 0;
 
@@ -766,7 +773,7 @@ int WaspUIO::readFrame(uint8_t &n)
       return -1;
     }
     dataFile.seekSet(*(uint32_t *)(item + 3));
-    uint8_t *start = &(frame.buffer[totSize]);
+    uint8_t *start = (uint8_t*)&(SD.buffer[totSize]);
     int readSize = dataFile.read(start, (size_t) size);
     dataFile.close();
 

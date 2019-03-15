@@ -335,6 +335,8 @@ uint8_t getSequence(uint8_t *p);
 void showFrame(uint8_t *p);
 uint8_t frame2Sd();
 int readFrame(uint8_t &n);
+uint8_t frameSize;
+uint16_t payloadSize;
 void setFrameSize();
 
 // Menu
