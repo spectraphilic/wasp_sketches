@@ -377,6 +377,9 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
+  // Default to 255, will be used when there's not any network module
+  payloadSize = 255;
+
 #if WITH_4G
   // XXX Documentation says "Depends on the protocol used"
   if (networkType == NETWORK_4G) { payloadSize = 255; }
