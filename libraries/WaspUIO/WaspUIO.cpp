@@ -183,12 +183,12 @@ LIFO lifo = LIFO("LIFO.BIN", 8);
 uint32_t WaspUIO::nextAlarm(char* alarmTime)
 {
   uint32_t next = ULONG_MAX / 60; // max posible value of minutes since epoch
+
+  // Minutes since epoch
+  // With +2s safeguard, this means we've 2s before going to sleep
   uint32_t epoch = getEpochTime();
+  uint32_t minutes = (epoch + 2) / 60;
 
-  // Add 2s safeguard, this means we've 2s before going to sleep
-  epoch += 2;
-
-  uint32_t minutes = (epoch / 60); // minutes since epoch
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
     uint32_t value = actions[i] * cooldown;
