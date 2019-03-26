@@ -108,7 +108,6 @@ void WaspUIO::onSetup()
 
 void WaspUIO::onLoop()
 {
-  cr.sleep_time = 0;
   readBattery();
 
   pinMode(PIN_1WIRE, INPUT);

@@ -57,14 +57,14 @@ uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day,
                          uint8_t hour, uint8_t minute, uint8_t second)
 {
   epochTime = RTC.getEpochTime(year, month, day, hour, minute, second);
-  start = millis() - cr.sleep_time;
+  start = millis();
   return saveTime();
 }
 
 uint8_t WaspUIO::setTime(uint32_t time)
 {
   epochTime = time;
-  start = millis() - cr.sleep_time;
+  start = millis();
   return saveTime();
 }
 
@@ -81,7 +81,7 @@ void WaspUIO::loadTime()
   rtcON = RTC.isON;
   if (! rtcON) { RTC.ON(); } // RTC ON
   epochTime = RTC.getEpochTime();
-  start = millis() - cr.sleep_time;
+  start = millis();
 
   // If it's an old time, read it from the SD
   if (epochTime < 1541030400) // 2018-11-01 A date in the past
@@ -102,7 +102,7 @@ void WaspUIO::loadTime()
       else
       {
         epochTime = strtoul(SD.buffer, NULL, 10);
-        start = millis() - cr.sleep_time;
+        start = millis();
 	saveTime();
         info(F("Time loaded from TIME.TXT"));
       }
@@ -123,14 +123,14 @@ void WaspUIO::loadTime()
 
 unsigned long WaspUIO::getEpochTime()
 {
-  uint32_t diff = (millis() - start) + cr.sleep_time;
+  uint32_t diff = (millis() - start);
 
   return epochTime + (diff / 1000);
 }
 
 unsigned long WaspUIO::getEpochTime(uint16_t &ms)
 {
-  uint32_t diff = (millis() - start) + cr.sleep_time;
+  uint32_t diff = (millis() - start);
 
   ms = diff % 1000;
   return epochTime + diff / 1000;

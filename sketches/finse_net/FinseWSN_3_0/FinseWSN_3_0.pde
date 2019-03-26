@@ -111,7 +111,7 @@ void loop()
   }
 
   uint32_t cpu_time = cr.millisDiff(UIO.start);
-  info(F("Loop done in %lu ms (CPU time %lu ms)."), cpu_time + cr.sleep_time, cpu_time);
+  info(F("Loop done in %lu ms"), cpu_time);
 //char alarmTime[12];
 //UIO.getNextAlarm(alarmTime);
 //info(F("NEXT ALARM %s"), alarmTime);
