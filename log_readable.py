@@ -20,6 +20,12 @@ if __name__ == '__main__':
 
     filename = sys.argv[1]
     for line in open(filename):
-        time, tail = line.split(' ', 1)
-        time = datetime.utcfromtimestamp(float(time))
-        print(f'{time} {tail}', end='')
+        try:
+            time, tail = line.split(' ', 1)
+            time = datetime.utcfromtimestamp(float(time))
+        except ValueError:
+            pass
+        else:
+            line = f'{time} {tail}'
+
+        print(line, end='')
