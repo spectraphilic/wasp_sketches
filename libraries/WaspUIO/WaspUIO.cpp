@@ -243,7 +243,20 @@ void WaspUIO::deepSleep()
   // Reset watchdog
   if (_boot_version >= 'H')
   {
-    RTC.setWatchdog(next + 2); // Max is 43200 (30 days)
+    // Max is 43200 (30 days), for alarm 2.
+    // Though in this example it says max is 1000
+    // http://www.libelium.com/development/waspmote/examples/rtc-10-set-watchdog/
+    // Anyway, better not to sleep for tooo long. We cap it to 960 (16h)
+    if (next > 960)
+    {
+      next = 960;
+    }
+
+    if (RTC.setWatchdog(next + 2))
+    {
+      PWR.switchesOFF(ALL_OFF);
+      PWR.reboot();
+    }
   }
 
   // Power off and Sleep
@@ -254,6 +267,10 @@ void WaspUIO::deepSleep()
   // Awake: Reset if stuck for 4 minutes
   if (_boot_version >= 'H')
   {
-    RTC.setWatchdog(LOOP_TIMEOUT);
+    if (RTC.setWatchdog(LOOP_TIMEOUT))
+    {
+      PWR.switchesOFF(ALL_OFF);
+      PWR.reboot();
+    }
   }
 }
