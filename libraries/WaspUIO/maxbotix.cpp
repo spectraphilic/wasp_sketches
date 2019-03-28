@@ -16,7 +16,7 @@
  */
 int WaspUIO::getMaxbotixSample()
 {
-  const uint16_t timeout = 5000; // 5s
+  const uint16_t timeout = 1000; // 1s timeout for a single sample
   const uint8_t port = 1; // Aux1
   const uint8_t bytes = 4; // Number of bytes to read
   char buffer[bytes]; // Store serial data
@@ -76,7 +76,7 @@ int WaspUIO::getMaxbotixSample()
 uint8_t WaspUIO::readMaxbotixSerial(int samples[], uint8_t nsamples)
 {
   const uint8_t port = 1;
-  uint8_t max = 25; // max number of readings, to avoid infinite loop
+  uint8_t max = nsamples * 2; // max number of readings, to avoid infinite loop
   uint8_t i, j;
 
   // ON Sensor needs 3.3 voltage
