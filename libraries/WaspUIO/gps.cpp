@@ -74,6 +74,8 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     {
       float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
       float lon = GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator);
+      float alt = atof(GPS.altitude);
+      float acc = atof(GPS.accuracy);
 
       // Debug
       char lat_str[15];
@@ -82,16 +84,14 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
       Utils.float2String(lon, lon_str, 6);
       debug(F("GPS latitude  %s %c => %s"), GPS.latitude, GPS.NS_indicator, lat_str);
       debug(F("GPS longitude %s %c => %s"), GPS.longitude, GPS.EW_indicator, lon_str);
-      debug(F("GPS altitude=%s course=%s speed=%s"), GPS.altitude, GPS.course, GPS.speed);
+      debug(F("GPS altitude=%s"), GPS.altitude);
+      debug(F("GPS satellites=%s"), GPS.satellites);
+      debug(F("GPS accuracy=%s"), GPS.accuracy);
 
       // Frame
       ADD_SENSOR(SENSOR_GPS, lat, lon);
-      if (GPS.altitude)
-      {
-        ADD_SENSOR(SENSOR_ALTITUDE, atof(GPS.altitude));
-      }
-      //ADD_SENSOR(SENSOR_SPEED, atof(GPS.speed));
-      //ADD_SENSOR(SENSOR_COURSE, atof(GPS.course));
+      ADD_SENSOR(SENSOR_ALTITUDE, alt)
+      ADD_SENSOR(SENSOR_GPS_ACCURACY, acc);
     }
   }
 

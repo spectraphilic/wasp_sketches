@@ -574,5 +574,6 @@ CR_TASK(taskSlow);
 #define SENSOR_VL53L1X   213
 #define SENSOR_MB73XX    214
 #define SENSOR_ATMOS     215
+#define SENSOR_GPS_ACCURACY 216
 
 #endif
