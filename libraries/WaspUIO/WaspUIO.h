@@ -197,212 +197,205 @@ const uint8_t xbee_len = sizeof(xbees) / sizeof(XBee);
 class WaspUIO
 {
 
-/// private methods //////////////////////////
 private:
 
-/// public methods and attributes ////////////
 public:
 
-uint16_t nloops;
+  // Utilities
 
-// Like Arduino's EEPROM.update, it writes the given value only if different
-// from the value already saved.
-bool updateEEPROM(int address, uint8_t value);
-bool updateEEPROM(int address, uint16_t value);
-bool updateEEPROM(int address, uint32_t value);
-bool writeEEPROM(int address, char* src, size_t size);
-char* readEEPROM(int address, char* dst, size_t size);
+  // Like Arduino's EEPROM.update, it writes the given value only if different
+  // from the value already saved.
+  bool updateEEPROM(int address, uint8_t value);
+  bool updateEEPROM(int address, uint16_t value);
+  bool updateEEPROM(int address, uint32_t value);
+  bool writeEEPROM(int address, char* src, size_t size);
+  char* readEEPROM(int address, char* dst, size_t size);
 
-// Configuration variables
-uint8_t flags;
-board_type_t boardType = BOARD_LEN; // Defaults to undefined
-battery_type_t batteryType = BATTERY_LEN; // Defaults to undefined
-network_type_t networkType;
-uint16_t actions[RUN_LEN];
+  // Math and algo utilities
+  int8_t index(const char* const list[], size_t size, const char* str);
+  void sort_uint16(uint16_t* array, uint8_t size);
+  uint16_t median_uint16(uint16_t* array, uint8_t size);
+  uint16_t mean_uint16(uint16_t* array, uint8_t size);
+  uint16_t std_uint16(uint16_t* array, uint8_t size, uint16_t mean);
 
-// Variables updated on every loop (see onLoop)
-float batteryVolts;
-uint8_t batteryLevel;
-battery_t battery;
-uint8_t cooldown; // Reduces frequency of action, depends on battery
-// To keep time without calling RCT each time
-unsigned long epochTime; // seconds since the epoch
-unsigned long start;     // millis taken at epochTime
+  // Lifecycle
+  uint16_t nloops;
+  void boot();
+  void bootConfig();
+  void bootDetect();
+  void onLoop();
+  uint32_t nextAlarm();
+  void reboot();
+  void deepSleep();
 
-// Autodetect
-bool hasSD;
-uint8_t hasGPS;
+  // Actions (tasks)
+  uint16_t actions[RUN_LEN];
+  bool action(uint8_t n, ...);
 
-// SD
-const char* archive_dir = "/data";
-const char* logFilename = "LOG.TXT";
-const char* timeFilename = "TIME.TXT"; //
-SdFile logFile;
-uint8_t ack_wait;
-int baselayout();
-void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
-void startSD();
-void stopSD();
-int readline(SdFile &file);
-int8_t walk(SdBaseFile &root,
-            bool (*before_cb)(SdBaseFile &me, char* name),
-            bool (*file_cb)(SdBaseFile &parent, char* name),
-            bool (*after_cb)(SdBaseFile &me, char* name));
-static void dateTime(uint16_t* date, uint16_t* time);
+  // General configuration
+  char name[17];
+  uint8_t flags;
+  board_type_t boardType = BOARD_LEN; // Defaults to undefined
 
-// Network
-void networkInit();
+  // Power related
+  battery_type_t batteryType = BATTERY_LEN; // Defaults to undefined
+  float batteryVolts;
+  uint8_t batteryLevel;
+  battery_t battery;
+  uint8_t cooldown; // Reduces frequency of action, depends on battery
+  // Power: State management
+  const uint8_t PWR_MAIN = 1;
+  const uint8_t PWR_3V3 = 2;
+  const uint8_t PWR_5V = 4;
+  const uint8_t PWR_LEAD_VOLTAGE = 8;
+  const uint8_t PWR_MB = 16;
+  const uint8_t PWR_I2C = 32;
+  const uint8_t PWR_1WIRE = 64;
+  const uint8_t PWR_SDI12 = 128;
+  uint8_t pwr_state = 0;
+  uint8_t pwr_saved_state;
+  void saveState();
+  void loadState();
+  bool _setState(uint8_t device, bool new_state);
+  // Power board
+  bool pwr_switch(uint8_t device, uint8_t pin, bool new_state);
+  bool pwr_main(bool new_state);
+  bool pwr_3v3(bool new_state);
+  bool pwr_5v(bool new_state);
+  bool pwr_leadVoltage(bool new_state);
+  void setSensorPower(uint8_t type, uint8_t mode);
+  // Sensor board
+  bool pwr_mb(bool new_state);
+  bool pwr_i2c(bool new_state);
+  bool pwr_1wire(bool new_state);
+  bool pwr_sdi12(bool new_state);
+  // Battery
+  void readBattery();
+  float getBatteryVolts();
+  float getLeadBatteryVolts();
 
-#if WITH_XBEE
-// Network: Xbee
-void OTA_communication(int OTA_duration); // TODO
-XBee xbee;
-void xbeeInit();
-int xbee_ping(int &rssi);
-//const char* BROADCAST_ADDRESS = "000000000000FFFF";
-#endif
+  // Time
+  // To keep time without calling RCT each time
+  unsigned long epochTime; // seconds since the epoch
+  unsigned long start;     // millis taken at epochTime
+  uint8_t saveTime();
+  uint8_t saveTimeToSD();
+  uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+  uint8_t setTime(uint32_t time);
+  void loadTime();
+  unsigned long getEpochTime();
+  unsigned long getEpochTime(uint16_t &ms);
+  uint8_t setTimeFromNetwork();
 
-#if WITH_4G
-// Network: 4G
-uint16_t pin; // Pin for 4G module
-void _4GInit();
-uint8_t _4GStart();
-uint8_t _4GStop();
-uint8_t _4GGPS();
-int _4GPing();
-#endif
+  // SD
+  bool hasSD;
+  const char* archive_dir = "/data";
+  const char* logFilename = "LOG.TXT";
+  const char* timeFilename = "TIME.TXT"; //
+  SdFile logFile;
+  uint8_t ack_wait;
+  int baselayout();
+  void startSD();
+  void stopSD();
+  int readline(SdFile &file);
+  int8_t walk(SdBaseFile &root,
+              bool (*before_cb)(SdBaseFile &me, char* name),
+              bool (*file_cb)(SdBaseFile &parent, char* name),
+              bool (*after_cb)(SdBaseFile &me, char* name));
+  static void dateTime(uint16_t* date, uint16_t* time);
 
-#if WITH_IRIDIUM
-char iridium_fw[9]; // firmware version
-void iridiumInit();
-int iridium_start();
-int iridium_stop();
-int iridium_ping();
-#endif
+  // Network
+  network_type_t networkType;
+  void networkInit();
+  #if WITH_XBEE
+  // Network: Xbee
+  void OTA_communication(int OTA_duration); // TODO
+  XBee xbee;
+  void xbeeInit();
+  int xbee_ping(int &rssi);
+  //const char* BROADCAST_ADDRESS = "000000000000FFFF";
+  #endif
+  #if WITH_4G
+  // Network: 4G
+  uint16_t pin; // Pin for 4G module
+  void _4GInit();
+  uint8_t _4GStart();
+  uint8_t _4GStop();
+  uint8_t _4GGPS();
+  int _4GPing();
+  #endif
+  #if WITH_IRIDIUM
+  char iridium_fw[9]; // firmware version
+  void iridiumInit();
+  int iridium_start();
+  int iridium_stop();
+  int iridium_ping();
+  #endif
+  #if WITH_CRYPTO
+  // Crypto
+  char password[33]; // To encrypt frames
+  #endif
 
-#if WITH_CRYPTO
-// Crypto
-char password[33]; // To encrypt frames
-#endif
+  // GPS
+  uint8_t hasGPS;
+  int8_t gps(bool setTime, bool getPosition);
 
-// Power
-// (power) state management
-const uint8_t PWR_MAIN = 1;
-const uint8_t PWR_3V3 = 2;
-const uint8_t PWR_5V = 4;
-const uint8_t PWR_LEAD_VOLTAGE = 8;
-const uint8_t PWR_MB = 16;
-const uint8_t PWR_I2C = 32;
-const uint8_t PWR_1WIRE = 64;
-const uint8_t PWR_SDI12 = 128;
+  // Frames
+  void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
+  void createFrame(bool discard=false);
+  int8_t addSensor(uint8_t type, ...);
+  uint8_t addSensorValue(uint8_t size, void* value); // XXX Should be private
+  uint8_t addSensorValue(float value);
+  uint8_t addSensorValue(int8_t value);
+  uint8_t addSensorValue(uint8_t value);
+  uint8_t addSensorValue(int16_t value);
+  uint8_t addSensorValue(uint16_t value);
+  uint8_t addSensorValue(int32_t value);
+  uint8_t addSensorValue(uint32_t value);
+  uint8_t getSequence(uint8_t *p);
+  void showFrame(uint8_t *p);
+  uint8_t frame2Sd();
+  int readFrame(uint8_t &n);
+  uint8_t frameSize;
+  uint16_t payloadSize;
+  void setFrameSize();
 
-uint8_t pwr_state = 0;
-uint8_t pwr_saved_state;
-void saveState();
-void loadState();
-bool _setState(uint8_t device, bool new_state);
-// Power board
-bool pwr_switch(uint8_t device, uint8_t pin, bool new_state);
-bool pwr_main(bool new_state);
-bool pwr_3v3(bool new_state);
-bool pwr_5v(bool new_state);
-bool pwr_leadVoltage(bool new_state);
-void setSensorPower(uint8_t type, uint8_t mode);
-// Sensor board
-bool pwr_mb(bool new_state);
-bool pwr_i2c(bool new_state);
-bool pwr_1wire(bool new_state);
-bool pwr_sdi12(bool new_state);
-// Battery
-void readBattery();
-float getBatteryVolts();
-float getLeadBatteryVolts();
+  // CLI
+  void clint();
+  const char* pprint4G(char* dst, size_t size);
+  const char* pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name);
+  const char* pprintActions(char* dst, size_t size);
+  const char* pprintBattery(char* dst, size_t size);
+  const char* pprintBoard(char* dst, size_t size);
+  const char* pprintFrames(char* dst, size_t size);
+  const char* pprintIridium(char* dst, size_t size);
+  const char* pprintLog(char* dst, size_t size);
+  const char* pprintSerial(char* str, size_t size);
+  const char* pprintXBee(char* dst, size_t size);
 
-// Init, start and stop methods
-void boot();
-void onSetup();
-void onLoop();
-bool action(uint8_t n, ...);
+  // Sensors
+  int getMaxbotixSample();
+  uint8_t readMaxbotixSerial(int samples[], uint8_t nsamples);
+  uint8_t readDS18B20(int values[], uint8_t max);
 
-// Frames
-void createFrame(bool discard=false);
-int8_t addSensor(uint8_t type, ...);
-uint8_t addSensorValue(uint8_t size, void* value); // XXX Should be private
-uint8_t addSensorValue(float value);
-uint8_t addSensorValue(int8_t value);
-uint8_t addSensorValue(uint8_t value);
-uint8_t addSensorValue(int16_t value);
-uint8_t addSensorValue(uint16_t value);
-uint8_t addSensorValue(int32_t value);
-uint8_t addSensorValue(uint32_t value);
-uint8_t getSequence(uint8_t *p);
-void showFrame(uint8_t *p);
-uint8_t frame2Sd();
-int readFrame(uint8_t &n);
-uint8_t frameSize;
-uint16_t payloadSize;
-void setFrameSize();
+  // I2C
+  void i2c_scan();
+  bool i2c_acc(int &x, int &y, int &z);
+  bool i2c_AS7263(byte &temp, float &r, float &s, float &t, float &u, float &v, float &w);
+  bool i2c_AS7265(uint8_t &temp,
+                  float &A, float &B, float &C, float &D, float &E, float &F,
+                  float &G, float &H, float &I, float &J, float &K, float &L,
+                  float &R, float &S, float &T, float &U, float &V, float &W);
+  bool i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
+  bool i2c_MLX90614(float &object, float &ambient);
+  bool i2c_TMP102(float &temperature);
 
-// Menu
-void clint();
-const char* pprint4G(char* dst, size_t size);
-const char* pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name);
-const char* pprintActions(char* dst, size_t size);
-const char* pprintBattery(char* dst, size_t size);
-const char* pprintBoard(char* dst, size_t size);
-const char* pprintFrames(char* dst, size_t size);
-const char* pprintIridium(char* dst, size_t size);
-const char* pprintLog(char* dst, size_t size);
-const char* pprintSerial(char* str, size_t size);
-const char* pprintXBee(char* dst, size_t size);
+  uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
 
-// Time
-uint8_t saveTime();
-uint8_t saveTimeToSD();
-uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
-uint8_t setTime(uint32_t time);
-void loadTime();
-unsigned long getEpochTime();
-unsigned long getEpochTime(uint16_t &ms);
-uint8_t setTimeFromNetwork();
-int8_t gps(bool setTime, bool getPosition);
-
-// Sleep
-uint32_t nextAlarm(char* alarmTime);
-void deepSleep();
-
-// Sensors
-int getMaxbotixSample();
-uint8_t readMaxbotixSerial(int samples[], uint8_t nsamples);
-uint8_t readDS18B20(int values[], uint8_t max);
-
-// I2C
-void i2c_scan();
-bool i2c_acc(int &x, int &y, int &z);
-bool i2c_AS7263(byte &temp, float &r, float &s, float &t, float &u, float &v, float &w);
-bool i2c_AS7265(
-  uint8_t &temp,
-  float &A, float &B, float &C, float &D, float &E, float &F,
-  float &G, float &H, float &I, float &J, float &K, float &L,
-  float &R, float &S, float &T, float &U, float &V, float &W);
-bool i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
-bool i2c_MLX90614(float &object, float &ambient);
-bool i2c_TMP102(float &temperature);
-
-uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
-
-// SDI-12
-char sdi_read_address();
-const char* sdi_identify(uint8_t address);
-uint8_t sdi_set_address(uint8_t current_address, uint8_t new_address);
-
-// Utils
-int8_t index(const char* const list[], size_t size, const char* str);
-void sort_uint16(uint16_t* array, uint8_t size);
-uint16_t median_uint16(uint16_t* array, uint8_t size);
-uint16_t mean_uint16(uint16_t* array, uint8_t size);
-uint16_t std_uint16(uint16_t* array, uint8_t size, uint16_t mean);
-
+  // SDI-12
+  char sdi_read_address();
+  const char* sdi_identify(uint8_t address);
+  uint8_t sdi_set_address(uint8_t current_address, uint8_t new_address);
 };
 
 
@@ -415,8 +408,6 @@ extern LIFO lifo;
 
 
 void vlog(loglevel_t level, const char* message, va_list args);
-void beforeSleep();
-void afterSleep();
 
 
 /*
@@ -558,21 +549,21 @@ CR_TASK(taskGPS4G);
 CR_TASK(taskSlow);
 
 
-#define SENSOR_BAT        52
-#define SENSOR_GPS        53
-#define SENSOR_TST       123
-#define SENSOR_CTD10     200
-#define SENSOR_DS18B20   203
-#define SENSOR_GPS_STATS 205
-#define SENSOR_VOLTS     206
-#define SENSOR_WS100     207
-#define SENSOR_DS2       208
-#define SENSOR_BME_76    209
-#define SENSOR_BME_77    210
-#define SENSOR_MLX90614  211
-#define SENSOR_TMP102    212
-#define SENSOR_VL53L1X   213
-#define SENSOR_MB73XX    214
-#define SENSOR_ATMOS     215
+#define SENSOR_BAT           52
+#define SENSOR_GPS           53
+#define SENSOR_TST          123
+#define SENSOR_CTD10        200
+#define SENSOR_DS18B20      203
+#define SENSOR_GPS_ACCURACY 205
+#define SENSOR_VOLTS        206
+#define SENSOR_WS100        207
+#define SENSOR_DS2          208
+#define SENSOR_BME_76       209
+#define SENSOR_BME_77       210
+#define SENSOR_MLX90614     211
+#define SENSOR_TMP102       212
+#define SENSOR_VL53L1X      213
+#define SENSOR_MB73XX       214
+#define SENSOR_ATMOS        215
 
 #endif

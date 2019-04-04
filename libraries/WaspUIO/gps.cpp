@@ -3,7 +3,8 @@
 
 int8_t WaspUIO::gps(bool setTime, bool getPosition)
 {
-  const __FlashStringHelper * err = NULL;
+  const __FlashStringHelper * error_msg = NULL;
+  uint8_t satellites;
 
   debug(F("GPS start"));
   if (_boot_version >= 'J') { stopSD(); }
@@ -18,15 +19,37 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   // Connect
   if (GPS.waitForSignal(150) == false) // 150s = 2m30s
   {
-    err = F("GPS Timeout");
+    error_msg = F("GPS Timeout");
     goto exit;
   }
 
   // Position
-  if (getPosition && GPS.getPosition() != 1)
+  if (getPosition)
   {
-    err = F("GPS.getPosition() Error");
-    goto exit;
+    // Try twice to get enough satellites (4), wait 10s before each try
+    for (int i=0; i < 3; i++)
+    {
+      delay(10000); // 10s
+      int8_t status = GPS.getPosition();
+      if (status == 1)
+      {
+        satellites = (uint8_t) atoi(GPS.satellites);
+        if (satellites > 4)
+        {
+          break;
+        }
+      }
+      else if (status == -1)
+      {
+        error_msg = F("GPS.getPosition() No GPS signal");
+        goto exit;
+      }
+      else // if (status == 0)
+      {
+        error_msg = F("GPS.getPosition() Timeout");
+        goto exit;
+      }
+    }
   }
 
   // Time
@@ -54,6 +77,8 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   {
     float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
     float lon = GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator);
+    float alt = atof(GPS.altitude);
+    float acc = atof(GPS.accuracy);
 
     // Debug
     char lat_str[15];
@@ -62,24 +87,22 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     Utils.float2String(lon, lon_str, 6);
     debug(F("GPS latitude  %s %c => %s"), GPS.latitude, GPS.NS_indicator, lat_str);
     debug(F("GPS longitude %s %c => %s"), GPS.longitude, GPS.EW_indicator, lon_str);
-    debug(F("GPS altitude=%s course=%s speed=%s"), GPS.altitude, GPS.course, GPS.speed);
+    debug(F("GPS altitude=%s"), GPS.altitude);
+    debug(F("GPS satellites=%s accuracy=%s"), GPS.satellites, GPS.accuracy);
 
-    // Frame
+    // Frames
     ADD_SENSOR(SENSOR_GPS, lat, lon);
-    if (GPS.altitude)
-    {
-      ADD_SENSOR(SENSOR_ALTITUDE, atof(GPS.altitude));
-    }
-    //ADD_SENSOR(SENSOR_SPEED, atof(GPS.speed));
-    //ADD_SENSOR(SENSOR_COURSE, atof(GPS.course));
+    ADD_SENSOR(SENSOR_ALTITUDE, alt)
+    ADD_SENSOR(SENSOR_GPS_ACCURACY, satellites, acc);
+
   }
 
 exit:
-  if (err)
+  if (error_msg)
   {
     GPS.OFF();
     if (_boot_version >= 'J') { startSD(); }
-    error(err);
+    error(error_msg);
     return -1;
   }
   return 0;

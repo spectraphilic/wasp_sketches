@@ -120,16 +120,8 @@ const char* WaspUIO::pprintSerial(char* dst, size_t size)
 {
   uint8_t serial[8];
 
-  if (_boot_version < 'H')
-  {
-    for (uint8_t i=0; i < 4; i++) { serial[i] = _serial_id[7-i]; }
-    sprintf(dst, "%lu", * (unsigned long*) serial);
-  }
-  else
-  {
-    for (uint8_t i=0; i < 8; i++) { serial[i] = _serial_id[i]; }
-    Utils.hex2str(serial, dst, 8);
-  }
+  for (uint8_t i=0; i < 8; i++) { serial[i] = _serial_id[i]; }
+  Utils.hex2str(serial, dst, 8);
 
   return dst;
 }

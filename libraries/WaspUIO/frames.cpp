@@ -26,6 +26,7 @@ const char frame_format_fff   [] PROGMEM = "fff";
 const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_fffuf [] PROGMEM = "fffuf";
 const char frame_format_ffffff[] PROGMEM = "ffffff";
+const char frame_format_uf    [] PROGMEM = "uf";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -69,46 +70,43 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 18x
   null, null, null, null, null, null, null, null, null, null, // 19x
   // 20x
-  frame_format_fff,   // 200 CTD-10
-  null,               // 201 Reserved, do not reuse (was 201 DS-2 1)
-  null,               // 202 Reserved, do not reuse (was 201 DS-2 2)
-  frame_format_n,     // 203 DS18B20
-  null,               // 204 Reserved, do not reuse (was MB73XX)
-  frame_format_ww,    // 205 GPS statistics
-  frame_format_f,     // 206 Battery Volts
-  frame_format_fffuf, // 207 WS100-UMB
-  frame_format_ffffff,// 208 DS-2
-  frame_format_fff,   // 209 BME 0x76 (internal)
-  frame_format_fff,   // 210 BME 0x77
-  frame_format_ff,    // 211 MLX90614
-  frame_format_f,     // 212 TMP102
-  frame_format_n,     // 213 VL53L1X
-  frame_format_n,     // 214 MB73XX
-  frame_format_ffffff // 215 ATMOS-22
+  frame_format_fff,     // 200 CTD-10
+  null,                 // 201 Reserved, do not reuse (was 201 DS-2 1)
+  null,                 // 202 Reserved, do not reuse (was 201 DS-2 2)
+  frame_format_n,       // 203 DS18B20
+  null,                 // 204 Reserved, do not reuse (was MB73XX)
+  frame_format_uf,      // 205 GPS number of satellites and accuracy
+  frame_format_f,       // 206 Battery Volts
+  frame_format_fffuf,   // 207 WS100-UMB
+  frame_format_ffffff,  // 208 DS-2
+  frame_format_fff,     // 209 BME 0x76 (internal)
+  frame_format_fff,     // 210 BME 0x77
+  frame_format_ff,      // 211 MLX90614
+  frame_format_f,       // 212 TMP102
+  frame_format_n,       // 213 VL53L1X
+  frame_format_n,       // 214 MB73XX
+  frame_format_ffffff,  // 215 ATMOS-22
 };
 
-const char frame_name_bat      [] PROGMEM = "BAT";
-const char frame_name_gps      [] PROGMEM = "GPS";
-const char frame_name_rssi     [] PROGMEM = "RSSI";
-const char frame_name_acc      [] PROGMEM = "ACC";
-//const char frame_name_bme_tc   [] PROGMEM = "BME TC";
-//const char frame_name_bme_hum  [] PROGMEM = "BME HUM";
-//const char frame_name_bme_pres [] PROGMEM = "BME PRES";
-const char frame_name_altitude [] PROGMEM = "ALT";
-const char frame_name_tst      [] PROGMEM = "TST";
-const char frame_name_ctd10    [] PROGMEM = "CTD10";
-const char frame_name_ds18b20  [] PROGMEM = "DS18B20";
-const char frame_name_gps_stats[] PROGMEM = "GPS STATS";
-const char frame_name_bat_volts[] PROGMEM = "BAT VOLTS";
-const char frame_name_ws100    [] PROGMEM = "WS100";
-const char frame_name_ds2      [] PROGMEM = "DS-2";
-const char frame_name_bme76    [] PROGMEM = "BME int";
-const char frame_name_bme77    [] PROGMEM = "BME ext";
-const char frame_name_mlx      [] PROGMEM = "MLX";
-const char frame_name_tmp      [] PROGMEM = "TMP";
-const char frame_name_vl       [] PROGMEM = "VL";
-const char frame_name_mb73xx   [] PROGMEM = "MB73XX";
-const char frame_name_atmos    [] PROGMEM = "ATMOS";
+const char frame_name_bat         [] PROGMEM = "BAT";
+const char frame_name_gps         [] PROGMEM = "GPS";
+const char frame_name_rssi        [] PROGMEM = "RSSI";
+const char frame_name_acc         [] PROGMEM = "ACC";
+const char frame_name_altitude    [] PROGMEM = "ALT";
+const char frame_name_tst         [] PROGMEM = "TST";
+const char frame_name_ctd10       [] PROGMEM = "CTD10";
+const char frame_name_ds18b20     [] PROGMEM = "DS18B20";
+const char frame_name_gps_accuracy[] PROGMEM = "GPS Accuracy";
+const char frame_name_bat_volts   [] PROGMEM = "BAT VOLTS";
+const char frame_name_ws100       [] PROGMEM = "WS100";
+const char frame_name_ds2         [] PROGMEM = "DS-2";
+const char frame_name_bme76       [] PROGMEM = "BME int";
+const char frame_name_bme77       [] PROGMEM = "BME ext";
+const char frame_name_mlx         [] PROGMEM = "MLX";
+const char frame_name_tmp         [] PROGMEM = "TMP";
+const char frame_name_vl          [] PROGMEM = "VL";
+const char frame_name_mb73xx      [] PROGMEM = "MB73XX";
+const char frame_name_atmos       [] PROGMEM = "ATMOS";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -158,7 +156,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null,                                                       // 202 Reserved, do not reuse (was 201 DS-2 2)
   frame_name_ds18b20,                                         // 203 DS18B20
   null,                                                       // 204 Reserved, do not reuse (was MB73XX)
-  frame_name_gps_stats,                                       // 205 GPS statistics
+  frame_name_gps_accuracy,                                    // 205 GPS Accuracy
   frame_name_bat_volts,                                       // 206 Battery Volts
   frame_name_ws100,                                           // 207 WS100-UMB
   frame_name_ds2,                                             // 208 DS-2
@@ -271,7 +269,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   if (addSensorValue(type) == 0) { err = -1; goto exit; }
 
   // Values
-  for (int i=0; i < strlen(format); i++)
+  for (uint8_t i=0; i < strlen(format); i++)
   {
     char c = format[i];
     if (c == 'f')
@@ -315,11 +313,11 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
       if (addSensorValue(n) == 0) { err = -1; goto exit; }
       const int* values = va_arg(args, const int*);
       int32_t value;
-      for (uint8_t i = 0; i < n; i++)
+      for (uint8_t j = 0; j < n; j++)
       {
-        if (i > 0)
+        if (j > 0)
         {
-          value = values[i] - values[i-1];
+          value = values[j] - values[j-1];
           if (value > -128 && value < 128)
           {
             if (addSensorValue((int8_t)value) == 0) { err = -1; goto exit; }
@@ -330,7 +328,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
           if (addSensorValue((int8_t)-128) == 0) { err = -1; goto exit; }
         }
 
-        if (addSensorValue(values[i]) == 0) { err = -1; goto exit; }
+        if (addSensorValue(values[j]) == 0) { err = -1; goto exit; }
       }
     }
     else
@@ -606,6 +604,18 @@ void WaspUIO::showFrame(uint8_t *p)
    }
 
    cr.println(F("=========================================="));
+}
+
+
+/**
+ * Read a line from the given open file, not including the end-of-line
+ * character. Store the read line in SD.buffer.
+ *
+ * Return the length of the line. Or -1 for EOF. Or -2 if error.
+ */
+void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date)
+{
+  sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
 }
 
 
