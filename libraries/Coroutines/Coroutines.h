@@ -142,10 +142,6 @@ enum loglevel_t {
 /* Logging */
 extern void vlog(loglevel_t level, const char* message, va_list args) __attribute__((weak));
 
-/* These are called before and after sleep within the loop. */
-extern void beforeSleep() __attribute__((weak));
-extern void afterSleep() __attribute__((weak));
-
 
 class Loop
 {
@@ -156,7 +152,6 @@ class Loop
     // Private functions
     int8_t join(Task* task, tid_t tid, tid_t target_id);
     void resume(Task* task, tid_t tid);
-    void sleep(int32_t delay_time);
 
   public:
     // 'get' is public only because used by the macros. It is not really

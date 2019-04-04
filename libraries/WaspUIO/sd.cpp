@@ -15,20 +15,6 @@ void WaspUIO::startSD()
   SD.OFF();
   hasSD = SD.ON();
 
-/*
-  // Apparently we don't really need to retry, the call to SD.OFF does the
-  // trick, but leaving this here for now
-  // TODO Remove it eventually
-  const uint8_t retries = 2;
-  for (uint8_t i=0; i < retries; i++)
-  {
-    hasSD = SD.ON();
-    if (hasSD) break;
-    SD.OFF();
-    USB.print("x");
-  }
-*/
-
   if (hasSD)
   {
     baselayout();

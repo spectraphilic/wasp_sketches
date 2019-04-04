@@ -263,9 +263,6 @@ void vlog(loglevel_t level, const char* message, va_list args)
   USB.println(buffer);
 }
 
-void beforeSleep() {}
-void afterSleep() {}
-
 /*
  * Instance
  */
