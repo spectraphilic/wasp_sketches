@@ -30,15 +30,24 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     for (int i=0; i < 3; i++)
     {
       delay(10000); // 10s
-      if (GPS.getPosition() != 1)
+      int8_t status = GPS.getPosition();
+      if (status == 1)
       {
-        error_msg = F("GPS.getPosition() Error");
+        satellites = (uint8_t) atoi(GPS.satellites);
+        if (satellites > 4)
+        {
+          break;
+        }
+      }
+      else if (status == -1)
+      {
+        error_msg = F("GPS.getPosition() No GPS signal");
         goto exit;
       }
-      satellites = (uint8_t) atoi(GPS.satellites);
-      if (satellites > 4)
+      else // if (status == 0)
       {
-        break;
+        error_msg = F("GPS.getPosition() Timeout");
+        goto exit;
       }
     }
   }
