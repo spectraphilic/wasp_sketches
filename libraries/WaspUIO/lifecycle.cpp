@@ -1,39 +1,29 @@
-/******************************************************************************
- * Includes
- ******************************************************************************/
-
 #include "WaspUIO.h"
-#include <assert.h>
 
-
-/******************************************************************************
- * PUBLIC FUNCTIONS
- ******************************************************************************/
 
 /**
  * Function to be called first in setup()
  */
+
 void WaspUIO::boot()
 {
   nloops = 0;
   SdFile::dateTimeCallback(WaspUIO::dateTime);
 
   RTC.ON();
-  cr.print(F("."));
-  UIO.onSetup();
-  cr.print(F("."));
-  UIO.onLoop();
-  cr.print(F("."));
-  UIO.networkInit(); // Network
+  cr.print(F(".")); UIO.bootConfig();  // Read config from EEPROM
+  cr.print(F(".")); UIO.bootDetect();  // Auto detect hardware
+  cr.print(F(".")); UIO.onLoop();
+  cr.print(F(".")); UIO.networkInit(); // Init network
 }
 
 
-void WaspUIO::onSetup()
+void WaspUIO::bootConfig()
 {
-  /*** 1. Read configuration from EEPROM ***/
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
+  // Network type
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
   if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
 
@@ -79,13 +69,17 @@ void WaspUIO::onSetup()
     }
   }
 
-  // Frames
-  setFrameSize();
-
   // Log level
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
-  /*** 2. Autodetect hardware ***/
+  // Frames
+  setFrameSize();
+}
+
+
+void WaspUIO::bootDetect()
+{
+  /* GPS */
   hasGPS = GPS_NO;
 #if WITH_4G
   if (_4G.ON() == 0)
@@ -102,9 +96,15 @@ void WaspUIO::onSetup()
   }
 #endif
 
-  // USB autodetect
+  // USB
   // Cannot be done with ATMega1281 but it can be with ATmega328P
 }
+
+
+
+/**
+ * Function to be called in every loop (and on boot as well)
+ */
 
 void WaspUIO::onLoop()
 {
@@ -118,67 +118,9 @@ void WaspUIO::onLoop()
 }
 
 
-/**
- * Retturn true if the given sensor is to be read now.
- */
-bool WaspUIO::action(uint8_t n, ...)
-{
-  va_list args;
-  bool yes = false;
-
-  uint32_t minutes = epochTime / 60; // minutes since the epoch
-
-  va_start(args, n);
-  for (; n; n--)
-  {
-    int idx = va_arg(args, int);
-    assert(idx < RUN_LEN); // TODO Define __assert
-
-    uint16_t value = actions[idx] * cooldown;
-    if (value > 0)
-    {
-      if (minutes % value == 0)
-      {
-        yes = true;
-        break;
-      }
-    }
-  }
-  va_end(args);
-
-  return yes;
-}
-
-
-/******************************************************************************
- * PRIVATE FUNCTIONS                                                          *
- ******************************************************************************/
 
 /**
- * Read a line from the given open file, not including the end-of-line
- * character. Store the read line in SD.buffer.
- *
- * Return the length of the line. Or -1 for EOF. Or -2 if error.
- */
-void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date)
-{
-  sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
-}
-
-/// Preinstantiate Objects /////////////////////////////////////////////////////
-WaspUIO UIO = WaspUIO();
-FIFO fifo = FIFO("TMP.TXT", "QSTART.BIN", 8); // TODO Rename to FIFO.BIN / FIDX.BIN
-#if WITH_IRIDIUM
-IridiumSBD iridium(Serial1, DIGITAL4); // RING pins not connected
-LIFO lifo = LIFO("LIFO.BIN", 8);
-#endif
-
-
-/**
- * getNextAlarm
- *
- * Return the string of the next alarm.
- *
+ * These 3 functions define the process to sleep for the next loop
  */
 
 void WaspUIO::reboot()
@@ -274,3 +216,16 @@ void WaspUIO::deepSleep()
     }
   }
 }
+
+
+
+/*
+ * Preinstantiate Objects.
+ * We have to do it somewhere.
+ */
+WaspUIO UIO = WaspUIO();
+FIFO fifo = FIFO("TMP.TXT", "QSTART.BIN", 8); // TODO Rename to FIFO.BIN / FIDX.BIN
+#if WITH_IRIDIUM
+IridiumSBD iridium(Serial1, DIGITAL4); // RING pins not connected
+LIFO lifo = LIFO("LIFO.BIN", 8);
+#endif

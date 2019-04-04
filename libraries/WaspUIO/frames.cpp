@@ -269,7 +269,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   if (addSensorValue(type) == 0) { err = -1; goto exit; }
 
   // Values
-  for (int i=0; i < strlen(format); i++)
+  for (uint8_t i=0; i < strlen(format); i++)
   {
     char c = format[i];
     if (c == 'f')
@@ -313,11 +313,11 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
       if (addSensorValue(n) == 0) { err = -1; goto exit; }
       const int* values = va_arg(args, const int*);
       int32_t value;
-      for (uint8_t i = 0; i < n; i++)
+      for (uint8_t j = 0; j < n; j++)
       {
-        if (i > 0)
+        if (j > 0)
         {
-          value = values[i] - values[i-1];
+          value = values[j] - values[j-1];
           if (value > -128 && value < 128)
           {
             if (addSensorValue((int8_t)value) == 0) { err = -1; goto exit; }
@@ -328,7 +328,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
           if (addSensorValue((int8_t)-128) == 0) { err = -1; goto exit; }
         }
 
-        if (addSensorValue(values[i]) == 0) { err = -1; goto exit; }
+        if (addSensorValue(values[j]) == 0) { err = -1; goto exit; }
       }
     }
     else
@@ -604,6 +604,18 @@ void WaspUIO::showFrame(uint8_t *p)
    }
 
    cr.println(F("=========================================="));
+}
+
+
+/**
+ * Read a line from the given open file, not including the end-of-line
+ * character. Store the read line in SD.buffer.
+ *
+ * Return the length of the line. Or -1 for EOF. Or -2 if error.
+ */
+void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date)
+{
+  sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
 }
 
 
