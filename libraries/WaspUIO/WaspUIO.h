@@ -368,7 +368,8 @@ uint8_t setTimeFromNetwork();
 int8_t gps(bool setTime, bool getPosition);
 
 // Sleep
-uint32_t nextAlarm(char* alarmTime);
+uint32_t nextAlarm();
+void reboot();
 void deepSleep();
 
 // Sensors

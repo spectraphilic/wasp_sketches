@@ -180,9 +180,25 @@ LIFO lifo = LIFO("LIFO.BIN", 8);
  * Return the string of the next alarm.
  *
  */
-uint32_t WaspUIO::nextAlarm(char* alarmTime)
+
+void WaspUIO::reboot()
+{
+  // Stop stuff
+  UIO.stopSD();
+  PWR.switchesOFF(ALL_OFF);
+
+  // Clear interruption flag & pin
+  intFlag = 0;
+  PWR.clearInterruptionPin();
+
+  // Reboot
+  PWR.reboot();
+}
+
+uint32_t WaspUIO::nextAlarm()
 {
   uint32_t next = ULONG_MAX / 60; // max posible value of minutes since epoch
+  timestamp_t ts;
 
   // Minutes since epoch
   // With +2s safeguard, this means we've 2s before going to sleep
@@ -202,12 +218,28 @@ uint32_t WaspUIO::nextAlarm(char* alarmTime)
     }
   }
 
-  // Format time to string, to be passed to deepSleep
-  timestamp_t ts;
+
+  // Set Alarm-1 and Alarm-2 (watchdog)
+  //
+  // Use MODE3 instead of MODE2 to not sleep for more than 1 day, in case
+  // somehow the RTC loses it's time but the alarms are not reset.
+  //
+  // Be paronoid and set Alarm-1 at 01s, because Alarm-2 can only run at 00s.
+  // This way we are extra sure both are not triggered at the same time and we
+  // get predictable results. This should not be necessary because we set
+  // Alarm-2 2 minues later.
+  //
+  RTC.ON();
   RTC.breakTimeAbsolute(next * 60, &ts);
-  sprintf(alarmTime, "00:%02d:%02d:00", ts.hour, ts.minute);
-  //sprintf(alarmTime, "%02d:%02d:%02d:00", ts.date, ts.hour, ts.minute);
-  return next - minutes;
+  RTC.setAlarm1(ts.date, ts.hour, ts.minute, 1, RTC_ABSOLUTE, RTC_ALM1_MODE3);
+  debug(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, 1);
+  // Alarm-2
+  RTC.breakTimeAbsolute((next + 2) * 60, &ts);
+  RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
+  debug(F("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)"), ts.date, ts.hour, ts.minute);
+  RTC.OFF();
+
+  return 1;
 }
 
 void WaspUIO::deepSleep()
@@ -215,62 +247,30 @@ void WaspUIO::deepSleep()
   saveTimeToSD();
 
   // For robustness sake, reboot once in a while
-  bool reboot = (nloops >= MAX_LOOPS);
-  if (reboot)
+  if (nloops >= MAX_LOOPS)
   {
     info(F("Rebooting after %u loops"), nloops);
+    reboot();
   }
 
-  // Get next alarm time
-  char alarmTime[12]; // "00:00:00:00"
-  uint32_t next = nextAlarm(alarmTime);
-  debug(F("Next alarm at %s in %lu minutes"), alarmTime, next);
-
-  // Stop SD, logging ends here
-  UIO.stopSD();
+  nextAlarm();  // Set next alarm
+  UIO.stopSD(); // Stop SD, logging ends here
 
   // Clear interruption flag & pin
   intFlag = 0;
   PWR.clearInterruptionPin();
 
-  // Reboot
-  if (reboot)
-  {
-    PWR.switchesOFF(ALL_OFF);
-    PWR.reboot();
-  }
-
-  // Reset watchdog
-  if (_boot_version >= 'H')
-  {
-    // Max is 43200 (30 days), for alarm 2.
-    // Though in this example it says max is 1000
-    // http://www.libelium.com/development/waspmote/examples/rtc-10-set-watchdog/
-    // Anyway, better not to sleep for tooo long. We cap it to 960 (16h)
-    if (next > 960)
-    {
-      next = 960;
-    }
-
-    if (RTC.setWatchdog(next + 2))
-    {
-      PWR.switchesOFF(ALL_OFF);
-      PWR.reboot();
-    }
-  }
-
   // Power off and Sleep
-  // XXX Using MODE3 instead of MODE2 to not sleep for more than 1 day
-  PWR.deepSleep(alarmTime, RTC_ABSOLUTE, RTC_ALM1_MODE3, ALL_OFF);
-  nloops++;
+  PWR.sleep(ALL_OFF);
 
-  // Awake: Reset if stuck for 4 minutes
-  if (_boot_version >= 'H')
+  // Awake
+  nloops++;                 // Next loop
+  if (_boot_version >= 'H') // Reset if stuck for 4 minutes
   {
     if (RTC.setWatchdog(LOOP_TIMEOUT))
     {
-      PWR.switchesOFF(ALL_OFF);
-      PWR.reboot();
+      fatal(F("Error setting watchdog"));
+      reboot();
     }
   }
 }
