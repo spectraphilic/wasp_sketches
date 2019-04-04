@@ -4,7 +4,7 @@
 int8_t WaspUIO::gps(bool setTime, bool getPosition)
 {
   const __FlashStringHelper * error_msg = NULL;
-  int satellites;
+  uint8_t satellites;
 
   debug(F("GPS start"));
   if (_boot_version >= 'J') { stopSD(); }
@@ -27,7 +27,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   if (getPosition)
   {
     // Try twice to get enough satellites (4), wait 10s before each try
-    for (int i=0; i < 2; i++)
+    for (int i=0; i < 3; i++)
     {
       delay(10000); // 10s
       if (GPS.getPosition() != 1)
@@ -35,8 +35,8 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
         error_msg = F("GPS.getPosition() Error");
         goto exit;
       }
-      satellites = atoi(GPS.satellites);
-      if (satellites >= 4)
+      satellites = (uint8_t) atoi(GPS.satellites);
+      if (satellites > 4)
       {
         break;
       }
@@ -66,33 +66,26 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
 
   if (getPosition)
   {
-    if (satellites < 4)
-    {
-      warn(F("Only found %d satellites, give up"), satellites);
-    }
-    else
-    {
-      float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
-      float lon = GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator);
-      float alt = atof(GPS.altitude);
-      float acc = atof(GPS.accuracy);
+    float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
+    float lon = GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator);
+    float alt = atof(GPS.altitude);
+    float acc = atof(GPS.accuracy);
 
-      // Debug
-      char lat_str[15];
-      char lon_str[15];
-      Utils.float2String(lat, lat_str, 6);
-      Utils.float2String(lon, lon_str, 6);
-      debug(F("GPS latitude  %s %c => %s"), GPS.latitude, GPS.NS_indicator, lat_str);
-      debug(F("GPS longitude %s %c => %s"), GPS.longitude, GPS.EW_indicator, lon_str);
-      debug(F("GPS altitude=%s"), GPS.altitude);
-      debug(F("GPS satellites=%s"), GPS.satellites);
-      debug(F("GPS accuracy=%s"), GPS.accuracy);
+    // Debug
+    char lat_str[15];
+    char lon_str[15];
+    Utils.float2String(lat, lat_str, 6);
+    Utils.float2String(lon, lon_str, 6);
+    debug(F("GPS latitude  %s %c => %s"), GPS.latitude, GPS.NS_indicator, lat_str);
+    debug(F("GPS longitude %s %c => %s"), GPS.longitude, GPS.EW_indicator, lon_str);
+    debug(F("GPS altitude=%s"), GPS.altitude);
+    debug(F("GPS satellites=%s accuracy=%s"), GPS.satellites, GPS.accuracy);
 
-      // Frame
-      ADD_SENSOR(SENSOR_GPS, lat, lon);
-      ADD_SENSOR(SENSOR_ALTITUDE, alt)
-      ADD_SENSOR(SENSOR_GPS_ACCURACY, acc);
-    }
+    // Frames
+    ADD_SENSOR(SENSOR_GPS, lat, lon);
+    ADD_SENSOR(SENSOR_ALTITUDE, alt)
+    ADD_SENSOR(SENSOR_GPS_ACCURACY, satellites, acc);
+
   }
 
 exit:
