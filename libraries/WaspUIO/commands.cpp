@@ -119,15 +119,10 @@ const uint8_t nCommands = sizeof commands / sizeof commands[0];
 void WaspUIO::clint()
 {
   char buffer[150];
-  //char out[150];
   size_t size = sizeof(buffer);
 
-  // Print info
-  cr.println();
-  cmdPrint(NULL);
-  cr.println();
-
   // Go interactive or not
+  cr.println();
   cr.println(F("Press Enter to start interactive mode. Wait 2 seconds to skip."));
   if (cr.input(buffer, sizeof(buffer), 2000) != NULL)
   {

@@ -233,6 +233,7 @@ public:
   bool action(uint8_t n, ...);
 
   // General configuration
+  char name[17];
   uint8_t flags;
   board_type_t boardType = BOARD_LEN; // Defaults to undefined
 
