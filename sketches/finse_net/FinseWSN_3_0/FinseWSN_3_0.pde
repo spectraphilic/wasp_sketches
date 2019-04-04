@@ -25,32 +25,15 @@ void setup()
   UIO.clint();   // Command line interface
   USB.OFF();
 
-  // Uptime frame
+  // Boot frame
   Utils.getID(name);
   frame.setID(name);
   frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
-  if (_boot_version >= 'G')
-  {
-    frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
-  }
-  else
-  {
-    frame.setFrameType(INFORMATION_FRAME_V12 + EVENT_FRAME);
-  }
+  frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
   UIO.addSensor(SENSOR_TST, UIO.epochTime);
   UIO.frame2Sd();
 #if WITH_XBEE
   frame.setID((char*)""); // We only want to send the name once
-#endif
-
-#if WITH_GPS
-  // Set time from GPS if wrong time is detected
-  // XXX Do this unconditionally to update location?
-  if (UIO.epochTime < 1483225200) // 2017-01-01 arbitrary date in the past
-  {
-    warn(F("Wrong time detected, updating from GPS"));
-    taskGPS();
-  }
 #endif
 
   // Log configuration
@@ -74,8 +57,6 @@ void setup()
   info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
   info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
-
-  info(F("Boot done, go to sleep"));
 }
 
 void loop()

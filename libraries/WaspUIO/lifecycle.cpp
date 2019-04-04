@@ -15,6 +15,11 @@ void WaspUIO::boot()
   cr.print(F(".")); UIO.bootDetect();  // Auto detect hardware
   cr.print(F(".")); UIO.onLoop();
   cr.print(F(".")); UIO.networkInit(); // Init network
+
+  if (_boot_version < 'H')
+  {
+    cr.println(F("\nWARNING boot version=%c (only version H and above are supported)"), (char) _boot_version);
+  }
 }
 
 
@@ -174,11 +179,11 @@ uint32_t WaspUIO::nextAlarm()
   RTC.ON();
   RTC.breakTimeAbsolute(next * 60, &ts);
   RTC.setAlarm1(ts.date, ts.hour, ts.minute, 1, RTC_ABSOLUTE, RTC_ALM1_MODE3);
-  debug(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, 1);
+  info(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, 1);
   // Alarm-2
   RTC.breakTimeAbsolute((next + 2) * 60, &ts);
   RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
-  debug(F("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)"), ts.date, ts.hour, ts.minute);
+  info(F("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)"), ts.date, ts.hour, ts.minute);
   RTC.OFF();
 
   return 1;
@@ -207,13 +212,10 @@ void WaspUIO::deepSleep()
 
   // Awake
   nloops++;                 // Next loop
-  if (_boot_version >= 'H') // Reset if stuck for 4 minutes
+  if (RTC.setWatchdog(LOOP_TIMEOUT))
   {
-    if (RTC.setWatchdog(LOOP_TIMEOUT))
-    {
-      fatal(F("Error setting watchdog"));
-      reboot();
-    }
+    fatal(F("Error setting watchdog"));
+    reboot();
   }
 }
 
