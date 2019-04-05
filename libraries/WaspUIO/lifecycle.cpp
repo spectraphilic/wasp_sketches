@@ -18,10 +18,6 @@ void WaspUIO::boot()
   UIO.bootConfig();
   cr.print(F("."));
 
-  // Load time and start SD
-  UIO.onLoop();
-  cr.println(F("."));
-
   // Now we can start logging
   info(F("Welcome to wsn"));
   if (_boot_version < 'H')
@@ -34,6 +30,10 @@ void WaspUIO::boot()
 
   debug(F("Init network"));
   UIO.networkInit();
+  
+  // Load time and start SD
+  UIO.onLoop();
+  cr.println(F("."));
 
   // Command line interface
   clint();
