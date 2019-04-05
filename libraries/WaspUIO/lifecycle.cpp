@@ -174,21 +174,20 @@ uint32_t WaspUIO::nextAlarm()
     }
   }
 
-
+  //
   // Set Alarm-1 and Alarm-2 (watchdog)
   //
   // Use MODE3 instead of MODE2 to not sleep for more than 1 day, in case
   // somehow the RTC loses it's time but the alarms are not reset.
   //
-  // Be paronoid and set Alarm-1 at 01s, because Alarm-2 can only run at 00s.
-  // This way we are extra sure both are not triggered at the same time and we
-  // get predictable results. This should not be necessary because we set
-  // Alarm-2 2 minues later.
-  //
+
+  // It may be 1 to be different from Alarm-2, but both are clearly different already, by 2 minutes
+  uint8_t second = 0;
+
   RTC.ON();
   RTC.breakTimeAbsolute(next * 60, &ts);
-  RTC.setAlarm1(ts.date, ts.hour, ts.minute, 1, RTC_ABSOLUTE, RTC_ALM1_MODE3);
-  info(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, 1);
+  RTC.setAlarm1(ts.date, ts.hour, ts.minute, second, RTC_ABSOLUTE, RTC_ALM1_MODE3);
+  info(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, second);
   // Alarm-2
   RTC.breakTimeAbsolute((next + 2) * 60, &ts);
   RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
@@ -232,7 +231,7 @@ void WaspUIO::deepSleep()
   onLoop();
 
   char buffer[50];
-  info(F("*** Awake loop=%u battery=%s ***"), UIO.nloops,
+  info(F("===== Loop %u battery=%s ====="), UIO.nloops,
        UIO.pprintBattery(buffer, sizeof buffer));
 }
 
