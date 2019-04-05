@@ -16,10 +16,7 @@
 void setup()
 {
   // Boot process
-  USB.ON();
   UIO.boot();
-  UIO.clint();   // Command line interface
-  USB.OFF();
 
   // Boot frame
   frame.setID(UIO.name);

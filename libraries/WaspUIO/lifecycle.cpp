@@ -10,12 +10,20 @@ void WaspUIO::boot()
   nloops = 0;
   SdFile::dateTimeCallback(WaspUIO::dateTime);
 
+  USB.ON();
   RTC.ON();
-  UIO.bootConfig();  // Read config from EEPROM
-  UIO.onLoop();      // Load time and start SD
+  cr.print(F("."));
+
+  // Read config from EEPROM
+  UIO.bootConfig();
+  cr.print(F("."));
+
+  // Load time and start SD
+  UIO.onLoop();
+  cr.println(F("."));
 
   // Now we can start logging
-  info(F("Boot.."));
+  info(F("Welcome to wsn"));
   if (_boot_version < 'H')
   {
     warn(F("Old boot version found (%c), only version H and above are supported"), _boot_version);
@@ -26,6 +34,11 @@ void WaspUIO::boot()
 
   debug(F("Init network"));
   UIO.networkInit();
+
+  // Command line interface
+  clint();
+  RTC.OFF();
+  USB.OFF();
 }
 
 
