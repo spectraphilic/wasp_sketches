@@ -18,22 +18,22 @@ void WaspUIO::boot()
   UIO.bootConfig();
   cr.print(F("."));
 
+  UIO.bootDetect();
+  cr.print(F("."));
+
+  UIO.networkInit();
+  cr.print(F("."));
+
+  // Load time and start SD
+  UIO.onLoop();
+  cr.println(F("."));
+
   // Now we can start logging
   info(F("Welcome to wsn"));
   if (_boot_version < 'H')
   {
     warn(F("Old boot version found (%c), only version H and above are supported"), _boot_version);
   }
-
-  debug(F("Detect hardware"));
-  UIO.bootDetect();
-
-  debug(F("Init network"));
-  UIO.networkInit();
-  
-  // Load time and start SD
-  UIO.onLoop();
-  cr.println(F("."));
 
   // Command line interface
   clint();
