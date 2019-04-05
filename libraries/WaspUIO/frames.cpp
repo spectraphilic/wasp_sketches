@@ -426,9 +426,9 @@ uint8_t WaspUIO::getSequence(uint8_t *p)
 
    // FIXME Encrypted frames don't have un-encrypted sequence number
 
-   // Fixed header, depends on version (4 or 8 bytes serial)
-   if (_boot_version >= 'G') { offset = 3 + 1 + 1 + 8; }
-   else                      { offset = 3 + 1 + 1 + 4; }
+   // Fixed header.
+   // This only works with boot version G or above
+   offset = 3 + 1 + 1 + 8;
 
    // Variable header, mote name
    p += offset;
@@ -475,19 +475,10 @@ void WaspUIO::showFrame(uint8_t *p)
    //println(F("Number of bytes left: %d"), nbytes);
 
    // Serial ID
-   //println(F("BOOT VERSION %c"), _boot_version);
-   if (_boot_version >= 'G')
-   {
-     Utils.hex2str(p, buffer, 8);
-     p += 8;
-     nbytes -= 8;
-   }
-   else
-   {
-     Utils.hex2str(p, buffer, 4);
-     p += 4;
-     nbytes -=4;
-   }
+   // This only works with boot version G or above
+   Utils.hex2str(p, buffer, 8);
+   p += 8;
+   nbytes -= 8;
    cr.println(F("Serial ID: 0x%s"), buffer);
 
    // Waspmote ID
