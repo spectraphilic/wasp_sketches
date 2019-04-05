@@ -18,7 +18,7 @@
 #define SEND_TIMEOUT 180000L // ms
 
 // Reboot every N loops
-#define MAX_LOOPS 5000
+#define MAX_LOOPS 1000
 
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
