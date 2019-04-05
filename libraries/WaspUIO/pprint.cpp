@@ -126,6 +126,31 @@ const char* WaspUIO::pprintSerial(char* dst, size_t size)
   return dst;
 }
 
+const char* WaspUIO::pprintTime(char* dst, size_t size)
+{
+  timestamp_t ts;
+  const char* day;
+  uint32_t epoch = getEpochTime();
+
+  RTC.breakTimeAbsolute(epoch, &ts);
+  switch (ts.day)
+  {
+    case 1: day = DAY_1; break;
+    case 2: day = DAY_2; break;
+    case 3: day = DAY_3; break;
+    case 4: day = DAY_4; break;
+    case 5: day = DAY_5; break;
+    case 6: day = DAY_6; break;
+    case 7: day = DAY_7; break;
+    default: day = "???";
+  }
+
+  snprintf_F(dst, size, F("%s, %02u/%02u/%02u, %02u:%02u:%02u"),
+             day, ts.year, ts.month, ts.date, ts.hour, ts.minute, ts.second);
+
+  return dst;
+}
+
 #if WITH_XBEE
 const char* WaspUIO::pprintXBee(char* dst, size_t size)
 {

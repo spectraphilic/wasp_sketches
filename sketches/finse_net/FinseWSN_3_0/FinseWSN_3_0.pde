@@ -31,7 +31,7 @@ void setup()
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Time      : %s"), RTC.getTime());
+  info(F("Time      : %s"), UIO.pprintTime(buffer, size));
   info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, UIO.name);
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);

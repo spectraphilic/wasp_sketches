@@ -410,7 +410,7 @@ COMMAND(cmdPrint)
 
   Utils.getID(name);
 
-  cr.println(F("Time      : %s"), RTC.getTime());
+  cr.println(F("Time      : %s"), UIO.pprintTime(buffer, size));
   cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, size), _boot_version, name);
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);

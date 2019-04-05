@@ -371,6 +371,7 @@ public:
   const char* pprintIridium(char* dst, size_t size);
   const char* pprintLog(char* dst, size_t size);
   const char* pprintSerial(char* str, size_t size);
+  const char* pprintTime(char* dst, size_t size);
   const char* pprintXBee(char* dst, size_t size);
 
   // Sensors
