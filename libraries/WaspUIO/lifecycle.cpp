@@ -15,41 +15,25 @@ void WaspUIO::boot()
   UIO.onLoop();      // Load time and start SD
 
   // Now we can start logging
+  info(F("Boot.."));
+  if (_boot_version < 'H')
+  {
+    warn(F("Old boot version found (%c), only version H and above are supported"), _boot_version);
+  }
+
   debug(F("Detect hardware"));
   UIO.bootDetect();
 
   debug(F("Init network"));
   UIO.networkInit();
-
-  // Log configuration
-  char buffer[150];
-  size_t size = sizeof(buffer);
-  Utils.getID(name);
-
-  info(F("Time      : %s"), RTC.getTime());
-  info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
-  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
-  #if WITH_XBEE
-  if (UIO.networkType == NETWORK_XBEE)
-  { info(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
-  #endif
-  #if WITH_4G
-  if (UIO.networkType == NETWORK_4G)
-  { info(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
-  #endif
-  #if WITH_IRIDIUM
-  if (UIO.networkType == NETWORK_IRIDIUM)
-  { info(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
-  #endif
-  info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
-  info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 }
 
 
 void WaspUIO::bootConfig()
 {
+  // Read device name from EEPROM into static variable
+  Utils.getID(name);
+
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
