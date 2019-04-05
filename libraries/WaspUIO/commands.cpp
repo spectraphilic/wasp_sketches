@@ -558,10 +558,10 @@ COMMAND(cmdGPS)
 COMMAND(cmdReboot)
 {
 
-  cr.println(F("Waspmote will reboot in 2s ..."));
+  cr.println(F("Waspmote will reboot in 2s..."));
   delay(2000);
 
-  PWR.reboot();
+  UIO.reboot();
   return cmd_ok;
 }
 
