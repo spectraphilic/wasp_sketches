@@ -19,7 +19,7 @@ void WaspUIO::xbeeInit()
 
   // Reduce the number of retries (default is 3)
   // There're as well 10 retries (by default) at the lower level.
-  xbeeDM.setSendingRetries(1);
+  xbeeDM.setSendingRetries(2);
 
   // Set channel, check AT commmand execution flag
   xbeeDM.setChannel(xbee.channel);

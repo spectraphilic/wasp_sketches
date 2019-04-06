@@ -121,15 +121,25 @@ void WaspUIO::clint()
   char buffer[150];
   size_t size = sizeof(buffer);
 
-  // Go interactive or not
+  // Print info
   cr.println();
+  cmdPrint(NULL);
+  cr.println();
+
+  // Go interactive or not
   cr.println(F("Press Enter to start interactive mode. Wait 2 seconds to skip."));
   if (cr.input(buffer, sizeof(buffer), 2000) != NULL)
   {
-    cr.println(F("Type 'help' to see the list of commands, 'exit' to leave."));
+    cr.println(F("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity."));
     do {
       cr.print(F("> "));
-      cr.input(buffer, size, 0);
+      if (cr.input(buffer, size, 3 * 60 * 1000UL) == NULL)
+      {
+        cr.println();
+        cr.println(F("Timeout!"));
+        break;
+      }
+
       cr.println(buffer);
       int8_t status = exeCommand(buffer);
       if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
@@ -400,7 +410,7 @@ COMMAND(cmdPrint)
 
   Utils.getID(name);
 
-  cr.println(F("Time      : %s"), RTC.getTime());
+  cr.println(F("Time      : %s"), UIO.pprintTime(buffer, size));
   cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, size), _boot_version, name);
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
@@ -548,10 +558,10 @@ COMMAND(cmdGPS)
 COMMAND(cmdReboot)
 {
 
-  cr.println(F("Waspmote will reboot in 2s ..."));
+  cr.println(F("Waspmote will reboot in 2s..."));
   delay(2000);
 
-  PWR.reboot();
+  UIO.reboot();
   return cmd_ok;
 }
 

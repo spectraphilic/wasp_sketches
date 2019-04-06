@@ -35,8 +35,9 @@
 // Iridium specific
 // Save frames to lifo instead of fifo every n loops. If a loop is 5min a value
 // of 120 will save to lifo once every 6h.
-#define SAVE_TO_LIFO 6
+#define SAVE_TO_LIFO 12 // SAVE_TO_LIFO 12, loop 5 min, send 1h
+//#define SAVE_TO_LIFO 24 // SAVE_TO_LIFO 24, loop 15 min, send 6h
 
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
-#define MB_SAMPLES 7     // maximum number of samples for Maxbotix is 25
-#define VL_SAMPLES 30    // maximum number of samples for VL53L1X  is 99
+#define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25
+#define VL_SAMPLES 5    // maximum number of samples for VL53L1X  is 99

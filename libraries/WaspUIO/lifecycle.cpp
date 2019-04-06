@@ -10,46 +10,43 @@ void WaspUIO::boot()
   nloops = 0;
   SdFile::dateTimeCallback(WaspUIO::dateTime);
 
+  USB.ON();
   RTC.ON();
-  UIO.bootConfig();  // Read config from EEPROM
-  UIO.onLoop();      // Load time and start SD
+  cr.print(F("."));
+
+  // Read config from EEPROM
+  UIO.bootConfig();
+  cr.print(F("."));
+
+  UIO.bootDetect();
+  cr.print(F("."));
+
+  UIO.networkInit();
+  cr.print(F("."));
+
+  // Load time and start SD
+  UIO.onLoop();
+  cr.println(F("."));
 
   // Now we can start logging
-  debug(F("Detect hardware"));
-  UIO.bootDetect();
+  info(F("Welcome to wsn"));
+  if (_boot_version < 'H')
+  {
+    warn(F("Old boot version found (%c), only version H and above are supported"), _boot_version);
+  }
 
-  debug(F("Init network"));
-  UIO.networkInit();
-
-  // Log configuration
-  char buffer[150];
-  size_t size = sizeof(buffer);
-  Utils.getID(name);
-
-  info(F("Time      : %s"), RTC.getTime());
-  info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, name);
-  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
-  #if WITH_XBEE
-  if (UIO.networkType == NETWORK_XBEE)
-  { info(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
-  #endif
-  #if WITH_4G
-  if (UIO.networkType == NETWORK_4G)
-  { info(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
-  #endif
-  #if WITH_IRIDIUM
-  if (UIO.networkType == NETWORK_IRIDIUM)
-  { info(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
-  #endif
-  info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
-  info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
+  // Command line interface
+  clint();
+  RTC.OFF();
+  USB.OFF();
 }
 
 
 void WaspUIO::bootConfig()
 {
+  // Read device name from EEPROM into static variable
+  Utils.getID(name);
+
   // Flags
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
 
@@ -190,21 +187,20 @@ uint32_t WaspUIO::nextAlarm()
     }
   }
 
-
+  //
   // Set Alarm-1 and Alarm-2 (watchdog)
   //
   // Use MODE3 instead of MODE2 to not sleep for more than 1 day, in case
   // somehow the RTC loses it's time but the alarms are not reset.
   //
-  // Be paronoid and set Alarm-1 at 01s, because Alarm-2 can only run at 00s.
-  // This way we are extra sure both are not triggered at the same time and we
-  // get predictable results. This should not be necessary because we set
-  // Alarm-2 2 minues later.
-  //
+
+  // It may be 1 to be different from Alarm-2, but both are clearly different already, by 2 minutes
+  uint8_t second = 0;
+
   RTC.ON();
   RTC.breakTimeAbsolute(next * 60, &ts);
-  RTC.setAlarm1(ts.date, ts.hour, ts.minute, 1, RTC_ABSOLUTE, RTC_ALM1_MODE3);
-  info(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, 1);
+  RTC.setAlarm1(ts.date, ts.hour, ts.minute, second, RTC_ABSOLUTE, RTC_ALM1_MODE3);
+  info(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, second);
   // Alarm-2
   RTC.breakTimeAbsolute((next + 2) * 60, &ts);
   RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
@@ -248,7 +244,7 @@ void WaspUIO::deepSleep()
   onLoop();
 
   char buffer[50];
-  info(F("*** Awake loop=%u battery=%s ***"), UIO.nloops,
+  info(F("===== Loop %u battery=%s ====="), UIO.nloops,
        UIO.pprintBattery(buffer, sizeof buffer));
 }
 
