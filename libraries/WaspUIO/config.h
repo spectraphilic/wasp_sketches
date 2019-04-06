@@ -3,14 +3,14 @@
 #define WITH_CRYPTO FALSE
 
 // Networking
-#define WITH_XBEE TRUE
+#define WITH_XBEE FALSE
 #define WITH_4G FALSE
-#define WITH_IRIDIUM FALSE
+#define WITH_IRIDIUM TRUE
 
 // Sensors
 #define WITH_I2C TRUE
 #define WITH_SDI TRUE
-#define WITH_1WIRE FALSE
+#define WITH_1WIRE TRUE
 #define WITH_MB TRUE
 
 // Timeouts
@@ -18,7 +18,7 @@
 #define SEND_TIMEOUT 180000L // ms
 
 // Reboot every N loops
-#define MAX_LOOPS 5000
+#define MAX_LOOPS 1000
 
 // Pins
 #define PIN_1WIRE DIGITAL6 // Use DIGITAL6 as default (protoboard)
