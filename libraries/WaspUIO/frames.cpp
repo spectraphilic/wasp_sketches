@@ -698,7 +698,6 @@ uint8_t WaspUIO::frame2Sd()
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
 #if WITH_IRIDIUM
-  uint32_t minutes = epochTime / 60; // minutes since the epoch
   uint16_t value = SAVE_TO_LIFO * cooldown;
   if (value > 0 && minutes % value == 0)
   {

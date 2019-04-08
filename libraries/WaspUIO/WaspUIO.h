@@ -277,6 +277,7 @@ public:
   // Time
   // To keep time without calling RCT each time
   unsigned long epochTime; // seconds since the epoch
+  unsigned long minutes;   // minutes since the epoch (reference time for actions)
   unsigned long start;     // millis taken at epochTime
   uint8_t saveTime();
   uint8_t saveTimeToSD();

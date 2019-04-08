@@ -111,6 +111,10 @@ void WaspUIO::loadTime()
 
   // Ok
   if (! rtcON) { RTC.OFF(); } // RTC OFF
+
+  // Minutes since the epoch. This is the reference value used to decide
+  // whether actions are run.
+  minutes = epochTime / 60;
 }
 
 
