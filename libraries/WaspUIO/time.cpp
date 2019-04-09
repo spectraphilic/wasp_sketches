@@ -19,7 +19,7 @@ uint8_t WaspUIO::saveTime()
   uint8_t err = RTC.setTime(ts.year, ts.month, ts.date, ts.day, ts.hour, ts.minute, ts.second);
   if (err)
   {
-    warn(F("saveTime: RTC.setTime(%lu) failed"), epochTime);
+    warn(F("saveTime: RTC.setTime(%lu) failed"), time);
   }
 
   if (! rtcON) { RTC.OFF(); } // RTC OFF
@@ -56,15 +56,15 @@ uint8_t WaspUIO::saveTimeToSD()
 uint8_t WaspUIO::setTime(uint8_t year, uint8_t month, uint8_t day,
                          uint8_t hour, uint8_t minute, uint8_t second)
 {
-  epochTime = RTC.getEpochTime(year, month, day, hour, minute, second);
-  start = millis();
+  _epoch_millis = millis();
+  _epoch = RTC.getEpochTime(year, month, day, hour, minute, second);
   return saveTime();
 }
 
 uint8_t WaspUIO::setTime(uint32_t time)
 {
-  epochTime = time;
-  start = millis();
+  _epoch_millis = millis();
+  _epoch = time;
   return saveTime();
 }
 
@@ -80,11 +80,11 @@ void WaspUIO::loadTime()
   // Read time from RTC
   rtcON = RTC.isON;
   if (! rtcON) { RTC.ON(); } // RTC ON
-  epochTime = RTC.getEpochTime();
-  start = millis();
+  _epoch = RTC.getEpochTime();
+  _epoch_millis = millis();
 
   // If it's an old time, read it from the SD
-  if (epochTime < 1541030400) // 2018-11-01 A date in the past
+  if (_epoch < 1541030400) // 2018-11-01 A date in the past
   {
     warn(F("Wrong time detected"));
     if (sd_open(timeFilename, file, O_READ))
@@ -101,8 +101,8 @@ void WaspUIO::loadTime()
       }
       else
       {
-        epochTime = strtoul(SD.buffer, NULL, 10);
-        start = millis();
+        _epoch = strtoul(SD.buffer, NULL, 10);
+        _epoch_millis = millis();
 	saveTime();
         info(F("Time loaded from TIME.TXT"));
       }
@@ -111,10 +111,6 @@ void WaspUIO::loadTime()
 
   // Ok
   if (! rtcON) { RTC.OFF(); } // RTC OFF
-
-  // Minutes since the epoch. This is the reference value used to decide
-  // whether actions are run.
-  minutes = epochTime / 60;
 }
 
 
@@ -127,17 +123,17 @@ void WaspUIO::loadTime()
 
 unsigned long WaspUIO::getEpochTime()
 {
-  uint32_t diff = (millis() - start);
+  uint32_t diff = (millis() - _epoch_millis);
 
-  return epochTime + (diff / 1000);
+  return _epoch + (diff / 1000);
 }
 
 unsigned long WaspUIO::getEpochTime(uint16_t &ms)
 {
-  uint32_t diff = (millis() - start);
+  uint32_t diff = (millis() - _epoch_millis);
 
   ms = diff % 1000;
-  return epochTime + diff / 1000;
+  return _epoch + diff / 1000;
 }
 
 

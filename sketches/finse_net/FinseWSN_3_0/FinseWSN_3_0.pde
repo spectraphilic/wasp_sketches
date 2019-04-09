@@ -22,7 +22,7 @@ void setup()
   frame.setID(UIO.name);
   frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
   frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
-  UIO.addSensor(SENSOR_TST, UIO.epochTime);
+  UIO.addSensor(SENSOR_TST, UIO._epoch);
   UIO.frame2Sd();
   #if WITH_XBEE
   frame.setID((char*)""); // We only want to send the name once
@@ -75,7 +75,6 @@ void loop()
     cr.spawn(taskMain);
     cr.run();
 
-    uint32_t cpu_time = cr.millisDiff(UIO.start);
-    info(F("Loop done in %lu ms"), cpu_time);
+    info(F("Loop done in %lu ms"), cr.millisDiff(UIO._loop_start));
   }
 }

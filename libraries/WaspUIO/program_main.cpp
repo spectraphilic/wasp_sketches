@@ -19,7 +19,7 @@ bool WaspUIO::action(uint8_t n, ...)
     uint16_t value = actions[idx] * cooldown;
     if (value > 0)
     {
-      if (minutes % value == 0)
+      if (_epoch_minutes % value == 0)
       {
         yes = true;
         break;
