@@ -276,8 +276,10 @@ public:
 
   // Time
   // To keep time without calling RCT each time
-  unsigned long epochTime; // seconds since the epoch
-  unsigned long start;     // millis taken at epochTime
+  uint32_t _epoch;         // seconds since the epoch
+  uint32_t _epoch_millis;  // millis taken at _epoch
+  uint32_t _epoch_minutes; // ref time for actions, set once in the loop
+  uint32_t _loop_start;    // millis, set once in the loop
   uint8_t saveTime();
   uint8_t saveTimeToSD();
   uint8_t setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);

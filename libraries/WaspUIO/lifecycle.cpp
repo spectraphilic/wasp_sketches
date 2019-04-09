@@ -135,6 +135,9 @@ void WaspUIO::bootDetect()
 
 void WaspUIO::onLoop()
 {
+  // This one is used only to know for how long the loop run
+  _loop_start = millis();
+
   readBattery();
 
   pinMode(PIN_1WIRE, INPUT);
@@ -142,6 +145,9 @@ void WaspUIO::onLoop()
 
   startSD();
   loadTime();
+
+  // This is the reference value used to decide whether actions are run
+  _epoch_minutes = _epoch / 60;
 }
 
 

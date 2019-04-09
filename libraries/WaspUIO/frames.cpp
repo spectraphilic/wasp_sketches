@@ -184,7 +184,7 @@ void WaspUIO::createFrame(bool discard)
   }
 
   frame.createFrameBin(BINARY);
-  addSensor(SENSOR_TST, epochTime);
+  addSensor(SENSOR_TST, _epoch);
 }
 
 
@@ -698,19 +698,22 @@ uint8_t WaspUIO::frame2Sd()
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
 #if WITH_IRIDIUM
-  if ((nloops % SAVE_TO_LIFO) == 0)
+  uint16_t value = SAVE_TO_LIFO * cooldown;
+  if (value > 0 && _epoch_minutes % value == 0)
   {
     if (lifo.push(item)) { return 2; }
+    info(F("Frame saved to LIFO (%d fields in %d bytes)"), frame.numFields, frame.length);
   }
   else
   {
     if (fifo.push(item)) { return 2; }
+    info(F("Frame saved to FIFO (%d fields in %d bytes)"), frame.numFields, frame.length);
   }
 #else
   if (fifo.push(item)) { return 2; }
+  info(F("Frame saved to FIFO (%d fields in %d bytes)"), frame.numFields, frame.length);
 #endif
 
-  info(F("Frame saved to SD (%d fields in %d bytes)"), frame.numFields, frame.length);
 
   return 0;
 }

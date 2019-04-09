@@ -12,7 +12,7 @@ CR_TASK(taskNetwork4G)
   CR_BEGIN;
 
   // Check we've at least 30s to send something
-  if (cr.timeout(UIO.start, SEND_TIMEOUT - 30000L))
+  if (cr.timeout(UIO._epoch_millis, SEND_TIMEOUT - 30000L))
   {
     warn(F("No time left to send anything"));
     CR_RETURN;
@@ -26,7 +26,7 @@ CR_TASK(taskNetwork4G)
 
   // Send frames
   debug(F("Sending frames..."));
-  while (!cr.timeout(UIO.start, SEND_TIMEOUT))
+  while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
   {
     t0 = millis();
 
@@ -82,7 +82,7 @@ CR_TASK(taskNetworkIridium)
   CR_BEGIN;
 
   // Check we've at least 1m30 to send something
-  if (cr.timeout(UIO.start, SEND_TIMEOUT - 90000L))
+  if (cr.timeout(UIO._epoch_millis, SEND_TIMEOUT - 90000L))
   {
     warn(F("No time left to send anything"));
     CR_RETURN;
@@ -111,7 +111,7 @@ CR_TASK(taskNetworkIridium)
 
   // Send frames
   debug(F("Sending frames..."));
-  while (!cr.timeout(UIO.start, SEND_TIMEOUT))
+  while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
   {
     t0 = millis();
 
@@ -148,13 +148,13 @@ CR_TASK(taskNetworkXBee)
 {
   static tid_t tid;
 
-  // Send, once every 3 hours if low battery  and lithium battery
+  // Send, once every 3 hours if low battery and lithium battery
   bool send = false;
   if (UIO.hasSD)
   {
     send = (
       (UIO.battery == BATTERY_HIGH) ||
-      (UIO.battery == BATTERY_MIDDLE && UIO.epochTime % (3*60*60) == 0)
+      (UIO.battery == BATTERY_MIDDLE && UIO._epoch % (3*60*60) == 0)
     );
   }
 
@@ -214,7 +214,7 @@ CR_TASK(taskNetworkXBeeSend)
   UIO.ack_wait = 0;
 
   // Send frames
-  while (!cr.timeout(UIO.start, SEND_TIMEOUT))
+  while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
   {
     if (UIO.ack_wait == 0)
     {
