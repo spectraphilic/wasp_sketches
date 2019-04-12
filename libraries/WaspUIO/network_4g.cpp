@@ -98,7 +98,7 @@ uint8_t WaspUIO::_4GStop()
   uint8_t status = _4G.OFF();
   if (status == 0)
   {
-     debug(F("_4G.OFF() timeout"));
+     error(F("_4G.OFF() timeout"));
   }
   return 0;
 }
