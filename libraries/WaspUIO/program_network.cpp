@@ -57,13 +57,12 @@ CR_TASK(taskNetwork4G)
 
   // Set time from network
   status = _4G.setTimeFrom4G(true);
+  UIO._4GStop(); // Switch off
+
   if (status == 0)
   {
     UIO.loadTime();
   }
-
-  // Switch off
-  UIO._4GStop();
 
   CR_END;
 }
