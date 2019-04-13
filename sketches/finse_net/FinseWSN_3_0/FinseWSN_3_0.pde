@@ -69,12 +69,9 @@ void loop()
   PWR.clearInterruptionPin();
 
   // Low battery level: do nothing
-  if (UIO.battery != BATTERY_LOW)
-  {
-    cr.reset();
-    cr.spawn(taskMain);
-    cr.run();
+  cr.reset();
+  cr.spawn(taskMain);
+  cr.run();
 
-    info(F("Loop done in %lu ms"), cr.millisDiff(UIO._loop_start));
-  }
+  info(F("Loop done in %lu ms"), cr.millisDiff(UIO._loop_start));
 }

@@ -36,7 +36,7 @@
 // Save frames to lifo instead of fifo every n minutes since epoch (like
 // actions), e.g. loop 5min gps 1h and SAVE_TO_LIFO 60 then the GPS frame will
 // always be sent.
-#define SAVE_TO_LIFO 60
+#define SAVE_TO_LIFO 360
 
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
 #define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25
