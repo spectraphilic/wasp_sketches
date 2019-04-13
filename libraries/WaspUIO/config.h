@@ -9,8 +9,8 @@
 
 // Sensors
 #define WITH_I2C TRUE
-#define WITH_SDI TRUE
-#define WITH_1WIRE FALSE
+#define WITH_SDI FALSE
+#define WITH_1WIRE TRUE
 #define WITH_MB TRUE
 
 // Timeouts
@@ -40,4 +40,4 @@
 
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
 #define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25
-#define VL_SAMPLES 5    // maximum number of samples for VL53L1X  is 99
+#define VL_SAMPLES 15    // maximum number of samples for VL53L1X  is 99
