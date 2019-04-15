@@ -325,6 +325,7 @@ public:
   uint8_t _4GStop();
   uint8_t _4GGPS();
   int _4GPing();
+  uint8_t setTimeFrom4G(const char* value=NULL);
   #endif
   #if WITH_IRIDIUM
   char iridium_fw[9]; // firmware version

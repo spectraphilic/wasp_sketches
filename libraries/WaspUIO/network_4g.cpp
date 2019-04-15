@@ -154,6 +154,67 @@ int WaspUIO::_4GPing()
 }
 
 
+uint8_t WaspUIO::setTimeFrom4G(const char *value)
+{
+  int8_t answer;
+  char format[60];
+  char command_buffer[50];
+  uint8_t year, month, day;
+  uint8_t hour, minute, second;
+  bool RTC_status;
+  int8_t timezone;
+
+  // AT+CCLK?\r
+  strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[25])));
+
+  // XXX The option to pass a value is only for testing purposes
+  if (value == NULL)
+  {
+    // send command
+    answer = _4G.sendCommand(command_buffer, "\"", LE910_ERROR, 2000);
+    if (answer != 1)
+    {
+      return 1;
+    }
+  
+    _4G.waitFor("\"", 2000);
+  }
+  else
+  {
+    strcpy((char*)_4G._buffer, value);
+  }
+
+  // format <-- "%2hhu%*c%2hhu%*c%2hhu%*c%2hhu%*c%2hhu%*c%2hhu%hhd\""
+  // e.g. 02/09/07,22:30:00+08
+  // timezone is in quarters, for example +08 (CEST) is +0200
+  // 19/04/11,00:00:00+08
+  strcpy_P(format, (char*)pgm_read_word(&(table_4G[35])));
+
+  debug(F("4G time: %s"), _4G._buffer);
+  sscanf((char*)_4G._buffer, format, &year, &month, &day, &hour, &minute, &second, &timezone);
+
+  // Get current state of RTC power mode
+  RTC_status = RTC.isON;
+  if (! RTC_status) { RTC.ON(); }
+
+  // Convert to UTC
+  uint32_t epoch = RTC.getEpochTime(year, month, day, hour, minute, second);
+
+  if ((epoch / 3600) % 24 == 0) // XXX Skip at midnight
+  {
+    warn(F("Skip this time because we know it doesn't work in Svalbard"));
+    return 0;
+  }
+
+  // Set time
+  epoch = epoch - (timezone * 15 * 60);
+  UIO.setTime(epoch);
+
+  if (! RTC_status) { RTC.OFF(); }
+
+  return 0;
+}
+
 
 uint8_t WaspUIO::_4GGPS()
 {

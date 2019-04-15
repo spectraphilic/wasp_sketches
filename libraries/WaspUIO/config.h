@@ -4,8 +4,8 @@
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G FALSE
-#define WITH_IRIDIUM TRUE
+#define WITH_4G TRUE
+#define WITH_IRIDIUM FALSE
 
 // Sensors
 #define WITH_I2C TRUE

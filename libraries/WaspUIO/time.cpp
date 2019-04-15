@@ -161,12 +161,8 @@ uint8_t WaspUIO::setTimeFromNetwork()
     err = _4GStart();
     if (err == 0)
     {
-      err = _4G.setTimeFrom4G(true);
+      err = setTimeFrom4G();
       _4GStop();
-      if (err == 0)
-      {
-        loadTime();
-      }
     }
 #else
     error(F("4G not enabled, define WITH_4G TRUE"));
