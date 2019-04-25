@@ -57,13 +57,12 @@ CR_TASK(taskNetwork4G)
 
   // Set time from network
   status = _4G.setTimeFrom4G(true);
+  UIO._4GStop(); // Switch off
+
   if (status == 0)
   {
     UIO.loadTime();
   }
-
-  // Switch off
-  UIO._4GStop();
 
   CR_END;
 }
@@ -148,16 +147,6 @@ CR_TASK(taskNetworkXBee)
 {
   static tid_t tid;
 
-  // Send, once every 3 hours if low battery and lithium battery
-  bool send = false;
-  if (UIO.hasSD)
-  {
-    send = (
-      (UIO.battery == BATTERY_HIGH) ||
-      (UIO.battery == BATTERY_MIDDLE && UIO._epoch % (3*60*60) == 0)
-    );
-  }
-
   CR_BEGIN;
 
   if (!xbeeDM.XBee_ON)
@@ -174,14 +163,14 @@ CR_TASK(taskNetworkXBee)
   CR_SPAWN(taskNetworkXBeeReceive);
 
   // Schedule sending frames
-  if (send)
+  if (UIO.hasSD)
   {
     CR_SPAWN2(taskNetworkXBeeSend, tid);
   }
 
   CR_DELAY(8000); // Keep the network open at least for 8s
 
-  if (send)
+  if (UIO.hasSD)
   {
     CR_JOIN(tid);
   }

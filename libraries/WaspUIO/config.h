@@ -1,15 +1,15 @@
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS TRUE
+#define WITH_GPS TRUE  // set to FALSE if 4G is TRUE
 #define WITH_CRYPTO FALSE
 
 // Networking
 #define WITH_XBEE FALSE
 #define WITH_4G FALSE
-#define WITH_IRIDIUM TRUE
+#define WITH_IRIDIUM FALSE
 
 // Sensors
-#define WITH_I2C TRUE
-#define WITH_SDI TRUE
+#define WITH_I2C FALSE
+#define WITH_SDI FALSE
 #define WITH_1WIRE TRUE
 #define WITH_MB TRUE
 

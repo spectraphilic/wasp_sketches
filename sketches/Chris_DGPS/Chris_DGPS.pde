@@ -12,7 +12,7 @@
 */
 #include <WaspGPS.h>
 
-#define deploy 1 // Set to 1 for deployment and 0 for testing
+#define deploy 0 // Set to 1 for deployment and 0 for testing
 
 // define variable for summer and winter season
 #define SummerStartMonth 3 // 3

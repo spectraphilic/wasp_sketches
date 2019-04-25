@@ -69,7 +69,7 @@ CR_TASK(taskMain)
   // The RTC is DS1337C (v15), its accuracy is not enough for our networking
   // requirements, so we have to sync it once in a while.
   // http://hycamp.org/private-area/waspmote-rtc/
-  if (UIO.action(1, RUN_GPS))
+  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_GPS))
   {
 #if WITH_4G
     if (UIO.hasGPS & GPS_4G)
