@@ -1,14 +1,14 @@
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS TRUE  // set to FALSE if 4G is TRUE
+#define WITH_GPS TRUE
 #define WITH_CRYPTO FALSE
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G FALSE
+#define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
 
 // Sensors
-#define WITH_I2C FALSE
+#define WITH_I2C TRUE
 #define WITH_SDI FALSE
 #define WITH_1WIRE TRUE
 #define WITH_MB TRUE
@@ -36,8 +36,8 @@
 // Save frames to lifo instead of fifo every n minutes since epoch (like
 // actions), e.g. loop 5min gps 1h and SAVE_TO_LIFO 60 then the GPS frame will
 // always be sent.
-#define SAVE_TO_LIFO 60
+#define SAVE_TO_LIFO 360
 
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
 #define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25
-#define VL_SAMPLES 5    // maximum number of samples for VL53L1X  is 99
+#define VL_SAMPLES 15    // maximum number of samples for VL53L1X  is 99
