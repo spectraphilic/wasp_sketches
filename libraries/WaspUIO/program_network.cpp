@@ -163,7 +163,7 @@ CR_TASK(taskNetworkXBee)
     CR_SPAWN2(taskNetworkXBeeSend, tid);
   }
 
-  CR_DELAY(8000); // Keep the network open at least for 8s
+  CR_DELAY(45000); // Keep the network open at least for 45s
 
   if (UIO.hasSD)
   {
