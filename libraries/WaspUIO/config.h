@@ -15,7 +15,7 @@
 
 // Timeouts
 #define LOOP_TIMEOUT 4 // minutes
-#define SEND_TIMEOUT 180000L // ms
+#define SEND_TIMEOUT 150000L // ms
 
 // Reboot every N loops
 #define MAX_LOOPS 1000

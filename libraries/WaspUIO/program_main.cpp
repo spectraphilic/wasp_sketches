@@ -52,21 +52,6 @@ CR_TASK(taskMain)
   // Create the first frame
   UIO.createFrame(true);
 
-  // XBee network. We do this one first to run it as predictable as possible,
-  // to improve the chances for neighbor motes to be awake at the same time.
-  // Do not use network and sensors at the same time, we have observed issues
-  // in the past with SDI-12.
-#if WITH_XBEE
-  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
-  {
-    if (UIO.networkType == NETWORK_XBEE)
-    {
-      CR_SPAWN2(taskNetworkXBee, network_id);
-      CR_JOIN(network_id);
-    }
-  }
-#endif
-
   // Sensors
   CR_SPAWN2(taskHealthFrame, health_id);
   CR_SPAWN2(taskSensors, sensors_id);
@@ -98,10 +83,26 @@ CR_TASK(taskMain)
   // Save the last frame, if there is something to save
   if (frame.numFields > 1) { UIO.frame2Sd(); }
 
+  // Don't use network and sensors at the same time. We have observed issues in
+  // the past with SDI-12.
 
-  // Networks that don't require mote syncrhonization run last.
-  // They are often slower, specially satellite netwokrs (iridium), so they
-  // may disturb sensor sampling if run earlier.
+  // Ideally the XBee network should run in a differnt loop than the sensor
+  // reading. So it runs at a predictable time, improving the chances of
+  // success communication with neighbors. For instance read sensors every 5min
+  // and run the XBee network every hour at :07 (in this example sensor reading
+  // must finish in less than 2 minutes, otherwise the network loop will be
+  // skept).
+#if WITH_XBEE
+  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
+  {
+    if (UIO.networkType == NETWORK_XBEE)
+    {
+      CR_SPAWN2(taskNetworkXBee, network_id);
+      CR_JOIN(network_id);
+    }
+  }
+#endif
+
 #if WITH_4G
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
   {
