@@ -85,14 +85,16 @@ void WaspUIO::bootConfig()
     const char* name = (const char*)pgm_read_word(&(run_names[i]));
     if (strcmp_P("", name) == 0)
     {
-      actions[i] = 0;
+      actions[i].type = action_disabled;
     }
     else
     {
       uint16_t base = EEPROM_UIO_RUN + (i * 2);
-      uint8_t hours = Utils.readEEPROM(base);
-      uint8_t minutes = Utils.readEEPROM(base + 1);
-      actions[i] = (hours * 60) + minutes;
+      uint8_t minute = Utils.readEEPROM(base);
+      uint8_t type = minute >> 6;
+      minute = minute & 0b00111111;
+      uint8_t hour = Utils.readEEPROM(base + 1);
+      actions[i] = (Action){(action_t)type, hour, minute};
     }
   }
 
@@ -170,26 +172,52 @@ void WaspUIO::reboot()
   PWR.reboot();
 }
 
+uint32_t WaspUIO::__nextAlarmHelper(
+  uint32_t now,   // Current time (minutes since epoch)
+  uint32_t size,  // Time interval (minutes or hours)
+  uint8_t factor, // 1 if size is in minutes, 60 if size is in hours
+  uint8_t offset, // 0 if size is in minutes, otherwise some minutes
+  uint8_t step    // 0 or 1
+)
+{
+  if (factor == 0) { return 0; } // Avoid "division by zero"
+
+  uint32_t value = size * cooldown;
+  value = ((now / factor) / value + step) * value;
+  return value * factor + offset;
+}
+
 uint32_t WaspUIO::nextAlarm()
 {
-  uint32_t next = ULONG_MAX / 60; // max posible value of minutes since epoch
-  timestamp_t ts;
+  uint32_t max = ULONG_MAX / 60; // max posible value of minutes since epoch
+  uint32_t next = max;
 
   // Minutes since epoch
   // With +2s safeguard, this means we've 2s before going to sleep
   uint32_t epoch = getEpochTime();
   uint32_t minutes = (epoch + 2) / 60;
 
-  for (uint8_t i=0; i < RUN_LEN; i++)
+  for (uint8_t idx=0; idx < RUN_LEN; idx++)
   {
-    uint32_t value = actions[i] * cooldown;
-    if (value > 0)
+    Action action = actions[idx];
+    uint32_t value = max;
+
+    if (action.type == action_minutes)
     {
-      value = (minutes / value + 1) * value;
-      if (value < next)
+      value = __nextAlarmHelper(minutes, action.minute);
+    }
+    else if (action.type == action_hours)
+    {
+      value = __nextAlarmHelper(minutes, action.hour, 60, action.minute, 0);
+      if (value <= minutes)
       {
-        next = value;
+        value = __nextAlarmHelper(minutes, action.hour, 60, action.minute, 1);
       }
+    }
+
+    if (value < next)
+    {
+      next = value;
     }
   }
 
@@ -201,6 +229,7 @@ uint32_t WaspUIO::nextAlarm()
   //
 
   // It may be 1 to be different from Alarm-2, but both are clearly different already, by 2 minutes
+  timestamp_t ts;
   uint8_t second = 0;
 
   RTC.ON();

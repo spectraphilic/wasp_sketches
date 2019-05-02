@@ -49,8 +49,8 @@ const char CMD_PING      [] PROGMEM = "ping              - Send a test message";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
 const char CMD_REBOOT    [] PROGMEM = "reboot            - Reboot waspmote";
 const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
-const char CMD_RUN       [] PROGMEM = "run NAME H M      - Run every hours and minutes, type just run to see "
-                                      "the available names";
+const char CMD_RUN       [] PROGMEM = "run NAME H:MM     - run (list names), run <name> 0 (disable), "
+                                      "run <name> 5 (every 5 mins), run <name> 1:07 (every 1h at :07)";
 const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 sensors";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
 const char CMD_TIME      [] PROGMEM = "time VALUE        - Set time, value can be 'network', 'gps', "
@@ -118,7 +118,7 @@ const uint8_t nCommands = sizeof commands / sizeof commands[0];
 
 void WaspUIO::clint()
 {
-  char buffer[150];
+  char buffer[180];
   size_t size = sizeof(buffer);
 
   // Print info
@@ -442,11 +442,10 @@ COMMAND(cmdPrint)
 COMMAND(cmdRun)
 {
   char name[11];
-  uint8_t hours;
-  uint8_t minutes;
+  uint8_t hour, minute;
 
   // Check input
-  int n = sscanf(str, "%10s %hhu %hhu", &name, &hours, &minutes);
+  int n = sscanf(str, "%10s %hhu:%hhu", &name, &hour, &minute);
 
   // Print names
   if (n == -1)
@@ -461,24 +460,40 @@ COMMAND(cmdRun)
     return cmd_quiet;
   }
 
-  // Run
-  if (n == 3)
+  if (n < 2 || n > 3)
   {
-    int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-    if (value == -1) { return cmd_bad_input; }
-
-    if (minutes > 59) { return cmd_bad_input; }
-
-    // Do
-    uint16_t base = EEPROM_UIO_RUN + (value * 2);
-    if (! UIO.updateEEPROM(base, hours)) { return cmd_error; }
-    if (! UIO.updateEEPROM(base + 1, minutes)) { return cmd_error; }
-    UIO.actions[value] = (hours * 60) + minutes;
-
-    return cmd_ok;
+    return cmd_bad_input;
   }
 
-  return cmd_bad_input;
+  int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
+  if (value == -1) { return cmd_bad_input; }
+
+  action_t type;
+  if (n == 2)
+  {
+    type = action_minutes;
+    minute = hour;
+    hour = 0;
+    if (minute == 0)
+    {
+      type = action_disabled;
+    }
+  }
+  else
+  {
+    type = action_hours;
+    if (hour == 0) { return cmd_bad_input; }
+  }
+
+  if (minute > 59) { return cmd_bad_input; }
+  UIO.actions[value] = (Action){type, hour, minute};
+
+  uint16_t base = EEPROM_UIO_RUN + (value * 2);
+  minute = minute | (type << 6); // Pack the type within the same byte as the minute
+  if (! UIO.updateEEPROM(base, minute)) { return cmd_error; }
+  if (! UIO.updateEEPROM(base + 1, hour)) { return cmd_error; }
+
+  return cmd_ok;
 }
 
 

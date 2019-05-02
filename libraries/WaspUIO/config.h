@@ -32,11 +32,14 @@
 #define I2C_ADDRESS_LAGOPUS_MLX90614   0x5A // Surface temperature
 #define I2C_ADDRESS_LAGOPUS_AS726X     0x49 // Spectral Sensor
 
-// Iridium specific
-// Save frames to lifo instead of fifo every n minutes since epoch (like
-// actions), e.g. loop 5min gps 1h and SAVE_TO_LIFO 60 then the GPS frame will
-// always be sent.
-#define SAVE_TO_LIFO 360
+// Iridium specific.
+// Save frames to lifo instead of fifo every n hours since epoch at the :mm
+// minutes (like actions).
+// For example if sensors=5m and gps=1h then with SAVE_TO_LIFO 6 / 0 the GPS
+// frame will always be sent, because the frames will be saved to LIFO every 6h
+// at :00
+#define SAVE_TO_LIFO_HOUR 6
+#define SAVE_TO_LIFO_MINUTE 0
 
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
 #define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25

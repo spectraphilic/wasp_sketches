@@ -154,9 +154,25 @@ const char* const run_names[] PROGMEM = {
 
 
 /*
- * Network
+ * Actions
  */
 
+enum action_t {
+  action_disabled,
+  action_minutes, // Run every M minutes
+  action_hours,   // Run every H hours at M minutes
+};
+
+struct Action {
+  action_t type;
+  uint8_t hour;
+  uint8_t minute;
+};
+
+
+/*
+ * Network
+ */
 
 /* XBee stuff */
 struct XBee {
@@ -224,12 +240,14 @@ public:
   void bootConfig();
   void bootDetect();
   void onLoop();
+
+  uint32_t __nextAlarmHelper(uint32_t now, uint32_t size, uint8_t factor=1, uint8_t offset=0, uint8_t step=1);
   uint32_t nextAlarm();
   void reboot();
   void deepSleep();
 
   // Actions (tasks)
-  uint16_t actions[RUN_LEN];
+  Action actions[RUN_LEN];
   bool action(uint8_t n, ...);
 
   // General configuration

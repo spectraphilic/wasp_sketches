@@ -698,8 +698,12 @@ uint8_t WaspUIO::frame2Sd()
   *(uint32_t *)(item + 3) = size;
   item[7] = (uint8_t) frame.length;
 #if WITH_IRIDIUM
-  uint16_t value = SAVE_TO_LIFO * cooldown;
-  if (value > 0 && _epoch_minutes % value == 0)
+  // This behaves like an action of type action_hours
+  uint32_t hours = _epoch_minutes / 60;
+  uint32_t minutes = _epoch_minutes % 60;
+  if (SAVE_TO_LIFO_HOUR > 0
+      && hours % (SAVE_TO_LIFO_HOUR * cooldown) == 0
+      && minutes == SAVE_TO_LIFO_MINUTE)
   {
     if (lifo.push(item)) { return 2; }
     info(F("Frame saved to LIFO (%d fields in %d bytes)"), frame.numFields, frame.length);

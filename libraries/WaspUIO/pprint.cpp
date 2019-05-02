@@ -20,25 +20,25 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
 #endif
 
 
-const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name)
+const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t idx, const __FlashStringHelper* name)
 {
-  uint16_t value = actions[action];
+  Action action = actions[idx];
 
-  if (value) {
-    size_t len = strlen(dst);
-    snprintf_F(dst + len, size - len, name);
+  if (action.type != action_disabled)
+  {
+    size_t len;
+
+    len = strlen(dst); snprintf_F(dst + len, size - len, name);
+    len = strlen(dst); snprintf_F(dst + len, size - len, F("="));
+
     len = strlen(dst);
-
-    uint8_t hours = value / 60;
-    uint8_t minutes = value % 60;
-    if (hours == 0) {
-      snprintf_F(dst + len, size - len, F("=%hhum "), minutes);
+    if (action.type == action_hours)
+    {
+      snprintf_F(dst + len, size - len, F("%d:%02d "), action.hour, action.minute);
     }
-    else if (minutes == 0) {
-      snprintf_F(dst + len, size - len, F("=%hhuh "), hours);
-    }
-    else {
-      snprintf_F(dst + len, size - len, F("=%hhuh%hhu "), hours, minutes);
+    else if (action.type == action_minutes)
+    {
+      snprintf_F(dst + len, size - len, F("%d "), action.minute);
     }
   }
 

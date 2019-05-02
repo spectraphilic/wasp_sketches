@@ -15,14 +15,22 @@ bool WaspUIO::action(uint8_t n, ...)
   {
     int idx = va_arg(args, int);
     assert(idx < RUN_LEN); // TODO Define __assert
+    Action action = actions[idx];
 
-    uint16_t value = actions[idx] * cooldown;
-    if (value > 0)
+    if (action.type == action_minutes)
     {
-      if (_epoch_minutes % value == 0)
+      if (_epoch_minutes % (action.minute * cooldown) == 0)
       {
-        yes = true;
-        break;
+        yes = true; break;
+      }
+    }
+    else if (action.type == action_hours)
+    {
+      uint32_t hours = _epoch_minutes / 60;
+      uint32_t minutes = _epoch_minutes % 60;
+      if (hours % (action.hour * cooldown) == 0 && minutes == action.minute)
+      {
+        yes = true; break;
       }
     }
   }
