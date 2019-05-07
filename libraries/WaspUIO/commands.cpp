@@ -30,16 +30,12 @@ const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]        - Read battery or chang
 const char CMD_BOARD     [] PROGMEM = "board VALUE       - Choose the sensor board: 0=none 1=lemming";
 const char CMD_CAT       [] PROGMEM = "cat FILENAME      - Print FILENAME contents to USB";
 const char CMD_CATX      [] PROGMEM = "catx FILENAME     - Print FILENAME contents in hexadecimal to USB";
-const char CMD_DISABLE   [] PROGMEM = "disable FLAG      - Disables a feature: 0=log_sd 1=log_usb";
-const char CMD_ENABLE    [] PROGMEM = "enable FLAG       - Enables a feature: 0=log_sd 1=log_usb";
 const char CMD_EXIT      [] PROGMEM = "exit              - Exit the command line interface";
 const char CMD_FORMAT    [] PROGMEM = "format            - Format SD card";
 const char CMD_GPS       [] PROGMEM = "gps               - Get position from GPS";
 const char CMD_HELP      [] PROGMEM = "help              - Prints the list of commands";
 const char CMD_I2C       [] PROGMEM = "i2c [NAME]        - Scan I2C bus or read values from NAME: "
                                       "as7263 as7265 bme bm76 mlx tmp vl";
-const char CMD_LOGLEVEL  [] PROGMEM = "loglevel VALUE    - Set the log level: "
-                                      "0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
@@ -55,6 +51,7 @@ const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 senso
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
 const char CMD_TIME      [] PROGMEM = "time VALUE        - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";
+const char CMD_VAR       [] PROGMEM = "var [NAME VALUE]  - type 'var' to list the variable names";
 const char CMD_XBEE      [] PROGMEM = "xbee VALUE        - Choose xbee network: "
                                       "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
@@ -73,8 +70,6 @@ const Command commands[] PROGMEM = {
   {"board ",        &cmdBoard,     CMD_BOARD},
   {"cat ",          &cmdCat,       CMD_CAT},
   {"catx ",         &cmdCatx,      CMD_CATX},
-  {"disable ",      &cmdDisable,   CMD_DISABLE},
-  {"enable ",       &cmdEnable,    CMD_ENABLE},
   {"exit",          &cmdExit,      CMD_EXIT},
   {"format",        &cmdFormat,    CMD_FORMAT},
 #if WITH_GPS
@@ -84,7 +79,6 @@ const Command commands[] PROGMEM = {
 #if WITH_I2C
   {"i2c",           &cmdI2C,       CMD_I2C},
 #endif
-  {"loglevel ",     &cmdLogLevel,  CMD_LOGLEVEL},
   {"ls",            &cmdLs,        CMD_LS},
 #if WITH_MB
   {"mb",            &cmdMB,        CMD_MB},
@@ -104,6 +98,7 @@ const Command commands[] PROGMEM = {
 #endif
   {"tail",          &cmdTail,      CMD_TAIL},
   {"time ",         &cmdTime,      CMD_TIME},
+  {"var",           &cmdVar,       CMD_VAR},
 #if WITH_XBEE
   {"xbee ",         &cmdXBee,      CMD_XBEE},
 #endif
@@ -255,52 +250,6 @@ COMMAND(cmdBoard)
   return cmd_ok;
 }
 
-
-/**
- * Enable/Disable features (flags).
- */
-
-uint8_t _getFlag(const char* str)
-{
-  unsigned int flag;
-
-  if (sscanf(str, "%u", &flag) != 1) { return cmd_bad_input; }
-  if (flag == 0) return FLAG_LOG_SD;
-  if (flag == 1) return FLAG_LOG_USB;
-
-  return 0; // Not found
-}
-
-COMMAND(cmdDisable)
-{
-  uint8_t flag;
-
-  // Check input
-  flag = _getFlag(str);
-  if (flag == 0) { return cmd_bad_input; }
-
-  // Do
-  UIO.flags &= ~flag;
-  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
-
-  return cmd_ok;
-}
-
-COMMAND(cmdEnable)
-{
-  uint8_t flag;
-
-  // Check input
-  flag = _getFlag(str);
-  if (flag == 0) { return cmd_bad_input; }
-
-  // Do
-  UIO.flags |= flag;
-  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
-
-  return cmd_ok;
-}
-
 /**
  * Exit the command line interface
  */
@@ -309,6 +258,28 @@ COMMAND(cmdExit)
 {
   return cmd_exit;
 }
+
+#if WITH_GPS
+/**
+ * Sets time. Accepts two formats:
+ *
+ * - time=yy:mm:dd:hh:mm:ss
+ * - time=<seconds since the epoch>
+ *
+ */
+COMMAND(cmdGPS)
+{
+  // Check feature availability
+  if (UIO.hasGPS & GPS_YES == 0) { return cmd_unavailable; }
+
+  if (UIO.gps(false, true) == -1)
+  {
+    return cmd_error;
+  }
+
+  return cmd_ok;
+}
+#endif
 
 /**
  * Help: Prints the list of commands
@@ -330,25 +301,6 @@ COMMAND(cmdHelp)
   }
 
   return cmd_quiet;
-}
-
-/**
- * Sets log level.
- */
-
-COMMAND(cmdLogLevel)
-{
-  uint8_t value;
-
-  // Check input
-  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
-  if (value >= LOG_LEN) { return cmd_bad_input; }
-
-  // Do
-  if (! UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, value)) { return cmd_error; }
-  cr.loglevel = (loglevel_t) value;
-
-  return cmd_ok;
 }
 
 
@@ -433,6 +385,16 @@ COMMAND(cmdPrint)
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
 
   return cmd_quiet;
+}
+
+
+COMMAND(cmdReboot)
+{
+  cr.println(F("Waspmote will reboot in 2s..."));
+  delay(2000);
+
+  UIO.reboot();
+  return cmd_ok;
 }
 
 /**
@@ -548,38 +510,65 @@ COMMAND(cmdTime)
   return cmd_ok;
 }
 
-#if WITH_GPS
-/**
- * Sets time. Accepts two formats:
- *
- * - time=yy:mm:dd:hh:mm:ss
- * - time=<seconds since the epoch>
- *
- */
-COMMAND(cmdGPS)
-{
-  // Check feature availability
-  if (UIO.hasGPS & GPS_YES == 0) { return cmd_unavailable; }
 
-  if (UIO.gps(false, true) == -1)
+/**
+ * Set variable value.
+ */
+
+COMMAND(cmdVar)
+{
+  char name[11];
+  uint8_t value;
+  uint8_t flag;
+
+  int n = sscanf(str, "%10s %hhu", &name, &value);
+
+  // Print variables
+  if (n == -1)
   {
-    return cmd_error;
+    for (uint8_t i=0; i <= 2; i++)
+    {
+      const char* xname = (const char*)pgm_read_word(&(var_names[i]));
+      const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
+      cr.print((__FlashStringHelper*)xname);
+      cr.println((__FlashStringHelper*)xhelp);
+    }
+    return cmd_quiet;
   }
 
+  if (n != 2)
+  {
+    return cmd_bad_input;
+  }
+
+  // Set variable
+  int8_t idx = UIO.index(var_names, sizeof var_names / sizeof var_names[0], name);
+  if (idx == -1) { return cmd_bad_input; }
+
+  if (idx == 0)
+  {
+    flag = FLAG_LOG_SD;
+  }
+  else if (idx == 1)
+  {
+    flag = FLAG_LOG_USB;
+  }
+  else if (idx == 2)
+  {
+    if (value >= LOG_LEN) { return cmd_bad_input; }
+    cr.loglevel = (loglevel_t) value;
+    if (! UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, value)) { return cmd_error; } // Save
+    return cmd_ok;
+  }
+  else
+  {
+    return cmd_bad_input;
+  }
+
+  // Update flags
+  if (value) { UIO.flags |= flag; }
+  else       { UIO.flags &= ~flag; }
+  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; } // Save
+
   return cmd_ok;
 }
-#endif
-
-COMMAND(cmdReboot)
-{
-
-  cr.println(F("Waspmote will reboot in 2s..."));
-  delay(2000);
-
-  UIO.reboot();
-  return cmd_ok;
-}
-
-
-  
-

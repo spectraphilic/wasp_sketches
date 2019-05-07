@@ -145,6 +145,26 @@ const char* const run_names[] PROGMEM = {
 #define FLAG_LOG_USB 1
 #define FLAG_LOG_SD  4
 
+const char VAR_LOG_SD    [] PROGMEM = "logsd";
+const char VAR_LOG_USB   [] PROGMEM = "logusb";
+const char VAR_LOG_LEVEL [] PROGMEM = "loglevel";
+
+const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
+const char VAR_LOG_LEVEL_HELP [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
+
+const char* const var_names[] PROGMEM = {
+  VAR_LOG_SD,
+  VAR_LOG_USB,
+  VAR_LOG_LEVEL,
+};
+
+const char* const var_help[] PROGMEM = {
+  VAR_LOG_FLAG_HELP,
+  VAR_LOG_FLAG_HELP,
+  VAR_LOG_LEVEL_HELP,
+};
+
+
 #define ADD_SENSOR(type, ...) \
   if (UIO.addSensor(type, ## __VA_ARGS__) == -1)\
   {\
@@ -457,14 +477,11 @@ COMMAND(cmdBattery);
 COMMAND(cmdBoard);
 COMMAND(cmdCat);
 COMMAND(cmdCatx);
-COMMAND(cmdDisable);
-COMMAND(cmdEnable);
 COMMAND(cmdExit);
 COMMAND(cmdFormat);
 COMMAND(cmdGPS);
 COMMAND(cmdHelp);
 COMMAND(cmdI2C);
-COMMAND(cmdLogLevel);
 COMMAND(cmdLs);
 COMMAND(cmdMB);
 COMMAND(cmdName);
@@ -480,6 +497,7 @@ COMMAND(cmdRun);
 COMMAND(cmdSDI12);
 COMMAND(cmdTail);
 COMMAND(cmdTime);
+COMMAND(cmdVar);
 COMMAND(cmdXBee);
 
 
