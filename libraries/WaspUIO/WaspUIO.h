@@ -42,7 +42,7 @@
 #define EEPROM_UIO_BOARD_TYPE (EEPROM_START + 3)
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
 #define EEPROM_UIO_NETWORK_TYPE (EEPROM_START + 5)
-// 1 byte available
+#define EEPROM_UIO_XBEE_WAIT (EEPROM_START + 6)
 #define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
 // 1 byte available
 #define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
@@ -148,20 +148,24 @@ const char* const run_names[] PROGMEM = {
 const char VAR_LOG_SD    [] PROGMEM = "logsd";
 const char VAR_LOG_USB   [] PROGMEM = "logusb";
 const char VAR_LOG_LEVEL [] PROGMEM = "loglevel";
+const char VAR_XBEE_WAIT [] PROGMEM = "xbeewait";
 
 const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
 const char VAR_LOG_LEVEL_HELP [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
+const char VAR_XBEE_WAIT_HELP [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
 
 const char* const var_names[] PROGMEM = {
   VAR_LOG_SD,
   VAR_LOG_USB,
   VAR_LOG_LEVEL,
+  VAR_XBEE_WAIT,
 };
 
 const char* const var_help[] PROGMEM = {
   VAR_LOG_FLAG_HELP,
   VAR_LOG_FLAG_HELP,
   VAR_LOG_LEVEL_HELP,
+  VAR_XBEE_WAIT_HELP,
 };
 
 
@@ -273,6 +277,7 @@ public:
   // General configuration
   char name[17];
   uint8_t flags;
+  uint8_t xbeewait;
   board_type_t boardType = BOARD_LEN; // Defaults to undefined
 
   // Power related

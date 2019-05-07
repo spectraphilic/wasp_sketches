@@ -141,6 +141,7 @@ CR_TASK(taskNetworkIridium)
 CR_TASK(taskNetworkXBee)
 {
   static tid_t tid;
+  uint32_t wait;
 
   CR_BEGIN;
 
@@ -163,7 +164,9 @@ CR_TASK(taskNetworkXBee)
     CR_SPAWN2(taskNetworkXBeeSend, tid);
   }
 
-  CR_DELAY(45000); // Keep the network open at least for 45s
+  // Keep the network open, default is 45s
+  wait = UIO.xbeewait ? (UIO.xbeewait * 1000UL) : 45000UL;
+  CR_DELAY(wait);
 
   if (UIO.hasSD)
   {

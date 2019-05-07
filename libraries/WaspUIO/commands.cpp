@@ -526,7 +526,7 @@ COMMAND(cmdVar)
   // Print variables
   if (n == -1)
   {
-    for (uint8_t i=0; i <= 2; i++)
+    for (uint8_t i=0; i <= 3; i++)
     {
       const char* xname = (const char*)pgm_read_word(&(var_names[i]));
       const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
@@ -557,7 +557,13 @@ COMMAND(cmdVar)
   {
     if (value >= LOG_LEN) { return cmd_bad_input; }
     cr.loglevel = (loglevel_t) value;
-    if (! UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, value)) { return cmd_error; } // Save
+    if (! UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, value)) { return cmd_error; }
+    return cmd_ok;
+  }
+  else if (idx == 3)
+  {
+    UIO.xbeewait = value;
+    if (! UIO.updateEEPROM(EEPROM_UIO_XBEE_WAIT, value)) { return cmd_error; }
     return cmd_ok;
   }
   else
@@ -568,7 +574,7 @@ COMMAND(cmdVar)
   // Update flags
   if (value) { UIO.flags |= flag; }
   else       { UIO.flags &= ~flag; }
-  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; } // Save
+  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
 
   return cmd_ok;
 }

@@ -47,8 +47,10 @@ void WaspUIO::bootConfig()
   // Read device name from EEPROM into static variable
   Utils.getID(name);
 
-  // Flags
+  // Variables
   flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
+  cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
+  xbeewait = Utils.readEEPROM(EEPROM_UIO_XBEE_WAIT);
 
   // Network type
   networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
@@ -97,9 +99,6 @@ void WaspUIO::bootConfig()
       actions[i] = (Action){(action_t)type, hour, minute};
     }
   }
-
-  // Log level
-  cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
 
   // Frames
   setFrameSize();

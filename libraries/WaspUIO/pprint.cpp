@@ -165,7 +165,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
-  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\""), macH, macL, hw, sw, name);
+  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, xbeewait);
 
   return dst;
 }
