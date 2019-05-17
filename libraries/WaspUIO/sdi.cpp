@@ -90,7 +90,7 @@ CR_TASK(taskSdiCtd10)
   a = strtod(sdi.buffer+1, &next);
   b = strtod(next, &next);
   c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_CTD10, a, b, c);
+  ADD_SENSOR(SENSOR_CTD10, (int16_t)a, (int16_t)(b*10), (int32_t)c);
 
   // Success
   CR_END;

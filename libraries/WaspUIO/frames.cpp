@@ -27,6 +27,7 @@ const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_fffuf [] PROGMEM = "fffuf";
 const char frame_format_ffffff[] PROGMEM = "ffffff";
 const char frame_format_uf    [] PROGMEM = "uf";
+const char frame_format_jjk   [] PROGMEM = "jjk";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -46,10 +47,10 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null,
   // 07x
   null, null, null, null,
-  null,                                                       // 74 Reserved, was BME temperature
+  null,                                                       // 74 Reserved (was BME temperature)
   null,
-  null,                                                       // 76 Reserved, was BME humidity
-  null,                                                       // 77 Reserved, was BME pressure
+  null,                                                       // 76 Reserved (was BME humidity)
+  null,                                                       // 77 Reserved (was BME pressure)
   null, null,
   null, null, null, null, null, null, null, null, null, null, // 08x
   // 09x
@@ -70,11 +71,11 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 18x
   null, null, null, null, null, null, null, null, null, null, // 19x
   // 20x
-  frame_format_fff,     // 200 CTD-10
-  null,                 // 201 Reserved, do not reuse (was 201 DS-2 1)
-  null,                 // 202 Reserved, do not reuse (was 201 DS-2 2)
+  null            ,     // 200 Reserved (was CTD-10)
+  null,                 // 201 Reserved (was 201 DS-2 1)
+  null,                 // 202 Reserved (was 201 DS-2 2)
   frame_format_n,       // 203 DS18B20
-  null,                 // 204 Reserved, do not reuse (was MB73XX)
+  null,                 // 204 Reserved (was MB73XX)
   frame_format_uf,      // 205 GPS number of satellites and accuracy
   frame_format_f,       // 206 Battery Volts
   frame_format_fffuf,   // 207 WS100-UMB
@@ -86,6 +87,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_n,       // 213 VL53L1X
   frame_format_n,       // 214 MB73XX
   frame_format_ffffff,  // 215 ATMOS-22
+  frame_format_jjk,     // 216 CTD-10
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
@@ -94,7 +96,6 @@ const char frame_name_rssi        [] PROGMEM = "RSSI";
 const char frame_name_acc         [] PROGMEM = "ACC";
 const char frame_name_altitude    [] PROGMEM = "ALT";
 const char frame_name_tst         [] PROGMEM = "TST";
-const char frame_name_ctd10       [] PROGMEM = "CTD10";
 const char frame_name_ds18b20     [] PROGMEM = "DS18B20";
 const char frame_name_gps_accuracy[] PROGMEM = "GPS Accuracy";
 const char frame_name_bat_volts   [] PROGMEM = "BAT VOLTS";
@@ -107,6 +108,7 @@ const char frame_name_tmp         [] PROGMEM = "TMP";
 const char frame_name_vl          [] PROGMEM = "VL";
 const char frame_name_mb73xx      [] PROGMEM = "MB73XX";
 const char frame_name_atmos       [] PROGMEM = "ATMOS";
+const char frame_name_ctd10       [] PROGMEM = "CTD10";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -127,10 +129,10 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null, null, null, null, null, null,
   // 07x
   null, null, null, null,
-  null,                                                       // 74 Reserved, was BME temperature
+  null,                                                       // 74 Reserved (was BME temperature)
   null,
-  null,                                                       // 76 Reserved, was BME humidity
-  null,                                                       // 77 Reserved, was BME pressure
+  null,                                                       // 76 Reserved (was BME humidity)
+  null,                                                       // 77 Reserved (was BME pressure)
   null, null,
   null, null, null, null, null, null, null, null, null, null, // 08x
   // 09x
@@ -151,11 +153,11 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null, null, null, null, null, null, null, null, null, null, // 18x
   null, null, null, null, null, null, null, null, null, null, // 19x
   // 20x
-  frame_name_ctd10,                                           // 200 CTD-10
-  null,                                                       // 201 Reserved, do not reuse (was 201 DS-2 1)
-  null,                                                       // 202 Reserved, do not reuse (was 201 DS-2 2)
+  null,                                                       // 200 Reserved (was CTD-10)
+  null,                                                       // 201 Reserved (was DS-2 1)
+  null,                                                       // 202 Reserved (was DS-2 2)
   frame_name_ds18b20,                                         // 203 DS18B20
-  null,                                                       // 204 Reserved, do not reuse (was MB73XX)
+  null,                                                       // 204 Reserved (was MB73XX)
   frame_name_gps_accuracy,                                    // 205 GPS Accuracy
   frame_name_bat_volts,                                       // 206 Battery Volts
   frame_name_ws100,                                           // 207 WS100-UMB
@@ -168,6 +170,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_vl,                                              // 213 VL53L1X
   frame_name_mb73xx,                                          // 214 MB73XX
   frame_name_atmos,                                           // 215 ATMOS-22
+  frame_name_ctd10,                                           // 216 CTD-10
 };
 
 /**
@@ -536,6 +539,11 @@ void WaspUIO::showFrame(uint8_t *p)
        {
          cr.println(F("Sensor %d (%s): %d"), type, name, *(int16_t *)p);
          p += 2; nbytes -= 2;
+       }
+       else if (c == 'k')
+       {
+         cr.println(F("Sensor %d (%s): %d"), type, name, *(int32_t *)p);
+         p += 4; nbytes -= 4;
        }
        else if (c == 'u')
        {

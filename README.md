@@ -70,4 +70,4 @@ Create symbolic links to the libraries needed:
 # Contents
 
 See the README files within the libraries and sketches folders for a
-drescription of the libraries and sketches.
+description of the libraries and sketches.

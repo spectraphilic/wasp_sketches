@@ -597,7 +597,6 @@ CR_TASK(taskSlow);
 #define SENSOR_BAT           52
 #define SENSOR_GPS           53
 #define SENSOR_TST          123
-#define SENSOR_CTD10        200
 #define SENSOR_DS18B20      203
 #define SENSOR_GPS_ACCURACY 205
 #define SENSOR_VOLTS        206
@@ -610,5 +609,6 @@ CR_TASK(taskSlow);
 #define SENSOR_VL53L1X      213
 #define SENSOR_MB73XX       214
 #define SENSOR_ATMOS        215
+#define SENSOR_CTD10        216
 
 #endif
