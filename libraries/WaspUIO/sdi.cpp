@@ -85,12 +85,16 @@ CR_TASK(taskSdiCtd10)
 
   // Frame. The result looks like 0+167+17.5+103
   char *next;
-  double a, b, c;
+  double depth, temp, cond;
 
-  a = strtod(sdi.buffer+1, &next);
-  b = strtod(next, &next);
-  c = strtod(next, &next);
-  ADD_SENSOR(SENSOR_CTD10, (int16_t)a, (int16_t)(b*10), (int32_t)c);
+  depth = strtod(sdi.buffer+1, &next);
+  temp = strtod(next, &next);
+  cond = strtod(next, &next);
+  ADD_SENSOR(SENSOR_CTD10,
+        (int16_t)round(depth),
+        (int16_t)round(temp*10),
+        (int32_t)round(cond)
+  );
 
   // Success
   CR_END;
@@ -128,12 +132,12 @@ CR_TASK(taskSdiDs2)
 
   // Frame
   ADD_SENSOR(SENSOR_DS2,
-    (int16_t)(speed*100),
-    (int16_t)dir,
-    (int16_t)(temp*10),
-    (int16_t)(meridional*100),
-    (int16_t)(zonal*100),
-    (int16_t)(gust*100)
+    (int16_t)round(speed*100),
+    (int16_t)round(dir),
+    (int16_t)round(temp*10),
+    (int16_t)round(meridional*100),
+    (int16_t)round(zonal*100),
+    (int16_t)round(gust*100)
   );
 
   CR_END;
@@ -174,12 +178,12 @@ CR_TASK(taskSdiAtmos)
 
   // Frame
   ADD_SENSOR(SENSOR_ATMOS,
-    (int16_t)(speed*100),
-    (int16_t)dir,
-    (int16_t)(gust*100),
-    (int16_t)(temp*10),
-    (int8_t)(x*10),
-    (int8_t)(y*10)
+    (int16_t)round(speed*100),
+    (int16_t)round(dir),
+    (int16_t)round(gust*100),
+    (int16_t)round(temp*10),
+    (int8_t)round(x*10),
+    (int8_t)round(y*10)
   );
 
   CR_END;

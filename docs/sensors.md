@@ -1,3 +1,14 @@
+Using floats in the mote has two problems:
+
+- A float takes 4 bytes in a frame. Because frame size is small and network is
+  a precious ressource (specially Iridium), it's important to make frames as
+  small as possible. Send the smaller integer possible instead of float.
+  See issue #50 for details.
+
+- With 4 bytes floats errors in accuracy are possible, as we have observed.
+  Avoid working with floats in the MCU.
+  See issue #9 for details.
+
 This page documents the sensors from a data point of view. We're interested in
 three aspects:
 
@@ -6,12 +17,6 @@ three aspects:
 3. How the information is stored in the server.
 
 Unless stated otherwise 1. and 3. are the same.
-
-The information may be transformed for transport. Here we try to avoid floats
-and use only integer, for two purposes:
-
-- Reduce the frame size, see issue #50
-- Avoid accuracy errors, see issue #9
 
 Eventually the information contained here may be used for more efficient
 storage in the server as well.
@@ -27,9 +32,15 @@ wrong (e.g. tilt in the Atmos).
 We prefer signed over unsigned integers, even when the value cannot be
 negative, unless using an unsigned allows us to reduce the frame size.
 
+# SDI-12
 
-CTD-10 (water)
-========================================================================
+SDI-12 sensors send the data as a text string. We have a library that works
+with SDI-12, but we don't use other libraries specifically for a SDI-12 sensor.
+
+This is to say that, unlike I2C sensors, we don't do transformations on the
+input data. This makes it much easier to work with.
+
+## CTD-10 (water)
 
 |                   | Depth       | Temp         | BEC        |
 | ----------------- | -----------:| ------------:| ----------:|
@@ -41,8 +52,7 @@ CTD-10 (water)
 | Transform         |             |          x10 |            |
 
 
-DS-2 (wind)
-========================================================================
+## DS-2 (wind)
 
 |                   | Speed       | Direction    | Temp       | Meridional | Zonal    |     Gust |
 | ----------------- | -----------:| ------------:| ----------:| ----------:| --------:| --------:|
@@ -57,8 +67,7 @@ But from the given example and the data we we can see in the log files: the
 resolution is 0.1 ºC
 
 
-Atmos (wind)
-========================================================================
+## Atmos-22 (wind)
 
 |                   | Speed       | Direction    | Gust       | Temp       | Tilt X     | Tilt Y     |
 | ----------------- | -----------:| ------------:| ----------:| ----------:| ----------:| ----------:|
@@ -71,3 +80,40 @@ Atmos (wind)
 
 \* The specification does not say the air temperature resolution and range.
 But from the data we we can see in the log files: the resolution is 0.1 ºC
+
+
+## WS100-UMB
+
+We don't use this one, not yet at least. Support for it may be dropped from the
+mote, at least temporarily, to save program memory.
+
+So for know we don't touch it. Still sending floats to the server.
+
+TODO
+
+
+# I2C
+
+- ACC (x, y, z) and VL5L1X (distance)
+  Their libraries already return integers.
+
+- AS7263, AS7265, BM280, MLX90614 and TMP102 sensors
+  The libraries return floats. Internally they transform integers to float
+  doing some conversions. We would need to modify the libraries and do the
+  conversions when parsing the frame (in the server or Pi). This is much more
+  work.
+
+
+# GPS
+
+Latitude, longitude, altitude and accuracy are floats.
+
+
+# Other sensors and data
+
+- Battery level, DS18B20, MB73XX, RSSI
+  Their libraries already return integers.
+
+- Battery volts
+  This one is float, but it's only used for lead-acid batteries, and we won't
+  use it again in future deployments.
