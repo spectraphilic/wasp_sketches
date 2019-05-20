@@ -17,17 +17,18 @@ const char null               [] PROGMEM = "";
 const char frame_format_j     [] PROGMEM = "j";
 const char frame_format_jjj   [] PROGMEM = "jjj";
 const char frame_format_u     [] PROGMEM = "u";
-const char frame_format_v     [] PROGMEM = "v";
+//const char frame_format_v     [] PROGMEM = "v";
 const char frame_format_w     [] PROGMEM = "w";
-const char frame_format_ww    [] PROGMEM = "ww";
+//const char frame_format_ww    [] PROGMEM = "ww";
 const char frame_format_f     [] PROGMEM = "f";
 const char frame_format_ff    [] PROGMEM = "ff";
 const char frame_format_fff   [] PROGMEM = "fff";
 const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_fffuf [] PROGMEM = "fffuf";
-const char frame_format_ffffff[] PROGMEM = "ffffff";
 const char frame_format_uf    [] PROGMEM = "uf";
 const char frame_format_jjk   [] PROGMEM = "jjk";
+const char frame_format_jjjjjj[] PROGMEM = "jjjjjj";
+const char frame_format_jjjjii[] PROGMEM = "jjjjii";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -79,15 +80,18 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_uf,      // 205 GPS number of satellites and accuracy
   frame_format_f,       // 206 Battery Volts
   frame_format_fffuf,   // 207 WS100-UMB
-  frame_format_ffffff,  // 208 DS-2
+  null,                 // 208 Reserved (was DS-2)
   frame_format_fff,     // 209 BME 0x76 (internal)
+  // 21x
   frame_format_fff,     // 210 BME 0x77
   frame_format_ff,      // 211 MLX90614
   frame_format_f,       // 212 TMP102
   frame_format_n,       // 213 VL53L1X
   frame_format_n,       // 214 MB73XX
-  frame_format_ffffff,  // 215 ATMOS-22
+  null,                 // 215 Reserved (was ATMOS-22)
   frame_format_jjk,     // 216 CTD-10
+  frame_format_jjjjjj,  // 217 DS-2
+  frame_format_jjjjii,  // 215 ATMOS-22
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
@@ -100,15 +104,15 @@ const char frame_name_ds18b20     [] PROGMEM = "DS18B20";
 const char frame_name_gps_accuracy[] PROGMEM = "GPS Accuracy";
 const char frame_name_bat_volts   [] PROGMEM = "BAT VOLTS";
 const char frame_name_ws100       [] PROGMEM = "WS100";
-const char frame_name_ds2         [] PROGMEM = "DS-2";
 const char frame_name_bme76       [] PROGMEM = "BME int";
 const char frame_name_bme77       [] PROGMEM = "BME ext";
 const char frame_name_mlx         [] PROGMEM = "MLX";
 const char frame_name_tmp         [] PROGMEM = "TMP";
 const char frame_name_vl          [] PROGMEM = "VL";
 const char frame_name_mb73xx      [] PROGMEM = "MB73XX";
-const char frame_name_atmos       [] PROGMEM = "ATMOS";
 const char frame_name_ctd10       [] PROGMEM = "CTD10";
+const char frame_name_ds2         [] PROGMEM = "DS-2";
+const char frame_name_atmos       [] PROGMEM = "ATMOS";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -161,7 +165,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_gps_accuracy,                                    // 205 GPS Accuracy
   frame_name_bat_volts,                                       // 206 Battery Volts
   frame_name_ws100,                                           // 207 WS100-UMB
-  frame_name_ds2,                                             // 208 DS-2
+  null,                                                       // 208 Reserved (was DS-2)
   frame_name_bme76,                                           // 209 BME 0x76
   // 21x
   frame_name_bme77,                                           // 210 BME 0x77
@@ -169,8 +173,10 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_tmp,                                             // 212 TMP102
   frame_name_vl,                                              // 213 VL53L1X
   frame_name_mb73xx,                                          // 214 MB73XX
-  frame_name_atmos,                                           // 215 ATMOS-22
+  null,                                                       // 215 Reserved (was ATMOS-22)
   frame_name_ctd10,                                           // 216 CTD-10
+  frame_name_ds2,                                             // 217 DS-2
+  frame_name_atmos,                                           // 218 ATMOS-22
 };
 
 /**
@@ -535,6 +541,11 @@ void WaspUIO::showFrame(uint8_t *p)
          cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
          p += 4; nbytes -= 4;
        }
+       else if (c == 'i')
+       {
+         cr.println(F("Sensor %d (%s): %d"), type, name, *(int8_t *)p);
+         p += 1; nbytes -= 1;
+       }
        else if (c == 'j')
        {
          cr.println(F("Sensor %d (%s): %d"), type, name, *(int16_t *)p);
@@ -542,13 +553,13 @@ void WaspUIO::showFrame(uint8_t *p)
        }
        else if (c == 'k')
        {
-         cr.println(F("Sensor %d (%s): %d"), type, name, *(int32_t *)p);
+         cr.println(F("Sensor %d (%s): %ld"), type, name, *(int32_t *)p);
          p += 4; nbytes -= 4;
        }
        else if (c == 'u')
        {
-         cr.println(F("Sensor %d (%s): %d"), type, name, *p++);
-         nbytes--;
+         cr.println(F("Sensor %d (%s): %d"), type, name, *(uint8_t *)p);
+         p += 1; nbytes -= 1;
        }
        else if (c == 'v')
        {

@@ -127,7 +127,14 @@ CR_TASK(taskSdiDs2)
   double gust = strtod(next, &next);
 
   // Frame
-  ADD_SENSOR(SENSOR_DS2, speed, dir, temp, meridional, zonal, gust);
+  ADD_SENSOR(SENSOR_DS2,
+    (int16_t)(speed*100),
+    (int16_t)dir,
+    (int16_t)(temp*10),
+    (int16_t)(meridional*100),
+    (int16_t)(zonal*100),
+    (int16_t)(gust*100)
+  );
 
   CR_END;
 }
@@ -166,7 +173,14 @@ CR_TASK(taskSdiAtmos)
   double y = strtod(next, &next);
 
   // Frame
-  ADD_SENSOR(SENSOR_ATMOS, speed, dir, gust, temp, x, y);
+  ADD_SENSOR(SENSOR_ATMOS,
+    (int16_t)(speed*100),
+    (int16_t)dir,
+    (int16_t)(gust*100),
+    (int16_t)(temp*10),
+    (int8_t)(x*10),
+    (int8_t)(y*10)
+  );
 
   CR_END;
 }

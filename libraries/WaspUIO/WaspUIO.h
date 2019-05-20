@@ -601,14 +601,14 @@ CR_TASK(taskSlow);
 #define SENSOR_GPS_ACCURACY 205
 #define SENSOR_VOLTS        206
 #define SENSOR_WS100        207
-#define SENSOR_DS2          208
 #define SENSOR_BME_76       209
 #define SENSOR_BME_77       210
 #define SENSOR_MLX90614     211
 #define SENSOR_TMP102       212
 #define SENSOR_VL53L1X      213
 #define SENSOR_MB73XX       214
-#define SENSOR_ATMOS        215
 #define SENSOR_CTD10        216
+#define SENSOR_DS2          217
+#define SENSOR_ATMOS        218
 
 #endif
