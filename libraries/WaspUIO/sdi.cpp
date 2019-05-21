@@ -179,7 +179,7 @@ CR_TASK(taskSdiAtmos)
   // Frame
   ADD_SENSOR(SENSOR_ATMOS,
     (int16_t)round(speed*100),
-    (int16_t)round(dir*10),
+    (int16_t)round(dir),
     (int16_t)round(gust*100),
     (int16_t)round(temp*10),
     (int16_t)round(x*10),
