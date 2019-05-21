@@ -69,14 +69,17 @@ resolution is 0.1 ºC
 
 ## Atmos-22 (wind)
 
-|                   | Speed       | Direction    | Gust       | Temp       | Tilt X     | Tilt Y     |
+|                   | Speed       | Direction\*  | Gust       | Temp       | Tilt X     | Tilt Y     |
 | ----------------- | -----------:| ------------:| ----------:| ----------:| ----------:| ----------:|
-| Resolution & Unit |    0.01 m/s |     1 degree |   0.01 m/s |         \* | 0.1 degree | 0.1 degree |
+| Resolution & Unit |    0.01 m/s |   0.1 degree |   0.01 m/s |         \* | 0.1 degree | 0.1 degree |
 | Input (example)   |           ? |            ? |          ? |          ? |          ? |          ? |
 | Range (spec)      |      0 : 30 |      0 : 359 |     0 : 30 |         \* |    0 : 180 |    0 : 180 |
 | Range (read)      |           ? |            ? |          ? |          ? |  -90 : +90 |  -90 : +90 |
-| Transport (type)  |       int16 |        int16 |      int16 |      int16 |       int8 |       int8 |
-| Transform         |        x100 |              |       x100 |        x10 |        x10 |        x10 |
+| Transport (type)  |       int16 |        int16 |      int16 |      int16 |      int16 |      int16 |
+| Transform         |        x100 |          x10 |       x100 |        x10 |        x10 |        x10 |
+
+\* The specification says the direction resolution is 1 degree, but we've observed
+it's 0.1 degrees actually. TODO To be confirmed
 
 \* The specification does not say the air temperature resolution and range.
 But from the data we we can see in the log files: the resolution is 0.1 ºC

@@ -28,7 +28,6 @@ const char frame_format_fffuf [] PROGMEM = "fffuf";
 const char frame_format_uf    [] PROGMEM = "uf";
 const char frame_format_jjk   [] PROGMEM = "jjk";
 const char frame_format_jjjjjj[] PROGMEM = "jjjjjj";
-const char frame_format_jjjjii[] PROGMEM = "jjjjii";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -91,7 +90,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null,                 // 215 Reserved (was ATMOS-22)
   frame_format_jjk,     // 216 CTD-10
   frame_format_jjjjjj,  // 217 DS-2
-  frame_format_jjjjii,  // 215 ATMOS-22
+  frame_format_jjjjjj,  // 215 ATMOS-22
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
