@@ -193,18 +193,20 @@ uint8_t WaspUIO::setTimeFrom4G(const char *value)
   debug(F("4G time: %s"), _4G._buffer);
   sscanf((char*)_4G._buffer, format, &year, &month, &day, &hour, &minute, &second, &timezone);
 
+  // XXX Workaround: skip from 00:00 to 01:59
+  // See https://github.com/spectraphilic/wasp_sketches/issues/69
+  if (hour == 0 || hour == 1)
+  {
+    warn(F("Skip this time because we know it doesn't work in Norway"));
+    return 0;
+  }
+
   // Get current state of RTC power mode
   RTC_status = RTC.isON;
   if (! RTC_status) { RTC.ON(); }
 
   // Convert to UTC
   uint32_t epoch = RTC.getEpochTime(year, month, day, hour, minute, second);
-
-  if ((epoch / 3600) % 24 == 0) // XXX Skip at midnight
-  {
-    warn(F("Skip this time because we know it doesn't work in Svalbard"));
-    return 0;
-  }
 
   // Set time
   epoch = epoch - (timezone * 15 * 60);
