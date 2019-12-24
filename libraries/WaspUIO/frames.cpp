@@ -387,7 +387,7 @@ void WaspUIO::setFrameSize()
   payloadSize = 255;
 
 #if WITH_4G
-  // XXX Documentation says "Depends on the protocol used"
+  // XXX Should use getMaxSizeFor4G (since v041) but it would take more memory
   if (networkType == NETWORK_4G) { payloadSize = 255; }
 #endif
 
