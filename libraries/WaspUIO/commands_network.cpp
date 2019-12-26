@@ -71,38 +71,11 @@ COMMAND(cmd4G_Pin)
  */
 COMMAND(cmdLora)
 {
-  loraInit();
+  UIO.loraInit();
 
-  // uint8_t 0x00 to 0x1B (5 to 240 mA)
-  cr.println(F("Max current = %u"), sx1272._maxCurrent);
-
-  cr.println(F("Payload length"), sx1272._payloadlength);
-
-  // uint16_t
-  cr.println(F("Preamble length = %u"), sx1272._preamblelength);
-
-  return cmd_ok;
-}
-
-COMMAND(cmdLoraAddress)
-{
-  uint8_t address;
-
-  int n = sscanf(str, "%hhu", &address);
-  if (n == -1)
-  {
-    cr.println(F("%u"), UIO.lora_address);
-  }
-  else if (n == 1)
-  {
-    if (! (1 <= address <= 255)) { return cmd_bad_input; }
-    if (! UIO.updateEEPROM(EEPROM_UIO_LORA_ADDRESS, address)) { return cmd_error; }
-    UIO.lora_address = address;
-  }
-  else
-  {
-    return cmd_bad_input;
-  }
+  cr.println(F("Max current = %u"), sx1272._maxCurrent); // uint8_t 0x00 to 0x1B (5 to 240 mA)
+  cr.println(F("Payload length = %u"), sx1272._payloadlength); // uint8_t
+  cr.println(F("Preamble length = %u"), sx1272._preamblelength); // uint16_t
 
   return cmd_ok;
 }

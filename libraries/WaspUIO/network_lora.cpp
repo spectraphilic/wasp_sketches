@@ -11,7 +11,7 @@ void WaspUIO::loraInit()
   // 1. Configure the module
   // Note: configuration is not save in the module, so it must be configured every
   // time the module is switched ON
-  err = sx1272.setMode(LORA_MODE)
+  err = sx1272.setMode(LORA_MODE);
   if (err)
   {
     cr.println(F("sx1272.setMode(..) error=%d"), err);

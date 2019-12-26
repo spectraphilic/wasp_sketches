@@ -37,7 +37,6 @@ const char CMD_HELP      [] PROGMEM = "help              - Prints the list of co
 const char CMD_I2C       [] PROGMEM = "i2c [NAME]        - Scan I2C bus or read values from NAME: "
                                       "as7263 as7265 bme bm76 mlx tmp vl";
 const char CMD_LORA      [] PROGMEM = "lora              - Print Lora configuration";
-const char CMD_LORA      [] PROGMEM = "lora address [N]  - Set or get Lora node address (1-255, 1=Gateway)";
 const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
@@ -83,7 +82,6 @@ const Command commands[] PROGMEM = {
 #endif
 #if WITH_LORA
   {"lora",          &cmdLora,        CMD_LORA},
-  {"lora address",  &cmdLoraAddress, CMD_LORA},
 #endif
   {"ls",            &cmdLs,          CMD_LS},
 #if WITH_MB
@@ -527,16 +525,21 @@ COMMAND(cmdTime)
 
 COMMAND(cmdVar)
 {
+  // Number of variables
+  uint8_t nvars = sizeof var_names / sizeof var_names[0];
+  // Input data
   char name[11];
+  int n;
   uint8_t value;
+  // Depends on n
   uint8_t flag;
+  int eeprom_address;
 
-  int n = sscanf(str, "%10s %hhu", &name, &value);
-
-  // Print variables
+  // Read input
+  n = sscanf(str, "%10s %hhu", &name, &value);
   if (n == -1)
   {
-    for (uint8_t i=0; i <= 3; i++)
+    for (uint8_t i=0; i < nvars; i++)
     {
       const char* xname = (const char*)pgm_read_word(&(var_names[i]));
       const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
@@ -546,45 +549,76 @@ COMMAND(cmdVar)
     return cmd_quiet;
   }
 
-  if (n != 2)
+  if (n < 1 || n > 2)
   {
     return cmd_bad_input;
   }
 
-  // Set variable
-  int8_t idx = UIO.index(var_names, sizeof var_names / sizeof var_names[0], name);
-  if (idx == -1) { return cmd_bad_input; }
+  // Action
+  int8_t idx = UIO.index(var_names, nvars, name);
+  switch (idx)
+  {
+    case -1:
+      return cmd_bad_input;
+    case 0:
+      flag = FLAG_LOG_SD;
+      goto flag;
+    case 1:
+      flag = FLAG_LOG_USB;
+      goto flag;
+    case 2:
+      if (n == 1) {
+        value = (uint8_t)cr.loglevel;
+      } else {
+        if (value >= LOG_LEN) { return cmd_bad_input; }
+        cr.loglevel = (loglevel_t) value;
+        eeprom_address = EEPROM_UIO_LOG_LEVEL;
+      }
+      goto uint8;
+    case 3:
+      if (n == 1) {
+        value = UIO.xbeewait;
+      } else {
+        UIO.xbeewait = value;
+	eeprom_address = EEPROM_UIO_XBEE_WAIT;
+      }
+      goto uint8;
+    case 4:
+      if (n == 1) {
+        value = UIO.lora_address;
+      } else {
+        if (value == 0) { return cmd_bad_input; }
+        UIO.lora_address = value;
+	eeprom_address = EEPROM_UIO_LORA_ADDRESS;
+      }
+      goto uint8;
+    default:
+      return cmd_bad_input;
+  }
 
-  if (idx == 0)
-  {
-    flag = FLAG_LOG_SD;
-  }
-  else if (idx == 1)
-  {
-    flag = FLAG_LOG_USB;
-  }
-  else if (idx == 2)
-  {
-    if (value >= LOG_LEN) { return cmd_bad_input; }
-    cr.loglevel = (loglevel_t) value;
-    if (! UIO.updateEEPROM(EEPROM_UIO_LOG_LEVEL, value)) { return cmd_error; }
-    return cmd_ok;
-  }
-  else if (idx == 3)
-  {
-    UIO.xbeewait = value;
-    if (! UIO.updateEEPROM(EEPROM_UIO_XBEE_WAIT, value)) { return cmd_error; }
-    return cmd_ok;
-  }
-  else
-  {
-    return cmd_bad_input;
+flag:
+  // Update
+  if (n == 2) {
+    if (value) { UIO.flags |= flag; }
+    else       { UIO.flags &= ~flag; }
+    if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
   }
 
-  // Update flags
-  if (value) { UIO.flags |= flag; }
-  else       { UIO.flags &= ~flag; }
-  if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
+  // Print
+  cr.println(F("%d"), (UIO.flags & flag)? 1 : 0);
+  return cmd_quiet;
 
-  return cmd_ok;
+uint8:
+  // Update
+  if (n == 2)
+  {
+    if (! UIO.updateEEPROM(eeprom_address, value))
+    {
+      return cmd_error;
+    }
+  }
+
+  // Print
+  cr.println(F("%u"), value);
+  return cmd_quiet;
 }

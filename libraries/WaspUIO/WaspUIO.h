@@ -152,20 +152,23 @@ const char* const run_names[] PROGMEM = {
 #define FLAG_LOG_USB 1
 #define FLAG_LOG_SD  4
 
-const char VAR_LOG_SD    [] PROGMEM = "logsd";
-const char VAR_LOG_USB   [] PROGMEM = "logusb";
-const char VAR_LOG_LEVEL [] PROGMEM = "loglevel";
-const char VAR_XBEE_WAIT [] PROGMEM = "xbeewait";
+const char VAR_LOG_SD    [] PROGMEM = "log.sd";
+const char VAR_LOG_USB   [] PROGMEM = "log.usb";
+const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
+const char VAR_XBEE_WAIT [] PROGMEM = "xbee.wait";
+const char VAR_LORA_ADDR [] PROGMEM = "lora.addr";
 
 const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
 const char VAR_LOG_LEVEL_HELP [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char VAR_XBEE_WAIT_HELP [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
+const char VAR_LORA_ADDR_HELP [] PROGMEM = ": 1-255 (1=Gateway)";
 
 const char* const var_names[] PROGMEM = {
   VAR_LOG_SD,
   VAR_LOG_USB,
   VAR_LOG_LEVEL,
   VAR_XBEE_WAIT,
+  VAR_LORA_ADDR,
 };
 
 const char* const var_help[] PROGMEM = {
@@ -173,6 +176,7 @@ const char* const var_help[] PROGMEM = {
   VAR_LOG_FLAG_HELP,
   VAR_LOG_LEVEL_HELP,
   VAR_XBEE_WAIT_HELP,
+  VAR_LORA_ADDR_HELP,
 };
 
 
@@ -501,7 +505,6 @@ COMMAND(cmdGPS);
 COMMAND(cmdHelp);
 COMMAND(cmdI2C);
 COMMAND(cmdLora);
-COMMAND(cmdLoraAddress);
 COMMAND(cmdLs);
 COMMAND(cmdMB);
 COMMAND(cmdName);
