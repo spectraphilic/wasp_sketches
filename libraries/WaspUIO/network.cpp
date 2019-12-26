@@ -14,4 +14,8 @@ void WaspUIO::networkInit()
 #if WITH_IRIDIUM
   if (networkType == NETWORK_IRIDIUM) { iridiumInit(); }
 #endif
+
+#if WITH_LORA
+  if (networkType == NETWORK_LORA) { loraInit(); }
+#endif
 }

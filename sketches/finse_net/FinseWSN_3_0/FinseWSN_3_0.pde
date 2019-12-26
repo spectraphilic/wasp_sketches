@@ -47,6 +47,10 @@ void setup()
   if (UIO.networkType == NETWORK_IRIDIUM)
   { info(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
   #endif
+  #if WITH_LORA
+  if (UIO.networkType == NETWORK_LORA)
+  { info(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
+  #endif
   info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
   info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   info(F("Actions   : %s"), UIO.pprintActions(buffer, size));

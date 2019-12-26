@@ -1,0 +1,20 @@
+- Lora SX1272, SPI bus, Socket 0
+- No security, no OTA
+- Work always with antennas attached
+- Distance 3-4 meters between modules
+
+Configuration (Lora):
+- Channel, e.g. CH_10_868 865.20 Mhz
+- Power level: L H M
+
+TODO:
+- Add support for Lora (SX1272)
+- Rename WITH_ to USE_
+- Support more than 1 network, e.g. Lora and 4G
+- Choose transmission mode (1-10), page 16
+  Do sender and receiver need to have the same configuration?
+- Add support for rssimap.pde sketch
+- Add ping support
+- Add RSSI frame? Log RSSI info, on reception only?
+- Set time from Lora network?
+- Multi-hop (star) topology

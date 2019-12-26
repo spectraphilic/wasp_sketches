@@ -65,6 +65,50 @@ COMMAND(cmd4G_Pin)
 #endif
 
 
+#if WITH_LORA
+/**
+ * Lora network
+ */
+COMMAND(cmdLora)
+{
+  loraInit();
+
+  // uint8_t 0x00 to 0x1B (5 to 240 mA)
+  cr.println(F("Max current = %u"), sx1272._maxCurrent);
+
+  cr.println(F("Payload length"), sx1272._payloadlength);
+
+  // uint16_t
+  cr.println(F("Preamble length = %u"), sx1272._preamblelength);
+
+  return cmd_ok;
+}
+
+COMMAND(cmdLoraAddress)
+{
+  uint8_t address;
+
+  int n = sscanf(str, "%hhu", &address);
+  if (n == -1)
+  {
+    cr.println(F("%u"), UIO.lora_address);
+  }
+  else if (n == 1)
+  {
+    if (! (1 <= address <= 255)) { return cmd_bad_input; }
+    if (! UIO.updateEEPROM(EEPROM_UIO_LORA_ADDRESS, address)) { return cmd_error; }
+    UIO.lora_address = address;
+  }
+  else
+  {
+    return cmd_bad_input;
+  }
+
+  return cmd_ok;
+}
+#endif
+
+
 
 /**
  * Choose network type

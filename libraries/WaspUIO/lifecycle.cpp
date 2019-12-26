@@ -81,6 +81,11 @@ void WaspUIO::bootConfig()
   memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
 #endif
 
+#if WITH_LORA
+  // Lora network
+  lora_address = Utils.readEEPROM(EEPROM_UIO_LORA_ADDRESS);
+#endif
+
   // Read run table
   for (uint8_t i=0; i < RUN_LEN; i++)
   {

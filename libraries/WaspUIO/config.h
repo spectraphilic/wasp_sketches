@@ -3,9 +3,10 @@
 #define WITH_CRYPTO FALSE
 
 // Networking
-#define WITH_XBEE TRUE
+#define WITH_XBEE FALSE
 #define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
+#define WITH_LORA TRUE
 
 // Sensors
 #define WITH_I2C TRUE
@@ -44,3 +45,8 @@
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
 #define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25
 #define VL_SAMPLES 30    // maximum number of samples for VL53L1X  is 99
+
+// Lora configuration
+#define LORA_CHANNEL CH_10_868 // From 10 (865.20 MHz) to 17 (868 MHz)
+#define LORA_MODE 5 // TODO Choose definitive mode (1-10), page 16. Or set specific BW/CR/SF values.
+#define LORA_POWER 'H' // Low = 0 dBm / High = 7 dBm / Max = 14 dBm

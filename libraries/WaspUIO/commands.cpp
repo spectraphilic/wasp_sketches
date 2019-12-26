@@ -36,10 +36,12 @@ const char CMD_GPS       [] PROGMEM = "gps               - Get position from GPS
 const char CMD_HELP      [] PROGMEM = "help              - Prints the list of commands";
 const char CMD_I2C       [] PROGMEM = "i2c [NAME]        - Scan I2C bus or read values from NAME: "
                                       "as7263 as7265 bme bm76 mlx tmp vl";
+const char CMD_LORA      [] PROGMEM = "lora              - Print Lora configuration";
+const char CMD_LORA      [] PROGMEM = "lora address [N]  - Set or get Lora node address (1-255, 1=Gateway)";
 const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
 const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
 const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
-const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g 2=iridium";
+const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g 2=iridium 3=lora";
 const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - Password for frame encryption";
 const char CMD_PING      [] PROGMEM = "ping              - Send a test message";
 const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
@@ -61,46 +63,50 @@ const Command commands[] PROGMEM = {
   {"1wire scan ",   &cmd1WireScan, CMD_1WIRE_SCAN},
 #endif
 #if WITH_4G
-  {"4g apn",        &cmd4G_APN,    CMD_4G_APN},
-  {"4g gps",        &cmd4G_GPS,    CMD_4G_GPS},
-  {"4g pin ",       &cmd4G_Pin,    CMD_4G_PIN},
+  {"4g apn",        &cmd4G_APN,      CMD_4G_APN},
+  {"4g gps",        &cmd4G_GPS,      CMD_4G_GPS},
+  {"4g pin ",       &cmd4G_Pin,      CMD_4G_PIN},
 #endif
-  {"ack",           &cmdAck,       CMD_ACK}, // Internal use only
-  {"bat",           &cmdBattery,   CMD_BATTERY},
-  {"board ",        &cmdBoard,     CMD_BOARD},
-  {"cat ",          &cmdCat,       CMD_CAT},
-  {"catx ",         &cmdCatx,      CMD_CATX},
-  {"exit",          &cmdExit,      CMD_EXIT},
-  {"format",        &cmdFormat,    CMD_FORMAT},
+  {"ack",           &cmdAck,         CMD_ACK}, // Internal use only
+  {"bat",           &cmdBattery,     CMD_BATTERY},
+  {"board ",        &cmdBoard,       CMD_BOARD},
+  {"cat ",          &cmdCat,         CMD_CAT},
+  {"catx ",         &cmdCatx,        CMD_CATX},
+  {"exit",          &cmdExit,        CMD_EXIT},
+  {"format",        &cmdFormat,      CMD_FORMAT},
 #if WITH_GPS
-  {"gps",           &cmdGPS,       CMD_GPS},
+  {"gps",           &cmdGPS,         CMD_GPS},
 #endif
-  {"help",          &cmdHelp,      CMD_HELP},
+  {"help",          &cmdHelp,        CMD_HELP},
 #if WITH_I2C
-  {"i2c",           &cmdI2C,       CMD_I2C},
+  {"i2c",           &cmdI2C,         CMD_I2C},
 #endif
-  {"ls",            &cmdLs,        CMD_LS},
+#if WITH_LORA
+  {"lora",          &cmdLora,        CMD_LORA},
+  {"lora address",  &cmdLoraAddress, CMD_LORA},
+#endif
+  {"ls",            &cmdLs,          CMD_LS},
 #if WITH_MB
-  {"mb",            &cmdMB,        CMD_MB},
+  {"mb",            &cmdMB,          CMD_MB},
 #endif
-  {"name",          &cmdName,      CMD_NAME},
-  {"network ",      &cmdNetwork,   CMD_NETWORK},
+  {"name",          &cmdName,        CMD_NAME},
+  {"network ",      &cmdNetwork,     CMD_NETWORK},
 #if WITH_CRYPTO
-  {"password ",     &cmdPassword,  CMD_PASSWORD},
+  {"password ",     &cmdPassword,    CMD_PASSWORD},
 #endif
-  {"ping",          &cmdPing,      CMD_PING},
-  {"print",         &cmdPrint,     CMD_PRINT},
-  {"reboot",        &cmdReboot,    CMD_REBOOT},
-  {"rm ",           &cmdRm,        CMD_RM},
-  {"run",           &cmdRun,       CMD_RUN},
+  {"ping",          &cmdPing,        CMD_PING},
+  {"print",         &cmdPrint,       CMD_PRINT},
+  {"reboot",        &cmdReboot,      CMD_REBOOT},
+  {"rm ",           &cmdRm,          CMD_RM},
+  {"run",           &cmdRun,         CMD_RUN},
 #if WITH_SDI
-  {"sdi",           &cmdSDI12,     CMD_SDI12},
+  {"sdi",           &cmdSDI12,       CMD_SDI12},
 #endif
-  {"tail",          &cmdTail,      CMD_TAIL},
-  {"time ",         &cmdTime,      CMD_TIME},
-  {"var",           &cmdVar,       CMD_VAR},
+  {"tail",          &cmdTail,        CMD_TAIL},
+  {"time ",         &cmdTime,        CMD_TIME},
+  {"var",           &cmdVar,         CMD_VAR},
 #if WITH_XBEE
-  {"xbee ",         &cmdXBee,      CMD_XBEE},
+  {"xbee ",         &cmdXBee,        CMD_XBEE},
 #endif
 };
 
@@ -378,6 +384,10 @@ COMMAND(cmdPrint)
 #if WITH_IRIDIUM
   if (UIO.networkType == NETWORK_IRIDIUM)
   { cr.println(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
+#endif
+#if WITH_LORA
+  if (UIO.networkType == NETWORK_LORA)
+  { cr.println(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
 #endif
 
   cr.println(F("Frames    : %s"), UIO.pprintFrames(buffer, size));

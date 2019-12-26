@@ -31,6 +31,10 @@
 #include "HardwareSerial.h"
 #endif
 
+#if WITH_LORA
+#include <WaspSX1272.h>
+#endif
+
 
 /******************************************************************************
  * Definitions & Declarations
@@ -50,6 +54,7 @@
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
 #define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
+#define EEPROM_UIO_LORA_ADDRESS (EEPROM_START + 83) // 1 byte
 
 #define GPS_NO 0
 #define GPS_YES 1
@@ -73,10 +78,12 @@ enum battery_t {
   BATTERY_HIGH
 };
 
+// TODO Allow more than 1 network, e.g. Lora and 4G
 enum network_type_t {
   NETWORK_XBEE,
   NETWORK_4G,
   NETWORK_IRIDIUM,
+  NETWORK_LORA,
   NETWORK_LEN
 };
 
@@ -377,6 +384,11 @@ public:
   int iridium_stop();
   int iridium_ping();
   #endif
+  #if WITH_LORA
+  // Network: Lora
+  void loraInit();
+  uint8_t lora_address;
+  #endif
   #if WITH_CRYPTO
   // Crypto
   char password[33]; // To encrypt frames
@@ -416,6 +428,7 @@ public:
   const char* pprintFrames(char* dst, size_t size);
   const char* pprintIridium(char* dst, size_t size);
   const char* pprintLog(char* dst, size_t size);
+  const char* pprintLora(char* dst, size_t size);
   const char* pprintSerial(char* str, size_t size);
   const char* pprintTime(char* dst, size_t size);
   const char* pprintXBee(char* dst, size_t size);
@@ -487,6 +500,8 @@ COMMAND(cmdFormat);
 COMMAND(cmdGPS);
 COMMAND(cmdHelp);
 COMMAND(cmdI2C);
+COMMAND(cmdLora);
+COMMAND(cmdLoraAddress);
 COMMAND(cmdLs);
 COMMAND(cmdMB);
 COMMAND(cmdName);
@@ -587,6 +602,7 @@ CR_TASK(taskNetworkIridium);
 CR_TASK(taskNetworkXBee);
 CR_TASK(taskNetworkXBeeSend);
 CR_TASK(taskNetworkXBeeReceive);
+CR_TASK(taskNetworkLoraSend);
 // GPS
 CR_TASK(taskGPS);
 CR_TASK(taskGPS4G);

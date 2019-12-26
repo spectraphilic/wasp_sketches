@@ -170,3 +170,10 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   return dst;
 }
 #endif
+
+#if WITH_LORA
+const char* WaspUIO::pprintLora(char* dst, size_t size)
+{
+  snprintf_F(dst, size, F("address=%u"), lora_address);
+}
+#endif

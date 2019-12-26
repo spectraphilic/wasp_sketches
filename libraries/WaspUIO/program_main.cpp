@@ -92,37 +92,43 @@ CR_TASK(taskMain)
   // and run the XBee network every hour at :07 (in this example sensor reading
   // must finish in less than 2 minutes, otherwise the network loop will be
   // skept).
-#if WITH_XBEE
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
   {
+#if WITH_XBEE
     if (UIO.networkType == NETWORK_XBEE)
     {
       CR_SPAWN2(taskNetworkXBee, network_id);
       CR_JOIN(network_id);
     }
-  }
 #endif
 
 #if WITH_4G
-  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
-  {
     if (UIO.networkType == NETWORK_4G)
     {
       CR_SPAWN2(taskNetwork4G, network_id);
       CR_JOIN(network_id);
     }
-  }
 #endif
+
 #if WITH_IRIDIUM
-  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
-  {
     if (UIO.networkType == NETWORK_IRIDIUM)
     {
       CR_SPAWN2(taskNetworkIridium, network_id);
       CR_JOIN(network_id);
     }
-  }
 #endif
+
+#if WITH_LORA
+    if (UIO.networkType == NETWORK_LORA)
+    {
+      if (UIO.lora_network != 1) // Do not send with Lora if I'm the gateway
+      {
+        CR_SPAWN2(taskNetworkLoraSend, network_id);
+        CR_JOIN(network_id);
+      }
+    }
+#endif
+  }
 
   // Uncomment this to verify the watchdog works
   //CR_SPAWN(taskSlow);
