@@ -20,40 +20,38 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_1WIRE_READ[] PROGMEM = "1wire read        - Read DS18B20 string";
-const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+   - Scan DS18B20 in the given pins, save to onewire.txt";
-const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]      - Set 4G Access Point Name (APN)";
-const char CMD_4G_GPS    [] PROGMEM = "4g gps            - Get position from 4G's GPS";
-const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE      - Set pin for the 4G module (0=disabled)";
+const char CMD_1WIRE_READ[] PROGMEM = "1wire read         - Read DS18B20 string";
+const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+    - Scan DS18B20 in the given pins, save to onewire.txt";
+const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]       - Set 4G Access Point Name (APN)";
+const char CMD_4G_GPS    [] PROGMEM = "4g gps             - Get position from 4G's GPS";
+const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE       - Set pin for the 4G module (0=disabled)";
 const char CMD_ACK       [] PROGMEM = ""; // Hidden command
-const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]        - Read battery or change type: 1=lithium 2=lead";
-const char CMD_BOARD     [] PROGMEM = "board VALUE       - Choose the sensor board: 0=none 1=lemming";
-const char CMD_CAT       [] PROGMEM = "cat FILENAME      - Print FILENAME contents to USB";
-const char CMD_CATX      [] PROGMEM = "catx FILENAME     - Print FILENAME contents in hexadecimal to USB";
-const char CMD_EXIT      [] PROGMEM = "exit              - Exit the command line interface";
-const char CMD_FORMAT    [] PROGMEM = "format            - Format SD card";
-const char CMD_GPS       [] PROGMEM = "gps               - Get position from GPS";
-const char CMD_HELP      [] PROGMEM = "help              - Prints the list of commands";
-const char CMD_I2C       [] PROGMEM = "i2c [NAME]        - Scan I2C bus or read values from NAME: "
-                                      "as7263 as7265 bme bm76 mlx tmp vl";
-const char CMD_LORA      [] PROGMEM = "lora              - Print Lora configuration";
-const char CMD_LS        [] PROGMEM = "ls                - List files in SD card";
-const char CMD_MB        [] PROGMEM = "mb                - Read the MB7389";
-const char CMD_NAME      [] PROGMEM = "name              - Give a name to the mote (max 16 chars)";
-const char CMD_NETWORK   [] PROGMEM = "network VALUE     - Choose network type: 0=xbee 1=4g 2=iridium 3=lora";
-const char CMD_PASSWORD  [] PROGMEM = "password VALUE    - Password for frame encryption";
-const char CMD_PING      [] PROGMEM = "ping              - Send a test message";
-const char CMD_PRINT     [] PROGMEM = "print             - Print configuration and other information";
-const char CMD_REBOOT    [] PROGMEM = "reboot            - Reboot waspmote";
-const char CMD_RM        [] PROGMEM = "rm FILENAME       - Remove file";
-const char CMD_RUN       [] PROGMEM = "run NAME H:MM     - run (list names), run <name> 0 (disable), "
+const char CMD_BATTERY   [] PROGMEM = "bat [TYPE]         - Read battery or change type: 1=lithium 2=lead";
+const char CMD_BOARD     [] PROGMEM = "board VALUE        - Choose the sensor board: 0=none 1=lemming";
+const char CMD_CAT       [] PROGMEM = "cat FILENAME       - Print FILENAME contents to USB";
+const char CMD_CATX      [] PROGMEM = "catx FILENAME      - Print FILENAME contents in hexadecimal to USB";
+const char CMD_EXIT      [] PROGMEM = "exit               - Exit the command line interface";
+const char CMD_FORMAT    [] PROGMEM = "format             - Format SD card";
+const char CMD_GPS       [] PROGMEM = "gps                - Get position from GPS";
+const char CMD_HELP      [] PROGMEM = "help               - Prints the list of commands";
+const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read values from NAME: ";
+const char CMD_LORA      [] PROGMEM = "lora               - Print Lora configuration";
+const char CMD_LS        [] PROGMEM = "ls                 - List files in SD card";
+const char CMD_MB        [] PROGMEM = "mb                 - Read the MB7389";
+const char CMD_NAME      [] PROGMEM = "name               - Give a name to the mote (max 16 chars)";
+const char CMD_PASSWORD  [] PROGMEM = "password VALUE     - Password for frame encryption";
+const char CMD_PING      [] PROGMEM = "ping               - Send a test message";
+const char CMD_PRINT     [] PROGMEM = "print              - Print configuration and other information";
+const char CMD_REBOOT    [] PROGMEM = "reboot             - Reboot waspmote";
+const char CMD_RM        [] PROGMEM = "rm FILENAME        - Remove file";
+const char CMD_RUN       [] PROGMEM = "run NAME H:MM      - run (list names), run <name> 0 (disable), "
                                       "run <name> 5 (every 5 mins), run <name> 1:07 (every 1h at :07)";
-const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]  - Identify SDI-12 sensors";
-const char CMD_TAIL      [] PROGMEM = "tail N FILENAME   - Print last N lines of FILENAME to USB";
-const char CMD_TIME      [] PROGMEM = "time VALUE        - Set time, value can be 'network', 'gps', "
+const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]   - Identify SDI-12 sensors";
+const char CMD_TAIL      [] PROGMEM = "tail N FILENAME    - Print last N lines of FILENAME to USB";
+const char CMD_TIME      [] PROGMEM = "time VALUE         - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";
-const char CMD_VAR       [] PROGMEM = "var [NAME VALUE]  - type 'var' to list the variable names";
-const char CMD_XBEE      [] PROGMEM = "xbee VALUE        - Choose xbee network: "
+const char CMD_VAR       [] PROGMEM = "var [NAME [VALUE]] - type 'var' to list the variable names";
+const char CMD_XBEE      [] PROGMEM = "xbee VALUE         - Choose xbee network: "
                                       "0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 
 const Command commands[] PROGMEM = {
@@ -88,7 +86,6 @@ const Command commands[] PROGMEM = {
   {"mb",            &cmdMB,          CMD_MB},
 #endif
   {"name",          &cmdName,        CMD_NAME},
-  {"network ",      &cmdNetwork,     CMD_NETWORK},
 #if WITH_CRYPTO
   {"password ",     &cmdPassword,    CMD_PASSWORD},
 #endif
@@ -370,24 +367,22 @@ COMMAND(cmdPrint)
   cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, size), _boot_version, name);
   cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   cr.println(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
-
 #if WITH_XBEE
-  if (UIO.networkType == NETWORK_XBEE)
+  if (UIO.lan_type == LAN_XBEE)
   { cr.println(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
 #endif
+#if WITH_LORA
+  if (UIO.lan_type == LAN_LORA)
+  { cr.println(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
+#endif
 #if WITH_4G
-  if (UIO.networkType == NETWORK_4G)
+  if (UIO.wan_type == WAN_4G)
   { cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
 #endif
 #if WITH_IRIDIUM
-  if (UIO.networkType == NETWORK_IRIDIUM)
+  if (UIO.wan_type == WAN_IRIDIUM)
   { cr.println(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
 #endif
-#if WITH_LORA
-  if (UIO.networkType == NETWORK_LORA)
-  { cr.println(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
-#endif
-
   cr.println(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
   cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
   cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
@@ -531,9 +526,6 @@ COMMAND(cmdVar)
   char name[11];
   int n;
   uint8_t value;
-  // Depends on n
-  uint8_t flag;
-  int eeprom_address;
 
   // Read input
   n = sscanf(str, "%10s %hhu", &name, &value);
@@ -560,68 +552,77 @@ COMMAND(cmdVar)
   {
     case -1:
       return cmd_bad_input;
-    case 0:
-      flag = FLAG_LOG_SD;
-      goto flag;
-    case 1:
-      flag = FLAG_LOG_USB;
-      goto flag;
-    case 2:
+    case VAR_LOG_LEVEL_IDX:
       if (n == 1) {
         value = (uint8_t)cr.loglevel;
       } else {
         if (value >= LOG_LEN) { return cmd_bad_input; }
         cr.loglevel = (loglevel_t) value;
-        eeprom_address = EEPROM_UIO_LOG_LEVEL;
       }
-      goto uint8;
-    case 3:
+      break;
+    case VAR_LOG_SD_IDX:
       if (n == 1) {
-        value = UIO.xbeewait;
+        value = UIO.log_sd;
       } else {
-        UIO.xbeewait = value;
-	eeprom_address = EEPROM_UIO_XBEE_WAIT;
+        if (value > 1) { return cmd_bad_input; }
+        UIO.log_sd = value;
       }
-      goto uint8;
-    case 4:
+      break;
+    case VAR_LOG_USB_IDX:
+      if (n == 1) {
+        value = UIO.log_usb;
+      } else {
+        if (value > 1) { return cmd_bad_input; }
+        UIO.log_usb = value;
+      }
+      break;
+    case VAR_LAN_TYPE_IDX:
+      if (n == 1) {
+        value = (uint8_t)UIO.lan_type;
+      } else {
+        if (value >= LAN_LEN) { return cmd_bad_input; }
+        UIO.lan_type = (lan_type_t)value;
+      }
+      break;
+    case VAR_WAN_TYPE_IDX:
+      if (n == 1) {
+        value = (uint8_t)UIO.wan_type;
+      } else {
+        if (value >= WAN_LEN) { return cmd_bad_input; }
+        UIO.wan_type = (wan_type_t)value;
+      }
+      break;
+    case VAR_LORA_ADDR_IDX:
       if (n == 1) {
         value = UIO.lora_addr;
       } else {
         if (value == 0) { return cmd_bad_input; }
         UIO.lora_addr = value;
-	eeprom_address = EEPROM_UIO_LORA_ADDR;
       }
-      goto uint8;
-    case 5:
+      break;
+    case VAR_LORA_MODE_IDX:
       if (n == 1) {
         value = UIO.lora_mode;
       } else {
-        if (value == 0) { return cmd_bad_input; }
+        if (value == 0 || value > 10) { return cmd_bad_input; }
         UIO.lora_mode = value;
-	eeprom_address = EEPROM_UIO_LORA_MODE;
       }
-      goto uint8;
+      break;
+    case VAR_XBEE_WAIT_IDX:
+      if (n == 1) {
+        value = UIO.xbee_wait;
+      } else {
+        UIO.xbee_wait = value;
+      }
+      break;
     default:
       return cmd_bad_input;
   }
 
-flag:
-  // Update
-  if (n == 2) {
-    if (value) { UIO.flags |= flag; }
-    else       { UIO.flags &= ~flag; }
-    if (! UIO.updateEEPROM(EEPROM_UIO_FLAGS, UIO.flags)) { return cmd_error; }
-  }
-
-  // Print
-  cr.println(F("%d"), (UIO.flags & flag)? 1 : 0);
-  return cmd_quiet;
-
-uint8:
   // Update
   if (n == 2)
   {
-    if (! UIO.updateEEPROM(eeprom_address, value))
+    if (! UIO.updateEEPROM(EEPROM_UIO_VARS + idx, value))
     {
       return cmd_error;
     }

@@ -95,15 +95,23 @@ CR_TASK(taskMain)
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
   {
 #if WITH_XBEE
-    if (UIO.networkType == NETWORK_XBEE)
+    if (UIO.lan_type == LAN_XBEE)
     {
       CR_SPAWN2(taskNetworkXBee, network_id);
       CR_JOIN(network_id);
     }
 #endif
 
+#if WITH_LORA
+    if (UIO.lan_type == LAN_LORA)
+    {
+      CR_SPAWN2(taskNetworkLora, network_id);
+      CR_JOIN(network_id);
+    }
+#endif
+
 #if WITH_4G
-    if (UIO.networkType == NETWORK_4G)
+    if (UIO.wan_type == WAN_4G)
     {
       CR_SPAWN2(taskNetwork4G, network_id);
       CR_JOIN(network_id);
@@ -111,17 +119,9 @@ CR_TASK(taskMain)
 #endif
 
 #if WITH_IRIDIUM
-    if (UIO.networkType == NETWORK_IRIDIUM)
+    if (UIO.wan_type == WAN_IRIDIUM)
     {
       CR_SPAWN2(taskNetworkIridium, network_id);
-      CR_JOIN(network_id);
-    }
-#endif
-
-#if WITH_LORA
-    if (UIO.networkType == NETWORK_LORA)
-    {
-      CR_SPAWN2(taskNetworkLora, network_id);
       CR_JOIN(network_id);
     }
 #endif

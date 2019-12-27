@@ -165,7 +165,7 @@ CR_TASK(taskNetworkXBee)
   }
 
   // Keep the network open, default is 45s
-  wait = UIO.xbeewait ? (UIO.xbeewait * 1000UL) : 45000UL;
+  wait = UIO.xbee_wait ? (UIO.xbee_wait * 1000UL) : 45000UL;
   CR_DELAY(wait);
 
   if (UIO.hasSD)
@@ -306,7 +306,7 @@ CR_TASK(taskNetworkLora)
 
   // Keep the network open, default is 45s
   // TODO Will be needed for the Gateway (and for multihop nodes)
-  //wait = UIO.xbeewait ? (UIO.xbeewait * 1000UL) : 45000UL;
+  //wait = UIO.xbee_wait ? (UIO.xbee_wait * 1000UL) : 45000UL;
   //CR_DELAY(wait);
 
   if (UIO.hasSD && UIO.lora_addr != 1)

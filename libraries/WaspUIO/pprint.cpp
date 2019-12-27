@@ -111,8 +111,8 @@ const char* WaspUIO::pprintIridium(char* dst, size_t size)
 const char* WaspUIO::pprintLog(char* dst, size_t size)
 {
   dst[0] = '\0';
-  if (flags & FLAG_LOG_USB) strnjoin_F(dst, size, F(", "), F("USB"));
-  if (flags & FLAG_LOG_SD)  strnjoin_F(dst, size, F(", "), F("SD"));
+  if (log_usb) strnjoin_F(dst, size, F(", "), F("USB"));
+  if (log_sd)  strnjoin_F(dst, size, F(", "), F("SD"));
   return dst;
 }
 
@@ -165,7 +165,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
-  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, xbeewait);
+  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, xbee_wait);
 
   return dst;
 }

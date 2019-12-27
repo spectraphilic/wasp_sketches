@@ -45,7 +45,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
   buffer[len + 1] = '\0';
 
   // (2) Print to USB
-  if (UIO.flags & FLAG_LOG_USB)
+  if (UIO.log_usb)
   {
     USB.ON();
     USB.flush(); // XXX This fixes a weird bug with XBee
@@ -54,7 +54,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
   }
 
   // (3) Print to log file
-  if (UIO.hasSD && (UIO.flags & FLAG_LOG_SD))
+  if (UIO.hasSD && UIO.log_sd)
   {
     if (sd_open(UIO.logFilename, UIO.logFile, O_WRITE | O_CREAT | O_APPEND))
     {

@@ -383,40 +383,30 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
-  // Default to 255, will be used when there's not any network module
-  payloadSize = 255;
+  // The payload & frame sizes are set for outgoing messages, so WAN takes
+  // priority over LAN
 
-#if WITH_4G
-  // XXX Should use getMaxSizeFor4G (since v041) but it would take more memory
-  if (networkType == NETWORK_4G) { payloadSize = 255; }
-#endif
-
-#if WITH_XBEE
-  if (networkType == NETWORK_XBEE)
-  {
-    // We don't call frame.getMaxSizeForXBee to save memory, and because we
-    // know already the value.
-    // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, encryption);
+  // Set payloadSize
+  // Avoid calling getMaxSizeForXXX functions to avoid using extra memory
+  if (wan_type == WAN_4G) {
+    payloadSize = 255;
+  } else if (wan_type == WAN_IRIDIUM) {
+    payloadSize = 340;
+  } else if (lan_type = LAN_XBEE) {
     payloadSize = 73;
-#if WITH_CRYPTO
-    if (strlen(password) > 0)
-    {
-      payloadSize = 48;
-    }
-#endif
+    #if WITH_CRYPTO
+    if (strlen(password) > 0) { payloadSize = 48; }
+    #endif
+  } else if (lan_type = LAN_LORA) {
+    // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
+    // (page 32) it looks to me it's 250, so better to be extra sure.
+    payloadSize = 250;
+  } else {
+    // Default to 255, will be used when there's not any network module
+    payloadSize = 255;
   }
-#endif
 
-#if WITH_IRIDIUM
-  if (networkType == NETWORK_IRIDIUM) { payloadSize = 340; }
-#endif
-
-#if WITH_LORA
-  // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
-  // (page 32) it looks to me it's 250, so better to be extra sure.
-  if (networkType == NETWORK_LORA) { payloadSize = 250; }
-#endif
-
+  // Set frameSize
   if (payloadSize > 255)
   {
     frameSize = 255;
@@ -668,7 +658,7 @@ uint8_t WaspUIO::frame2Sd()
   SdFile dataFile;
 
   // Print frame to USB for debugging
-  if (flags & FLAG_LOG_USB)
+  if (log_usb)
   {
     USB.ON();
     USB.flush();
@@ -683,7 +673,7 @@ uint8_t WaspUIO::frame2Sd()
   if (strlen(password) > 0)
   {
     frame.encryptFrame(AES_128, password);
-    if (flags & FLAG_LOG_USB)
+    if (log_usb)
     {
       frame.showFrame();
     }

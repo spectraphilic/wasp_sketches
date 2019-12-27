@@ -2,19 +2,21 @@
 - No security, no OTA
 - Work always with antennas attached
 - Distance 3-4 meters between modules
+- Network defined by channel and mode
 
 Configuration (Lora):
-- Channel, e.g. CH_10_868 865.20 Mhz
-- Power level: L H M
+- Power level: L H M (hardcoded in config.h)
+- Channel, e.g. CH_10_868 865.20 Mhz (hardcoded in config.h)
+- Mode is configurable (var lora_mode), local tests with mode 10, find out
+  which one is best in the field (page 16)
 
 TODO:
-- Add support for Lora (SX1272)
 - Rename WITH_ to USE_
 - Support more than 1 network, e.g. Lora and 4G
-- Choose transmission mode (1-10), page 16
-  Do sender and receiver need to have the same configuration?
-- Add support for rssimap.pde sketch
 - Add ping support
-- Add RSSI frame? Log RSSI info, on reception only?
 - Set time from Lora network?
 - Multi-hop (star) topology
+- RSSI (Received Signal Strength) and SNR (Signal-to-Noise  Ratio) page 24
+  - Send in frame?
+  - Log info
+  - Support in rssimap.pde sketch

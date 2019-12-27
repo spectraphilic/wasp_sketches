@@ -48,13 +48,14 @@ void WaspUIO::bootConfig()
   Utils.getID(name);
 
   // Variables
-  flags = Utils.readEEPROM(EEPROM_UIO_FLAGS);
-  cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_LOG_LEVEL);
-  xbeewait = Utils.readEEPROM(EEPROM_UIO_XBEE_WAIT);
-
-  // Network type
-  networkType = (network_type_t) Utils.readEEPROM(EEPROM_UIO_NETWORK_TYPE);
-  if (networkType >= NETWORK_LEN) { networkType = NETWORK_XBEE; }
+  cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_LEVEL_IDX);
+  log_sd = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_SD_IDX);
+  log_usb = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_USB_IDX);
+  lan_type = (lan_type_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LAN_TYPE_IDX);
+  wan_type = (wan_type_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_WAN_TYPE_IDX);
+  lora_addr = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_ADDR_IDX);
+  lora_mode = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_MODE_IDX);
+  xbee_wait = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_WAIT_IDX);
 
 #if WITH_CRYPTO
   // Frame encryption
@@ -79,12 +80,6 @@ void WaspUIO::bootConfig()
   uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);
   if (panid_low >= xbee_len) { panid_low = 2; } // Default
   memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
-#endif
-
-#if WITH_LORA
-  // Lora network
-  lora_addr = Utils.readEEPROM(EEPROM_UIO_LORA_ADDR);
-  lora_mode = Utils.readEEPROM(EEPROM_UIO_LORA_MODE);
 #endif
 
   // Read run table

@@ -82,29 +82,6 @@ COMMAND(cmdLora)
 #endif
 
 
-
-/**
- * Choose network type
- */
-COMMAND(cmdNetwork)
-{
-  uint8_t value;
-
-  // Check input
-  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
-  if (value >= NETWORK_LEN) { return cmd_bad_input; }
-
-  // Do
-  if (! UIO.updateEEPROM(EEPROM_UIO_NETWORK_TYPE, value)) { return cmd_error; }
-  UIO.networkType = (network_type_t) value;
-
-  // Action
-  UIO.setFrameSize();
-  UIO.networkInit();
-
-  return cmd_ok;
-}
-
 /**
  * Send a test message
  */

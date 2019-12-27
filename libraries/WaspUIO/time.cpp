@@ -146,31 +146,19 @@ uint8_t WaspUIO::setTimeFromNetwork()
 {
   uint8_t err = 1;
 
-  if (networkType == NETWORK_XBEE)
-  {
-    // Right now it's the Pi who pushes the time to the Mote
-    // This may change in the future to make the Mote pull the time from the Pi
-    // so it would work like with 4G
-    error(F("Setting time from XBee network NOT implemented"));
-    return 1;
-  }
-
-  else if (networkType == NETWORK_4G)
-  {
 #if WITH_4G
+  if (wan_type == WAN_4G)
+  {
     err = _4GStart();
     if (err == 0)
     {
       err = setTimeFrom4G();
       _4GStop();
     }
-#else
-    error(F("4G not enabled, define WITH_4G TRUE"));
-#endif
+    return err;
   }
+#endif
 
-  if (err) { error(F("Failed to set time from network")); }
-  else     { debug(F("Success setting time from network")); }
-
-  return err;
+  error(F("Setting time from network only supported in 4G networks"));
+  return 1;
 }

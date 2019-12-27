@@ -41,21 +41,26 @@
  ******************************************************************************/
 
 // EEPROM addresses used by the library
-#define EEPROM_UIO_FLAGS (EEPROM_START + 0)
-#define EEPROM_UIO_XBEE (EEPROM_START + 1)   // 2 bytes to store the xbee id
+// 1 byte available
+#define EEPROM_UIO_XBEE (EEPROM_START + 1) // 2 bytes to store the xbee id
 #define EEPROM_UIO_BOARD_TYPE (EEPROM_START + 3)
 #define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
-#define EEPROM_UIO_NETWORK_TYPE (EEPROM_START + 5)
-#define EEPROM_UIO_XBEE_WAIT (EEPROM_START + 6)
-#define EEPROM_UIO_LOG_LEVEL (EEPROM_START + 7) // 1 byte for the log level
-// 1 byte available
+// 4 bytes available
 #define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
                                           // (every action takes 2 bytes)
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
 #define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
-#define EEPROM_UIO_LORA_ADDR (EEPROM_START + 83) // 1 byte
-#define EEPROM_UIO_LORA_MODE (EEPROM_START + 84) // 1 byte
+// 17 bytes available
+#define EEPROM_UIO_VARS (EEPROM_START + 100) // 100 bytes reserved
+#define VAR_LOG_LEVEL_IDX 0
+#define VAR_LOG_SD_IDX 1
+#define VAR_LOG_USB_IDX 2
+#define VAR_LAN_TYPE_IDX 3
+#define VAR_WAN_TYPE_IDX 4
+#define VAR_LORA_ADDR_IDX 5
+#define VAR_LORA_MODE_IDX 6
+#define VAR_XBEE_WAIT_IDX 7
 
 #define GPS_NO 0
 #define GPS_YES 1
@@ -79,13 +84,18 @@ enum battery_t {
   BATTERY_HIGH
 };
 
-// TODO Allow more than 1 network, e.g. Lora and 4G
-enum network_type_t {
-  NETWORK_XBEE,
-  NETWORK_4G,
-  NETWORK_IRIDIUM,
-  NETWORK_LORA,
-  NETWORK_LEN
+enum lan_type_t {
+  LAN_DISABLED,
+  LAN_XBEE,
+  LAN_LORA,
+  LAN_LEN
+};
+
+enum wan_type_t {
+  WAN_DISABLED,
+  WAN_4G,
+  WAN_IRIDIUM,
+  WAN_LEN
 };
 
 enum run_t {
@@ -149,39 +159,43 @@ const char* const run_names[] PROGMEM = {
   RUN_ATMOS_NAME,
 };
 
-// Flags available: 2 8 16 32 64 128
-#define FLAG_LOG_USB 1
-#define FLAG_LOG_SD  4
-
+const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
 const char VAR_LOG_SD    [] PROGMEM = "log.sd";
 const char VAR_LOG_USB   [] PROGMEM = "log.usb";
-const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
-const char VAR_XBEE_WAIT [] PROGMEM = "xbee.wait";
+const char VAR_LAN_TYPE  [] PROGMEM = "lan.type";
+const char VAR_WAN_TYPE  [] PROGMEM = "wan.type";
 const char VAR_LORA_ADDR [] PROGMEM = "lora.addr";
 const char VAR_LORA_MODE [] PROGMEM = "lora.mode";
+const char VAR_XBEE_WAIT [] PROGMEM = "xbee.wait";
 
-const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
 const char VAR_LOG_LEVEL_HELP [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char VAR_XBEE_WAIT_HELP [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
+const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
+const char VAR_LAN_TYPE_HELP  [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
+const char VAR_WAN_TYPE_HELP  [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
 const char VAR_LORA_ADDR_HELP [] PROGMEM = ": 1-255 (1=Gateway)";
 const char VAR_LORA_MODE_HELP [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
+const char VAR_XBEE_WAIT_HELP [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
 
 const char* const var_names[] PROGMEM = {
+  VAR_LOG_LEVEL,
   VAR_LOG_SD,
   VAR_LOG_USB,
-  VAR_LOG_LEVEL,
-  VAR_XBEE_WAIT,
+  VAR_LAN_TYPE,
+  VAR_WAN_TYPE,
   VAR_LORA_ADDR,
   VAR_LORA_MODE,
+  VAR_XBEE_WAIT,
 };
 
 const char* const var_help[] PROGMEM = {
-  VAR_LOG_FLAG_HELP,
-  VAR_LOG_FLAG_HELP,
   VAR_LOG_LEVEL_HELP,
-  VAR_XBEE_WAIT_HELP,
+  VAR_LOG_FLAG_HELP,
+  VAR_LOG_FLAG_HELP,
+  VAR_LAN_TYPE_HELP,
+  VAR_WAN_TYPE_HELP,
   VAR_LORA_ADDR_HELP,
   VAR_LORA_MODE_HELP,
+  VAR_XBEE_WAIT_HELP,
 };
 
 
@@ -292,9 +306,16 @@ public:
 
   // General configuration
   char name[17];
-  uint8_t flags;
-  uint8_t xbeewait;
   board_type_t boardType = BOARD_LEN; // Defaults to undefined
+
+  // Variables configured with the 'var' command
+  uint8_t log_sd;
+  uint8_t log_usb;
+  lan_type_t lan_type;
+  wan_type_t wan_type;
+  uint8_t lora_addr;
+  uint8_t lora_mode;
+  uint8_t xbee_wait;
 
   // Power related
   battery_type_t batteryType = BATTERY_LEN; // Defaults to undefined
@@ -366,7 +387,6 @@ public:
   static void dateTime(uint16_t* date, uint16_t* time);
 
   // Network
-  network_type_t networkType;
   void networkInit();
   #if WITH_XBEE
   // Network: Xbee
@@ -398,8 +418,6 @@ public:
   int loraStart();
   void loraStop();
   int loraInit();
-  uint8_t lora_addr;
-  uint8_t lora_mode;
   #endif
   #if WITH_CRYPTO
   // Crypto
@@ -516,7 +534,6 @@ COMMAND(cmdLora);
 COMMAND(cmdLs);
 COMMAND(cmdMB);
 COMMAND(cmdName);
-COMMAND(cmdNetwork);
 COMMAND(cmd1WireRead);
 COMMAND(cmd1WireScan);
 COMMAND(cmdPassword);

@@ -36,20 +36,20 @@ void setup()
   info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
   info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
   #if WITH_XBEE
-  if (UIO.networkType == NETWORK_XBEE)
+  if (UIO.lan_type == LAN_XBEE)
   { info(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
   #endif
+  #if WITH_LORA
+  if (UIO.lan_type == LAN_LORA)
+  { info(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
+  #endif
   #if WITH_4G
-  if (UIO.networkType == NETWORK_4G)
+  if (UIO.wan_type == WAN_4G)
   { info(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
   #endif
   #if WITH_IRIDIUM
-  if (UIO.networkType == NETWORK_IRIDIUM)
+  if (UIO.wan_type == WAN_IRIDIUM)
   { info(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
-  #endif
-  #if WITH_LORA
-  if (UIO.networkType == NETWORK_LORA)
-  { info(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
   #endif
   info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
   info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
