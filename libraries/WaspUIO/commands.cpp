@@ -585,11 +585,20 @@ COMMAND(cmdVar)
       goto uint8;
     case 4:
       if (n == 1) {
-        value = UIO.lora_address;
+        value = UIO.lora_addr;
       } else {
         if (value == 0) { return cmd_bad_input; }
-        UIO.lora_address = value;
-	eeprom_address = EEPROM_UIO_LORA_ADDRESS;
+        UIO.lora_addr = value;
+	eeprom_address = EEPROM_UIO_LORA_ADDR;
+      }
+      goto uint8;
+    case 5:
+      if (n == 1) {
+        value = UIO.lora_mode;
+      } else {
+        if (value == 0) { return cmd_bad_input; }
+        UIO.lora_mode = value;
+	eeprom_address = EEPROM_UIO_LORA_MODE;
       }
       goto uint8;
     default:

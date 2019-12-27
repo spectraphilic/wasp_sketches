@@ -2,19 +2,24 @@
 
 
 #if WITH_LORA
-void WaspUIO::loraInit()
+int WaspUIO::loraStart()
 {
   int err;
 
-  sx1272.ON();
-
-  // 1. Configure the module
-  // Note: configuration is not save in the module, so it must be configured every
-  // time the module is switched ON
-  err = sx1272.setMode(LORA_MODE);
+  err = sx1272.ON();
   if (err)
   {
-    cr.println(F("sx1272.setMode(..) error=%d"), err);
+    cr.println(F("sx1272.ON() error=%d"), err);
+    return err;
+  }
+
+  // Configuration is not saved in the module, so the module must be configured
+  // every time it's switched ON
+
+  err = sx1272.setMode(lora_mode);
+  if (err)
+  {
+    cr.println(F("sx1272.setMode(%u) error=%d"), lora_mode, err);
     goto exit;
   }
 
@@ -25,21 +30,40 @@ void WaspUIO::loraInit()
     goto exit;
   }
 
-  err = sx1272.setNodeAddress(lora_address); // 1 (Gateway) or 2-255
+  err = sx1272.setNodeAddress(lora_addr); // 1 (Gateway) or 2-255
   if (err)
   {
-    cr.println(F("sx1272.setNodeAddress(%u) error=%d"), lora_address, err);
+    cr.println(F("sx1272.setNodeAddress(%u) error=%d"), lora_addr, err);
     goto exit;
   }
 
   err = sx1272.setPower(LORA_POWER);
   if (err)
   {
-    cr.println(F("sx1272.setPower(%u) error=%d"), lora_address, err);
+    cr.println(F("sx1272.setPower(%u) error=%d"), lora_addr, err);
     goto exit;
   }
 
-  // 2. Read some parameters
+exit:
+  if (err) { loraStop(); }
+  return err;
+}
+
+
+void WaspUIO::loraStop()
+{
+  // This is safe. The SD card uses SPI as well, but SPI.close() will only
+  // close SPI if all devices (SD and Socket0) are closed.
+  sx1272.OFF();
+}
+
+
+int WaspUIO::loraInit()
+{
+  int err = loraStart();
+  if (err) { return err; }
+
+  // Read some parameters
   // TODO Verify these are not loaded automatically
   err = sx1272.getMaxCurrent();
   if (err)
@@ -63,8 +87,8 @@ void WaspUIO::loraInit()
   }
 
 exit:
-  // TODO This closes SPI, verify it doesn't produce errors with other SPI
-  // devices
-  sx1272.OFF();
+  loraStop();
+  return err;
 }
+
 #endif

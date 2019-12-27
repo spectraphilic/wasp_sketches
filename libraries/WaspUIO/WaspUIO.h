@@ -54,7 +54,8 @@
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
 #define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
-#define EEPROM_UIO_LORA_ADDRESS (EEPROM_START + 83) // 1 byte
+#define EEPROM_UIO_LORA_ADDR (EEPROM_START + 83) // 1 byte
+#define EEPROM_UIO_LORA_MODE (EEPROM_START + 84) // 1 byte
 
 #define GPS_NO 0
 #define GPS_YES 1
@@ -157,11 +158,13 @@ const char VAR_LOG_USB   [] PROGMEM = "log.usb";
 const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
 const char VAR_XBEE_WAIT [] PROGMEM = "xbee.wait";
 const char VAR_LORA_ADDR [] PROGMEM = "lora.addr";
+const char VAR_LORA_MODE [] PROGMEM = "lora.mode";
 
 const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
 const char VAR_LOG_LEVEL_HELP [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char VAR_XBEE_WAIT_HELP [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
 const char VAR_LORA_ADDR_HELP [] PROGMEM = ": 1-255 (1=Gateway)";
+const char VAR_LORA_MODE_HELP [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
 
 const char* const var_names[] PROGMEM = {
   VAR_LOG_SD,
@@ -169,6 +172,7 @@ const char* const var_names[] PROGMEM = {
   VAR_LOG_LEVEL,
   VAR_XBEE_WAIT,
   VAR_LORA_ADDR,
+  VAR_LORA_MODE,
 };
 
 const char* const var_help[] PROGMEM = {
@@ -177,6 +181,7 @@ const char* const var_help[] PROGMEM = {
   VAR_LOG_LEVEL_HELP,
   VAR_XBEE_WAIT_HELP,
   VAR_LORA_ADDR_HELP,
+  VAR_LORA_MODE_HELP,
 };
 
 
@@ -390,8 +395,11 @@ public:
   #endif
   #if WITH_LORA
   // Network: Lora
-  void loraInit();
-  uint8_t lora_address;
+  int loraStart();
+  void loraStop();
+  int loraInit();
+  uint8_t lora_addr;
+  uint8_t lora_mode;
   #endif
   #if WITH_CRYPTO
   // Crypto
@@ -605,7 +613,9 @@ CR_TASK(taskNetworkIridium);
 CR_TASK(taskNetworkXBee);
 CR_TASK(taskNetworkXBeeSend);
 CR_TASK(taskNetworkXBeeReceive);
+CR_TASK(taskNetworkLora);
 CR_TASK(taskNetworkLoraSend);
+CR_TASK(taskNetworkLoraReceive);
 // GPS
 CR_TASK(taskGPS);
 CR_TASK(taskGPS4G);

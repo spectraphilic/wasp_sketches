@@ -250,8 +250,7 @@ CR_TASK(taskNetworkXBeeReceive)
     if (xbeeDM.available())
     {
       // Data is expected to be available before calling this method, that's
-      // why we only timout for 50ms, much less should be enough (to be
-      // tested).
+      // why we only timeout for 100ms, less should be enough
       if (xbeeDM.receivePacketTimeout(100))
       {
         warn(F("receivePacket: timeout (we will retry)"));
@@ -263,6 +262,169 @@ CR_TASK(taskNetworkXBeeReceive)
         if (status == cmd_bad_input)
         {
           warn(F("unexpected frame received from %s"), sourceMAC);
+        }
+      }
+    }
+
+    // Give control back
+    CR_DELAY(0);
+  }
+
+  CR_END;
+}
+#endif
+
+#if WITH_LORA
+CR_TASK(taskNetworkLora)
+{
+  static tid_t tid;
+  uint32_t wait;
+
+  CR_BEGIN;
+
+  if (UIO.loraStart())
+  {
+    error(F("taskNetworkLora loraStart() failed"));
+    CR_ERROR;
+  }
+  info(F("Network started"));
+
+  // Spawn first the receive task
+  CR_SPAWN(taskNetworkLoraReceive);
+
+  // Schedule sending frames
+  // Do not send with Lora if I'm the gateway
+  if (UIO.hasSD && UIO.lora_addr != 1)
+  {
+    if (sx1272.setHeaderON() or sx1272.setCRC_ON())
+    {
+      error(F("taskNetworkLora sx1272 setHeaderON or setCRC_ON failed"));
+      CR_ERROR;
+    }
+    CR_SPAWN2(taskNetworkLoraSend, tid);
+  }
+
+  // Keep the network open, default is 45s
+  // TODO Will be needed for the Gateway (and for multihop nodes)
+  //wait = UIO.xbeewait ? (UIO.xbeewait * 1000UL) : 45000UL;
+  //CR_DELAY(wait);
+
+  if (UIO.hasSD && UIO.lora_addr != 1)
+  {
+    CR_JOIN(tid);
+  }
+
+  // RSSI TODO
+//if (xbeeDM.getRSSI() == 0)
+//{
+//  int rssi = xbeeDM.valueRSSI[0];
+//  rssi *= -1;
+//  ADD_SENSOR(SENSOR_RSSI, rssi);
+//}
+
+  UIO.loraStop();
+  info(F("Network stopped"));
+
+  CR_END;
+}
+
+CR_TASK(taskNetworkLoraSend)
+{
+  uint32_t t0;
+  static unsigned long sent;
+  uint8_t n;
+
+  CR_BEGIN;
+
+  // TODO See whether sx1272._sendTime changes much in every call, if it
+  // doesn't set it once here (probably use it as well for receving data)
+
+  // TODO Randomize sending time? Because only one packet can be in the network
+  // at the same time. Also consider higher modes to reduce the time in the air,
+  // so to improve the network availability. See pages 41-42
+
+  // Send frames
+  while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
+  {
+    if (UIO.ack_wait == 0)
+    {
+      t0 = millis();
+
+      // Read
+      int size = UIO.readFrame(n);
+      if (size <= 0) { break; }
+
+      // Send the frame. If not given explicitely (last parameter) the timeout
+      // will be automatically calculated; sending is aborted if the timeout is
+      // reached.
+      if (sx1272.sendPacketTimeout(1, (uint8_t*)SD.buffer, size))
+      {
+        debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
+        warn(F("xbeeDM.send(..) failure"));
+        break;
+      }
+      debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
+      sent = millis();
+
+      // Next
+      debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+      UIO.ack_wait = n;
+    }
+    else
+    {
+      // Do not wait more than 5s
+      if (cr.timeout(sent, 5 * 1000))
+      {
+         break;
+      }
+    }
+
+    CR_DELAY(50); // Give control back
+  }
+
+  CR_END;
+}
+
+CR_TASK(taskNetworkLoraReceive)
+{
+  cmd_status_t status;
+
+  CR_BEGIN;
+
+  while (SPI.isSocket0)
+  {
+    if (sx1272.availableData(10)) // If timeout not given max will be used!
+    {
+      // Data is expected to be available before calling this method, that's
+      // why we only timeout for 100ms, less should be enough
+      // TODO Find out how much timeout is auto-caculated
+      // TODO For a multi-hop setup use receiveAll (promiscous mode, page 36)
+      if (sx1272.receivePacketTimeout())
+      {
+        debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
+        warn(F("receivePacket: timeout (we will retry)"));
+      }
+      else
+      {
+        debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
+	sx1272.showReceivedPacket();
+/*
+	info(F("Packet received from Lora network"));
+	info(F("dst=%u src=%u packnum=%u length=%u retry=%u"),
+	  sx1272.packet_received.dst,
+	  sx1272.packet_received.src,
+	  sx1272.packet_received.packnum,
+	  sx1272.packet_received.length,
+	  sx1272.packet_received.retry,
+	);
+	UIO.showFrame(sx1272.packet_received.data);
+*/
+
+        status = exeCommand((const char*)sx1272.packet_received.data);
+        if (status == cmd_bad_input)
+        {
+          // TODO If it's a frame: save the frame into the SD and send ACK command
+          warn(F("unexpected frame received from %u"), sx1272.packet_received.src);
         }
       }
     }

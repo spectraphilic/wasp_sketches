@@ -121,11 +121,8 @@ CR_TASK(taskMain)
 #if WITH_LORA
     if (UIO.networkType == NETWORK_LORA)
     {
-      if (UIO.lora_address != 1) // Do not send with Lora if I'm the gateway
-      {
-        CR_SPAWN2(taskNetworkLoraSend, network_id);
-        CR_JOIN(network_id);
-      }
+      CR_SPAWN2(taskNetworkLora, network_id);
+      CR_JOIN(network_id);
     }
 #endif
   }

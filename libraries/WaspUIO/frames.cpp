@@ -411,6 +411,12 @@ void WaspUIO::setFrameSize()
   if (networkType == NETWORK_IRIDIUM) { payloadSize = 340; }
 #endif
 
+#if WITH_LORA
+  // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
+  // (page 32) it looks to me it's 250, so better to be extra sure.
+  if (networkType == NETWORK_LORA) { payloadSize = 250; }
+#endif
+
   if (payloadSize > 255)
   {
     frameSize = 255;

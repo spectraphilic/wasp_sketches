@@ -48,5 +48,4 @@
 
 // Lora configuration
 #define LORA_CHANNEL CH_10_868 // From 10 (865.20 MHz) to 17 (868 MHz)
-#define LORA_MODE 5 // TODO Choose definitive mode (1-10), page 16. Or set specific BW/CR/SF values.
 #define LORA_POWER 'H' // Low = 0 dBm / High = 7 dBm / Max = 14 dBm

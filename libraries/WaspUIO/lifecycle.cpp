@@ -83,7 +83,8 @@ void WaspUIO::bootConfig()
 
 #if WITH_LORA
   // Lora network
-  lora_address = Utils.readEEPROM(EEPROM_UIO_LORA_ADDRESS);
+  lora_addr = Utils.readEEPROM(EEPROM_UIO_LORA_ADDR);
+  lora_mode = Utils.readEEPROM(EEPROM_UIO_LORA_MODE);
 #endif
 
   // Read run table
