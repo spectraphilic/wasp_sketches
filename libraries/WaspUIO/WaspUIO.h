@@ -394,7 +394,13 @@ public:
   XBee xbee;
   void xbeeInit();
   int xbee_ping(int &rssi);
-  //const char* BROADCAST_ADDRESS = "000000000000FFFF";
+  #endif
+  #if WITH_LORA
+  // Network: Lora
+  int loraStart();
+  void loraStop();
+  int loraInit();
+  int loraPing();
   #endif
   #if WITH_4G
   // Network: 4G
@@ -412,12 +418,6 @@ public:
   int iridium_start();
   int iridium_stop();
   int iridium_ping();
-  #endif
-  #if WITH_LORA
-  // Network: Lora
-  int loraStart();
-  void loraStop();
-  int loraInit();
   #endif
   #if WITH_CRYPTO
   // Crypto

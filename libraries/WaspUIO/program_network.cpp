@@ -296,11 +296,6 @@ CR_TASK(taskNetworkLora)
   // Do not send with Lora if I'm the gateway
   if (UIO.hasSD && UIO.lora_addr != 1)
   {
-    if (sx1272.setHeaderON() or sx1272.setCRC_ON())
-    {
-      error(F("taskNetworkLora sx1272 setHeaderON or setCRC_ON failed"));
-      CR_ERROR;
-    }
     CR_SPAWN2(taskNetworkLoraSend, tid);
   }
 

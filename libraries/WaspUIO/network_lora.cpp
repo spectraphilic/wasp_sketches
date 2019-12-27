@@ -44,6 +44,21 @@ int WaspUIO::loraStart()
     goto exit;
   }
 
+  // Used for sending
+  err = sx1272.setHeaderON();
+  if (err)
+  {
+    cr.println(F("sx1272.setHeaderON() error=%d"), err);
+    goto exit;
+  }
+
+  err= sx1272.setCRC_ON();
+  if (err)
+  {
+    cr.println(F("sx1272.setCRC_ON() error=%d"), err);
+    goto exit;
+  }
+
 exit:
   if (err) { loraStop(); }
   return err;
@@ -89,6 +104,33 @@ int WaspUIO::loraInit()
 exit:
   loraStop();
   return err;
+}
+
+int WaspUIO::loraPing()
+{
+  bool success = false;
+
+  USB.OFF();
+
+  if (UIO.loraStart() == 0)
+  {
+    sx1272.sendPacketTimeout(1, "ping");
+    // TODO RSSI
+    success = true;
+  }
+  UIO.loraStop();
+
+  // Print
+  USB.ON();
+  USB.flush();
+  if (! success)
+  {
+    error(F("ping() Error"));
+    return 1;
+  }
+
+  //info(F("RSSI(dBm) = %d"), rssi);
+  return 0;
 }
 
 #endif

@@ -392,12 +392,12 @@ void WaspUIO::setFrameSize()
     payloadSize = 255;
   } else if (wan_type == WAN_IRIDIUM) {
     payloadSize = 340;
-  } else if (lan_type = LAN_XBEE) {
+  } else if (lan_type == LAN_XBEE) {
     payloadSize = 73;
     #if WITH_CRYPTO
     if (strlen(password) > 0) { payloadSize = 48; }
     #endif
-  } else if (lan_type = LAN_LORA) {
+  } else if (lan_type == LAN_LORA) {
     // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
     // (page 32) it looks to me it's 250, so better to be extra sure.
     payloadSize = 250;

@@ -88,18 +88,37 @@ COMMAND(cmdLora)
 
 COMMAND(cmdPing)
 {
-#if WITH_XBEE
-  int rssi;
-  UIO.xbee_ping(rssi);
-#endif
 #if WITH_4G
-  UIO._4GPing();
+  if (UIO.wan_type == WAN_4G)
+  {
+    UIO._4GPing();
+    return cmd_quiet;
+  }
 #endif
 #if WITH_IRIDIUM
-  UIO.iridium_ping();
+  if (UIO.wan_type == WAN_IRIDIUM)
+  {
+    UIO.iridium_ping();
+    return cmd_quiet;
+  }
+#endif
+#if WITH_XBEE
+  if (UIO.lan_type == LAN_XBEE)
+  {
+    int rssi;
+    UIO.xbee_ping(rssi);
+    return cmd_quiet;
+  }
+#endif
+#if WITH_LORA
+  if (UIO.lan_type == LAN_LORA)
+  {
+    UIO.loraPing();
+    return cmd_quiet;
+  }
 #endif
 
-  return cmd_quiet;
+  return cmd_error;
 }
 
 
