@@ -62,68 +62,54 @@ exit:
 }
 
 
-int WaspUIO::xbee_ping(int &rssi)
+// With XBee we always use network ACK
+int WaspUIO::xbeeSend(const char* dst, const char* msg)
 {
-  bool success = false;
+  int err;
 
+  // UART0 is shared by USB and Socket0 (XBee, Lora)
   USB.OFF();
 
-  // Action
-  if (xbeeDM.ON() == 0)
+  // Switch ON
+  bool isOn = xbeeDM.XBee_ON;
+  if (! isOn)
   {
-    if (xbeeDM.send((char*)UIO.xbee.rx_address, (char*)"ping") == 0)
-    {
-      if (xbeeDM.getRSSI() == 0)
-      {
-        rssi = xbeeDM.valueRSSI[0];
-        rssi *= -1;
-        success = true;
-      }
-    }
+    err = xbeeDM.ON();
+    if (err) goto exit;
   }
-  xbeeDM.OFF();
+
+  err = xbeeDM.send((char*)dst, (char*)msg);
+  if (err == 0)
+  {
+    err = xbeeQuality();
+  }
+
+exit:
+  if (! isOn)
+  {
+    xbeeDM.OFF();
+  }
 
   // Print
-  USB.ON();
-  USB.flush();
-  if (! success)
+  //USB.ON();
+  //USB.flush();
+  if (err)
   {
-    error(F("ping() Error"));
+    error(F("xbeeSend failed error=%d"), err);
     return 1;
   }
 
-  info(F("RSSI(dBm) = %d"), rssi);
   return 0;
 }
 
-/**
- * Function to communicate through OTA with remote unit
- *
- * Parameters: int OTA_duration  - duration in minute of the time window for OTA access to the unit
- */
-void WaspUIO::OTA_communication(int OTA_duration)
+int WaspUIO::xbeeQuality()
 {
-  unsigned long start;
-  unsigned long duration_ms;
-
-  // OTA_duration is given in minutes
-  duration_ms = OTA_duration * 60 * 1000;
-
-  start = millis();
-  do
+  int err = xbeeDM.getRSSI();
+  if (err == 0)
   {
-    if( xbeeDM.available() )
-    {
-      xbeeDM.treatData();
-      // Keep inside this loop while a new program is being received
-      while( xbeeDM.programming_ON  && !xbeeDM.checkOtapTimeout() )
-      {
-        if( xbeeDM.available() )
-        {
-          xbeeDM.treatData();
-        }
-      }
-    }
-  } while (! cr.timeout(start, duration_ms));
+    rssi = xbeeDM.valueRSSI[0] * -1;
+  }
+  return err;
 }
+
 #endif

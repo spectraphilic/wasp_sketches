@@ -3,6 +3,10 @@
  *
  *   int8_t cmd(const char* command);
  *
+ * Arguments:
+ *
+ *   command: The command to execute
+ *
  * Return:
  *
  *   0: success
@@ -56,8 +60,8 @@ const char CMD_XBEE      [] PROGMEM = "xbee VALUE         - Choose xbee network:
 
 const Command commands[] PROGMEM = {
 #if WITH_1WIRE
-  {"1wire read",    &cmd1WireRead, CMD_1WIRE_READ},
-  {"1wire scan ",   &cmd1WireScan, CMD_1WIRE_SCAN},
+  {"1wire read",    &cmd1WireRead,   CMD_1WIRE_READ},
+  {"1wire scan ",   &cmd1WireScan,   CMD_1WIRE_SCAN},
 #endif
 #if WITH_4G
   {"4g apn",        &cmd4G_APN,      CMD_4G_APN},
@@ -250,6 +254,7 @@ COMMAND(cmdBoard)
 
   return cmd_ok;
 }
+
 
 /**
  * Exit the command line interface

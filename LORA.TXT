@@ -10,13 +10,15 @@ Configuration (Lora):
 - Mode is configurable (var lora_mode), local tests with mode 10, find out
   which one is best in the field (page 16)
 
+To test:
+- Ping
+- RSSI (Received Signal Strength) and SNR (Signal-to-Noise  Ratio) page 24
+
 TODO:
+- Send through wan
+- Handle incoming frames: print, save, send
+- Send frames at different times to avoid collisions
+- Support in rssimap.pde sketch
 - Rename WITH_ to USE_
-- Support more than 1 network, e.g. Lora and 4G
-- Add ping support
 - Set time from Lora network?
 - Multi-hop (star) topology
-- RSSI (Received Signal Strength) and SNR (Signal-to-Noise  Ratio) page 24
-  - Send in frame?
-  - Log info
-  - Support in rssimap.pde sketch

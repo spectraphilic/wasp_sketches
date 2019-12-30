@@ -106,31 +106,59 @@ exit:
   return err;
 }
 
-int WaspUIO::loraPing()
+int WaspUIO::loraSend(uint8_t dst, const char* msg, bool ack)
 {
-  bool success = false;
+  int err;
 
+  // UART0 is shared by USB and Socket0 (XBee, Lora)
   USB.OFF();
 
-  if (UIO.loraStart() == 0)
+  // Switch ON
+  bool isOn = SPI.isSocket0;
+  if (! isOn)
   {
-    sx1272.sendPacketTimeout(1, "ping");
-    // TODO RSSI
-    success = true;
+    err = UIO.loraStart();
+    if (err) goto exit;
   }
-  UIO.loraStop();
+
+  if (ack) {
+    err = sx1272.sendPacketTimeoutACK(dst, (char*)msg);
+    if (err == 0)
+    {
+      err = loraQuality();
+    }
+  } else {
+    err = sx1272.sendPacketTimeout(dst, (char*)msg);
+  }
+
+exit:
+  if (! isOn)
+  {
+    UIO.loraStop();
+  }
 
   // Print
-  USB.ON();
-  USB.flush();
-  if (! success)
+  //USB.ON();
+  //USB.flush();
+  if (err)
   {
-    error(F("ping() Error"));
+    error(F("loraSend failed error=%d"), err);
     return 1;
   }
 
-  //info(F("RSSI(dBm) = %d"), rssi);
   return 0;
+}
+
+int WaspUIO::loraQuality()
+{
+  int err = sx1272.getRSSIpacket() or sx1272.getSNR();
+  if (err == 0)
+  {
+    rssi = sx1272._RSSIpacket; // XXX Check this is a negative value
+    snr = sx1272._SNR;
+  }
+
+  return err;
 }
 
 #endif

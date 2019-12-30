@@ -388,19 +388,21 @@ public:
 
   // Network
   void networkInit();
+  int rssi, snr;
   #if WITH_XBEE
   // Network: Xbee
-  void OTA_communication(int OTA_duration); // TODO
   XBee xbee;
   void xbeeInit();
-  int xbee_ping(int &rssi);
+  int xbeeSend(const char* dst, const char* msg);
+  int xbeeQuality();
   #endif
   #if WITH_LORA
   // Network: Lora
   int loraStart();
   void loraStop();
   int loraInit();
-  int loraPing();
+  int loraSend(uint8_t dst, const char* msg, bool ack=false);
+  int loraQuality();
   #endif
   #if WITH_4G
   // Network: 4G

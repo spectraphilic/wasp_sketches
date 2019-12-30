@@ -83,11 +83,16 @@ COMMAND(cmdLora)
 
 
 /**
- * Send a test message
+ * Network testing: ping
  */
 
 COMMAND(cmdPing)
 {
+  /*
+   * If the ping command is local, then test the network. How depends on the
+   * network used; for local networks send the "ping" command to the remote
+   * host.
+   */
 #if WITH_4G
   if (UIO.wan_type == WAN_4G)
   {
@@ -105,15 +110,18 @@ COMMAND(cmdPing)
 #if WITH_XBEE
   if (UIO.lan_type == LAN_XBEE)
   {
-    int rssi;
-    UIO.xbee_ping(rssi);
+    if (UIO.xbeeSend(UIO.xbee.rx_address, "ping"))
+      return cmd_error;
+    info(F("RSSI(dBm) = %d"), UIO.rssi);
     return cmd_quiet;
   }
 #endif
 #if WITH_LORA
   if (UIO.lan_type == LAN_LORA)
   {
-    UIO.loraPing();
+    if (UIO.loraSend(1, "ping", true))
+      return cmd_error;
+    info(F("RSSI(dBm) = %d SNR = %d"), UIO.rssi, UIO.snr);
     return cmd_quiet;
   }
 #endif

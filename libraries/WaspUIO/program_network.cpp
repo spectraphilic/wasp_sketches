@@ -174,11 +174,9 @@ CR_TASK(taskNetworkXBee)
   }
 
   // RSSI
-  if (xbeeDM.getRSSI() == 0) // FIXME This outputs garbage to USB
+  if (UIO.xbeeQuality() == 0) // FIXME This outputs garbage to USB ??
   {
-    int rssi = xbeeDM.valueRSSI[0];
-    rssi *= -1;
-    ADD_SENSOR(SENSOR_RSSI, rssi);
+    ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
   }
 
   // Stop network
@@ -309,13 +307,12 @@ CR_TASK(taskNetworkLora)
     CR_JOIN(tid);
   }
 
-  // RSSI TODO
-//if (xbeeDM.getRSSI() == 0)
-//{
-//  int rssi = xbeeDM.valueRSSI[0];
-//  rssi *= -1;
-//  ADD_SENSOR(SENSOR_RSSI, rssi);
-//}
+  // RSSI
+  if (UIO.loraQuality() == 0)
+  {
+    ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
+    //ADD_SENSOR(SENSOR_SNR, UIO.snr);
+  }
 
   UIO.loraStop();
   info(F("Network stopped"));

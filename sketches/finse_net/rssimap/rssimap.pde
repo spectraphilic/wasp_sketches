@@ -22,7 +22,6 @@
 
 // Global variables
 uint8_t powerLevel;
-int rssi;
 
 
 uint8_t getPowerLevel()
@@ -93,12 +92,13 @@ void loop()
   // Get data and create frame
   time = UIO.getEpochTime();
   info(F("ping() ..."));
-  if (UIO.xbee_ping(rssi) == 0)
+
+  if (UIO.xbeeSend(UIO.xbee.rx_address, "ping") == 0)
   {
     // Frame
     frame.createFrameBin(BINARY);
     ADD_SENSOR(SENSOR_TST, time);
-    ADD_SENSOR(SENSOR_RSSI, rssi);
+    ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
     if (UIO.gps(false, true) == 0)
     {
       UIO.frame2Sd();
