@@ -380,6 +380,7 @@ CR_TASK(taskNetworkLoraSend)
 CR_TASK(taskNetworkLoraReceive)
 {
   cmd_status_t status;
+  const char *data;
 
   CR_BEGIN;
 
@@ -399,24 +400,33 @@ CR_TASK(taskNetworkLoraReceive)
       else
       {
         debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
-	sx1272.showReceivedPacket();
+        sx1272.showReceivedPacket();
 /*
-	info(F("Packet received from Lora network"));
-	info(F("dst=%u src=%u packnum=%u length=%u retry=%u"),
-	  sx1272.packet_received.dst,
-	  sx1272.packet_received.src,
-	  sx1272.packet_received.packnum,
-	  sx1272.packet_received.length,
-	  sx1272.packet_received.retry,
-	);
-	UIO.showFrame(sx1272.packet_received.data);
+        info(F("Packet received from Lora network"));
+        info(F("dst=%u src=%u packnum=%u length=%u retry=%u"),
+          sx1272.packet_received.dst,
+          sx1272.packet_received.src,
+          sx1272.packet_received.packnum,
+          sx1272.packet_received.length,
+          sx1272.packet_received.retry,
+        );
 */
 
-        status = exeCommand((const char*)sx1272.packet_received.data);
-        if (status == cmd_bad_input)
-        {
-          // TODO If it's a frame: save the frame into the SD and send ACK command
-          warn(F("unexpected frame received from %u"), sx1272.packet_received.src);
+        data = (const char*)sx1272.packet_received.data;
+        if (strncmp("<=>", data, 3) == 0) {
+          // TODO Save the frame with the correct filepath and send ACK command
+          UIO.saveFrame(
+            sx1272.packet_received.src,
+            sx1272.packet_received.data,
+            sx1272.packet_received.length
+          );
+
+        } else {
+          status = exeCommand(data);
+          if (status == cmd_bad_input)
+          {
+            warn(F("unexpected frame received from %u"), sx1272.packet_received.src);
+          }
         }
       }
     }

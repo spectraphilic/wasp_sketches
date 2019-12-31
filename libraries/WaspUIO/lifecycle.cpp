@@ -290,8 +290,8 @@ void WaspUIO::deepSleep()
  * We have to do it somewhere.
  */
 WaspUIO UIO = WaspUIO();
-FIFO fifo = FIFO("TMP.TXT", "QSTART.BIN", 8); // TODO Rename to FIFO.BIN / FIDX.BIN
+FIFO fifo = FIFO("FIFO.BIN", "FIDX.BIN", 9);
 #if WITH_IRIDIUM
 IridiumSBD iridium(Serial1, DIGITAL4); // RING pins not connected
-LIFO lifo = LIFO("LIFO.BIN", 8);
+LIFO lifo = LIFO("LIFO2.BIN", 9);
 #endif

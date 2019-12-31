@@ -101,7 +101,7 @@ void loop()
     ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
     if (UIO.gps(false, true) == 0)
     {
-      UIO.frame2Sd();
+      UIO.saveFrame();
     }
   }
 }

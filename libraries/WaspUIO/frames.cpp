@@ -188,7 +188,7 @@ void WaspUIO::createFrame(bool discard)
 {
   if (frame.numFields > 1 && !discard)
   {
-    frame2Sd();
+    saveFrame();
   }
 
   frame.createFrameBin(BINARY);
@@ -618,9 +618,21 @@ void WaspUIO::showFrame(uint8_t *p)
  *
  * Return the length of the line. Or -1 for EOF. Or -2 if error.
  */
-void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date)
+uint8_t WaspUIO::getDataFilename(char* filename, uint8_t src, uint8_t year, uint8_t month, uint8_t date)
 {
-  sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
+  if (src) {
+    sprintf(filename, "%s/%03u", archive_dir, src);
+    if (sd_mkdir(filename))
+    {
+      error(F("getDataFilename fail to mkdir %s"), filename);
+      return 1;
+    }
+    sprintf(filename, "%s/%03u/%02u%02u%02u.TXT", archive_dir, src, year, month, date);
+  } else {
+    sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
+  }
+
+  return 0;
 }
 
 
@@ -649,12 +661,12 @@ void WaspUIO::getDataFilename(char* filename, uint8_t year, uint8_t month, uint8
  * - 2 error, archived frame, but append to queue failed
  */
 
-uint8_t WaspUIO::frame2Sd()
+uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_t numFields)
 {
   uint8_t year, month, date;
-  char dataFilename[18]; // /data/YYMMDD.txt
+  char dataFilename[21]; // /data/[SRC/]YYMMDD.txt (max length is 21)
   uint32_t size;
-  uint8_t item[8];
+  uint8_t item[9];
   SdFile dataFile;
 
   // Print frame to USB for debugging
@@ -662,7 +674,7 @@ uint8_t WaspUIO::frame2Sd()
   {
     USB.ON();
     USB.flush();
-    showFrame(frame.buffer);
+    showFrame(buffer);
     USB.OFF();
   }
 
@@ -670,6 +682,7 @@ uint8_t WaspUIO::frame2Sd()
 
 #if WITH_CRYPTO
   // Encrypt frame
+  // FIXME This doesn't work for frames from a remote host (Lora LAN)
   if (strlen(password) > 0)
   {
     frame.encryptFrame(AES_128, password);
@@ -687,7 +700,7 @@ uint8_t WaspUIO::frame2Sd()
   year = RTC.year;
   month = RTC.month;
   date = RTC.date;
-  getDataFilename(dataFilename, year, month, date);
+  if (getDataFilename(dataFilename, src, year, month, date)) { return 1; }
 
   // (2) Store frame in archive file
   if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
@@ -697,7 +710,7 @@ uint8_t WaspUIO::frame2Sd()
   }
   size = dataFile.fileSize();
 
-  if (sd_append(dataFile, frame.buffer, frame.length))
+  if (sd_append(dataFile, buffer, length))
   {
     dataFile.close();
     error(F("Append to data file failure"));
@@ -706,11 +719,15 @@ uint8_t WaspUIO::frame2Sd()
   dataFile.close();
 
   // (3) Append to queue
-  item[0] = year;
-  item[1] = month;
-  item[2] = date;
-  *(uint32_t *)(item + 3) = size;
-  item[7] = (uint8_t) frame.length;
+  item[0] = src;
+  item[1] = year;
+  item[2] = month;
+  item[3] = date;
+  *(uint32_t *)(item + 4) = size;
+  item[8] = (uint8_t) length;
+
+  const char *queue_name = "FIFO";
+
 #if WITH_IRIDIUM
   // This behaves like an action of type action_hours
   uint32_t hours = _epoch_minutes / 60;
@@ -719,23 +736,31 @@ uint8_t WaspUIO::frame2Sd()
       && hours % (SAVE_TO_LIFO_HOUR * cooldown) == 0
       && minutes == SAVE_TO_LIFO_MINUTE)
   {
+    queue_name = "LIFO";
     if (lifo.push(item)) { return 2; }
-    info(F("Frame saved to LIFO (%d fields in %d bytes)"), frame.numFields, frame.length);
   }
   else
   {
     if (fifo.push(item)) { return 2; }
-    info(F("Frame saved to FIFO (%d fields in %d bytes)"), frame.numFields, frame.length);
   }
 #else
   if (fifo.push(item)) { return 2; }
-  info(F("Frame saved to FIFO (%d fields in %d bytes)"), frame.numFields, frame.length);
 #endif
 
+  // Log
+  if (numFields) {
+    info(F("Frame saved to %s (bytes=%d fields=%d)"), queue_name, length, numFields);
+  } else {
+    info(F("Frame saved to %s (bytes=%d)"), queue_name, length);
+  }
 
   return 0;
 }
 
+uint8_t WaspUIO::saveFrame()
+{
+  return saveFrame(0, frame.buffer, frame.length, frame.numFields);
+}
 
 /**
  * This function reads the next frame from the SD.
@@ -747,8 +772,8 @@ uint8_t WaspUIO::frame2Sd()
  */
 int WaspUIO::readFrame(uint8_t &n)
 {
-  uint8_t item[8];
-  char dataFilename[18]; // /data/YYMMDD.txt
+  uint8_t item[9];
+  char dataFilename[21]; // /data/[SRC/]YYMMDD.txt (max length is 21)
   SdFile dataFile;
 
   if (! hasSD)
@@ -784,20 +809,20 @@ int WaspUIO::readFrame(uint8_t &n)
     }
 
     // Stop condition
-    int size = (int) item[7];
+    int size = (int) item[8];
     if (totSize + size > maxSize)
     {
       break;
     }
 
     // Read the frame
-    getDataFilename(dataFilename, item[0], item[1], item[2]);
+    if (getDataFilename(dataFilename, item[0], item[1], item[2], item[3])) { return -1; }
     if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
     {
       error(F("readFrame fail to open %s"), dataFilename);
       return -1;
     }
-    dataFile.seekSet(*(uint32_t *)(item + 3));
+    dataFile.seekSet(*(uint32_t *)(item + 4));
     uint8_t *start = (uint8_t*)&(SD.buffer[totSize]);
     int readSize = dataFile.read(start, (size_t) size);
     dataFile.close();

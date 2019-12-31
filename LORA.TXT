@@ -13,9 +13,11 @@ Configuration (Lora):
 To test:
 - Ping
 - RSSI (Received Signal Strength) and SNR (Signal-to-Noise  Ratio) page 24
+- If address=1 (gateway) will not send through Lora (so will send with 4G only)
+- FIFO/LIFO Upgrade process
 
 TODO:
-- Send through wan
+- Too much program memory with 4G specially
 - Handle incoming frames: print, save, send
 - Send frames at different times to avoid collisions
 - Support in rssimap.pde sketch

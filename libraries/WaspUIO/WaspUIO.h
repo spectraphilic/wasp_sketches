@@ -431,7 +431,7 @@ public:
   int8_t gps(bool setTime, bool getPosition);
 
   // Frames
-  void getDataFilename(char* filename, uint8_t year, uint8_t month, uint8_t date);
+  uint8_t getDataFilename(char* filename, uint8_t src, uint8_t year, uint8_t month, uint8_t date);
   void createFrame(bool discard=false);
   int8_t addSensor(uint8_t type, ...);
   uint8_t addSensorValue(uint8_t size, void* value); // XXX Should be private
@@ -444,7 +444,8 @@ public:
   uint8_t addSensorValue(uint32_t value);
   uint8_t getSequence(uint8_t *p);
   void showFrame(uint8_t *p);
-  uint8_t frame2Sd();
+  uint8_t saveFrame();
+  uint8_t saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_t numFields=0);
   int readFrame(uint8_t &n);
   uint8_t frameSize;
   uint16_t payloadSize;

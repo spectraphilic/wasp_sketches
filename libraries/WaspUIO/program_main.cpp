@@ -81,7 +81,7 @@ CR_TASK(taskMain)
   }
 
   // Save the last frame, if there is something to save
-  if (frame.numFields > 1) { UIO.frame2Sd(); }
+  if (frame.numFields > 1) { UIO.saveFrame(); }
 
   // Don't use network and sensors at the same time. We have observed issues in
   // the past with SDI-12.

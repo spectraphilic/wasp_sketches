@@ -1,29 +1,126 @@
-
-  /*
+/*
  SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
  April 2017, Simon Filhol
- Script description:
- */
+*/
 
-// 1. Include Libraries
 #include <WaspUIO.h>
 
-// 2. Definitions
 
+int upgradeFIFO()
+{
+  if (SD.isFile("TMP.TXT") == -1)
+  {
+    return 0;
+  }
+  cr.println(F("Upgrading FIFO..."));
 
-// 3. Global variables declaration
+  FIFO old = FIFO("TMP.TXT", "QSTART.BIN", 8);
+  //FIFO fifo = FIFO("FIFO.BIN", "FIDX.BIN", 9);
+
+  // Upgrade
+  uint8_t item[9] = {0};
+  int idx, status, err = 1;
+
+  for (idx=0; true; idx++)
+  {
+    // Read from old FIFO
+    status = old.peek(&item[1], idx);
+    if (status == QUEUE_EMPTY || status == QUEUE_INDEX_ERROR) // Stop condition
+    {
+      err = 0;
+      break;
+    }
+    if (status) { break; } // Error
+
+    // Write to new FIFO
+    if (fifo.push(item)) { break; }
+  }
+
+  if (err)
+  {
+    // Redo new
+    SD.del("FIFO.BIN");
+    SD.del("FIDX.BIN");
+    fifo.make();
+
+    cr.println(F("ERROR Upgrading"));
+    return 1;
+  }
+
+  // Remove old
+  SD.del("TMP.TXT");
+  SD.del("QSTART.BIN");
+
+  return 0;
+}
+
+int upgradeLIFO()
+{
+  if (SD.isFile("LIFO.BIN") == -1)
+  {
+    return 0;
+  }
+  cr.println(F("Upgrading LIFO..."));
+
+  LIFO old = LIFO("LIFO.BIN", 8);
+  LIFO lifo = LIFO("LIFO2.BIN", 9);
+
+  // Upgrade
+  uint8_t item[9] = {0};
+  int idx, status, err = 1;
+
+  for (idx=0; true; idx++)
+  {
+    // Read from old FIFO
+    status = old.peek(&item[1], idx);
+    if (status == QUEUE_EMPTY || status == QUEUE_INDEX_ERROR) // Stop condition
+    {
+      err = 0;
+      break;
+    }
+    if (status) { break; } // Error
+
+    // Write to new FIFO
+    if (lifo.push(item)) { break; }
+  }
+
+  if (err)
+  {
+    // Redo new
+    SD.del("LIFO2.BIN");
+    lifo.make();
+
+    cr.println(F("ERROR Upgrading"));
+    return 1;
+  }
+
+  // Remove old
+  SD.del("LIFO.BIN");
+
+  return 0;
+}
+
 
 void setup()
 {
   // Boot process
   UIO.boot();
 
+  // Upgrade queues
+  if (UIO.hasSD)
+  {
+    upgradeFIFO();
+#if WITH_IRIDIUM
+    upgradeLIFO();
+#endif
+  }
+
   // Boot frame
   frame.setID(UIO.name);
   frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
   frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
   UIO.addSensor(SENSOR_TST, UIO._epoch);
-  UIO.frame2Sd();
+  UIO.saveFrame();
   #if WITH_XBEE
   frame.setID((char*)""); // We only want to send the name once
   #endif
