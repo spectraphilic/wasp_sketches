@@ -6,6 +6,9 @@ void WaspUIO::xbeeInit()
 {
   const __FlashStringHelper * err = NULL;
 
+  // XBee network
+  memcpy_P(&xbee, &xbees[xbee_network], sizeof xbee);
+
   // init XBee
   if (xbeeDM.ON())
   {

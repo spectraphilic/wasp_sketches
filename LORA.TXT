@@ -11,16 +11,14 @@ Configuration (Lora):
   which one is best in the field (page 16)
 
 To test:
-- Ping
-- RSSI (Received Signal Strength) and SNR (Signal-to-Noise  Ratio) page 24
-- If address=1 (gateway) will not send through Lora (so will send with 4G only)
+- Ping with RSSI and SNR
+- Send through the Gateway, Lora/4G combo
 - FIFO/LIFO Upgrade process
+- Test no regressions with XBee
 
 TODO:
-- Too much program memory with 4G specially
-- Handle incoming frames: print, save, send
 - Send frames at different times to avoid collisions
 - Support in rssimap.pde sketch
-- Rename WITH_ to USE_
-- Set time from Lora network?
-- Multi-hop (star) topology
+- Reduce memory further (specially with 4G)
+? Set time from Lora network
+? Multi-hop (star) topology

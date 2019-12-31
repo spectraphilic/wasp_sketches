@@ -41,11 +41,7 @@
  ******************************************************************************/
 
 // EEPROM addresses used by the library
-// 1 byte available
-#define EEPROM_UIO_XBEE (EEPROM_START + 1) // 2 bytes to store the xbee id
-#define EEPROM_UIO_BOARD_TYPE (EEPROM_START + 3)
-#define EEPROM_UIO_BATTERY_TYPE (EEPROM_START + 4)
-// 4 bytes available
+// 9 bytes available
 #define EEPROM_UIO_RUN (EEPROM_START + 9) // Many bytes, leave room for future actions
                                           // (every action takes 2 bytes)
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
@@ -53,21 +49,13 @@
 #define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
 // 17 bytes available
 #define EEPROM_UIO_VARS (EEPROM_START + 100) // 100 bytes reserved
-#define VAR_LOG_LEVEL_IDX 0
-#define VAR_LOG_SD_IDX 1
-#define VAR_LOG_USB_IDX 2
-#define VAR_LAN_TYPE_IDX 3
-#define VAR_WAN_TYPE_IDX 4
-#define VAR_LORA_ADDR_IDX 5
-#define VAR_LORA_MODE_IDX 6
-#define VAR_XBEE_WAIT_IDX 7
 
 #define GPS_NO 0
 #define GPS_YES 1
 #define GPS_4G 2
 
 enum battery_type_t {
-  BATTERY_LITHIUM = 1,
+  BATTERY_LITHIUM,
   BATTERY_LEAD,
   BATTERY_LEN
 };
@@ -159,6 +147,22 @@ const char* const run_names[] PROGMEM = {
   RUN_ATMOS_NAME,
 };
 
+enum var_indexes {
+  VAR_BAT_IDX,
+  VAR_BOARD_IDX,
+  VAR_LOG_LEVEL_IDX,
+  VAR_LOG_SD_IDX,
+  VAR_LOG_USB_IDX,
+  VAR_LAN_TYPE_IDX,
+  VAR_WAN_TYPE_IDX,
+  VAR_LORA_ADDR_IDX,
+  VAR_LORA_MODE_IDX,
+  VAR_XBEE_NETWORK_IDX,
+  VAR_XBEE_WAIT_IDX
+};
+
+const char VAR_BAT       [] PROGMEM = "bat";
+const char VAR_BOARD     [] PROGMEM = "board";
 const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
 const char VAR_LOG_SD    [] PROGMEM = "log.sd";
 const char VAR_LOG_USB   [] PROGMEM = "log.usb";
@@ -166,17 +170,23 @@ const char VAR_LAN_TYPE  [] PROGMEM = "lan.type";
 const char VAR_WAN_TYPE  [] PROGMEM = "wan.type";
 const char VAR_LORA_ADDR [] PROGMEM = "lora.addr";
 const char VAR_LORA_MODE [] PROGMEM = "lora.mode";
+const char VAR_XBEE_NETWORK [] PROGMEM = "xbee.network";
 const char VAR_XBEE_WAIT [] PROGMEM = "xbee.wait";
 
-const char VAR_LOG_LEVEL_HELP [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
-const char VAR_LOG_FLAG_HELP  [] PROGMEM = ": 0/1";
-const char VAR_LAN_TYPE_HELP  [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
-const char VAR_WAN_TYPE_HELP  [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
-const char VAR_LORA_ADDR_HELP [] PROGMEM = ": 1-255 (1=Gateway)";
-const char VAR_LORA_MODE_HELP [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
-const char VAR_XBEE_WAIT_HELP [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
+const char VAR_BAT_HELP          [] PROGMEM = ": 0=lithium 1=lead";
+const char VAR_BOARD_HELP        [] PROGMEM = ": 0=none 1=lemming";
+const char VAR_LOG_LEVEL_HELP    [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
+const char VAR_LOG_FLAG_HELP     [] PROGMEM = ": 0/1";
+const char VAR_LAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
+const char VAR_WAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
+const char VAR_LORA_ADDR_HELP    [] PROGMEM = ": 1-255 (1=Gateway)";
+const char VAR_LORA_MODE_HELP    [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
+const char VAR_XBEE_NETWORK_HELP [] PROGMEM = ": 0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
+const char VAR_XBEE_WAIT_HELP    [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
 
 const char* const var_names[] PROGMEM = {
+  VAR_BAT,
+  VAR_BOARD,
   VAR_LOG_LEVEL,
   VAR_LOG_SD,
   VAR_LOG_USB,
@@ -184,10 +194,13 @@ const char* const var_names[] PROGMEM = {
   VAR_WAN_TYPE,
   VAR_LORA_ADDR,
   VAR_LORA_MODE,
+  VAR_XBEE_NETWORK,
   VAR_XBEE_WAIT,
 };
 
 const char* const var_help[] PROGMEM = {
+  VAR_BAT_HELP,
+  VAR_BOARD_HELP,
   VAR_LOG_LEVEL_HELP,
   VAR_LOG_FLAG_HELP,
   VAR_LOG_FLAG_HELP,
@@ -195,6 +208,7 @@ const char* const var_help[] PROGMEM = {
   VAR_WAN_TYPE_HELP,
   VAR_LORA_ADDR_HELP,
   VAR_LORA_MODE_HELP,
+  VAR_XBEE_NETWORK_HELP,
   VAR_XBEE_WAIT_HELP,
 };
 
@@ -249,7 +263,7 @@ const char XBEE_PI_CS     [] PROGMEM = "Pi CS";
 const XBee xbees[] PROGMEM = {
   {XBEE_FINSE,     {0x12, 0x00}, 0x0F, "0013A20040779085"},
   {XBEE_UNUSED,    {0x12, 0x01}, 0x0F, "0000000000000000"}, // Available
-  {XBEE_BROADCAST, {0x12, 0x02}, 0x0F, "000000000000FFFF"}, // Default (2)
+  {XBEE_BROADCAST, {0x12, 0x02}, 0x0F, "000000000000FFFF"},
   {XBEE_PI_UIO,    {0x12, 0x03}, 0x0F, "0013A200416B1B9B"},
   {XBEE_PI_FINSE,  {0x12, 0x00}, 0x0F, "0013A20040779085"},
   {XBEE_PI_CS,     {0x12, 0x05}, 0x0F, "0013A200412539D3"}, // Office of jdavid
@@ -315,6 +329,7 @@ public:
   wan_type_t wan_type;
   uint8_t lora_addr;
   uint8_t lora_mode;
+  uint8_t xbee_network;
   uint8_t xbee_wait;
 
   // Power related
@@ -524,8 +539,6 @@ COMMAND(cmd4G_APN);
 COMMAND(cmd4G_GPS);
 COMMAND(cmd4G_Pin);
 COMMAND(cmdAck);
-COMMAND(cmdBattery);
-COMMAND(cmdBoard);
 COMMAND(cmdCat);
 COMMAND(cmdCatx);
 COMMAND(cmdExit);
@@ -549,7 +562,6 @@ COMMAND(cmdSDI12);
 COMMAND(cmdTail);
 COMMAND(cmdTime);
 COMMAND(cmdVar);
-COMMAND(cmdXBee);
 
 
 /*

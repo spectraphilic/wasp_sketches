@@ -87,18 +87,6 @@ bool WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 {
   bool new_state = (mode == SENS_ON)? true: false;
 
-  // Read information from the EEPROM that is required to properly handle power
-  if (UIO.boardType >= BOARD_LEN)
-  {
-    UIO.boardType = (board_type_t)Utils.readEEPROM(EEPROM_UIO_BOARD_TYPE);
-    if (UIO.boardType >= BOARD_LEN) { UIO.boardType = BOARD_NONE; }
-  }
-  if (UIO.batteryType >= BATTERY_LEN)
-  {
-    UIO.batteryType = (battery_type_t)Utils.readEEPROM(EEPROM_UIO_BATTERY_TYPE);
-    if (UIO.batteryType >= BATTERY_LEN) { UIO.batteryType = BATTERY_LITHIUM; }
-  }
-
   if (type == SENS_3V3) { return UIO.pwr_3v3(new_state); }
   if (type == SENS_5V)  { return UIO.pwr_5v(new_state); }
   if (type == SENS_I2C) { return UIO.pwr_i2c(new_state); }

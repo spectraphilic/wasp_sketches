@@ -128,29 +128,3 @@ COMMAND(cmdPing)
 
   return cmd_error;
 }
-
-
-#if WITH_XBEE
-/**
- * Choose Xbee network
- */
-COMMAND(cmdXBee)
-{
-  uint8_t value;
-
-  // Check input
-  if (sscanf(str, "%hhu", &value) != 1) { return cmd_bad_input; }
-  if (value >= xbee_len) { return cmd_bad_input; }
-
-  // Do
-  memcpy_P(&UIO.xbee, &xbees[value], sizeof UIO.xbee);
-  if (! UIO.updateEEPROM(EEPROM_UIO_XBEE, UIO.xbee.panid[0]) ||
-      ! UIO.updateEEPROM(EEPROM_UIO_XBEE+1, UIO.xbee.panid[1]))
-  {
-    return cmd_error;
-  }
-  UIO.xbeeInit();
-
-  return cmd_ok;
-}
-#endif

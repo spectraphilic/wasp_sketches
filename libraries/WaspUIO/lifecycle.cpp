@@ -48,6 +48,8 @@ void WaspUIO::bootConfig()
   Utils.getID(name);
 
   // Variables
+  batteryType = (battery_type_t)Utils.readEEPROM(EEPROM_UIO_VARS + VAR_BAT_IDX);
+  boardType = (board_type_t)Utils.readEEPROM(EEPROM_UIO_VARS + VAR_BOARD_IDX);
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_LEVEL_IDX);
   log_sd = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_SD_IDX);
   log_usb = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_USB_IDX);
@@ -55,7 +57,12 @@ void WaspUIO::bootConfig()
   wan_type = (wan_type_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_WAN_TYPE_IDX);
   lora_addr = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_ADDR_IDX);
   lora_mode = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_MODE_IDX);
+  xbee_network = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_NETWORK_IDX);
   xbee_wait = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_WAIT_IDX);
+
+  // Defaults for safety
+  if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }
+  if (boardType >= BOARD_LEN) { boardType = BOARD_NONE; }
 
 #if WITH_CRYPTO
   // Frame encryption
@@ -73,13 +80,6 @@ void WaspUIO::bootConfig()
   pin = eeprom_read_word((uint16_t*)EEPROM_UIO_PIN);
   UIO.readEEPROM(EEPROM_UIO_APN, apn, sizeof apn);
   _4G.set_APN(apn);
-#endif
-
-#if WITH_XBEE
-  // XBee network
-  uint8_t panid_low = Utils.readEEPROM(EEPROM_UIO_XBEE+1);
-  if (panid_low >= xbee_len) { panid_low = 2; } // Default
-  memcpy_P(&xbee, &xbees[panid_low], sizeof xbee);
 #endif
 
   // Read run table
