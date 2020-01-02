@@ -20,39 +20,43 @@
  * debug it later.
  */
 
-// Global variables
-uint8_t powerLevel;
-
 
 uint8_t getPowerLevel()
 {
   bool success = false;
+  uint8_t powerLevel;
 
   info(F("getPowerLevel() ..."));
   USB.OFF();
 
   // Action
-  if (xbeeDM.ON() == 0)
+#if WITH_XBEE
+  if (xbeeDM.ON() == 0 && xbeeDM.getPowerLevel() == 0)
   {
-    if (xbeeDM.getPowerLevel() == 0)
-    {
-      powerLevel = xbeeDM.powerLevel;
-      success = true;
-    }
+    powerLevel = xbeeDM.powerLevel;
+    success = true;
   }
   xbeeDM.OFF();
+#elif WITH_LORA
+  if (UIO.loraStart() == 0 && sx1272.getPower() == 0)
+  {
+    powerLevel = sx1272._power;
+    success = true;
+  }
+  UIO.loraStop();
+#endif
 
   // Print
   USB.ON();
   USB.flush();
   if (success)
   {
-    info(F("powerLevel = %hhu"), powerLevel);
+    info(F("power level = %hhu"), powerLevel);
     return 0;
   }
   else
   {
-    error(F("getPowerLevel() Error"));
+    error(F("Failed to read the power level"));
     return 1;
   }
 }
@@ -83,6 +87,7 @@ void setup()
 void loop()
 {
   uint32_t time, wait;
+  int err;
 
   // Wait until the next 30s slot
   wait = 30 - UIO.getEpochTime() % 30; // Every 30s
@@ -93,12 +98,21 @@ void loop()
   time = UIO.getEpochTime();
   info(F("ping() ..."));
 
-  if (UIO.xbeeSend(UIO.xbee.rx_address, "ping") == 0)
+#if WITH_XBEE
+  err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");
+#elif WITH_LORA
+  err = UIO.loraSend(1, "ping", true);
+#endif
+
+  if (err == 0)
   {
     // Frame
     frame.createFrameBin(BINARY);
     ADD_SENSOR(SENSOR_TST, time);
     ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
+#if WITH_LORA
+    //ADD_SENSOR(SENSOR_SNR, UIO.snr);
+#endif
     if (UIO.gps(false, true) == 0)
     {
       UIO.saveFrame();

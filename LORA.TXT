@@ -15,10 +15,10 @@ To test:
 - Send through the Gateway, Lora/4G combo
 - FIFO/LIFO Upgrade process
 - Test no regressions with XBee
+- Test rssimap.pde sketch
 
 TODO:
 - Send frames at different times to avoid collisions
-- Support in rssimap.pde sketch
 - Reduce memory further (specially with 4G)
 ? Set time from Lora network
 ? Multi-hop (star) topology
