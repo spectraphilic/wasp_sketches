@@ -1,6 +1,54 @@
 #include "WaspUIO.h"
 
 
+int upgradeFIFO()
+{
+  if (SD.isFile("TMP.TXT") == -1)
+  {
+    return 0;
+  }
+  cr.println(F("Upgrading FIFO..."));
+
+  FIFO old = FIFO("TMP.TXT", "QSTART.BIN", 8);
+  //FIFO fifo = FIFO("FIFO.BIN", "FIDX.BIN", 9);
+
+  // Upgrade
+  uint8_t item[9] = {0};
+  int idx, err = 1;
+
+  for (idx=0; true; idx++)
+  {
+    // Read from old FIFO
+    int status = old.peek(&item[1], idx);
+    if (status == QUEUE_EMPTY || status == QUEUE_INDEX_ERROR) // Stop condition
+    {
+      err = 0;
+      break;
+    }
+    if (status) { break; } // Error
+
+    // Write to new FIFO
+    if (fifo.push(item)) { break; }
+  }
+
+  if (err)
+  {
+    // Redo new
+    SD.del("FIFO.BIN");
+    SD.del("FIDX.BIN");
+    fifo.make();
+
+    cr.println(F("ERROR Upgrading"));
+    return 1;
+  }
+
+  // Remove old
+  SD.del("TMP.TXT");
+  SD.del("QSTART.BIN");
+
+  return 0;
+}
+
 /**
  * Function to be called first in setup()
  */
@@ -33,6 +81,15 @@ void WaspUIO::boot()
   if (_boot_version < 'H')
   {
     warn(F("Old boot version found (%c), only version H and above are supported"), _boot_version);
+  }
+
+  // Upgrade queues
+  if (UIO.hasSD)
+  {
+    upgradeFIFO();
+#if WITH_IRIDIUM
+    upgradeLIFO();
+#endif
   }
 
   // Command line interface

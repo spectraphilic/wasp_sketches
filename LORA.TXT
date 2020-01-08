@@ -22,3 +22,7 @@ TODO:
 - Reduce memory further (specially with 4G)
 ? Set time from Lora network
 ? Multi-hop (star) topology
+
+Issues:
+- With the eeprom changes, at first log level becomes FATAL and log to USB is
+  disabled, so you don't see anything and it looks broken.
