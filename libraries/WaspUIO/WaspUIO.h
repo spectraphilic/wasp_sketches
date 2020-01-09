@@ -158,7 +158,7 @@ enum var_indexes {
   VAR_LORA_ADDR_IDX,
   VAR_LORA_MODE_IDX,
   VAR_XBEE_NETWORK_IDX,
-  VAR_XBEE_WAIT_IDX
+  VAR_LAN_WAIT_IDX
 };
 
 const char VAR_BAT       [] PROGMEM = "bat";
@@ -171,7 +171,7 @@ const char VAR_WAN_TYPE  [] PROGMEM = "wan.type";
 const char VAR_LORA_ADDR [] PROGMEM = "lora.addr";
 const char VAR_LORA_MODE [] PROGMEM = "lora.mode";
 const char VAR_XBEE_NETWORK [] PROGMEM = "xbee.network";
-const char VAR_XBEE_WAIT [] PROGMEM = "xbee.wait";
+const char VAR_LAN_WAIT  [] PROGMEM = "lan.wait";
 
 const char VAR_BAT_HELP          [] PROGMEM = ": 0=lithium 1=lead";
 const char VAR_BOARD_HELP        [] PROGMEM = ": 0=none 1=lemming";
@@ -182,7 +182,7 @@ const char VAR_WAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
 const char VAR_LORA_ADDR_HELP    [] PROGMEM = ": 1-255 (1=Gateway)";
 const char VAR_LORA_MODE_HELP    [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
 const char VAR_XBEE_NETWORK_HELP [] PROGMEM = ": 0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
-const char VAR_XBEE_WAIT_HELP    [] PROGMEM = ": 0-255 seconds to keep it open (zero means use default)";
+const char VAR_LAN_WAIT_HELP     [] PROGMEM = ": 0-255 seconds to keep LAN open (zero means use default)";
 
 const char* const var_names[] PROGMEM = {
   VAR_BAT,
@@ -195,7 +195,7 @@ const char* const var_names[] PROGMEM = {
   VAR_LORA_ADDR,
   VAR_LORA_MODE,
   VAR_XBEE_NETWORK,
-  VAR_XBEE_WAIT,
+  VAR_LAN_WAIT,
 };
 
 const char* const var_help[] PROGMEM = {
@@ -209,7 +209,7 @@ const char* const var_help[] PROGMEM = {
   VAR_LORA_ADDR_HELP,
   VAR_LORA_MODE_HELP,
   VAR_XBEE_NETWORK_HELP,
-  VAR_XBEE_WAIT_HELP,
+  VAR_LAN_WAIT_HELP,
 };
 
 
@@ -330,7 +330,7 @@ public:
   uint8_t lora_addr;
   uint8_t lora_mode;
   uint8_t xbee_network;
-  uint8_t xbee_wait;
+  uint8_t lan_wait;
 
   // Power related
   battery_type_t batteryType = BATTERY_LEN; // Defaults to undefined

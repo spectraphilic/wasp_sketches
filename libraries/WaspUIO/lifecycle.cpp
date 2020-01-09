@@ -115,7 +115,7 @@ void WaspUIO::bootConfig()
   lora_addr = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_ADDR_IDX);
   lora_mode = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_MODE_IDX);
   xbee_network = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_NETWORK_IDX);
-  xbee_wait = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_WAIT_IDX);
+  lan_wait = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LAN_WAIT_IDX);
 
   // Defaults for safety
   if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }

@@ -588,11 +588,11 @@ COMMAND(cmdVar)
 #endif
       }
       break;
-    case VAR_XBEE_WAIT_IDX:
+    case VAR_LAN_WAIT_IDX:
       if (n == 1) {
-        value = UIO.xbee_wait;
+        value = UIO.lan_wait;
       } else {
-        UIO.xbee_wait = value;
+        UIO.lan_wait = value;
       }
       break;
     default:

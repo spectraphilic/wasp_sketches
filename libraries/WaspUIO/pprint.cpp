@@ -165,7 +165,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
-  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, xbee_wait);
+  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, lan_wait);
 
   return dst;
 }
@@ -174,7 +174,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
 #if WITH_LORA
 const char* WaspUIO::pprintLora(char* dst, size_t size)
 {
-  snprintf_F(dst, size, F("address=%u mode=%u"), lora_addr, lora_mode);
+  snprintf_F(dst, size, F("address=%u mode=%u wait=%d"), lora_addr, lora_mode, lan_wait);
   return dst;
 }
 #endif
