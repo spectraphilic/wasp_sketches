@@ -12,7 +12,7 @@ int FIFO::make()
   if (sd_mkfile(iname)) { return 1; }
   if (SD.getFileSize(iname) == 0)
   {
-    SD.openFile((char*)iname, &index, O_WRITE);
+    sd_open(iname, index, O_WRITE | O_SYNC);
     sd_write(index, (void*)(&start), 4);
     index.close();
   }
@@ -21,9 +21,10 @@ int FIFO::make()
 
 int FIFO::open(uint8_t mode)
 {
-  if (_mode == mode) { return 0; } // If already open with the same mode, do nothing
+  // If already open, do nothing. Then it's the responsability of the caller to
+  // open with the right mode.
+  if (_mode != 0) { return 0; }
   //cr.println(F("FIFO::open(%s, %d -> %d)"), qname, _mode, mode);
-  if (_mode) { close(); }          // If open with a different mode, close first
 
   // Open
   if (sd_open(qname, queue, mode))
@@ -63,11 +64,17 @@ int FIFO::open(uint8_t mode)
 void FIFO::close()
 {
   //cr.println(F("FIFO::close(%s)"), qname);
-  if (index.isOpen()) { index.close(); }
   if (queue.isOpen()) { queue.close(); }
+  if (index.isOpen()) { index.close(); }
   _mode = 0;
 }
 
+int FIFO::sync()
+{
+  if (queue.sync() == false) { return 1; } // Error
+  if (index.sync() == false) { return 1; } // Error
+  return 0;
+}
 
 int FIFO::read_offset()
 {
@@ -87,7 +94,7 @@ int FIFO::drop_begin(uint8_t n)
 {
   // Open
   bool closed = (_mode == 0);
-  if (open(O_RDWR)) { return 1; }
+  if (open(O_RDWR | O_SYNC)) { return 1; }
 
   // Truncate queue to zero
   offset += item_size * n;

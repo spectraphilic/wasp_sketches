@@ -31,19 +31,17 @@ uint8_t WaspUIO::saveTimeToSD()
 {
   SdFile file;
 
-  if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC))
+  if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC | O_SYNC))
   {
     warn(F("saveTimeToSD: Opening TIME.TXT failed"));
     return 1;
   }
-  else
-  {
-    char buffer[11];
-    uint32_t time = getEpochTime();
-    snprintf_F(buffer, 11, F("%lu"), time);
-    file.write(buffer);
-    file.close();
-  }
+
+  char buffer[11];
+  uint32_t time = getEpochTime();
+  snprintf_F(buffer, 11, F("%lu"), time);
+  file.write(buffer); // TODO Check error code
+  file.close();
 
   return 0;
 }
@@ -160,5 +158,5 @@ uint8_t WaspUIO::setTimeFromNetwork()
 #endif
 
   error(F("Setting time from network only supported in 4G networks"));
-  return 1;
+  return err;
 }

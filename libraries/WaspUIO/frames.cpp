@@ -703,7 +703,7 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_
   if (getDataFilename(dataFilename, src, year, month, date)) { return 1; }
 
   // (2) Store frame in archive file
-  if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND))
+  if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND | O_SYNC))
   {
     error(F("Open data file failure"));
     return 1;
@@ -737,14 +737,14 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_
       && minutes == SAVE_TO_LIFO_MINUTE)
   {
     queue_name = "LIFO";
-    if (lifo.push(item)) { return 2; }
+    if (lifo.push(item)) { return 1; }
   }
   else
   {
-    if (fifo.push(item)) { return 2; }
+    if (fifo.push(item)) { return 1; }
   }
 #else
-  if (fifo.push(item)) { return 2; }
+  if (fifo.push(item)) { return 1; }
 #endif
 
   // Log

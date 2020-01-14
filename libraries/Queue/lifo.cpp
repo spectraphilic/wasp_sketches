@@ -10,9 +10,10 @@ int LIFO::make()
 
 int LIFO::open(uint8_t mode)
 {
-  if (_mode == mode) { return 0; } // If already open with the same mode, do nothing
+  // If already open, do nothing. Then it's the responsability of the caller to
+  // open with the right mode.
+  if (_mode != 0) { return 0; }
   //cr.println(F("LIFO::open(%s, %d -> %d)"), qname, _mode, mode);
-  if (_mode) { close(); }          // If open with a different mode, close first
 
   // Open
   if (sd_open(qname, queue, mode))
@@ -51,6 +52,14 @@ void LIFO::close()
   _mode = 0;
 }
 
+
+int LIFO::sync()
+{
+  if (queue.sync() == false) { return 1; } // Error
+  return 0;
+}
+
+
 int LIFO::read_offset()
 {
   return 0;
@@ -70,7 +79,7 @@ int LIFO::push(uint8_t *item)
 {
   // Open
   bool closed = (_mode == 0);
-  if (open(O_RDWR | O_CREAT)) { return 1; }
+  if (open(O_RDWR | O_CREAT | O_SYNC)) { return 1; }
 
   // Append
   if (sd_append(queue, item, item_size))
@@ -89,7 +98,7 @@ int LIFO::drop_end(uint8_t n)
 {
   // Open
   bool closed = (_mode == 0);
-  if (open(O_RDWR)) { return 1; }
+  if (open(O_RDWR | O_SYNC)) { return 1; }
 
   // Truncate (pop)
   if (queue.truncate(queue_size - item_size * n) == false)

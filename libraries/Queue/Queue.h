@@ -12,6 +12,19 @@ int sd_append(SdFile &file, const void* buf, size_t nbyte);
 
 /*
  * Last-In-First-Out queue (LIFO)
+ *
+ * TODO Merge LIFO and FIFO into a new Queue, it will use a single file. This
+ * file will have a header, including:
+ *
+ * - marker, to identify the file is a queue
+ * - version number (1 byte)
+ * - offset to the 1st element (4 bytes), or item-number (multiply by item-size)
+ * - and, maybe, the item-size (1 byte)
+ * - and maybe some reserved space
+ *
+ * This will simplify the code, save program memory, and make it easier to
+ * change/upgrade.
+ *
  */
 
 class LIFO
@@ -39,6 +52,7 @@ class LIFO
     virtual int make();       // Create files if not done already
     virtual int open(uint8_t mode);
     virtual void close();
+    virtual int sync();
     int drop_end(uint8_t n);  // Remove the last n items from the queue
     int peek(uint8_t *, int32_t); // Return the item in the given position
     int push(uint8_t *);
@@ -66,5 +80,6 @@ class FIFO : public LIFO
     int make();
     int open(uint8_t mode);
     void close();
+    int sync();
     int drop_begin(uint8_t n); // Remove the first n items from the queue
 };

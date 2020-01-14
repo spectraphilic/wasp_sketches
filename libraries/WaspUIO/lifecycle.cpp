@@ -10,13 +10,9 @@ int upgradeFIFO()
 
   // Open old
   FIFO old = FIFO("TMP.TXT", "QSTART.BIN", 8);
-  if (old.open(O_READ))
-  {
-    error(F("Failed to open old FIFO"));
-    return 1;
-  }
+  if (old.open(O_READ)) { return 1; } // Error
   int32_t nitems = old.len();
-  cr.println(F("Upgrading FIFO: %ld items (1 dot = 10 items)"), nitems);
+  cr.println(F("Upgrading FIFO: %ld items (1 dot = 20 items)"), nitems);
 
   // Create new (delete first in case previous upgrade was interrupted)
   SD.del("FIFO.BIN");
@@ -24,35 +20,39 @@ int upgradeFIFO()
   fifo.make();
 
   // Upgrade
-  const int progress_nth = 10; // Print a dot every .. items
+  const int progress_nth = 20; // Print a dot every .. items
   const int progress_nl = 60 * progress_nth; // Print a new line every .. dots
 
   fifo.open(O_RDWR | O_CREAT);
   uint8_t item[9] = {0};
   for (int32_t idx=0; idx < nitems; idx++)
   {
-    if (old.peek(&item[1], idx) || fifo.push(item))
-    {
-      cr.println(F("ERROR Upgrading"));
-      fifo.close();
-      return 1;
-    }
+    if (old.peek(&item[1], idx) || fifo.push(item)) { goto fail; }
 
     // Progress
     if ((idx+1) % progress_nth == 0)
     {
-      if ((idx+1) % progress_nl == 0) { cr.println(F(".")); }
-      else                            { cr.print(F(".")); }
+      cr.print(F("."));
+      if ((idx+1) % progress_nl == 0)
+      {
+        if (fifo.sync()) { goto fail; }
+        cr.println();
+      }
     }
   }
   fifo.close();
 
   // Remove old
-  cr.println(F("Done."));
+  old.close();
   SD.del("TMP.TXT");
   SD.del("QSTART.BIN");
-
+  cr.println(F("Done."));
   return 0;
+
+fail:
+  fifo.close();
+  old.close();
+  return 1;
 }
 
 #if WITH_IRIDIUM
@@ -65,47 +65,47 @@ int upgradeLIFO()
 
   // Open old
   LIFO old = LIFO("LIFO.BIN", 8);
-  if (old.open(O_READ))
-  {
-    error(F("Failed to open old LIFO"));
-    return 1;
-  }
+  if (old.open(O_READ)) { return 1; } // Error
   int32_t nitems = old.len();
-  cr.println(F("Upgrading LIFO: %ld items (1 dot = 10 items)"), nitems);
+  cr.println(F("Upgrading LIFO: %ld items (1 dot = 20 items)"), nitems);
 
   // Create new (delete first in case previous upgrade was interrupted)
   SD.del("LIFO2.BIN");
   lifo.make();
 
   // Upgrade
-  const int progress_nth = 10; // Print a dot every .. items
+  const int progress_nth = 20; // Print a dot every .. items
   const int progress_nl = 60 * progress_nth; // Print a new line every .. dots
 
   lifo.open(O_RDWR | O_CREAT);
   uint8_t item[9] = {0};
   for (int32_t idx=0; idx < nitems; idx++)
   {
-    if (old.peek(&item[1], idx) || lifo.push(item))
-    {
-      cr.println(F("ERROR Upgrading"));
-      lifo.close();
-      return 1;
-    }
+    if (old.peek(&item[1], idx) || lifo.push(item)) { goto fail; }
 
     // Progress
     if ((idx+1) % progress_nth == 0)
     {
-      if ((idx+1) % progress_nl == 0) { cr.println(F(".")); }
-      else                            { cr.print(F(".")); }
+      cr.print(F("."));
+      if ((idx+1) % progress_nl == 0)
+      {
+        if (lifo.sync()) { goto fail; }
+        cr.println();
+      }
     }
   }
   lifo.close();
 
   // Remove old
-  cr.println(F("Done."));
+  old.close();
   SD.del("LIFO.BIN");
-
+  cr.println(F("Done."));
   return 0;
+
+fail:
+  lifo.close();
+  old.close();
+  return 1;
 }
 #endif
 
@@ -150,9 +150,9 @@ void WaspUIO::boot()
   // Upgrade queues
   if (UIO.hasSD)
   {
-    upgradeFIFO();
+    if (upgradeFIFO()) { cr.println(F("ERROR Upgrading FIFO")); }
 #if WITH_IRIDIUM
-    upgradeLIFO();
+    if (upgradeLIFO()) { cr.println(F("ERROR Upgrading LIFO")); }
 #endif
   }
 

@@ -30,14 +30,8 @@ int sd_mkdir(const char* name)
 
 int sd_open(const char* filename, SdFile &file, uint8_t mode)
 {
-  if (! file.isOpen())
-  {
-    if (SD.openFile((char*)filename, &file, mode) == 0)
-    {
-      return 1;
-    }
-  }
-
+  if (file.isOpen()) { return 0; } // Do nothing if already open
+  if (SD.openFile((char*)filename, &file, mode) == 0) { return 1; } // Open
   return 0;
 }
 
@@ -49,22 +43,10 @@ int sd_open(const char* filename, SdFile &file, uint8_t mode)
  */
 int sd_write(SdFile &file, const void* buf, size_t size)
 {
-  int n;
-
-  n = file.write(buf, size);
-  if (n == -1)
+  int n = file.write(buf, size);
+  if (n == -1 || n < size)
   {
-    return 1; // write failed
-  }
-
-  if (file.sync() == false)
-  {
-    return 2; // sync failed
-  }
-
-  if (n < size)
-  {
-    return 3; // wrote only n bytes of size
+    return 1;
   }
 
   return 0;
@@ -80,7 +62,7 @@ int sd_append(SdFile &file, const void* buf, size_t size)
 {
   if (file.seekEnd() == false)
   {
-    return 4; // seekEnd failed
+    return 1;
   }
 
   return sd_write(file, buf, size);
