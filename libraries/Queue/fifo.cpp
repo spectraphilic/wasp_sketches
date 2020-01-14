@@ -6,10 +6,10 @@ int FIFO::make()
   uint32_t start = 0;
 
   // Queue file
-  if (sd_mkfile(qname)) { return QUEUE_ERROR; }
+  if (sd_mkfile(qname)) { return 1; }
 
   // Index file
-  if (sd_mkfile(iname)) { return QUEUE_ERROR; }
+  if (sd_mkfile(iname)) { return 1; }
   if (SD.getFileSize(iname) == 0)
   {
     SD.openFile((char*)iname, &index, O_WRITE);
@@ -21,28 +21,53 @@ int FIFO::make()
 
 int FIFO::open(uint8_t mode)
 {
-  //cr.println(F("FIFO::open(%d)"), mode);
-  if (sd_open(iname, index, mode))
-  {
-    return QUEUE_ERROR;
-  }
+  if (_mode == mode) { return 0; } // If already open with the same mode, do nothing
+  //cr.println(F("FIFO::open(%s, %d -> %d)"), qname, _mode, mode);
+  if (_mode) { close(); }          // If open with a different mode, close first
+
+  // Open
   if (sd_open(qname, queue, mode))
   {
-    index.close();
-    return QUEUE_ERROR;
+    return 1;
+  }
+  if (sd_open(iname, index, mode))
+  {
+    queue.close();
+    return 1;
+  }
+  _mode = mode;
+
+  // Read state
+  if (read_state())
+  {
+    close();
+    return 1;
   }
 
-  return read_state();
+  // Check for file corruption. The file size must be a multiple of item_size.
+  // If it is not we consider there has been a write error, and we truncate the
+  // file.
+  if (mode && O_WRITE)
+  {
+    uint32_t mod = queue_size % item_size;
+    if (mod != 0)
+    {
+      queue.truncate(queue_size - mod);
+    }
+  }
+
+  return 0;
 }
 
 
-int FIFO::close()
+void FIFO::close()
 {
-  //cr.println(F("FIFO::close()"));
+  //cr.println(F("FIFO::close(%s)"), qname);
   if (index.isOpen()) { index.close(); }
   if (queue.isOpen()) { queue.close(); }
-  return QUEUE_OK;
+  _mode = 0;
 }
+
 
 int FIFO::read_offset()
 {
@@ -51,42 +76,42 @@ int FIFO::read_offset()
   index.seekSet(0);
   if (index.read(item, 4) != 4)
   {
-    return QUEUE_ERROR;
+    return 1;
   }
   offset = *(uint32_t *)item;
-  return QUEUE_OK;
+  return 0;
 }
+
 
 int FIFO::drop_begin(uint8_t n)
 {
-  int status = open(O_RDWR);
-  if (status)
-  {
-    goto exit;
-  }
-  //cr.println(F("** fifo.drop_begin(): %lu %lu"), offset, queue_size);
+  // Open
+  bool closed = (_mode == 0);
+  if (open(O_RDWR)) { return 1; }
 
   // Truncate queue to zero
   offset += item_size * n;
-  if (offset >= queue_size)
-  {
+  if (offset >= queue_size) {
     offset = 0;
     if (queue.truncate(0) == false)
     {
-      //cr.println(F("TRUNCATE ERROR"));
-      status = QUEUE_ERROR;
-      goto exit;
+      close();
+      return 1;
     }
+    nitems = 0;
+  } else {
+    nitems -= n;
   }
 
   // Update offset
   index.seekSet(0);
   if (sd_write(index, (void*)(&offset), 4))
   {
-    status = QUEUE_ERROR;
+    close();
+    return 1;
   }
 
-exit:
-  close();
-  return status;
+  // Close
+  if (closed) { close(); } // Close only if it was closed before
+  return 0;
 }

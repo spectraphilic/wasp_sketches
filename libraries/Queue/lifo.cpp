@@ -4,123 +4,130 @@
 int LIFO::make()
 {
   // Queue file
-  if (sd_mkfile(qname)) { return QUEUE_ERROR; }
+  if (sd_mkfile(qname)) { return 1; }
 }
 
 
 int LIFO::open(uint8_t mode)
 {
-  //cr.println(F("LIFO::open(%d)"), mode);
-  // TODO Create if doesn't exist
+  if (_mode == mode) { return 0; } // If already open with the same mode, do nothing
+  //cr.println(F("LIFO::open(%s, %d -> %d)"), qname, _mode, mode);
+  if (_mode) { close(); }          // If open with a different mode, close first
+
+  // Open
   if (sd_open(qname, queue, mode))
   {
-    return QUEUE_ERROR;
+    return 1;
+  }
+  _mode = mode;
+
+  // Read state
+  if (read_state())
+  {
+    close();
+    return 1;
   }
 
-  return read_state();
+  // Check for file corruption. The file size must be a multiple of item_size.
+  // If it is not we consider there has been a write error, and we truncate the
+  // file.
+  if (mode && O_WRITE)
+  {
+    uint32_t mod = queue_size % item_size;
+    if (mod != 0)
+    {
+      queue.truncate(queue_size - mod);
+    }
+  }
+
+  return 0;
 }
 
 
-int LIFO::close()
+void LIFO::close()
 {
-  //cr.println(F("LIFO::close()"));
+  //cr.println(F("LIFO::close(%s)"), qname);
   if (queue.isOpen()) { queue.close(); }
-  return QUEUE_OK;
+  _mode = 0;
 }
 
 int LIFO::read_offset()
 {
-  offset = 0;
-  return QUEUE_OK;
+  return 0;
 }
 
 int LIFO::read_state()
 {
   queue_size = queue.fileSize();
-  if (read_offset() == QUEUE_ERROR) { return QUEUE_ERROR; }
+  if (read_offset())       { return 1; }
+  if (offset > queue_size) { return 1; }
   nitems = (queue_size - offset) / item_size;
-  return (nitems == 0)? QUEUE_EMPTY: QUEUE_OK;
+
+  return 0;
 }
 
 int LIFO::push(uint8_t *item)
 {
-  if (sd_open(qname, queue, O_RDWR | O_CREAT))
-  {
-    return QUEUE_ERROR;
-  }
+  // Open
+  bool closed = (_mode == 0);
+  if (open(O_RDWR | O_CREAT)) { return 1; }
 
-  // Security check, the file size must be a multiple of 8. If it is not we
-  // consider there has been a write error, and we trunctate the file.
-  queue_size = queue.fileSize();
-  uint32_t mod = queue_size % item_size;
-  if (mod != 0)
-  {
-    queue.truncate(queue_size - mod);
-  }
-
-  // Append record
+  // Append
   if (sd_append(queue, item, item_size))
   {
-    queue.close();
-    return QUEUE_ERROR;
+    close();
+    return 1;
   }
+  nitems++;
 
-  //cr.println(F("** push(): %lu"), queue.fileSize());
-  queue.close();
-  return QUEUE_OK;
+  // Close
+  if (closed) { close(); } // Close only if it was closed before
+  return 0;
 }
 
 int LIFO::drop_end(uint8_t n)
 {
-  int status = open(O_RDWR);
-  if (status)
-  {
-    goto exit;
-  }
-  //cr.println(F("** lifo.drop_end(): %lu"), queue_size);
+  // Open
+  bool closed = (_mode == 0);
+  if (open(O_RDWR)) { return 1; }
 
   // Truncate (pop)
   if (queue.truncate(queue_size - item_size * n) == false)
   {
-    status = QUEUE_ERROR;
+    close();
+    return 1;
   }
+  nitems -= n;
 
-exit:
-  close();
-  return status;
+  // Close
+  if (closed) { close(); } // Close only if it was closed before
+  return 0;
 }
 
 
-int LIFO::peek(uint8_t *item, int idx)
+int LIFO::peek(uint8_t *item, int32_t idx)
 {
-  int status = open(O_READ);
-  if (status)
-  {
-    goto exit;
-  }
-  //cr.println(F("** lifo.peek(%d): %lu"), idx, queue_size);
+  // Open
+  bool closed = (_mode == 0);
+  if (open(O_READ)) { return 1; }
 
-  // Check index is within range
-  if (idx > nitems-1 || idx < -nitems)
+  // Indexing
+  if (idx < 0) { idx = nitems + idx; } // Negative index: -1 (last) ..
+  if (idx < 0 || idx+1 > nitems)       // Check index is within range
   {
-    status = QUEUE_INDEX_ERROR;
-    goto exit;
+    close();
+    return 1;
   }
-
-  // Seek
-  if (idx < 0)
-  {
-    idx = nitems + idx;
-  }
-  queue.seekSet(offset + idx * item_size);
 
   // Read the record
+  queue.seekSet(offset + idx * item_size);
   if (queue.read(item, item_size) != item_size)
   {
-    status = QUEUE_ERROR;
+    close();
+    return 1;
   }
 
-exit:
-  close();
-  return status;
+  // Close
+  if (closed) { close(); } // Close only if it was closed before
+  return 0;
 }

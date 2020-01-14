@@ -794,19 +794,12 @@ int WaspUIO::readFrame(uint8_t &n)
   while (true)
   {
 #if WITH_IRIDIUM
-    int status = lifo.peek(item, idx - n);
+    if (lifo.len() == 0) { break; }
+    if (lifo.peek(item, idx - n)) { return -1; }
 #else
-    int status = fifo.peek(item, idx + n);
+    if (fifo.len() == 0) { break; }
+    if (fifo.peek(item, idx + n)) { return -1; }
 #endif
-    if (status == QUEUE_EMPTY || status == QUEUE_INDEX_ERROR)
-    {
-      break;
-    }
-    else if (status)
-    {
-      error(F("readFrame peek(%d) failure"), idx);
-      return -1;
-    }
 
     // Stop condition
     int size = (int) item[8];

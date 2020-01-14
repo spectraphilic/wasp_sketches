@@ -11,15 +11,6 @@ int sd_append(SdFile &file, const void* buf, size_t nbyte);
 
 
 /*
- * Base stuff for queues
- */
-
-#define QUEUE_OK 0
-#define QUEUE_EMPTY 1
-#define QUEUE_INDEX_ERROR 2
-#define QUEUE_ERROR 3
-
-/*
  * Last-In-First-Out queue (LIFO)
  */
 
@@ -33,9 +24,10 @@ class LIFO
     // State
     uint32_t queue_size;
     uint32_t offset = 0;
-    int nitems;  // Number of items in the queue
+    int32_t nitems; // Signed because idx can be negative
     virtual int read_offset();
     int read_state();
+    uint8_t _mode = 0;
 
     // Open files
     SdFile queue;
@@ -46,10 +38,11 @@ class LIFO
 
     virtual int make();       // Create files if not done already
     virtual int open(uint8_t mode);
-    virtual int close();
+    virtual void close();
     int drop_end(uint8_t n);  // Remove the last n items from the queue
-    int peek(uint8_t *, int); // Return the item in the given position
+    int peek(uint8_t *, int32_t); // Return the item in the given position
     int push(uint8_t *);
+    int32_t len() { return nitems; }
 };
 
 
@@ -72,6 +65,6 @@ class FIFO : public LIFO
 
     int make();
     int open(uint8_t mode);
-    int close();
+    void close();
     int drop_begin(uint8_t n); // Remove the first n items from the queue
 };
