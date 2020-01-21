@@ -4,7 +4,7 @@
 #if WITH_XBEE
 void WaspUIO::xbeeInit()
 {
-  const __FlashStringHelper * err = NULL;
+  const __FlashStringHelper *err = NULL;
 
   // XBee network
   memcpy_P(&xbee, &xbees[xbee_network], sizeof xbee);

@@ -458,9 +458,10 @@ public:
   uint8_t addSensorValue(int32_t value);
   uint8_t addSensorValue(uint32_t value);
   uint8_t getSequence(uint8_t *p);
-  void showFrame(uint8_t *p);
+  uint16_t parseFrame(uint8_t *p, uint16_t max_length);
+  uint8_t saveFrames(uint8_t src, uint8_t *buffer, uint16_t max_length);
+  uint8_t saveFrame(uint8_t src, uint8_t *buffer, uint16_t length);
   uint8_t saveFrame();
-  uint8_t saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_t numFields=0);
   int readFrame(uint8_t &n);
   uint8_t frameSize;
   uint16_t payloadSize;

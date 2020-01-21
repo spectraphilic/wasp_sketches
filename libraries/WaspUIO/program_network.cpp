@@ -422,15 +422,16 @@ CR_TASK(taskNetworkLoraReceive)
           warn(F("Lora: Failed to send ACK"));
         }
       } else if (strncmp("<=>", data, 3) == 0) {
-        err = UIO.saveFrame(
+        uint8_t n = UIO.saveFrames(
           sx1272.packet_received.src,
           sx1272.packet_received.data,
-          sx1272.packet_received.length
+          sx1272.packet_received.length - 5 // dst(1) + src(1) + packnum(1) + length(1) + data + retry(1)
         );
-        if (err) {
-          warn(F("Failed to save frame"));
-        } else {
-          loraSend(sx1272.packet_received.src, "ack 1", false); // XXX ack n; time xxx
+        if (n > 0)
+        {
+          char cmd[8];
+          snprintf_F(cmd, 8, F("ack %u"), n);
+          UIO.loraSend(sx1272.packet_received.src, cmd, false); // TODO "ack n; time xxx"
         }
       } else {
         status = exeCommand(data);

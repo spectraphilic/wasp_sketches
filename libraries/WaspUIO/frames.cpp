@@ -421,9 +421,8 @@ void WaspUIO::setFrameSize()
 
 
 /**
- * Print the binary frame to USB.
+ * Return the sequence of the given frame.
  */
-
 uint8_t WaspUIO::getSequence(uint8_t *p)
 {
    uint8_t offset, i;
@@ -448,65 +447,77 @@ uint8_t WaspUIO::getSequence(uint8_t *p)
    return 0;
 }
 
-void WaspUIO::showFrame(uint8_t *p)
-{
-   uint8_t nbytes;
-   char buffer[17];
-   char c;
-   uint8_t nfields;
-   uint8_t len;
-   char name[20];
-   char value_str[50];
-   int8_t diff;
 
-   // Binary Frame
-   cr.println(F("=== Binary Frame: %d fields in %d bytes ==="), frame.numFields, frame.length);
+/**
+ * Parse and print frame. Return total length of the frame, 0 if error.
+ */
+uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
+{
+   uint16_t length;
+   // Header
+   uint8_t frame_type;
+   uint8_t nbytes;
+   char serial[17];
+   char mote_id[17];
+   uint8_t seq;
+
+   if (log_usb) cr.println(F("=== Binary Frame ==="));
 
    // Start delimiter
    if (strncmp((const char*) p, "<=>", 3) != 0)
    {
-     cr.println(F("Error reading Start delimiter <=>"));
-     return;
+     if (log_usb) cr.println(F("Error reading Start delimiter <=>"));
+     return 0;
    }
    p += 3;
 
-   // Frame type (TODO Print text identifier: Information, TimeOut, ...)
-   // Don't clear the most significant bit, we already know it's zero
-   cr.println(F("Frame type: %d"), *p++);
+   // Frame type
+   frame_type = *p++;
+   if (log_usb) cr.println(F("Frame type: %d"), frame_type); // TODO Print text identifier: info, timeout, ...
 
    // Number of bytes
    nbytes = *p++;
-   //println(F("Number of bytes left: %d"), nbytes);
+   if (log_usb) cr.println(F("Number of bytes: %d"), nbytes);
+
+   length = 5 + nbytes;
+   if (length > max_length)
+   {
+     if (log_usb) cr.println(F("Frame length (%u) greater than max-length (%u"), length, max_length);
+     return 0;
+   }
 
    // Serial ID
-   // This only works with boot version G or above
-   Utils.hex2str(p, buffer, 8);
+   Utils.hex2str(p, serial, 8);
    p += 8;
    nbytes -= 8;
-   cr.println(F("Serial ID: 0x%s"), buffer);
+   if (log_usb) cr.println(F("Serial ID: 0x%s"), serial);
 
    // Waspmote ID
+   char c;
    for (uint8_t i = 0; i < 17 ; i++)
    {
      c = (char) *p++;
      nbytes--;
      if (c == '#')
      {
-       buffer[i] = '\0';
+       mote_id[i] = '\0';
        break;
      }
-     buffer[i] = c;
+     mote_id[i] = c;
    }
+   if (log_usb) cr.println(F("Waspmote ID: %s"), mote_id);
+
+   // Separator
    if (c != '#')
    {
-     cr.println(F("Error reading Waspmote ID"));
-     return;
+     if (log_usb) cr.println(F("Error reading Waspmote ID"));
+     return 0;
    }
-   cr.println(F("Waspmote ID: %s"), buffer);
 
    // Sequence
-   cr.println(F("Sequence: %d"), *p++);
+   seq = *p++;
    nbytes--;
+   if (log_usb) cr.println(F("Sequence: %d"), seq);
 
    // Payload
    while (nbytes > 0)
@@ -519,96 +530,99 @@ void WaspUIO::showFrame(uint8_t *p)
      strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
      if (strlen(format) == 0)
      {
-       cr.println(F("Unexpected frame type %hhu"), type);
-       return;
+       if (log_usb) cr.println(F("Unexpected frame type %hhu"), type);
+       return 0;
      }
 
      // Read name
+     char name[20];
      strcpy_P(name, (char*)pgm_read_word(&(FRAME_NAME_TABLE[type])));
 
      // Values
+     char value_str[50];
      for (int i=0; i < strlen(format); i++)
      {
        c = format[i];
        if (c == 'f')
        {
          Utils.float2String(*(float*)(void*)p, value_str, 4);
-         cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
+         if (log_usb) cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
          p += 4; nbytes -= 4;
        }
        else if (c == 'i')
        {
-         cr.println(F("Sensor %d (%s): %d"), type, name, *(int8_t *)p);
+         if (log_usb) cr.println(F("Sensor %d (%s): %d"), type, name, *(int8_t *)p);
          p += 1; nbytes -= 1;
        }
        else if (c == 'j')
        {
-         cr.println(F("Sensor %d (%s): %d"), type, name, *(int16_t *)p);
+         if (log_usb) cr.println(F("Sensor %d (%s): %d"), type, name, *(int16_t *)p);
          p += 2; nbytes -= 2;
        }
        else if (c == 'k')
        {
-         cr.println(F("Sensor %d (%s): %ld"), type, name, *(int32_t *)p);
+         if (log_usb) cr.println(F("Sensor %d (%s): %ld"), type, name, *(int32_t *)p);
          p += 4; nbytes -= 4;
        }
        else if (c == 'u')
        {
-         cr.println(F("Sensor %d (%s): %d"), type, name, *(uint8_t *)p);
+         if (log_usb) cr.println(F("Sensor %d (%s): %d"), type, name, *(uint8_t *)p);
          p += 1; nbytes -= 1;
        }
        else if (c == 'v')
        {
-         cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint16_t *)p);
+         if (log_usb) cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint16_t *)p);
          p += 2; nbytes -= 2;
        }
        else if (c == 'w')
        {
-         cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint32_t *)p);
+         if (log_usb) cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint32_t *)p);
          p += 4; nbytes -= 4;
        }
        else if (c == 'n')
        {
-         nfields = *p++;
+         uint8_t nfields = *p++;
          nbytes--;
          // Special case, we store ints in a compressed format
          for (uint8_t j=0; j < nfields; j++)
          {
            if (j > 0)
            {
-             diff = *(int8_t *)p; p++;
+             int8_t diff = *(int8_t *)p; p++;
              nbytes--;
              if (diff != -128)
              {
-               cr.println(F("Sensor %d (%s): %hhd"), type, name, diff);
+               if (log_usb) cr.println(F("Sensor %d (%s): %hhd"), type, name, diff);
                continue;
              }
            }
 
-           cr.println(F("Sensor %d (%s): %d"), type, name, *(int *)p);
+           if (log_usb) cr.println(F("Sensor %d (%s): %d"), type, name, *(int *)p);
            p += 2; nbytes -= 2;
          }
        }
        else if (c == 's')
        {
-         len = *p++;
+         uint8_t len = *p++;
          nbytes--;
          if (len > sizeof(value_str) - 1)
          {
-           cr.println(F("Error reading sensor value, string too long %d"), len);
-           return;
+           if (log_usb) cr.println(F("Error reading sensor value, string too long %d"), len);
+           return 0;
          }
          strncpy(value_str, (char*) p, len);
          p += len; nbytes -= len;
-         cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
+         if (log_usb) cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
        }
        else
        {
-         cr.println(F("Sensor %d (%s): unexpected type %c"), type, name, c);
+         if (log_usb) cr.println(F("Sensor %d (%s): unexpected type %c"), type, name, c);
        }
      }
    }
 
-   cr.println(F("=========================================="));
+   if (log_usb) cr.println(F("===================="));
+   return length;
 }
 
 
@@ -637,6 +651,46 @@ uint8_t WaspUIO::getDataFilename(char* filename, uint8_t src, uint8_t year, uint
 
 
 /**
+ * Saves the frames in the given buffer. Returns the number of frames saved.
+ */
+uint8_t WaspUIO::saveFrames(uint8_t src, uint8_t *buffer, uint16_t max_length)
+{
+  uint8_t n = 0;
+  uint8_t *p = buffer;
+  uint16_t bytes_left = max_length;
+
+  if (! hasSD)
+  {
+    return 0;
+  }
+
+  // Switch on USB
+  if (log_usb)
+  {
+    USB.ON();
+    USB.flush();
+  }
+
+  while (bytes_left > 0)
+  {
+    uint16_t length = parseFrame(p, bytes_left);
+    if (length == 0)
+    {
+      break;
+    }
+    saveFrame(src, p, length);
+    // Next
+    p += length;
+    bytes_left -= length;
+    n++;
+  }
+
+  // Switch OFF USB
+  USB.OFF();
+  return n;
+}
+
+/**
  * This function:
  *
  * - Stores the frame in the "archive file"
@@ -660,41 +714,13 @@ uint8_t WaspUIO::getDataFilename(char* filename, uint8_t src, uint8_t year, uint
  * - 1 error, failed to archive frame
  * - 2 error, archived frame, but append to queue failed
  */
-
-uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_t numFields)
+uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
 {
   uint8_t year, month, date;
   char dataFilename[21]; // /data/[SRC/]YYMMDD.txt (max length is 21)
   uint32_t size;
   uint8_t item[9];
   SdFile dataFile;
-
-  // Print frame to USB for debugging
-  if (log_usb)
-  {
-    USB.ON();
-    USB.flush();
-    showFrame(buffer);
-    USB.OFF();
-  }
-
-  // TODO Fragmentation
-
-#if WITH_CRYPTO
-  // Encrypt frame
-  // FIXME This doesn't work for frames from a remote host (Lora LAN)
-  if (strlen(password) > 0)
-  {
-    frame.encryptFrame(AES_128, password);
-    if (log_usb)
-    {
-      frame.showFrame();
-    }
-  }
-#endif
-
-  // Start SD
-  if (! hasSD) { return 1; }
 
   // (1) Get the date
   year = RTC.year;
@@ -748,18 +774,37 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length, uint8_
 #endif
 
   // Log
-  if (numFields) {
-    info(F("Frame saved to %s (bytes=%d fields=%d)"), queue_name, length, numFields);
-  } else {
-    info(F("Frame saved to %s (bytes=%d)"), queue_name, length);
-  }
+  info(F("Frame saved to %s (bytes=%d)"), queue_name, length);
 
   return 0;
 }
 
 uint8_t WaspUIO::saveFrame()
 {
-  return saveFrame(0, frame.buffer, frame.length, frame.numFields);
+  if (! hasSD) { return 1; }
+
+  // Print frame to USB for debugging
+  if (log_usb)
+  {
+    USB.ON();
+    USB.flush();
+    parseFrame(frame.buffer, frame.length);
+    USB.OFF();
+  }
+
+#if WITH_CRYPTO
+  // Encrypt frame
+  if (strlen(password) > 0)
+  {
+    frame.encryptFrame(AES_128, password);
+    if (log_usb)
+    {
+      frame.showFrame();
+    }
+  }
+#endif
+
+  return saveFrame(0, frame.buffer, frame.length);
 }
 
 /**
