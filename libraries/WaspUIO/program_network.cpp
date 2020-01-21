@@ -280,6 +280,11 @@ CR_TASK(taskNetworkLora)
 
   CR_BEGIN;
 
+  if (! UIO.hasSD)
+  {
+    CR_ERROR;
+  }
+
   if (UIO.loraStart())
   {
     error(F("taskNetworkLora loraStart() failed"));
@@ -287,12 +292,11 @@ CR_TASK(taskNetworkLora)
   }
   info(F("Network started"));
 
-  // Spawn first the receive task
+  // Receive: Senders need to listen as well for cmdAck
   CR_SPAWN(taskNetworkLoraReceive);
 
-  // Schedule sending frames
-  // Do not send with Lora if I'm the gateway
-  if (UIO.hasSD && UIO.lora_addr != 1)
+  // Schedule sending frames. Don't send with Lora if I'm the gateway.
+  if (UIO.lora_addr != 1)
   {
     CR_SPAWN2(taskNetworkLoraSend, tid);
   }
@@ -301,7 +305,7 @@ CR_TASK(taskNetworkLora)
   wait = UIO.lan_wait ? (UIO.lan_wait * 1000UL) : 45000UL;
   CR_DELAY(wait);
 
-  if (UIO.hasSD && UIO.lora_addr != 1)
+  if (UIO.lora_addr != 1)
   {
     CR_JOIN(tid);
   }
@@ -326,6 +330,7 @@ CR_TASK(taskNetworkLoraSend)
   uint8_t n;
 
   CR_BEGIN;
+  UIO.ack_wait = 0;
 
   // TODO See whether sx1272._sendTime changes much in every call, if it
   // doesn't set it once here (probably use it as well for receving data)
@@ -333,6 +338,8 @@ CR_TASK(taskNetworkLoraSend)
   // TODO Randomize sending time? Because only one packet can be in the network
   // at the same time. Also consider higher modes to reduce the time in the air,
   // so to improve the network availability. See pages 41-42
+
+  CR_DELAY(1000); // XXX
 
   // Send frames
   while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
@@ -348,13 +355,14 @@ CR_TASK(taskNetworkLoraSend)
       // Send the frame. If not given explicitely (last parameter) the timeout
       // will be automatically calculated; sending is aborted if the timeout is
       // reached.
+      debug(F("Lora sending..."));
+      //Utils.blinkGreenLED(500, 3);
       if (sx1272.sendPacketTimeout(1, (uint8_t*)SD.buffer, size))
       {
-        debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
-        warn(F("xbeeDM.send(..) failure"));
+        //Utils.blinkRedLED(500, 3);
+        warn(F("sx1272.send(..) failure"));
         break;
       }
-      debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
       sent = millis();
 
       // Next
@@ -380,52 +388,55 @@ CR_TASK(taskNetworkLoraReceive)
 {
   cmd_status_t status;
   const char *data;
+  uint8_t err;
 
   CR_BEGIN;
 
+  //Utils.blinkGreenLED(500, 3);
   while (SPI.isSocket0)
   {
-    if (sx1272.availableData(10)) // If timeout not given max will be used!
+    // Data is expected to be available before calling this method, that's
+    // why we only timeout for 100ms, less should be enough
+    // TODO Find out how much timeout is auto-caculated
+    // TODO For a multi-hop setup use receiveAll (promiscous mode, page 36)
+    if (sx1272.receivePacketTimeout(100) == 0)
     {
-      // Data is expected to be available before calling this method, that's
-      // why we only timeout for 100ms, less should be enough
-      // TODO Find out how much timeout is auto-caculated
-      // TODO For a multi-hop setup use receiveAll (promiscous mode, page 36)
-      if (sx1272.receivePacketTimeout())
-      {
-        debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
-        warn(F("receivePacket: timeout (we will retry)"));
-      }
-      else
-      {
-        debug(F("XXX sx1272._sendTime = %u"), sx1272._sendTime); // XXX
-        sx1272.showReceivedPacket();
+      debug(F("Packet received!! sx1272._sendTime = %u"), sx1272._sendTime);
+      sx1272.showReceivedPacket();
 /*
-        info(F("Packet received from Lora network"));
-        info(F("dst=%u src=%u packnum=%u length=%u retry=%u"),
-          sx1272.packet_received.dst,
-          sx1272.packet_received.src,
-          sx1272.packet_received.packnum,
-          sx1272.packet_received.length,
-          sx1272.packet_received.retry,
-        );
+      info(F("Packet received from Lora network"));
+      info(F("dst=%u src=%u packnum=%u length=%u retry=%u"),
+        sx1272.packet_received.dst,
+        sx1272.packet_received.src,
+        sx1272.packet_received.packnum,
+        sx1272.packet_received.length,
+        sx1272.packet_received.retry,
+      );
 */
 
-        data = (const char*)sx1272.packet_received.data;
-        if (strncmp("<=>", data, 3) == 0) {
-          // TODO Save the frame with the correct filepath and send ACK command
-          UIO.saveFrame(
-            sx1272.packet_received.src,
-            sx1272.packet_received.data,
-            sx1272.packet_received.length
-          );
-
+      data = (const char*)sx1272.packet_received.data;
+      if (strncmp("ping", data, 4) == 0) {
+        info(F("ping received from lora network address=%u"), sx1272.packet_received.src);
+        if (sx1272.setACK() || sx1272.sendWithTimeout())
+        {
+          warn(F("Lora: Failed to send ACK"));
+        }
+      } else if (strncmp("<=>", data, 3) == 0) {
+        err = UIO.saveFrame(
+          sx1272.packet_received.src,
+          sx1272.packet_received.data,
+          sx1272.packet_received.length
+        );
+        if (err) {
+          warn(F("Failed to save frame"));
         } else {
-          status = exeCommand(data);
-          if (status == cmd_bad_input)
-          {
-            warn(F("unexpected frame received from %u"), sx1272.packet_received.src);
-          }
+          loraSend(sx1272.packet_received.src, "ack 1", false); // XXX ack n; time xxx
+        }
+      } else {
+        status = exeCommand(data);
+        if (status == cmd_bad_input)
+        {
+          warn(F("unexpected frame received from %u"), sx1272.packet_received.src);
         }
       }
     }
@@ -433,6 +444,7 @@ CR_TASK(taskNetworkLoraReceive)
     // Give control back
     CR_DELAY(0);
   }
+  //Utils.blinkRedLED(500, 3);
 
   CR_END;
 }

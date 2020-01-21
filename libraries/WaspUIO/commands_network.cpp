@@ -73,9 +73,20 @@ COMMAND(cmdLora)
 {
   UIO.loraInit();
 
-  cr.println(F("Max current = %u"), sx1272._maxCurrent); // uint8_t 0x00 to 0x1B (5 to 240 mA)
-  cr.println(F("Payload length = %u"), sx1272._payloadlength); // uint8_t
+  // uint8_t unless specified otherwise
+  cr.println(F("Mode BW=%u CR=%u SF=%u"), sx1272._bandwidth, sx1272._codingRate, sx1272._spreadingFactor);
+  cr.println(F("Header = %u"), sx1272._header);
+  cr.println(F("CRC = %u"), sx1272._CRC);
+  cr.println(F("Channel = %lX"), sx1272._channel); // uint32_t
+  cr.println(F("Power = %u"), sx1272._power);
   cr.println(F("Preamble length = %u"), sx1272._preamblelength); // uint16_t
+  cr.println(F("Payload length = %u"), sx1272._payloadlength);
+  cr.println(F("Node address = %u"), sx1272._nodeAddress);
+  cr.println(F("Max current = %u mA"), sx1272._maxCurrent); // 0x00 to 0x1B (5 to 240 mA)
+  cr.println(F("Temp = %d"), sx1272._temp); // int
+
+//sx1272.setTimeout();
+//cr.println(F("Send time = %u ms"), sx1272._sendTime); // uint16_t
 
   return cmd_ok;
 }
