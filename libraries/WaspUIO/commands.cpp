@@ -20,7 +20,7 @@
 
 typedef struct {
   char prefix[12];
-  cmd_status_t (*function)(const char* command);
+  cmd_status_t (*function)(const char *command);
   const char* help;
 } Command;
 
@@ -133,13 +133,10 @@ void WaspUIO::clint()
       }
 
       cr.println(buffer);
-      int8_t status = exeCommand(buffer);
-      if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
-      else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
-      else if (status == cmd_error)       { cr.println(F("Error")); }
-      else if (status == cmd_ok)          { cr.println(F("OK")); }
-      else if (status == cmd_quiet)       { }
-      else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
+      if (exeCommands(buffer, true) == cmd_exit)
+      {
+        break;
+      }
     } while (true);
   }
   else
@@ -155,6 +152,40 @@ void WaspUIO::clint()
  * Call command
  */
 
+cmd_status_t exeCommands(char *str, bool interactive)
+{
+  cmd_status_t status;
+  char *p = str;
+
+  while (p != NULL)
+  {
+    // Find next command if any (commands separated by semicolon)
+    char *n = strchr(p, ';');
+    if (n != NULL)
+    {
+      *n = '\0';
+      n++;
+    }
+
+    debug(F("command \"%s\""), p);
+    status = exeCommand(p);
+    if (interactive)
+    {
+      if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
+      else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
+      else if (status == cmd_error)       { cr.println(F("Error")); }
+      else if (status == cmd_ok)          { cr.println(F("OK")); }
+      else if (status == cmd_quiet)       { }
+      else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
+    }
+
+    // Next command
+    p = n;
+  }
+
+  return status;
+}
+
 COMMAND(exeCommand)
 {
   Command cmd;
@@ -166,7 +197,6 @@ COMMAND(exeCommand)
     size_t len = strlen(cmd.prefix);
     if (strncmp(cmd.prefix, str, len) == 0)
     {
-      debug(F("command %s"), str);
       UIO.saveState();
       status = cmd.function(&(str[len]));
       UIO.loadState();

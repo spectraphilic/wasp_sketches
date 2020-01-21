@@ -85,8 +85,8 @@ COMMAND(cmdLora)
   cr.println(F("Max current = %u mA"), sx1272._maxCurrent); // 0x00 to 0x1B (5 to 240 mA)
   cr.println(F("Temp = %d"), sx1272._temp); // int
 
-//sx1272.setTimeout();
-//cr.println(F("Send time = %u ms"), sx1272._sendTime); // uint16_t
+  float Tpacket = sx1272.timeOnAir(250);
+  cr.println(F("time-on-air(250)=%u ms"), (uint16_t)Tpacket);
 
   return cmd_ok;
 }

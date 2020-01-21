@@ -203,13 +203,12 @@ CR_TASK(taskNetworkXBeeSend)
   {
     if (UIO.ack_wait == 0)
     {
-      t0 = millis();
-
       // Read
       int size = UIO.readFrame(n);
       if (size <= 0) { break; }
 
       // Send the frame
+      t0 = millis();
       if (xbeeDM.send((char*)UIO.xbee.rx_address, (uint8_t*)SD.buffer, size) == 1)
       {
         warn(F("xbeeDM.send(..) failure"));
@@ -221,13 +220,9 @@ CR_TASK(taskNetworkXBeeSend)
       debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
       UIO.ack_wait = n;
     }
-    else
+    else if (cr.timeout(sent, 10 * 1000))
     {
-      // Do not wait more than 5s
-      if (cr.timeout(sent, 5 * 1000))
-      {
-         break;
-      }
+      break; // If waiting for an ACK more than 10s, stop sending.
     }
 
     CR_DELAY(50); // Give control back
@@ -239,7 +234,6 @@ CR_TASK(taskNetworkXBeeSend)
 CR_TASK(taskNetworkXBeeReceive)
 {
   char sourceMAC[17];
-  cmd_status_t status;
 
   CR_BEGIN;
 
@@ -256,11 +250,7 @@ CR_TASK(taskNetworkXBeeReceive)
       else
       {
         Utils.hex2str(xbeeDM._srcMAC, sourceMAC, 8);
-        status = exeCommand((const char*)xbeeDM._payload);
-        if (status == cmd_bad_input)
-        {
-          warn(F("unexpected frame received from %s"), sourceMAC);
-        }
+        exeCommands((const char*)xbeeDM._payload, false);
       }
     }
 
@@ -332,50 +322,41 @@ CR_TASK(taskNetworkLoraSend)
   CR_BEGIN;
   UIO.ack_wait = 0;
 
-  // TODO See whether sx1272._sendTime changes much in every call, if it
-  // doesn't set it once here (probably use it as well for receving data)
+  // Higher modes have lower time-on-air, this improves channel availability,
+  // so we should have higher rates of successful messages sent; choose the
+  // higher mode that has enough range). See pages 41-42.
 
-  // TODO Randomize sending time? Because only one packet can be in the network
-  // at the same time. Also consider higher modes to reduce the time in the air,
-  // so to improve the network availability. See pages 41-42
-
-  CR_DELAY(1000); // XXX
+  // Wait 200ms to let the GW time to start, plus a random value to avoid
+  // all motes to start sending at the same time.
+  CR_DELAY(200 + rand() % 1001); // 200-1200 ms
 
   // Send frames
   while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
   {
     if (UIO.ack_wait == 0)
     {
-      t0 = millis();
-
       // Read
       int size = UIO.readFrame(n);
       if (size <= 0) { break; }
 
-      // Send the frame. If not given explicitely (last parameter) the timeout
-      // will be automatically calculated; sending is aborted if the timeout is
-      // reached.
-      debug(F("Lora sending..."));
       //Utils.blinkGreenLED(500, 3);
+      // Send the frame. The timeout is calculated by sx1272
+      t0 = millis();
       if (sx1272.sendPacketTimeout(1, (uint8_t*)SD.buffer, size))
       {
         //Utils.blinkRedLED(500, 3);
-        warn(F("sx1272.send(..) failure"));
+        warn(F("sx1272.send(..) failure (sx1272._sendTime=%u)"), sx1272._sendTime);
         break;
       }
       sent = millis();
 
       // Next
-      debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+      debug(F("%d frame(s) sent in %lu ms (sx1272._sendTime=%u)"), n, cr.millisDiff(t0), sx1272._sendTime);
       UIO.ack_wait = n;
     }
-    else
+    else if (cr.timeout(sent, 10 * 1000))
     {
-      // Do not wait more than 5s
-      if (cr.timeout(sent, 5 * 1000))
-      {
-         break;
-      }
+      break; // If waiting for an ACK more than 10s, stop sending.
     }
 
     CR_DELAY(50); // Give control back
@@ -386,7 +367,6 @@ CR_TASK(taskNetworkLoraSend)
 
 CR_TASK(taskNetworkLoraReceive)
 {
-  cmd_status_t status;
   const char *data;
   uint8_t err;
 
@@ -397,9 +377,8 @@ CR_TASK(taskNetworkLoraReceive)
   {
     // Data is expected to be available before calling this method, that's
     // why we only timeout for 100ms, less should be enough
-    // TODO Find out how much timeout is auto-caculated
     // TODO For a multi-hop setup use receiveAll (promiscous mode, page 36)
-    if (sx1272.receivePacketTimeout(100) == 0)
+    if (sx1272.receivePacketTimeout(200) == 0)
     {
       debug(F("Packet received!! sx1272._sendTime = %u"), sx1272._sendTime);
       sx1272.showReceivedPacket();
@@ -429,16 +408,14 @@ CR_TASK(taskNetworkLoraReceive)
         );
         if (n > 0)
         {
-          char cmd[8];
-          snprintf_F(cmd, 8, F("ack %u"), n);
-          UIO.loraSend(sx1272.packet_received.src, cmd, false); // TODO "ack n; time xxx"
+          //Utils.blinkLEDs(1000);
+          const int size = 25;
+          char cmd[size];
+          snprintf_F(cmd, size, F("ack %u;time %lu"), n, UIO.getEpochTime());
+          UIO.loraSend(sx1272.packet_received.src, cmd, false);
         }
       } else {
-        status = exeCommand(data);
-        if (status == cmd_bad_input)
-        {
-          warn(F("unexpected frame received from %u"), sx1272.packet_received.src);
-        }
+        exeCommands((char*)data, false);
       }
     }
 

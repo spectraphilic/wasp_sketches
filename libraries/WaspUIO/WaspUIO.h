@@ -534,7 +534,8 @@ enum cmd_status_t {
 uint8_t _getFlag(const char*);
 uint8_t _getPin(uint8_t);
 
-#define COMMAND(name) cmd_status_t name(const char* str)
+#define COMMAND(name) cmd_status_t name(const char *str)
+cmd_status_t exeCommands(char *str, bool interactive);
 COMMAND(exeCommand);
 COMMAND(cmd4G_APN);
 COMMAND(cmd4G_GPS);
