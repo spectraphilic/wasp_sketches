@@ -87,8 +87,7 @@ enum wan_type_t {
 };
 
 enum run_t {
-  RUN_NETWORK,
-  RUN_BATTERY,
+  RUN_BATTERY = 1,
   RUN_GPS,
   RUN_ACC,
   RUN_CTD10, // SDI-12
@@ -104,13 +103,17 @@ enum run_t {
   RUN_LAGOPUS_TMP102,
   RUN_LAGOPUS_VL53L1X,
   RUN_ATMOS, // SDI-12
+  RUN_LAN, // Lora or XBee
+  RUN_WAN, // 4G or Iridium
   RUN_LEN // Special value
 };
 
-const char RUN_NETWORK_NAME [] PROGMEM = "net";             // 0 network
+const char EMPTY_STRING     [] PROGMEM = "";
+
 const char RUN_BATTERY_NAME [] PROGMEM = "bat";             // 1 battery
 const char RUN_GPS_NAME     [] PROGMEM = "gps";             // 2 gps
 const char RUN_ACC_NAME     [] PROGMEM = "acc";             // 3 accelerometer
+// Sensors
 const char RUN_CTD10_NAME   [] PROGMEM = "ctd";             // 4 water
 const char RUN_DS2_NAME     [] PROGMEM = "ds2";             // 5 wind
 const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";          // 6 temperature string
@@ -126,9 +129,11 @@ const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp";    // 14 digital temper
 const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";     // 15 distance
 // More
 const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
+const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
+const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 
 const char* const run_names[] PROGMEM = {
-  RUN_NETWORK_NAME,
+  EMPTY_STRING,
   RUN_BATTERY_NAME,
   RUN_GPS_NAME,
   RUN_ACC_NAME,
@@ -145,6 +150,8 @@ const char* const run_names[] PROGMEM = {
   RUN_LAGOPUS_TMP102_NAME,
   RUN_LAGOPUS_VL53L1X_NAME,
   RUN_ATMOS_NAME,
+  RUN_LAN_NAME,
+  RUN_WAN_NAME,
 };
 
 enum var_indexes {

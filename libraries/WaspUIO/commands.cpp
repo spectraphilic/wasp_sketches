@@ -29,7 +29,6 @@ const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+    - Scan DS18B20 in the 
 const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]       - Set 4G Access Point Name";
 const char CMD_4G_GPS    [] PROGMEM = "4g gps             - Get position from 4G's GPS";
 const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE       - Set pin for the 4G module (0=disabled)";
-const char CMD_ACK       [] PROGMEM = ""; // Hidden command
 const char CMD_CAT       [] PROGMEM = "cat FILENAME       - Print FILENAME contents to USB";
 const char CMD_CATX      [] PROGMEM = "catx FILENAME      - Print FILENAME contents in hexadecimal to USB";
 const char CMD_EXIT      [] PROGMEM = "exit               - Exit the command line interface";
@@ -65,7 +64,7 @@ const Command commands[] PROGMEM = {
   {"4g gps",        &cmd4G_GPS,      CMD_4G_GPS},
   {"4g pin ",       &cmd4G_Pin,      CMD_4G_PIN},
 #endif
-  {"ack",           &cmdAck,         CMD_ACK}, // Internal use only
+  {"ack",           &cmdAck,         EMPTY_STRING}, // Internal use only
   {"cat ",          &cmdCat,         CMD_CAT},
   {"catx ",         &cmdCatx,        CMD_CATX},
   {"exit",          &cmdExit,        CMD_EXIT},

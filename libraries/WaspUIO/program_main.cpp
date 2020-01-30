@@ -92,7 +92,7 @@ CR_TASK(taskMain)
   // and run the XBee network every hour at :07 (in this example sensor reading
   // must finish in less than 2 minutes, otherwise the network loop will be
   // skept).
-  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_NETWORK))
+  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_LAN))
   {
 #if WITH_XBEE
     if (UIO.lan_type == LAN_XBEE)
@@ -109,7 +109,10 @@ CR_TASK(taskMain)
       CR_JOIN(network_id);
     }
 #endif
+  }
 
+  if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_WAN))
+  {
 #if WITH_4G
     if (UIO.wan_type == WAN_4G)
     {
