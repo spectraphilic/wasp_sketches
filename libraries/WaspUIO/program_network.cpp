@@ -342,7 +342,7 @@ CR_TASK(taskNetworkLoraSend)
       //Utils.blinkGreenLED(500, 3);
       // Send the frame. The timeout is calculated by sx1272
       t0 = millis();
-      if (sx1272.sendPacketTimeout(1, (uint8_t*)SD.buffer, size))
+      if (sx1272.sendPacketTimeout(UIO.lora_dst, (uint8_t*)SD.buffer, size))
       {
         //Utils.blinkRedLED(500, 3);
         warn(F("sx1272.send(..) failure (sx1272._sendTime=%u)"), sx1272._sendTime);

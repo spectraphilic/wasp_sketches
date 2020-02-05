@@ -624,6 +624,13 @@ COMMAND(cmdVar)
         UIO.lan_wait = value;
       }
       break;
+    case VAR_LORA_DST_IDX:
+      if (n == 1) {
+        value = UIO.lora_dst;
+      } else {
+        UIO.lora_dst = value;
+      }
+      break;
     default:
       return cmd_bad_input;
   }

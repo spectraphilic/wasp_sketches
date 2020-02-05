@@ -173,11 +173,12 @@ void WaspUIO::bootConfig()
   log_sd = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_SD_IDX);
   log_usb = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_USB_IDX);
   lan_type = (lan_type_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LAN_TYPE_IDX);
+  lan_wait = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LAN_WAIT_IDX);
   wan_type = (wan_type_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_WAN_TYPE_IDX);
   lora_addr = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_ADDR_IDX);
   lora_mode = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_MODE_IDX);
+  lora_dst = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_DST_IDX);
   xbee_network = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_NETWORK_IDX);
-  lan_wait = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LAN_WAIT_IDX);
 
   // Defaults for safety
   if (cr.loglevel >= LOG_LEN) { cr.loglevel = LOG_DEBUG; }

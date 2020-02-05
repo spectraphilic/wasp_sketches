@@ -101,7 +101,7 @@ void loop()
 #if WITH_XBEE
   err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");
 #elif WITH_LORA
-  err = UIO.loraSend(1, "ping", true);
+  err = UIO.loraSend(UIO.lora_dst, "ping", true);
 #endif
 
   if (err == 0)

@@ -130,7 +130,7 @@ COMMAND(cmdPing)
 #if WITH_LORA
   if (UIO.lan_type == LAN_LORA)
   {
-    if (UIO.loraSend(1, "ping", true))
+    if (UIO.loraSend(UIO.lora_dst, "ping", true))
       return cmd_error;
     info(F("RSSI(dBm) = %d SNR = %d"), UIO.rssi, UIO.snr);
     return cmd_quiet;
