@@ -174,7 +174,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
 #if WITH_LORA
 const char* WaspUIO::pprintLora(char* dst, size_t size)
 {
-  snprintf_F(dst, size, F("address=%u mode=%u wait=%d"), lora_addr, lora_mode, lan_wait);
+  snprintf_F(dst, size, F("addr=%u dst=%u mode=%u wait=%d"), lora_addr, lora_dst, lora_mode, lan_wait);
   return dst;
 }
 #endif

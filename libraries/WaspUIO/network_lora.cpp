@@ -72,7 +72,7 @@ int WaspUIO::loraSend(uint8_t dst, const char* msg, bool ack)
   bool isOn = SPI.isSocket0;
   if (! isOn)
   {
-    err = UIO.loraStart();
+    err = loraStart();
     if (err) goto exit;
   }
 
@@ -89,7 +89,7 @@ int WaspUIO::loraSend(uint8_t dst, const char* msg, bool ack)
 exit:
   if (! isOn)
   {
-    UIO.loraStop();
+    loraStop();
   }
 
   // Print
@@ -99,6 +99,16 @@ exit:
   {
     error(F("loraSend failed error=%d"), err);
     return 1;
+  }
+
+  // Set network address in auto mode (lora.dst 0)
+  if (ack && dst == 0)
+  {
+    info(F("loraSend success, ack received from %u"), sx1272.ACK.src);
+    if (sx1272.ACK.src < lora_addr)
+    {
+      lora_dst2 = sx1272.ACK.src;
+    }
   }
 
   return 0;

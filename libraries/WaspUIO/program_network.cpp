@@ -318,9 +318,24 @@ CR_TASK(taskNetworkLoraSend)
   uint32_t t0;
   static unsigned long sent;
   uint8_t n;
+  uint8_t dst;
 
   CR_BEGIN;
   UIO.ack_wait = 0;
+
+  // Discover destination address, auto mode routing (lora.dst 0)
+  dst = UIO.lora_dst ? UIO.lora_dst : UIO.lora_dst2;
+  if (dst == 0)
+  {
+    if (UIO.loraSend(UIO.lora_dst, "ping", true))
+    {
+      CR_ERROR;
+    }
+    else
+    {
+      dst = UIO.lora_dst2;
+    }
+  }
 
   // Higher modes have lower time-on-air, this improves channel availability,
   // so we should have higher rates of successful messages sent; choose the
@@ -342,7 +357,7 @@ CR_TASK(taskNetworkLoraSend)
       //Utils.blinkGreenLED(500, 3);
       // Send the frame. The timeout is calculated by sx1272
       t0 = millis();
-      if (sx1272.sendPacketTimeout(UIO.lora_dst, (uint8_t*)SD.buffer, size))
+      if (sx1272.sendPacketTimeout(dst, (uint8_t*)SD.buffer, size))
       {
         //Utils.blinkRedLED(500, 3);
         warn(F("sx1272.send(..) failure (sx1272._sendTime=%u)"), sx1272._sendTime);
@@ -396,9 +411,16 @@ CR_TASK(taskNetworkLoraReceive)
       data = (const char*)sx1272.packet_received.data;
       if (strncmp("ping", data, 4) == 0) {
         info(F("ping received from lora network address=%u"), sx1272.packet_received.src);
-        if (sx1272.setACK() || sx1272.sendWithTimeout())
+        if (sx1272.packet_received.dst == UIO.lora_addr || sx1272.packet_received.src > UIO.lora_addr)
         {
-          warn(F("Lora: Failed to send ACK"));
+          if (sx1272.setACK() || sx1272.sendWithTimeout())
+          {
+            warn(F("Lora: Failed to send ACK"));
+          }
+        }
+        else
+        {
+          info(F("ignore ping"));
         }
       } else if (strncmp("<=>", data, 3) == 0) {
         uint8_t n = UIO.saveFrames(
