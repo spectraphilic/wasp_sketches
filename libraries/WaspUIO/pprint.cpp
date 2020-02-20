@@ -67,7 +67,13 @@ const char* WaspUIO::pprintBattery(char* dst, size_t size)
   {
     snprintf_F(dst, size, F("Lithium-ion (%d %%)"), UIO.batteryLevel);
   }
-  else
+  else if (batteryType == BATTERY_REG3V3)
+  {
+    char aux[10];
+    Utils.float2String(UIO.batteryVolts, aux, 2);
+    snprintf_F(dst, size, F("3V3 regulator (%s volts)"), aux) ;
+  }
+  else 
   {
     char aux[10];
     Utils.float2String(UIO.batteryVolts, aux, 2);

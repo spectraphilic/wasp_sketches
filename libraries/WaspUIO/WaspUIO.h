@@ -57,6 +57,7 @@
 enum battery_type_t {
   BATTERY_LITHIUM,
   BATTERY_LEAD,
+  BATTERY_REG3V3,
   BATTERY_LEN
 };
 
@@ -182,7 +183,7 @@ const char VAR_XBEE_NETWORK [] PROGMEM = "xbee.network";
 const char VAR_LAN_WAIT  [] PROGMEM = "lan.wait";
 const char VAR_LORA_DST  [] PROGMEM = "lora.dst";
 
-const char VAR_BAT_HELP          [] PROGMEM = ": 0=lithium 1=lead";
+const char VAR_BAT_HELP          [] PROGMEM = ": 0=lithium 1=lead 2=3V3 regulator";
 const char VAR_BOARD_HELP        [] PROGMEM = ": 0=none 1=lemming";
 const char VAR_LOG_LEVEL_HELP    [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char VAR_LOG_FLAG_HELP     [] PROGMEM = ": 0/1";

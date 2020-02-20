@@ -246,6 +246,12 @@ void WaspUIO::readBattery()
     if      (batteryLevel <= 30) { battery = BATTERY_LOW; }
     else if (batteryLevel <= 80) { battery = BATTERY_MIDDLE; }
   }
+  else if(batteryType == BATTERY_REG3V3)
+  {
+    batteryVolts = PWR.getBatteryVolts();
+    // force waspmote to think battery is always high (as voltage will always be 3V3)
+    battery = BATTERY_HIGH;
+  }
   else
   {
     batteryVolts = getLeadBatteryVolts();
@@ -262,11 +268,10 @@ void WaspUIO::readBattery()
 
 float WaspUIO::getBatteryVolts()
 {
-  if (batteryType == BATTERY_LITHIUM)
+  if ((batteryType == BATTERY_LITHIUM) || (batteryType == BATTERY_REG3V3))
   {
     return PWR.getBatteryVolts();
   }
-
   return getLeadBatteryVolts();
 }
 
