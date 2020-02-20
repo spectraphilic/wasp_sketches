@@ -122,10 +122,10 @@ int LIFO::peek(uint8_t *item, int32_t idx)
 
   // Indexing
   if (idx < 0) { idx = nitems + idx; } // Negative index: -1 (last) ..
-  if (idx < 0 || idx+1 > nitems)       // Check index is within range
+  if (idx < 0 || idx >= nitems)        // Check index is within range
   {
     close();
-    return 1;
+    return QUEUE_INDEX_ERROR;
   }
 
   // Read the record

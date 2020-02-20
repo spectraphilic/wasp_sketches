@@ -820,6 +820,7 @@ int WaspUIO::readFrame(uint8_t &n)
   uint8_t item[9];
   char dataFilename[21]; // /data/[SRC/]YYMMDD.txt (max length is 21)
   SdFile dataFile;
+  int err;
 
   if (! hasSD)
   {
@@ -839,12 +840,13 @@ int WaspUIO::readFrame(uint8_t &n)
   while (true)
   {
 #if WITH_IRIDIUM
-    if (lifo.len() == 0) { break; }
-    if (lifo.peek(item, idx - n)) { return -1; }
+    err = lifo.peek(item, idx - n);
 #else
-    if (fifo.len() == 0) { break; }
-    if (fifo.peek(item, idx + n)) { return -1; }
+    err = fifo.peek(item, idx + n);
 #endif
+
+    if (err == QUEUE_INDEX_ERROR) { break; }
+    if (err) { return -1; }
 
     // Stop condition
     int size = (int) item[8];

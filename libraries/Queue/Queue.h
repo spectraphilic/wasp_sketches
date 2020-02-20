@@ -9,6 +9,9 @@ int sd_open(const char* filename, SdFile &file, uint8_t mode);
 int sd_write(SdFile &file, const void* buf, size_t nbyte);
 int sd_append(SdFile &file, const void* buf, size_t nbyte);
 
+#define QUEUE_OK 0
+#define QUEUE_ERROR 1
+#define QUEUE_INDEX_ERROR 2
 
 /*
  * Last-In-First-Out queue (LIFO)
