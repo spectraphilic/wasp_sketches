@@ -315,10 +315,10 @@ CR_TASK(taskNetworkLora)
 
 CR_TASK(taskNetworkLoraSend)
 {
-  uint32_t t0;
-  static unsigned long sent;
+  static uint32_t t0;
   uint8_t n;
   uint8_t dst;
+  int offset;
 
   CR_BEGIN;
   UIO.ack_wait = 0;
@@ -343,7 +343,9 @@ CR_TASK(taskNetworkLoraSend)
 
   // Wait 200ms to let the GW time to start, plus a random value to avoid
   // all motes to start sending at the same time.
-  CR_DELAY(200 + rand() % 1001); // 200-1200 ms
+  offset = 200 + rand() % 1001;
+  debug(F("lora send: wait %d ms to avoid collisions"), offset);
+  CR_DELAY(offset); // 200-1200 ms
 
   // Send frames
   while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
@@ -363,13 +365,12 @@ CR_TASK(taskNetworkLoraSend)
         warn(F("sx1272.send(..) failure (sx1272._sendTime=%u)"), sx1272._sendTime);
         break;
       }
-      sent = millis();
 
       // Next
       debug(F("%d frame(s) sent in %lu ms (sx1272._sendTime=%u)"), n, cr.millisDiff(t0), sx1272._sendTime);
       UIO.ack_wait = n;
     }
-    else if (cr.timeout(sent, 10 * 1000))
+    else if (cr.timeout(t0, 10 * 1000))
     {
       break; // If waiting for an ACK more than 10s, stop sending.
     }
