@@ -44,6 +44,7 @@ void WaspUIO::loadState()
   // Off
   if (! (pwr_saved_state & PWR_MB))    { pwr_mb(0); }
   if (! (pwr_saved_state & PWR_I2C))   { pwr_i2c(0); }
+  if (! (pwr_saved_state & PWR_I2C_2)) { pwr_i2c_2(0); }
   if (! (pwr_saved_state & PWR_1WIRE)) { pwr_1wire(0); }
   if (! (pwr_saved_state & PWR_SDI12)) { pwr_sdi12(0); }
   if (! (pwr_saved_state & PWR_3V3))   { pwr_3v3(0); }
@@ -56,6 +57,7 @@ void WaspUIO::loadState()
   if (pwr_saved_state & PWR_5V)    { pwr_5v(1); }
   if (pwr_saved_state & PWR_MB)    { pwr_mb(1); }
   if (pwr_saved_state & PWR_I2C)   { pwr_i2c(1); }
+  if (pwr_saved_state & PWR_I2C_2) { pwr_i2c_2(1); }
   if (pwr_saved_state & PWR_1WIRE) { pwr_1wire(1); }
   if (pwr_saved_state & PWR_SDI12) { pwr_sdi12(1); }
 }
@@ -113,7 +115,7 @@ bool WaspUIO::pwr_3v3(bool new_state)
   if (new_state) { pwr_main(1); }                     // on
   else                                                // off
   {
-    pwr_i2c(0);
+    pwr_i2c(0); pwr_i2c_2(0);
     if (boardType == BOARD_NONE) { pwr_mb(0); pwr_1wire(0); }
   }
 
@@ -171,6 +173,20 @@ bool WaspUIO::pwr_i2c(bool new_state)
 {
   uint8_t device = PWR_I2C;
   uint8_t pin = (boardType == BOARD_LEMMING) ? PIN_POWER_I2C: 0;
+  bool old_state = pwr_state & device;
+
+  if (new_state == old_state) { return old_state; }   // noop
+  if (new_state) { pwr_3v3(1); }                      // on
+  else {}                                             // off
+  pwr_switch(device, pin, new_state);                 // switch
+  if (old_state == 0) { delay(100); }                 // delay
+  return old_state;
+}
+
+bool WaspUIO::pwr_i2c_2(bool new_state)
+{
+  uint8_t device = PWR_I2C_2;
+  uint8_t pin = (boardType == BOARD_LEMMING) ? PIN_POWER_I2C_2: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop

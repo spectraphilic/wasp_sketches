@@ -3,6 +3,7 @@
 
 /**
  * Scan I2C slaves
+ * TODO Add support to scan the 2nd I2C line
  */
 
 COMMAND(cmdI2C)
