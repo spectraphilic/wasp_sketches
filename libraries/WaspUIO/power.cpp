@@ -48,14 +48,12 @@ void WaspUIO::loadState()
   if (! (pwr_saved_state & PWR_SDI12)) { pwr_sdi12(0); }
   if (! (pwr_saved_state & PWR_3V3))   { pwr_3v3(0); }
   if (! (pwr_saved_state & PWR_5V))    { pwr_5v(0); }
-  if (! (pwr_saved_state & PWR_LEAD_VOLTAGE)) { pwr_leadVoltage(0); }
   if (! (pwr_saved_state & PWR_MAIN))  { pwr_main(0); }
 
   // On
   if (pwr_saved_state & PWR_MAIN)  { pwr_main(1); }
   if (pwr_saved_state & PWR_3V3)   { pwr_3v3(1); }
   if (pwr_saved_state & PWR_5V)    { pwr_5v(1); }
-  if (pwr_saved_state & PWR_LEAD_VOLTAGE) { pwr_leadVoltage(1); }
   if (pwr_saved_state & PWR_MB)    { pwr_mb(1); }
   if (pwr_saved_state & PWR_I2C)   { pwr_i2c(1); }
   if (pwr_saved_state & PWR_1WIRE) { pwr_1wire(1); }
@@ -76,7 +74,7 @@ bool WaspUIO::_setState(uint8_t device, bool new_state)
 }
 
 /*
- * 1. If the pwr_state has not changed does nothgin.
+ * 1. If the pwr_state has not changed does nothing.
  * 2. Switches high/low the given pin, if the pin is zero does nothing.
  * 3. Sets the on/off the pwr_state of the given device.
  * 4. Returns the old pwr_state.
@@ -98,19 +96,17 @@ bool WaspUIO::pwr_switch(uint8_t device, uint8_t pin, bool new_state)
 bool WaspUIO::pwr_main(bool new_state)
 {
   uint8_t device = PWR_MAIN;
-  uint8_t pin = (batteryType == BATTERY_LEAD) ? 16: 0;
   bool old_state = pwr_state & device;
 
-  if (new_state == old_state) { return old_state; }   // noop
-  if (new_state) {}                                   // on
-  else { pwr_3v3(0); pwr_5v(0); pwr_leadVoltage(0); } // off
-  return pwr_switch(device, pin, new_state);          // switch
+  if (new_state == old_state) { return old_state; } // noop
+  if (new_state) {}                                 // on
+  else { pwr_3v3(0); pwr_5v(0); }                   // off
+  return pwr_switch(device, 0, new_state);          // switch
 }
 
 bool WaspUIO::pwr_3v3(bool new_state)
 {
   uint8_t device = PWR_3V3;
-  uint8_t pin = (batteryType == BATTERY_LEAD) ? 14: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
@@ -125,13 +121,12 @@ bool WaspUIO::pwr_3v3(bool new_state)
   {
     setSensorPower(SENS_3V3, new_state ? SENS_ON : SENS_OFF);
   }
-  return pwr_switch(device, pin, new_state);
+  return pwr_switch(device, 0, new_state);
 }
 
 bool WaspUIO::pwr_5v(bool new_state)
 {
   uint8_t device = PWR_5V;
-  uint8_t pin = (batteryType == BATTERY_LEAD) ? 15: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
@@ -146,19 +141,7 @@ bool WaspUIO::pwr_5v(bool new_state)
   {
     setSensorPower(SENS_5V, new_state ? SENS_ON : SENS_OFF);
   }
-  return pwr_switch(device, pin, new_state);
-}
-
-bool WaspUIO::pwr_leadVoltage(bool new_state)
-{
-  uint8_t device = PWR_LEAD_VOLTAGE;
-  uint8_t pin = (batteryType == BATTERY_LEAD) ? 17: 0;
-  bool old_state = pwr_state & device;
-
-  if (new_state == old_state) { return old_state; }   // noop
-  if (new_state) { pwr_main(1); }                     // on
-  else {}                                             // off
-  return pwr_switch(device, pin, new_state);          // switch
+  return pwr_switch(device, 0, new_state);
 }
 
 
@@ -169,7 +152,7 @@ bool WaspUIO::pwr_leadVoltage(bool new_state)
 bool WaspUIO::pwr_mb(bool new_state)
 {
   uint8_t device = PWR_MB;
-  uint8_t pin = (boardType == BOARD_LEMMING) ? DIGITAL1: 0;
+  uint8_t pin = (boardType == BOARD_LEMMING) ? PIN_POWER_MAXB: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
@@ -187,7 +170,7 @@ bool WaspUIO::pwr_mb(bool new_state)
 bool WaspUIO::pwr_i2c(bool new_state)
 {
   uint8_t device = PWR_I2C;
-  uint8_t pin = (boardType == BOARD_LEMMING) ? DIGITAL2: 0;
+  uint8_t pin = (boardType == BOARD_LEMMING) ? PIN_POWER_I2C: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
@@ -201,7 +184,7 @@ bool WaspUIO::pwr_i2c(bool new_state)
 bool WaspUIO::pwr_1wire(bool new_state)
 {
   uint8_t device = PWR_1WIRE;
-  uint8_t pin = (boardType == BOARD_LEMMING) ? DIGITAL5: 0;
+  uint8_t pin = (boardType == BOARD_LEMMING) ? PIN_POWER_1WIRE: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
@@ -219,7 +202,7 @@ bool WaspUIO::pwr_1wire(bool new_state)
 bool WaspUIO::pwr_sdi12(bool new_state)
 {
   uint8_t device = PWR_SDI12;
-  uint8_t pin = (boardType == BOARD_LEMMING) ? DIGITAL7: 0;
+  uint8_t pin = (boardType == BOARD_LEMMING) ? PIN_POWER_SDI12: 0;
   bool old_state = pwr_state & device;
 
   if (new_state == old_state) { return old_state; }   // noop
@@ -237,27 +220,21 @@ bool WaspUIO::pwr_sdi12(bool new_state)
 
 void WaspUIO::readBattery()
 {
-  battery = BATTERY_HIGH;
-
   // Read battery level (%) or volts, depending on type
-  if (batteryType == BATTERY_LITHIUM)
-  {
-    batteryLevel = PWR.getBatteryLevel();
-    if      (batteryLevel <= 30) { battery = BATTERY_LOW; }
-    else if (batteryLevel <= 80) { battery = BATTERY_MIDDLE; }
-  }
-  else if(batteryType == BATTERY_REG3V3)
+  if (batteryType == BATTERY_REG3V3)
   {
     batteryVolts = PWR.getBatteryVolts();
     // force waspmote to think battery is always high (as voltage will always be 3V3)
-    battery = BATTERY_HIGH;
+    batteryLevel = 100;
   }
-  else
+  else // BATTERY_LITHIUM
   {
-    batteryVolts = getLeadBatteryVolts();
-    if      (batteryVolts <= 10.5) { battery = BATTERY_LOW; }
-    else if (batteryVolts <= 11.6) { battery = BATTERY_MIDDLE; }
+    batteryLevel = PWR.getBatteryLevel();
   }
+
+  if      (batteryLevel <= 30) { battery = BATTERY_LOW; }
+  else if (batteryLevel <= 80) { battery = BATTERY_MIDDLE; }
+  else                         { battery = BATTERY_HIGH; }
 
   // cooldown factor
   if (battery == BATTERY_LOW) { cooldown = 4; }
@@ -265,36 +242,6 @@ void WaspUIO::readBattery()
   else if (battery == BATTERY_HIGH) { cooldown = 1; }
 }
 
-
-float WaspUIO::getBatteryVolts()
-{
-  if ((batteryType == BATTERY_LITHIUM) || (batteryType == BATTERY_REG3V3))
-  {
-    return PWR.getBatteryVolts();
-  }
-  return getLeadBatteryVolts();
-}
-
-
-float WaspUIO::getLeadBatteryVolts()
-{
-  int analog5;
-  float R1 = 10;  // 10k resistor
-  float R2 = 2.2; // 2k2 resistor
-  float volts;
-  char volts_str[15];
-
-  pinMode(ANALOG5, INPUT);
-
-  if (! pwr_leadVoltage(1)) { delay(100); } // on, let power to stabilize
-  analog5 = analogRead(ANALOG5);            // Analog output (0 - 3.3V): from 0 to 1023
-  pwr_leadVoltage(0);                       // off
-
-  volts = analog5  * (R1 + R2) / R2 * 3.3 / 1023 ;
-  Utils.float2String(volts, volts_str, 2);
-
-  return volts;
-}
 
 /*
  * This is derived from upstream WaspPWR::setSensorPower

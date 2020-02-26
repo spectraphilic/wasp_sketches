@@ -56,7 +56,7 @@
 
 enum battery_type_t {
   BATTERY_LITHIUM,
-  BATTERY_LEAD,
+  BATTERY_LEAD, // Unused
   BATTERY_REG3V3,
   BATTERY_LEN
 };
@@ -356,7 +356,7 @@ public:
   const uint8_t PWR_MAIN = 1;
   const uint8_t PWR_3V3 = 2;
   const uint8_t PWR_5V = 4;
-  const uint8_t PWR_LEAD_VOLTAGE = 8;
+  const uint8_t PWR_LEAD_VOLTAGE = 8; // Unused
   const uint8_t PWR_MB = 16;
   const uint8_t PWR_I2C = 32;
   const uint8_t PWR_1WIRE = 64;
@@ -371,7 +371,6 @@ public:
   bool pwr_main(bool new_state);
   bool pwr_3v3(bool new_state);
   bool pwr_5v(bool new_state);
-  bool pwr_leadVoltage(bool new_state);
   void setSensorPower(uint8_t type, uint8_t mode);
   // Sensor board
   bool pwr_mb(bool new_state);
@@ -380,8 +379,6 @@ public:
   bool pwr_sdi12(bool new_state);
   // Battery
   void readBattery();
-  float getBatteryVolts();
-  float getLeadBatteryVolts();
 
   // Time
   // To keep time without calling RCT each time

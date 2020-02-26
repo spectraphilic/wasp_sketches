@@ -263,9 +263,21 @@ void WaspUIO::onLoop()
 
   readBattery();
 
+#if WITH_EXT_CHARGE
+  // Switch ON/OFF external charge pin
+  pinMode(PIN_POWER_EXT, OUTPUT);
+  if (batteryLevel < 75) {
+    digitalWrite(PIN_POWER_EXT, HIGH);
+  } else if (batteryLevel > 85) {
+    digitalWrite(PIN_POWER_EXT, LOW);
+  }
+#endif
+
+  // Data lines
   pinMode(PIN_1WIRE, INPUT);
   pinMode(PIN_SDI12, INPUT);
 
+  // SD & time
   startSD();
   loadTime();
 
@@ -413,6 +425,6 @@ void WaspUIO::deepSleep()
 WaspUIO UIO = WaspUIO();
 FIFO fifo = FIFO("FIFO.BIN", "FIDX.BIN", 9);
 #if WITH_IRIDIUM
-IridiumSBD iridium(Serial1, DIGITAL4); // RING pins not connected
+IridiumSBD iridium(Serial1, PIN_ISBD_SLEEP); // RING pins not connected
 LIFO lifo = LIFO("LIFO2.BIN", 9);
 #endif
