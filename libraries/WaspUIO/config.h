@@ -23,7 +23,6 @@
 #define MAX_LOOPS 1000
 
 // Pins
-#define PIN_POWER_EXT   DIGITAL0 // External power charge
 #define PIN_POWER_MAXB  DIGITAL1 // Maxbotix power switch
 #define PIN_POWER_I2C   DIGITAL2 // I2C power switch
 #define PIN_POWER_I2C_2 DIGITAL3 // I2C (2nd line) power switch
@@ -32,6 +31,8 @@
 #define PIN_1WIRE       DIGITAL6 // Use DIGITAL6 as default (protoboard)
 #define PIN_POWER_SDI12 DIGITAL7 // SDI-12 power switch
 #define PIN_SDI12       DIGITAL8 // Use DIGITAL8 as default (protoboard)
+
+#define PIN_POWER_EXT   DIGITAL1 // External power charge (same as MB power switch)
 
 // I2C addresses
 #define I2C_ADDRESS_Lemming_BME280     0x76 // Internal temperature, Relative humidity and atmospheric pressure
