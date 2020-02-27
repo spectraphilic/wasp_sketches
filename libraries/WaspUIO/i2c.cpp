@@ -8,6 +8,7 @@
 #include "SparkFun_AS7265X.h"
 #include "SparkFunMLX90614.h"
 #include "SparkFunTMP102.h"
+#include "SparkFun_TMP117.h"
 #include "SparkFun_VL53L1X_Arduino_Library.h"
 
 
@@ -22,7 +23,7 @@ void WaspUIO::i2c_scan()
   cr.println(F("AS726X   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
   cr.println(F("BME280   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
   cr.println(F("MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
-  cr.println(F("TMP102   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_TMP102, I2C.scan(I2C_ADDRESS_LAGOPUS_TMP102));
+  cr.println(F("TMP1XX   (%02x) %hhu"), I2C_ADDRESS_TMP117, I2C.scan(I2C_ADDRESS_TMP117));
   cr.println(F("VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
   cr.println(F("0=success 1=no-state .. 5=protocol-error .. 10=busy .. 255=operation-in-progress"));
 }
@@ -223,18 +224,18 @@ bool WaspUIO::i2c_MLX90614(float &object, float &ambient)
 }
 
 
-/** i2c_TMP102
+/** i2c_TMP102 & i2c_TMP117
  *
  * Returns: bool      - 0 if success, 1 if error
  */
 bool WaspUIO::i2c_TMP102(float &temperature)
 {
-  TMP102 sensor0(I2C_ADDRESS_LAGOPUS_TMP102);
+  TMP102 sensor(I2C_ADDRESS_LAGOPUS_TMP102);
 
-  sensor0.begin();  // Join I2C bus
-  sensor0.wakeup();
-  temperature = sensor0.readTempC();
-  sensor0.sleep();
+  sensor.begin();  // Join I2C bus
+  sensor.wakeup();
+  temperature = sensor.readTempC();
+  sensor.sleep();
 
   // Debug
   char str[20];
@@ -243,6 +244,24 @@ bool WaspUIO::i2c_TMP102(float &temperature)
   return 0;
 }
 
+
+bool WaspUIO::i2c_TMP117(double &temperature)
+{
+  TMP117 sensor;
+
+  if (sensor.begin(I2C_ADDRESS_TMP117) == false)
+    return 1;
+
+  //sensor.wakeup();
+  temperature = sensor.readTempC();
+  //sensor.sleep();
+
+  // Debug
+  char str[20];
+  debug(F("TMP117 %s Celsius"), Utils.float2String(temperature, str, 2));
+
+  return 0;
+}
 
 /** i2c_VL53L1X
  *
@@ -259,7 +278,6 @@ uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
   VL53L1X distanceSensor;
   uint8_t max_sample = 99;
   uint8_t n = 0;
-  int16_t tmp;
 
   if (distanceSensor.begin() == false)
   {
@@ -275,7 +293,7 @@ uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
     while (distanceSensor.newDataReady() == false)
       delay(5);
 
-      tmp = distanceSensor.getDistance();
+      int16_t tmp = distanceSensor.getDistance();
       debug(F("Distance %u (mm): %u"), n, tmp);
       distances[n++] = tmp;
       delay(200);

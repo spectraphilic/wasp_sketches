@@ -27,55 +27,55 @@ COMMAND(cmdI2C)
   // Read
   bool err;
   int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-  if (value == 3)
+  if (value == RUN_ACC)
   {
     int x, y, z;
     err = UIO.i2c_acc(x, y, z);
   }
-  else if (value == 7)
+  else if (value == RUN_BME280)
   {
     float temperature, humidity, pressure;
     err = UIO.i2c_BME280(temperature, humidity, pressure);
   }
-  else if (value == 10)
+  else if (value == RUN_LAGOPUS_AS7263)
   {
     uint8_t temp;
     float r, s, t, u, v, w;
     err = UIO.i2c_AS7263(temp, r, s, t, u, v, w);
   }
-  else if (value == 11)
+  else if (value == RUN_LAGOPUS_AS7265)
   {
     uint8_t temp;
     float A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W;
     err = UIO.i2c_AS7265(temp, A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W);
   }
-  else if (value == 12)
+  else if (value == RUN_LAGOPUS_BME280)
   {
     float temperature, humidity, pressure;
     err = UIO.i2c_BME280(temperature, humidity, pressure, I2C_ADDRESS_LAGOPUS_BME280);
   }
-  else if (value == 13)
+  else if (value == RUN_LAGOPUS_MLX90614)
   {
     float object, ambient;
     err = UIO.i2c_MLX90614(object, ambient);
   }
-  else if (value == 14)
+  else if (value == RUN_LAGOPUS_TMP102)
   {
     float temperature;
     err = UIO.i2c_TMP102(temperature);
   }
-  else if (value == 15)
+  else if (value == RUN_TMP117)
+  {
+    double temperature;
+    err = UIO.i2c_TMP117(temperature);
+  }
+  else if (value == RUN_LAGOPUS_VL53L1X)
   { 
     uint8_t nbsamples = 3;
     int distance[nbsamples];
     uint8_t total = UIO.i2c_VL53L1X(distance, nbsamples);
     debug(F("Total = %u"), total);
-
-    if(total==(nbsamples)){
-      err=0;
-    }else{
-      err=1;
-    }
+    err = (total == nbsamples) ? 0: 1;
   }
   else
   {

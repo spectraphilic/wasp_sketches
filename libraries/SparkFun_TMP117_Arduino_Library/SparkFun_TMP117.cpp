@@ -31,9 +31,6 @@ Distributed as-is; no warranty is given.
 	linked on Page 35 of the TMP117's datasheet
 */
 
-#include <Arduino.h>
-#include <Wire.h>
-#include "SparkFun_TMP117_Registers.h"
 #include "SparkFun_TMP117.h"
 
 /* CONSTRUCTOR
@@ -53,14 +50,14 @@ TMP117::TMP117()
 	with setting the wire for the I2C Communication. 
 	This will return true if both checks pass.
 */
-bool TMP117::begin(uint8_t sensorAddress, TwoWire &wirePort)
+bool TMP117::begin(uint8_t sensorAddress)
 {
-	_i2cPort = &wirePort;			// Chooses the wire port of the device
 	_deviceAddress = sensorAddress; // Sets the address of the device
 
 	//make sure the TMP will acknowledge over I2C
-	_i2cPort->beginTransmission(_deviceAddress);
-	if (_i2cPort->endTransmission() != 0)
+	I2C.begin();
+	uint8_t error = I2C.write(_deviceAddress, (uint8_t*)NULL, 0);
+	if (error)
 	{
 		return false;
 	}
@@ -93,17 +90,10 @@ uint8_t TMP117::getAddress()
 */
 uint16_t TMP117::readRegister(uint8_t reg) // originally TMP117_Register reg
 {
-	_i2cPort->beginTransmission(_deviceAddress); // Originally cast (uint8_t)
-	_i2cPort->write(reg);
-	_i2cPort->endTransmission();					   // endTransmission but keep the connection active
-	_i2cPort->requestFrom(_deviceAddress, (uint8_t)2); // Ask for 2 bytes, once done, bus is released by default
-
 	uint8_t data[2] = {0};			// Declares an array of length 2 to be empty
 	int16_t datac = 0;				// Declares the return variable to be 0
-	if (_i2cPort->available() <= 2) // Won't read more than 2 bits
+	if (I2C.read(_deviceAddress, reg, data, 2) == 0)
 	{
-		data[0] = _i2cPort->read();			// Reads the first set of bits (D15-D8)
-		data[1] = _i2cPort->read();			// Reads the second set of bits (D7-D0)
 		datac = ((data[0] << 8) | data[1]); // Swap the LSB and the MSB
 	}
 	return datac;
@@ -114,11 +104,9 @@ uint16_t TMP117::readRegister(uint8_t reg) // originally TMP117_Register reg
 */
 void TMP117::writeRegister(uint8_t reg, uint16_t data) // originally TMP117_Register reg
 {
-	_i2cPort->beginTransmission(_deviceAddress); // Originally cast uint8_t when a register value again
-	_i2cPort->write(reg);
-	_i2cPort->write(highByte(data)); // Write MSB (D15-D8)
-	_i2cPort->write(lowByte(data));  // Write LSB (D7-D0)
-	_i2cPort->endTransmission();	 // Stop transmitting data
+	// AVR is little endian, but data is sent in big endian
+	uint8_t reversed[2] = {(uint8_t)(data >> 8), (uint8_t)(data & 0xFF)};
+	I2C.write(_deviceAddress, reg, reversed, 2);
 }
 
 /* READ TEMPERATURE CELSIUS

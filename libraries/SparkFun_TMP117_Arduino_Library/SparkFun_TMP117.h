@@ -21,8 +21,7 @@ Distributed as-is; no warranty is given.
 #ifndef __SparkFun_TMP117_H__
 #define __SparkFun_TMP117_H__
 
-#include <Wire.h>
-#include <Arduino.h>
+#include <WaspClasses.h>
 #include "SparkFun_TMP117_Registers.h"
 
 #define DEVICE_ID_VALUE 0x0117			// Value found in the device ID register on reset (page 24 Table 3 of datasheet)
@@ -67,7 +66,7 @@ class TMP117
 public:
 	TMP117(); // Constructor
 
-	bool begin(uint8_t sensorAddress = 0x48, TwoWire &wirePort = Wire); // Checks for ACK over I2C, and sets the device ID of the TMP and chooses the wire port
+	bool begin(uint8_t sensorAddress = 0x48); // Checks for ACK over I2C, and sets the device ID of the TMP and chooses the wire port
 	uint8_t getAddress();												// Returns the address of the device
 	double readTempC();													// Returns the temperature in degrees C
 	double readTempF();													// Converts readTempC result to degrees F
@@ -95,7 +94,6 @@ public:
 	bool dataReady();													// Checks to see if there is data ready from the device
 
 private:
-	TwoWire *_i2cPort = NULL; //The generic connection to user's chosen I2C hardware
 	uint8_t _deviceAddress;   // Address of Temperature sensor
 
 	uint16_t readRegister(uint8_t reg);				// Reads 2 register bytes from sensor
