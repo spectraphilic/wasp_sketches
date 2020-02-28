@@ -20,8 +20,7 @@
 #ifndef ADAFRUIT_SHT31_H
 #define ADAFRUIT_SHT31_H
 
-#include "Arduino.h"
-#include "Wire.h"
+#include <WaspClasses.h>
 
 #define SHT31_DEFAULT_ADDR 0x44 /**< SHT31 Default Address */
 #define SHT31_MEAS_HIGHREP_STRETCH                                             \
@@ -42,9 +41,6 @@
 #define SHT31_HEATEREN 0x306D    /**< Heater Enable */
 #define SHT31_HEATERDIS 0x3066   /**< Heater Disable */
 
-extern TwoWire Wire; /**< Forward declarations of Wire for board/variant
-                        combinations that don't have a default 'Wire' */
-
 /**
  * Driver for the Adafruit SHT31-D Temperature and Humidity breakout board.
  */
@@ -53,7 +49,7 @@ public:
   /**
    *  Constructor.
    */
-  Adafruit_SHT31(TwoWire *theWire = &Wire);
+  Adafruit_SHT31();
 
   /**
    * Initialises the I2C bus, and assigns the I2C address to us.
@@ -96,8 +92,6 @@ public:
    * @param h True to enable the heater, False to disable it.
    */
   void heater(bool h);
-
-  TwoWire *_wire; /**< Wire object */
 
 private:
   /**

@@ -77,6 +77,11 @@ COMMAND(cmdI2C)
     debug(F("Total = %u"), total);
     err = (total == nbsamples) ? 0: 1;
   }
+  else if (value == RUN_SHT31)
+  {
+    float temperature, humidity;
+    err = UIO.i2c_SHT31(temperature, humidity);
+  }
   else
   {
     RTC.OFF();

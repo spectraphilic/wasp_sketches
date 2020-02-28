@@ -34,8 +34,7 @@
  * @param  *theWire
  *         optional wire
  */
-Adafruit_SHT31::Adafruit_SHT31(TwoWire *theWire) {
-  _wire = theWire;
+Adafruit_SHT31::Adafruit_SHT31() {
   _i2caddr = 0;
 
   humidity = NAN;
@@ -43,18 +42,18 @@ Adafruit_SHT31::Adafruit_SHT31(TwoWire *theWire) {
 }
 
 bool Adafruit_SHT31::begin(uint8_t i2caddr) {
-  _wire->begin();
+  I2C.begin();
   _i2caddr = i2caddr;
   reset();
   return readStatus() != 0xFFFF;
 }
 
 uint16_t Adafruit_SHT31::readStatus(void) {
-  writeCommand(SHT31_READSTATUS);
-  _wire->requestFrom(_i2caddr, (uint8_t)3);
-  uint16_t stat = _wire->read();
-  stat <<= 8;
-  stat |= _wire->read();
+  uint8_t data[3];
+  if (I2C.read(_i2caddr, SHT31_READSTATUS, data, 3))
+    return 0xFFFF; // Error
+
+  uint16_t stat = ((uint16_t)data[0] << 8 | data[1]);
   // Serial.println(stat, HEX);
   return stat;
 }
@@ -124,12 +123,8 @@ bool Adafruit_SHT31::readTempHum(void) {
   writeCommand(SHT31_MEAS_HIGHREP);
 
   delay(20);
-  _wire->requestFrom(_i2caddr, sizeof(readbuffer));
-  if (_wire->available() != sizeof(readbuffer))
+  if (I2C.read(_i2caddr, readbuffer, sizeof(readbuffer)))
     return false;
-  for (size_t i = 0; i < sizeof(readbuffer); i++) {
-    readbuffer[i] = _wire->read();
-  }
 
   if (readbuffer[2] != crc8(readbuffer, 2) ||
       readbuffer[5] != crc8(readbuffer + 3, 2))
@@ -151,8 +146,6 @@ bool Adafruit_SHT31::readTempHum(void) {
 }
 
 void Adafruit_SHT31::writeCommand(uint16_t cmd) {
-  _wire->beginTransmission(_i2caddr);
-  _wire->write(cmd >> 8);
-  _wire->write(cmd & 0xFF);
-  _wire->endTransmission();
+  uint8_t reversed[2] = {(uint8_t)(cmd >> 8), (uint8_t)(cmd & 0xFF)};
+  I2C.write(_i2caddr, reversed, 2);
 }

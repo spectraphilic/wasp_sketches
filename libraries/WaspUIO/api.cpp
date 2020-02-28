@@ -62,6 +62,7 @@ uint8_t WaspI2C::scanSlaves()
     I2C_ADDRESS_LAGOPUS_VL53L1X,
     I2C_ADDRESS_LAGOPUS_MLX90614,
     I2C_ADDRESS_LAGOPUS_AS726X,
+    I2C_ADDRESS_SHT31,
   };
 
   _slavePresent = false;
