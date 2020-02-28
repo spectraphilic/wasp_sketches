@@ -1,16 +1,16 @@
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS TRUE
+#define WITH_GPS FALSE
 #define WITH_CRYPTO FALSE
 #define WITH_EXT_CHARGE FALSE
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G TRUE
+#define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA TRUE
 
 // Sensors
-#define WITH_I2C FALSE
+#define WITH_I2C TRUE
 #define WITH_SDI FALSE
 #define WITH_1WIRE FALSE
 #define WITH_MB FALSE
@@ -23,7 +23,7 @@
 #define MAX_LOOPS 1000
 
 // Pins
-#define PIN_POWER_EXT   DIGITAL0 // External power charge
+#define PIN_POWER_EXT   DIGITAL1 // External power charge
 #define PIN_POWER_MAXB  DIGITAL1 // Maxbotix power switch
 #define PIN_POWER_I2C   DIGITAL2 // I2C power switch
 #define PIN_POWER_I2C_2 DIGITAL3 // I2C (2nd line) power switch
