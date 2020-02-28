@@ -41,9 +41,10 @@ CR_TASK(taskSensors)
 
   // I2C
 #if WITH_I2C
-  if (UIO.action(9, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
+  if (UIO.action(10, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
                  RUN_LAGOPUS_AS7265, RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
-                 RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X, RUN_TMP117))
+                 RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X, RUN_TMP117,
+                 RUN_SHT31))
   {
     UIO.pwr_i2c(1);
     CR_SPAWN2(taskI2C, id);
@@ -132,7 +133,7 @@ CR_TASK(task1Wire)
 
 CR_TASK(taskI2C)
 {
-  static tid_t acc_id, bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp102_id, vl_id, tmp117_id;
+  static tid_t acc_id, bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp102_id, vl_id, tmp117_id, sht31_id;
   bool acc = UIO.action(1, RUN_ACC);
   bool bme280_76 = UIO.action(1, RUN_BME280);
   bool as7263 = UIO.action(1, RUN_LAGOPUS_AS7263);
@@ -142,6 +143,7 @@ CR_TASK(taskI2C)
   bool tmp102 = UIO.action(1, RUN_LAGOPUS_TMP102);
   bool vl = UIO.action(1, RUN_LAGOPUS_VL53L1X);
   bool tmp117 = UIO.action(1, RUN_TMP117);
+  bool sht31 = UIO.action(1, RUN_SHT31);
 
   CR_BEGIN;
 
@@ -155,6 +157,7 @@ CR_TASK(taskI2C)
   if (tmp102)    { CR_SPAWN2(taskI2C_TMP102, tmp102_id); }
   if (vl)        { CR_SPAWN2(taskI2C_VL53L1X, vl_id); }
   if (tmp117)    { CR_SPAWN2(taskI2C_TMP117, tmp117_id); }
+  if (sht31)     { CR_SPAWN2(taskI2C_SHT31, sht31_id); }
 
   if (acc)       { CR_JOIN(acc_id); }
   if (bme280_76) { CR_JOIN(bme280_76_id); }
@@ -165,6 +168,7 @@ CR_TASK(taskI2C)
   if (tmp102)    { CR_JOIN(tmp102_id); }
   if (vl)        { CR_JOIN(vl_id); }
   if (tmp117)    { CR_JOIN(tmp117_id); }
+  if (sht31)     { CR_JOIN(sht31_id); }
 
   CR_END;
 }
@@ -262,6 +266,15 @@ CR_TASK(taskI2C_VL53L1X)
   }
   CR_END;
 
+}
+
+CR_TASK(taskI2C_SHT31)
+{
+  float temperature, humidity;
+  bool err = UIO.i2c_SHT31(temperature, humidity);
+  if (err) { return CR_TASK_ERROR; }
+  ADD_SENSOR(SENSOR_SHT31, temperature, humidity);
+  return CR_TASK_STOP;
 }
 
 

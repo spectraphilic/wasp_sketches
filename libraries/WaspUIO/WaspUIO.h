@@ -107,6 +107,7 @@ enum run_t {
   RUN_LAN, // Lora or XBee
   RUN_WAN, // 4G or Iridium
   RUN_TMP117,
+  RUN_SHT31,
   RUN_LEN // Special value
 };
 
@@ -134,6 +135,7 @@ const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
 const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
 const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
+const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
 
 const char* const run_names[] PROGMEM = {
   EMPTY_STRING,
@@ -156,6 +158,7 @@ const char* const run_names[] PROGMEM = {
   RUN_LAN_NAME,
   RUN_WAN_NAME,
   RUN_TMP117_NAME,
+  RUN_SHT31_NAME,
 };
 
 enum var_indexes {
@@ -515,7 +518,7 @@ public:
   bool i2c_MLX90614(float &object, float &ambient);
   bool i2c_TMP102(float &temperature);
   bool i2c_TMP117(double &temperature);
-
+  bool i2c_SHT31(float &temperature, float &humidity);
   uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
 
   // SDI-12
@@ -658,6 +661,7 @@ CR_TASK(taskI2C_MLX90614);
 CR_TASK(taskI2C_TMP102);
 CR_TASK(taskI2C_VL53L1X);
 CR_TASK(taskI2C_TMP117);
+CR_TASK(taskI2C_SHT31);
 CR_TASK(taskTTL);
 // Network
 CR_TASK(taskNetwork4G);
@@ -691,5 +695,6 @@ CR_TASK(taskSlow);
 #define SENSOR_CTD10        216
 #define SENSOR_DS2          217
 #define SENSOR_ATMOS        218
+#define SENSOR_SHT31        219
 
 #endif

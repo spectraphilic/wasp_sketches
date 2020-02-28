@@ -10,6 +10,7 @@
 #include "SparkFunTMP102.h"
 #include "SparkFun_TMP117.h"
 #include "SparkFun_VL53L1X_Arduino_Library.h"
+#include "Adafruit_SHT31.h"
 
 
 void WaspUIO::i2c_scan()
@@ -25,6 +26,7 @@ void WaspUIO::i2c_scan()
   cr.println(F("MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
   cr.println(F("TMP1XX   (%02x) %hhu"), I2C_ADDRESS_TMP117, I2C.scan(I2C_ADDRESS_TMP117));
   cr.println(F("VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
+  cr.println(F("SHT31-D  (%02x) %hhu"), I2C_ADDRESS_SHT31, I2C.scan(I2C_ADDRESS_SHT31));
   cr.println(F("0=success 1=no-state .. 5=protocol-error .. 10=busy .. 255=operation-in-progress"));
 }
 
@@ -299,4 +301,36 @@ uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
       delay(200);
   }
   return n;
+}
+
+
+/** i2c_SHT31
+ *
+ * Returns: bool      - 0 if success, 1 if error
+ *
+ */
+
+bool WaspUIO::i2c_SHT31(float &temperature, float &humidity)
+{
+  char str[20];
+
+  Adafruit_SHT31 sht31 = Adafruit_SHT31();
+  if (sht31.begin(I2C_ADDRESS_SHT31) == 0)
+    return 1;
+
+  temperature = sht31.readTemperature();
+  humidity = sht31.readHumidity();
+  if (isnan(temperature)) {  // check if 'is not a number'
+    debug(F("Temp NaN"));
+  } else {
+    debug(F("Temp %s C"), Utils.float2String(temperature, str, 2));
+  }
+
+  if (isnan(humidity)) {  // check if 'is not a number'
+    debug(F("Hum. NaN"));
+  } else {
+    debug(F("Hum. %s %"), Utils.float2String(humidity, str, 2));
+  }
+
+  return 0;
 }

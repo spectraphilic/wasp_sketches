@@ -35,13 +35,14 @@
 #define PIN_POWER_EXT   DIGITAL1 // External power charge (same as MB power switch)
 
 // I2C addresses
-#define I2C_ADDRESS_Lemming_BME280     0x76 // Internal temperature, Relative humidity and atmospheric pressure
-#define I2C_ADDRESS_LAGOPUS_BME280     0x77 // Air temperature, Relative humidity and atmospheric pressure
+#define I2C_ADDRESS_LAGOPUS_VL53L1X    0x29 // Distance (Snow depth)
+#define I2C_ADDRESS_SHT31              0x44 // Temperature & humidity
 #define I2C_ADDRESS_LAGOPUS_TMP102     0x48 // Air temperature
 #define I2C_ADDRESS_TMP117             0x48 // Air temperature, replaces TMP102
-#define I2C_ADDRESS_LAGOPUS_VL53L1X    0x29 // Distance (Snow depth)
-#define I2C_ADDRESS_LAGOPUS_MLX90614   0x5A // Surface temperature
 #define I2C_ADDRESS_LAGOPUS_AS726X     0x49 // Spectral Sensor
+#define I2C_ADDRESS_LAGOPUS_MLX90614   0x5A // Surface temperature
+#define I2C_ADDRESS_Lemming_BME280     0x76 // Internal temperature, Relative humidity and atmospheric pressure
+#define I2C_ADDRESS_LAGOPUS_BME280     0x77 // Air temperature, Relative humidity and atmospheric pressure
 
 // Iridium specific.
 // Save frames to lifo instead of fifo every n hours since epoch at the :mm
