@@ -1,16 +1,16 @@
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS FALSE
+#define WITH_GPS TRUE
 #define WITH_CRYPTO FALSE
 #define WITH_EXT_CHARGE FALSE
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G FALSE
+#define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA TRUE
 
 // Sensors
-#define WITH_I2C TRUE
+#define WITH_I2C FALSE
 #define WITH_SDI FALSE
 #define WITH_1WIRE FALSE
 #define WITH_MB FALSE
@@ -23,7 +23,6 @@
 #define MAX_LOOPS 1000
 
 // Pins
-#define PIN_POWER_EXT   DIGITAL1 // External power charge
 #define PIN_POWER_MAXB  DIGITAL1 // Maxbotix power switch
 #define PIN_POWER_I2C   DIGITAL2 // I2C power switch
 #define PIN_POWER_I2C_2 DIGITAL3 // I2C (2nd line) power switch
@@ -33,10 +32,13 @@
 #define PIN_POWER_SDI12 DIGITAL7 // SDI-12 power switch
 #define PIN_SDI12       DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
+#define PIN_POWER_EXT   DIGITAL1 // External power charge (same as MB power switch)
+
 // I2C addresses
 #define I2C_ADDRESS_Lemming_BME280     0x76 // Internal temperature, Relative humidity and atmospheric pressure
 #define I2C_ADDRESS_LAGOPUS_BME280     0x77 // Air temperature, Relative humidity and atmospheric pressure
 #define I2C_ADDRESS_LAGOPUS_TMP102     0x48 // Air temperature
+#define I2C_ADDRESS_TMP117             0x48 // Air temperature, replaces TMP102
 #define I2C_ADDRESS_LAGOPUS_VL53L1X    0x29 // Distance (Snow depth)
 #define I2C_ADDRESS_LAGOPUS_MLX90614   0x5A // Surface temperature
 #define I2C_ADDRESS_LAGOPUS_AS726X     0x49 // Spectral Sensor

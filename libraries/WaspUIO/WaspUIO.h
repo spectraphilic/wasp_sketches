@@ -106,6 +106,7 @@ enum run_t {
   RUN_ATMOS, // SDI-12
   RUN_LAN, // Lora or XBee
   RUN_WAN, // 4G or Iridium
+  RUN_TMP117,
   RUN_LEN // Special value
 };
 
@@ -126,12 +127,13 @@ const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
 const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265"; // 11 spectrum
 const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme";    // 12 atmospheric
 const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx";    // 13 infrared thermometer
-const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp";    // 14 digital temperature
+const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp102"; // 14 digital temperature
 const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";     // 15 distance
 // More
 const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
 const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
 const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
+const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
 
 const char* const run_names[] PROGMEM = {
   EMPTY_STRING,
@@ -153,6 +155,7 @@ const char* const run_names[] PROGMEM = {
   RUN_ATMOS_NAME,
   RUN_LAN_NAME,
   RUN_WAN_NAME,
+  RUN_TMP117_NAME,
 };
 
 enum var_indexes {
@@ -511,6 +514,7 @@ public:
   bool i2c_BME280(float &temperature, float &humidity, float &pressure, uint8_t address=I2C_ADDRESS_Lemming_BME280);
   bool i2c_MLX90614(float &object, float &ambient);
   bool i2c_TMP102(float &temperature);
+  bool i2c_TMP117(double &temperature);
 
   uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
 
@@ -653,6 +657,7 @@ CR_TASK(taskI2C_BME280);
 CR_TASK(taskI2C_MLX90614);
 CR_TASK(taskI2C_TMP102);
 CR_TASK(taskI2C_VL53L1X);
+CR_TASK(taskI2C_TMP117);
 CR_TASK(taskTTL);
 // Network
 CR_TASK(taskNetwork4G);
@@ -680,7 +685,7 @@ CR_TASK(taskSlow);
 #define SENSOR_BME_76       209
 #define SENSOR_BME_77       210
 #define SENSOR_MLX90614     211
-#define SENSOR_TMP102       212
+#define SENSOR_TMP1XX       212
 #define SENSOR_VL53L1X      213
 #define SENSOR_MB73XX       214
 #define SENSOR_CTD10        216

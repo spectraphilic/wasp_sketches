@@ -84,7 +84,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   // 21x
   frame_format_fff,     // 210 BME 0x77
   frame_format_ff,      // 211 MLX90614
-  frame_format_f,       // 212 TMP102
+  frame_format_f,       // 212 TMP102 & TMP117
   frame_format_n,       // 213 VL53L1X
   frame_format_n,       // 214 MB73XX
   null,                 // 215 Reserved (was ATMOS-22)
@@ -169,7 +169,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   // 21x
   frame_name_bme77,                                           // 210 BME 0x77
   frame_name_mlx,                                             // 211 MLX90614
-  frame_name_tmp,                                             // 212 TMP102
+  frame_name_tmp,                                             // 212 TMP102 & TMP117
   frame_name_vl,                                              // 213 VL53L1X
   frame_name_mb73xx,                                          // 214 MB73XX
   null,                                                       // 215 Reserved (was ATMOS-22)

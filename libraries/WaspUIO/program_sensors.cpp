@@ -41,9 +41,9 @@ CR_TASK(taskSensors)
 
   // I2C
 #if WITH_I2C
-  if (UIO.action(8, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
+  if (UIO.action(9, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
                  RUN_LAGOPUS_AS7265, RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
-                 RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X))
+                 RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X, RUN_TMP117))
   {
     UIO.pwr_i2c(1);
     CR_SPAWN2(taskI2C, id);
@@ -132,15 +132,16 @@ CR_TASK(task1Wire)
 
 CR_TASK(taskI2C)
 {
-  static tid_t acc_id, bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp_id, vl_id;
+  static tid_t acc_id, bme280_76_id, as7263_id, as7265_id, bme280_id, mlx_id, tmp102_id, vl_id, tmp117_id;
   bool acc = UIO.action(1, RUN_ACC);
   bool bme280_76 = UIO.action(1, RUN_BME280);
   bool as7263 = UIO.action(1, RUN_LAGOPUS_AS7263);
   bool as7265 = UIO.action(1, RUN_LAGOPUS_AS7265);
   bool bme280 = UIO.action(1, RUN_LAGOPUS_BME280);
   bool mlx = UIO.action(1, RUN_LAGOPUS_MLX90614);
-  bool tmp = UIO.action(1, RUN_LAGOPUS_TMP102);
+  bool tmp102 = UIO.action(1, RUN_LAGOPUS_TMP102);
   bool vl = UIO.action(1, RUN_LAGOPUS_VL53L1X);
+  bool tmp117 = UIO.action(1, RUN_TMP117);
 
   CR_BEGIN;
 
@@ -151,8 +152,9 @@ CR_TASK(taskI2C)
   if (as7265)    { CR_SPAWN2(taskI2C_AS7265, as7265_id); }
   if (bme280)    { CR_SPAWN2(taskI2C_BME280, bme280_id); }
   if (mlx)       { CR_SPAWN2(taskI2C_MLX90614, mlx_id); }
-  if (tmp)       { CR_SPAWN2(taskI2C_TMP102, tmp_id); }
+  if (tmp102)    { CR_SPAWN2(taskI2C_TMP102, tmp102_id); }
   if (vl)        { CR_SPAWN2(taskI2C_VL53L1X, vl_id); }
+  if (tmp117)    { CR_SPAWN2(taskI2C_TMP117, tmp117_id); }
 
   if (acc)       { CR_JOIN(acc_id); }
   if (bme280_76) { CR_JOIN(bme280_76_id); }
@@ -160,8 +162,9 @@ CR_TASK(taskI2C)
   if (as7265)    { CR_JOIN(as7265_id); }
   if (bme280)    { CR_JOIN(bme280_id); }
   if (mlx)       { CR_JOIN(mlx_id); }
-  if (tmp)       { CR_JOIN(tmp_id); }
+  if (tmp102)    { CR_JOIN(tmp102_id); }
   if (vl)        { CR_JOIN(vl_id); }
+  if (tmp117)    { CR_JOIN(tmp117_id); }
 
   CR_END;
 }
@@ -230,7 +233,16 @@ CR_TASK(taskI2C_TMP102)
   float temperature;
   bool err = UIO.i2c_TMP102(temperature);
   if (err) { return CR_TASK_ERROR; }
-  ADD_SENSOR(SENSOR_TMP102, temperature);
+  ADD_SENSOR(SENSOR_TMP1XX, temperature);
+  return CR_TASK_STOP;
+}
+
+CR_TASK(taskI2C_TMP117)
+{
+  double temperature;
+  bool err = UIO.i2c_TMP117(temperature);
+  if (err) { return CR_TASK_ERROR; }
+  ADD_SENSOR(SENSOR_TMP1XX, (float)temperature);
   return CR_TASK_STOP;
 }
 
