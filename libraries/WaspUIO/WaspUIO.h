@@ -695,5 +695,6 @@ CR_TASK(taskSlow);
 #define SENSOR_CTD10        216
 #define SENSOR_DS2          217
 #define SENSOR_ATMOS        218
+#define SENSOR_SHT31        219
 
 #endif

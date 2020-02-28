@@ -90,7 +90,8 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null,                 // 215 Reserved (was ATMOS-22)
   frame_format_jjk,     // 216 CTD-10
   frame_format_jjjjjj,  // 217 DS-2
-  frame_format_jjjjjj,  // 215 ATMOS-22
+  frame_format_jjjjjj,  // 218 ATMOS-22
+  frame_format_ff,      // 219 SHT31
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
@@ -112,6 +113,7 @@ const char frame_name_mb73xx      [] PROGMEM = "MB73XX";
 const char frame_name_ctd10       [] PROGMEM = "CTD10";
 const char frame_name_ds2         [] PROGMEM = "DS-2";
 const char frame_name_atmos       [] PROGMEM = "ATMOS";
+const char frame_name_sht31       [] PROGMEM = "SHT31";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -176,6 +178,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_ctd10,                                           // 216 CTD-10
   frame_name_ds2,                                             // 217 DS-2
   frame_name_atmos,                                           // 218 ATMOS-22
+  frame_name_sht31,                                           // 219 SHT31
 };
 
 /**

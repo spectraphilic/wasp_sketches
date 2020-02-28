@@ -273,7 +273,7 @@ CR_TASK(taskI2C_SHT31)
   float temperature, humidity;
   bool err = UIO.i2c_SHT31(temperature, humidity);
   if (err) { return CR_TASK_ERROR; }
-  //ADD_SENSOR(SENSOR_SHT31, temperature, humidity);
+  ADD_SENSOR(SENSOR_SHT31, temperature, humidity);
   return CR_TASK_STOP;
 }
 
