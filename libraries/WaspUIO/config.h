@@ -5,12 +5,12 @@
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G TRUE
+#define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA TRUE
 
 // Sensors
-#define WITH_I2C FALSE
+#define WITH_I2C TRUE
 #define WITH_SDI FALSE
 #define WITH_1WIRE FALSE
 #define WITH_MB FALSE
