@@ -316,8 +316,8 @@ CR_TASK(taskNetworkLora)
 CR_TASK(taskNetworkLoraSend)
 {
   static uint32_t t0;
+  static uint8_t dst;
   uint8_t n;
-  uint8_t dst;
   int offset;
 
   CR_BEGIN;
@@ -332,7 +332,7 @@ CR_TASK(taskNetworkLoraSend)
   // - Add a fixed offset depending on address to reduce the chance of collisions?
   // - Add a random value to reduce the chance of collisions?
   offset = 5000;//+ rand() % 1001;
-  debug(F("lora send: wait %d ms before sending"), offset);
+  info(F("lora send: wait %d ms before sending"), offset);
   CR_DELAY(offset); // 200-1200 ms
 
   // Discover destination address, auto mode routing (lora.dst 0)
@@ -365,7 +365,7 @@ CR_TASK(taskNetworkLoraSend)
         warn(F("sx1272.send(..) failure timeout=%u"), sx1272._sendTime);
         break;
       }
-      info(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+      info(F("%hhu frame(s) sent to dst=%hhu in %lu ms"), n, dst, cr.millisDiff(t0));
 
       // Debug
 //    char str[50];
@@ -382,7 +382,7 @@ CR_TASK(taskNetworkLoraSend)
       break; // If waiting for an ACK more than 10s, stop sending.
     }
 
-    CR_DELAY(50); // Give control back
+    CR_DELAY(100); // Give control back
   }
 
   CR_END;
@@ -391,7 +391,6 @@ CR_TASK(taskNetworkLoraSend)
 CR_TASK(taskNetworkLoraReceive)
 {
   const char *data;
-  uint8_t err;
 
   CR_BEGIN;
 

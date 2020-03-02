@@ -166,16 +166,18 @@ cmd_status_t exeCommands(char *str, bool interactive)
       n++;
     }
 
-    debug(F("command \"%s\""), p);
-    status = exeCommand(p);
     if (interactive)
     {
+      status = exeCommand(p);
       if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
       else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
       else if (status == cmd_error)       { cr.println(F("Error")); }
       else if (status == cmd_ok)          { cr.println(F("OK")); }
       else if (status == cmd_quiet)       { }
       else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
+    } else {
+      info(F("command \"%s\""), p);
+      status = exeCommand(p);
     }
 
     // Next command
