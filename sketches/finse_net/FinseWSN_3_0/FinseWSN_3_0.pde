@@ -1,3 +1,5 @@
+
+
 /*
  SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
  April 2017, Simon Filhol

@@ -266,9 +266,9 @@ void WaspUIO::onLoop()
 #if WITH_EXT_CHARGE
   // Switch ON/OFF external charge pin
   pinMode(PIN_POWER_EXT, OUTPUT);
-  if (batteryLevel < 75) {
+  if (batteryLevel <= 75) {
     digitalWrite(PIN_POWER_EXT, HIGH);
-  } else if (batteryLevel > 85) {
+  } else if (batteryLevel > 88) {
     digitalWrite(PIN_POWER_EXT, LOW);
   }
 #endif
