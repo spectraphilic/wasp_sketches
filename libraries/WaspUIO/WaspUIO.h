@@ -437,6 +437,7 @@ public:
   int loraSend(uint8_t dst, const char* msg, bool ack=false);
   int loraQuality();
   uint8_t lora_dst2;
+  uint8_t lora_fails;
   #endif
   #if WITH_4G
   // Network: 4G

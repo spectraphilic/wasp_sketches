@@ -60,3 +60,4 @@
 // Lora configuration
 #define LORA_CHANNEL CH_10_868 // From 10 (865.20 MHz) to 17 (868 MHz)
 #define LORA_POWER 'H' // Low = 0 dBm / High = 7 dBm / Max = 14 dBm
+#define LORA_MAX_FAILS 3 // In auto mode (lora.dst=0), after 3 fails forget dst and ping again

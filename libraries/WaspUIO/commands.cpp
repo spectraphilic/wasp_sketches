@@ -227,6 +227,10 @@ COMMAND(cmdAck)
   if (fifo.drop_begin(UIO.ack_wait)) { return cmd_error; }
 #endif
 
+#if WITH_LORA
+  UIO.lora_fails = 0;
+#endif
+
   UIO.ack_wait = 0; // Ready for next frame!
   return cmd_ok;
 }

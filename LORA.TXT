@@ -14,18 +14,17 @@ Tested:
 - Ping with RSSI and SNR
 - The rssimap.pde sketch
 
+To test:
+* Multi-hop: with dst=0 reset if several attempts fail
+
 TODO:
-- Gateway: keep lora module receiving even if doing something else?
-- Test test
+- Use packnum in ACK for verification purposes
+- Test test: timing, time command, etc.
 - Verify TODO/XXX/FIXME
-- Send through the Gateway, Lora/4G combo
-- Test no regressions with XBee
-- More tests of FIFO/LIFO upgrade
 - Reduce memory further (specially with 4G)
 
 MAYBE:
 - rssimap: Add SNR frame field?
-- Multi-hop (star) topology
 
 Issues:
 - With the eeprom changes, at first log level becomes FATAL and log to USB is

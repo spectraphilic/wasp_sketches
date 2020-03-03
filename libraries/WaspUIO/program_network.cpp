@@ -317,11 +317,13 @@ CR_TASK(taskNetworkLoraSend)
 {
   static uint32_t t0;
   static uint8_t dst;
-  uint8_t n;
+  static uint8_t n_packages; // Number of packages sent in one loop
+  uint8_t n_frames;
   int offset;
 
   CR_BEGIN;
   UIO.ack_wait = 0;
+  n_packages = 0;
 
   // Higher modes have lower time-on-air, this improves channel availability,
   // so we should have higher rates of successful messages sent; choose the
@@ -355,7 +357,7 @@ CR_TASK(taskNetworkLoraSend)
     if (UIO.ack_wait == 0)
     {
       // Read
-      int size = UIO.readFrame(n);
+      int size = UIO.readFrame(n_frames);
       if (size <= 0) { break; }
 
       // Send the frame. The timeout is calculated by sx1272
@@ -365,7 +367,9 @@ CR_TASK(taskNetworkLoraSend)
         warn(F("sx1272.send(..) failure timeout=%u"), sx1272._sendTime);
         break;
       }
-      info(F("%hhu frame(s) sent to dst=%hhu in %lu ms"), n, dst, cr.millisDiff(t0));
+      n_packages++;
+      info(F("Sent packet=%hhu with %hhu frame(s) to dst=%hhu in %lu ms"),
+           sx1272.packet_sent.packnum, n_frames, dst, cr.millisDiff(t0));
 
       // Debug
 //    char str[50];
@@ -375,11 +379,22 @@ CR_TASK(taskNetworkLoraSend)
 //    );
 
       // Next
-      UIO.ack_wait = n;
+      UIO.ack_wait = n_frames;
     }
     else if (cr.timeout(t0, 10 * 1000))
     {
-      break; // If waiting for an ACK more than 10s, stop sending.
+      // Max 10s waiting for an ACK
+      // If didn't receive the ACK for the 1st frame consider it a failure
+      if (n_packages == 1)
+      {
+        UIO.lora_fails++;
+        // If too many fails reset dst2 (this only has an effect in auto routing mode)
+        if (UIO.lora_fails >= LORA_MAX_FAILS)
+        {
+          UIO.lora_dst2 = 0;
+        }
+      }
+      break;
     }
 
     CR_DELAY(100); // Give control back
