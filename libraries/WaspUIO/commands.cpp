@@ -176,7 +176,7 @@ cmd_status_t exeCommands(char *str, bool interactive)
       else if (status == cmd_quiet)       { }
       else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
     } else {
-      info(F("command \"%s\""), p);
+      info(F("Command \"%s\""), p);
       status = exeCommand(p);
     }
 

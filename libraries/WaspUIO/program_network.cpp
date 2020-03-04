@@ -334,7 +334,7 @@ CR_TASK(taskNetworkLoraSend)
   // - Add a fixed offset depending on address to reduce the chance of collisions?
   // - Add a random value to reduce the chance of collisions?
   offset = 5000;//+ rand() % 1001;
-  info(F("lora send: wait %d ms before sending"), offset);
+  info(F("Lora send: wait %d ms before sending"), offset);
   CR_DELAY(offset); // 200-1200 ms
 
   // Discover destination address, auto mode routing (lora.dst 0)
@@ -348,6 +348,7 @@ CR_TASK(taskNetworkLoraSend)
     else
     {
       dst = UIO.lora_dst2;
+      info(F("Lora auto mode dst=%hhu"), dst);
     }
   }
 
@@ -388,6 +389,7 @@ CR_TASK(taskNetworkLoraSend)
       if (n_packages == 1)
       {
         UIO.lora_fails++;
+        warn(F("Didn't get an ACK in this loop, fails=%hhu"), UIO.lora_fails);
         // If too many fails reset dst2 (this only has an effect in auto routing mode)
         if (UIO.lora_fails >= LORA_MAX_FAILS)
         {
