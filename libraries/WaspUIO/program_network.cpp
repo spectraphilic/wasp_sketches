@@ -447,7 +447,7 @@ CR_TASK(taskNetworkLoraReceive)
         }
       } else {
         //info(F("command received from lora address=%u"), sx1272.packet_received.src);
-        exeCommands((char*)data, false);
+        exeCommands(data, false);
       }
 
 /*

@@ -151,10 +151,10 @@ void WaspUIO::clint()
  * Call command
  */
 
-cmd_status_t exeCommands(char *str, bool interactive)
+cmd_status_t exeCommands(const char *str, bool interactive)
 {
   cmd_status_t status;
-  char *p = str;
+  const char *p = str;
 
   while (p != NULL)
   {
