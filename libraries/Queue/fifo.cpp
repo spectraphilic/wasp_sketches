@@ -16,6 +16,8 @@ int FIFO::make()
     sd_write(index, (void*)(&start), 4);
     index.close();
   }
+
+  return 0;
 }
 
 

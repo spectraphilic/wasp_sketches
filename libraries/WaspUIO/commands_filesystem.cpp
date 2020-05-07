@@ -29,7 +29,6 @@ COMMAND(cmdCatx)
   SdFile file;
   uint32_t size;
   uint8_t idx;
-  int chr;
 
   // Check feature availability
   if (! UIO.hasSD) { return cmd_unavailable; }
@@ -44,7 +43,7 @@ COMMAND(cmdCatx)
   size = file.fileSize();
   for (idx=0; idx < size; idx++)
   {
-    chr = file.read();
+    int chr = file.read();
     if (chr < 0)
     {
       file.close();
@@ -150,7 +149,7 @@ COMMAND(cmdTail)
   if (! UIO.hasSD) { return cmd_unavailable; }
 
   // Check input
-  if (sscanf(str, "%u %79s", &maxnl, &filename) != 2) { return cmd_bad_input; }
+  if (sscanf(str, "%u %79s", &maxnl, filename) != 2) { return cmd_bad_input; }
   if (strlen(filename) == 0) { return cmd_bad_input; }
 
   // Open file

@@ -91,5 +91,7 @@ bool WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
   if (type == SENS_3V3) { return UIO.pwr_3v3(new_state); }
   if (type == SENS_5V)  { return UIO.pwr_5v(new_state); }
   if (type == SENS_I2C) { return UIO.pwr_i2c(new_state); }
-  if (type == SENS_ALL) { return UIO.pwr_main(new_state); }
+
+  // Must be SENS_ALL
+  return UIO.pwr_main(new_state);
 }

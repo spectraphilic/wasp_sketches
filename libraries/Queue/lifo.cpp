@@ -3,8 +3,7 @@
 
 int LIFO::make()
 {
-  // Queue file
-  if (sd_mkfile(qname)) { return 1; }
+  return sd_mkfile(qname); // Queue file
 }
 
 

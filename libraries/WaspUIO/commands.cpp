@@ -394,7 +394,7 @@ COMMAND(cmdRun)
   uint8_t hour, minute;
 
   // Check input
-  int n = sscanf(str, "%10s %hhu:%hhu", &name, &hour, &minute);
+  int n = sscanf(str, "%10s %hhu:%hhu", name, &hour, &minute);
 
   // Print names
   if (n == -1)
@@ -512,7 +512,7 @@ COMMAND(cmdVar)
   uint8_t value;
 
   // Read input
-  n = sscanf(str, "%10s %hhu", &name, &value);
+  n = sscanf(str, "%10s %hhu", name, &value);
   if (n == -1)
   {
     for (uint8_t i=0; i < nvars; i++)
