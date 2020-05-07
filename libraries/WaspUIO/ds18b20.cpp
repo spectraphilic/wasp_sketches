@@ -95,7 +95,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
           {
             temp = INT_MIN;
             Utils.hex2str(data, data_str, 8);
-            warn(F("OneWire(%hhu) %s=%d (CRC failed: %s %02X)"), pin, temp, word, data_str, crc);
+            warn(F("OneWire(%hhu) %s=%d (CRC failed: %s %02X)"), pin, word, temp, data_str, crc);
           }
           values[n++] = temp;
         }
