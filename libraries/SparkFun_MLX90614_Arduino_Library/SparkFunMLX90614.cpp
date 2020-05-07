@@ -259,7 +259,7 @@ uint32_t IRTherm::getIDL(void)
 	return ((uint32_t)id[1] << 16) | id[0];
 }
 
-uint8_t IRTherm::sleep(void)
+void IRTherm::sleep(void)
 {
 	// Calculate a crc8 value.
 	// Bits sent: _deviceAddress (shifted left 1) + 0xFF
@@ -276,7 +276,7 @@ uint8_t IRTherm::sleep(void)
 //	pinMode(I2C_SDA, INPUT);
 }
 
-uint8_t IRTherm::wake(void)
+void IRTherm::wake(void)
 {
 	// Wake operation from datasheet
 	//Wire.end(); // stop i2c bus to send wake up request via digital pins

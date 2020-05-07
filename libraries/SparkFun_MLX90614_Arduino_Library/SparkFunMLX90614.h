@@ -138,10 +138,10 @@ public:
 	uint8_t setMin(float minTemp);
 	
 	// sleep() sets the MLX90614 into a low-power sleep mode.
-	uint8_t sleep(void);
+	void sleep(void);
 	
 	// wake() should revive the MLX90614 from low-power sleep mode.
-	uint8_t wake(void);
+	void wake(void);
 	
 private:
 	uint8_t _deviceAddress; // MLX90614's 7-bit I2C address

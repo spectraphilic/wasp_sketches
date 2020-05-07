@@ -290,7 +290,7 @@ boolean AS726X::dataAvailable()
 
 //Clears the DRDY flag
 //Normally this should clear when data registers are read
-boolean AS726X::clearDataAvailable()
+void AS726X::clearDataAvailable()
 {
 	byte value = virtualReadRegister(AS726x_CONTROL_SETUP);
 	value &= ~(1 << 1); //Set the DATA_RDY bit

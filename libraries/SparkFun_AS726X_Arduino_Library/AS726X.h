@@ -66,7 +66,7 @@ private:
 	int getChannel(byte channelRegister);
 	float getCalibratedValue(byte calAddress);
 	float convertBytesToFloat(uint32_t myLong);
-	boolean clearDataAvailable();
+	void clearDataAvailable();
 	byte virtualReadRegister(byte virtualAddr);
 	void virtualWriteRegister(byte virtualAddr, byte dataToWrite);
 	void writeRegister(byte addr, byte val);
