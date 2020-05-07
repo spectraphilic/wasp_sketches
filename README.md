@@ -33,38 +33,45 @@ fork of waspmoteapi and the sketches:
 
 (2) Download and install the IDE:
 
-    $ mkdir waspmote-pro-ide-v06.02
-    $ cd waspmote-pro-ide-v06.02
-    $ wget http://downloads.libelium.com/waspmote-pro-ide-v06.02-linux64.zip
-    $ unzip waspmote-pro-ide-v06.02-linux64.zip
+    $ mkdir waspmote-pro-ide-v06.19-linux64
+    $ cd waspmote-pro-ide-v06.19-linux64
+    $ wget http://downloads.libelium.com/waspmote-pro-ide-v06.19-linux64.zip
+    $ unzip waspmote-pro-ide-v06.19-linux64.zip
     $ ./install.sh
 
 (3) Replace the libraries from the IDE by those in our fork of waspmoteapi:
 
-    $ cd waspmote-pro-ide-v06.02
+    $ cd waspmote-pro-ide-v06.19-linux64
     $ mv libraries libraries.bak
     $ ln -s ../waspmoteapi-uio/libraries
     $ cd hardware/waspmote/avr/cores
     $ mv waspmote-api waspmote-api.bak
-    $ ln -s ../../../../../waspmoteapi/waspmote-api
+    $ ln -s ../../../../../waspmoteapi-uio/waspmote-api
 
 (4) Open the Preferences dialog in the IDE and change the "Sketchbook location"
 to point to the sketches project (where the libraries folder is). For example:
 
     [...]/wasp_sketches
 
-(4 alternative) Open the Preferences dialog in the IDE to find out where is
-your "Sketchbook location". For example mine is "~/Arduino". Then change
-directory to the libraries folder within:
 
-    $ cd ~/Arduino/libraries
+# Using a different compiler
 
-Create symbolic links to the libraries needed:
+It's encouraged to not use the compiler included in the IDE, because it's too
+old (GCC 4.9). A newer compiler will give more and better errors and warnings.
 
-    $ ln -s [...]/wasp_libraries/Coroutines
-    $ ln -s [...]/wasp_libraries/WString
-    $ ln -s [...]/wasp_libraries/SDI12
-    $ ln -s [...]/wasp_libraries/WaspUIO
+To do this first you need to install a crosscompiler for AVR. This is easy in
+Debian and Ubuntu (though the compiler won't be much newer, just 5.4):
+
+    apt-get install avr-libc gcc-avr
+
+Now, to change the compiler used edit the hardware/waspmote/avr/platform.txt
+file and do the following changes:
+
+    $ vi hardware/waspmote/avr/platform.txt
+    [...]
+    #compiler.path={runtime.tools.avr-gcc.path}/bin/
+    compiler.path=/usr/bin/
+    [...]
 
 
 # Contents
