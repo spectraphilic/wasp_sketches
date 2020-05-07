@@ -23,6 +23,8 @@ if __name__ == '__main__':
         try:
             time, tail = line.split(' ', 1)
             time = datetime.utcfromtimestamp(float(time))
+            time = time.strftime('%Y-%m-%d %H:%M:%S.%f')
+            time = time[:-3] # Display ms, not microseconds
         except ValueError:
             pass
         else:
