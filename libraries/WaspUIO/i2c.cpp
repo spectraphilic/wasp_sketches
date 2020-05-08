@@ -329,7 +329,7 @@ bool WaspUIO::i2c_SHT31(float &temperature, float &humidity)
   if (isnan(humidity)) {  // check if 'is not a number'
     log_debug("Hum. NaN");
   } else {
-    log_debug("Hum. %s %", Utils.float2String(humidity, str, 2));
+    log_debug("Hum. %s %%", Utils.float2String(humidity, str, 2));
   }
 
   return 0;

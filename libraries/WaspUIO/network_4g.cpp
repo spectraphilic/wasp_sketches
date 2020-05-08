@@ -254,18 +254,16 @@ uint8_t WaspUIO::_4GGPS()
     float lon = _4G.convert2Degrees(_4G._longitude, _4G._longitudeEW);
 
     // Debug
-    char lat_str[15];
-    char lon_str[15];
-    char alt_str[15];
-    Utils.float2String(lat, lat_str, 6);
-    Utils.float2String(lon, lon_str, 6);
-    log_debug("GPS latitude  %s %c => %s", _4G._latitude, _4G._latitudeNS, lat_str);
-    log_debug("GPS longitude %s %c => %s", _4G._longitude, _4G._longitudeEW, lon_str);
+    char aux[20];
+    char aux2[20];
+    log_debug("GPS latitude  %s %c => %s", _4G._latitude, _4G._latitudeNS,
+              Utils.float2String(lat, aux, 6));
+    log_debug("GPS longitude %s %c => %s", _4G._longitude, _4G._longitudeEW,
+              Utils.float2String(lon, aux, 6));
     log_debug("GPS altitude=%s course=%s speed=%s",
-      Utils.float2String(_4G._altitude, alt_str, 6),
-      _4G._courseOG,
-      _4G._speedOG
-    );
+              Utils.float2String(_4G._altitude, aux, 6),
+              _4G._courseOG,
+              Utils.float2String(_4G._speedOG, aux2, 6));
 
     // Frame
     ADD_SENSOR(SENSOR_GPS, lat, lon);
