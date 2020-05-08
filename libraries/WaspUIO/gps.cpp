@@ -6,13 +6,13 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   const __FlashStringHelper * error_msg = NULL;
   uint8_t satellites;
 
-  debug(F("GPS start"));
+  log_debug("GPS start");
   if (_boot_version >= 'J') { stopSD(); }
 
   // On
   if (GPS.ON() == 0)
   {
-    error(F("GPS.ON() failure"));
+    log_error("GPS.ON() failure");
     return -1;
   }
 
@@ -70,7 +70,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
 
   if (setTime)
   {
-    info(F("GPS Time updated!"));
+    log_info("GPS Time updated!");
   }
 
   if (getPosition)
@@ -85,10 +85,10 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     char lon_str[15];
     Utils.float2String(lat, lat_str, 6);
     Utils.float2String(lon, lon_str, 6);
-    debug(F("GPS latitude  %s %c => %s"), GPS.latitude, GPS.NS_indicator, lat_str);
-    debug(F("GPS longitude %s %c => %s"), GPS.longitude, GPS.EW_indicator, lon_str);
-    debug(F("GPS altitude=%s"), GPS.altitude);
-    debug(F("GPS satellites=%s accuracy=%s"), GPS.satellites, GPS.accuracy);
+    log_debug("GPS latitude  %s %c => %s", GPS.latitude, GPS.NS_indicator, lat_str);
+    log_debug("GPS longitude %s %c => %s", GPS.longitude, GPS.EW_indicator, lon_str);
+    log_debug("GPS altitude=%s", GPS.altitude);
+    log_debug("GPS satellites=%s accuracy=%s", GPS.satellites, GPS.accuracy);
 
     // Frames
     ADD_SENSOR(SENSOR_GPS, lat, lon);
@@ -102,7 +102,7 @@ exit:
   {
     GPS.OFF();
     if (_boot_version >= 'J') { startSD(); }
-    error(error_msg);
+    cr.log(LOG_ERROR, error_msg);
     return -1;
   }
   return 0;

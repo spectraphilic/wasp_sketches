@@ -17,7 +17,7 @@ bool WaspUIO::updateEEPROM(int address, uint8_t value)
 {
   if (address < EEPROM_START)
   {
-    error(F("cannot save value to lower eeprom memory address"));
+    log_error("cannot save value to lower eeprom memory address");
     return false;
   }
 
@@ -25,7 +25,7 @@ bool WaspUIO::updateEEPROM(int address, uint8_t value)
   bool ok = eeprom_read_byte((uint8_t*)address) == value;
   if (! ok)
   {
-    error(F("value read from eeprom different from value written"));
+    log_error("value read from eeprom different from value written");
   }
 
   return ok;
@@ -35,7 +35,7 @@ bool WaspUIO::updateEEPROM(int address, uint16_t value)
 {
   if (address < EEPROM_START)
   {
-    error(F("cannot save value to lower eeprom memory address"));
+    log_error("cannot save value to lower eeprom memory address");
     return false;
   }
 
@@ -43,7 +43,7 @@ bool WaspUIO::updateEEPROM(int address, uint16_t value)
   bool ok = eeprom_read_word((uint16_t*)address) == value;
   if (! ok)
   {
-    error(F("value read from eeprom different from value written"));
+    log_error("value read from eeprom different from value written");
   }
 
   return ok;
@@ -53,7 +53,7 @@ bool WaspUIO::updateEEPROM(int address, uint32_t value)
 {
   if (address < EEPROM_START)
   {
-    error(F("cannot save value to lower eeprom memory address"));
+    log_error("cannot save value to lower eeprom memory address");
     return false;
   }
 
@@ -61,7 +61,7 @@ bool WaspUIO::updateEEPROM(int address, uint32_t value)
   bool ok = eeprom_read_dword((uint32_t*)address) == value;
   if (! ok)
   {
-    error(F("value read from eeprom different from value written"));
+    log_error("value read from eeprom different from value written");
   }
 
   return ok;
@@ -97,7 +97,7 @@ bool WaspUIO::writeEEPROM(int address, char* src, size_t size)
 
   if (address < EEPROM_START)
   {
-    error(F("cannot save value to lower eeprom memory address"));
+    log_error("cannot save value to lower eeprom memory address");
     return false;
   }
 

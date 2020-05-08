@@ -537,7 +537,7 @@ extern LIFO lifo;
 #endif
 
 
-void vlog(loglevel_t level, const char* message, va_list args);
+void vlog(loglevel_t level, const char* message);
 
 
 /*

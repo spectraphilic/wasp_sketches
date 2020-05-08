@@ -123,7 +123,7 @@ COMMAND(cmdPing)
   {
     if (UIO.xbeeSend(UIO.xbee.rx_address, "ping"))
       return cmd_error;
-    info(F("RSSI(dBm) = %d"), UIO.rssi);
+    log_info("RSSI(dBm) = %d", UIO.rssi);
     return cmd_quiet;
   }
 #endif
@@ -132,7 +132,7 @@ COMMAND(cmdPing)
   {
     if (UIO.loraSend(UIO.lora_dst, "ping", true))
       return cmd_error;
-    info(F("RSSI(dBm) = %d SNR = %d"), UIO.rssi, UIO.snr);
+    log_info("RSSI(dBm) = %d SNR = %d", UIO.rssi, UIO.snr);
     return cmd_quiet;
   }
 #endif

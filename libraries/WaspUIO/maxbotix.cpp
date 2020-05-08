@@ -111,14 +111,14 @@ uint8_t WaspUIO::readMaxbotixSerial(int samples[], uint8_t nsamples)
   // Error
   if (j < nsamples)
   {
-    warn(F("readMaxbotixSerial: fail to read MB7389"));
+    log_warn("readMaxbotixSerial: fail to read MB7389");
     return 0;
   }
 
   // Success
   for (j=0; j < nsamples; j++)
   {
-    debug(F("readMaxbotixSerial: sample=%d"), samples[j]);
+    log_debug("readMaxbotixSerial: sample=%d", samples[j]);
   }
 
   return j;

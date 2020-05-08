@@ -63,7 +63,7 @@ int WaspUIO::loraSend(uint8_t dst, const char* msg, bool ack)
 {
   int err;
 
-  debug(F("loraSend(dst=%d, msg=\"%s\", ack=%d)"), dst, msg, ack);
+  log_debug("loraSend(dst=%d, msg=\"%s\", ack=%d)", dst, msg, ack);
 
   // UART0 is shared by USB and Socket0 (XBee, Lora)
   USB.OFF();
@@ -97,14 +97,14 @@ exit:
   //USB.flush();
   if (err)
   {
-    error(F("loraSend failed error=%d"), err);
+    log_error("loraSend failed error=%d", err);
     return 1;
   }
 
   // Set network address in auto mode (lora.dst 0)
   if (ack && dst == 0)
   {
-    info(F("loraSend success, ack received from %u"), sx1272.ACK.src);
+    log_info("loraSend success, ack received from %u", sx1272.ACK.src);
     if (sx1272.ACK.src < lora_addr)
     {
       lora_dst2 = sx1272.ACK.src;

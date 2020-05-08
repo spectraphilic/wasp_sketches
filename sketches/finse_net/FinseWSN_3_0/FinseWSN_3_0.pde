@@ -26,29 +26,29 @@ void setup()
   // Log configuration
   char buffer[150];
   size_t size = sizeof(buffer);
-  info(F("Time      : %s"), UIO.pprintTime(buffer, size));
-  info(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, sizeof buffer), _boot_version, UIO.name);
-  info(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  info(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
+  log_info("Time      : %s", UIO.pprintTime(buffer, size));
+  log_info("Id        : %s Version=%c Name=%s", UIO.pprintSerial(buffer, sizeof buffer), _boot_version, UIO.name);
+  log_info("Battery   : %s", UIO.pprintBattery(buffer, size));
+  log_info("Hardware  : board=%s SD=%d GPS=%d", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
   #if WITH_XBEE
   if (UIO.lan_type == LAN_XBEE)
-  { info(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
+  { log_info("XBee      : %s", UIO.pprintXBee(buffer, size)); }
   #endif
   #if WITH_LORA
   if (UIO.lan_type == LAN_LORA)
-  { info(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
+  { log_info("Lora      : %s", UIO.pprintLora(buffer, size)); }
   #endif
   #if WITH_4G
   if (UIO.wan_type == WAN_4G)
-  { info(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
+  { log_info("4G        : %s", UIO.pprint4G(buffer, size)); }
   #endif
   #if WITH_IRIDIUM
   if (UIO.wan_type == WAN_IRIDIUM)
-  { info(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
+  { log_info("Iridium   : %s", UIO.pprintIridium(buffer, size)); }
   #endif
-  info(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
-  info(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  info(F("Actions   : %s"), UIO.pprintActions(buffer, size));
+  log_info("Frames    : %s", UIO.pprintFrames(buffer, size));
+  log_info("Log       : level=%s output=%s", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+  log_info("Actions   : %s", UIO.pprintActions(buffer, size));
 }
 
 void loop()
@@ -58,7 +58,7 @@ void loop()
   // We expect *only* Alarm 1
   if (intFlag & ~RTC_INT)
   {
-    error(F("Expected *only* RTC_INT got %d"), intFlag);
+    log_error("Expected *only* RTC_INT got %d", intFlag);
     intFlag = 0;
     return;
   }
@@ -72,5 +72,5 @@ void loop()
   cr.spawn(taskMain);
   cr.run();
 
-  info(F("Loop done in %lu ms"), cr.millisDiff(UIO._loop_start));
+  log_info("Loop done in %lu ms", cr.millisDiff(UIO._loop_start));
 }

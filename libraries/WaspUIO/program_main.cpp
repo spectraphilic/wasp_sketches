@@ -148,9 +148,9 @@ CR_TASK(taskSlow)
   // Wait a little bit so this is executed last
   CR_DELAY(12000);
 
-  warn(F("Start slow task"));
+  log_warn("Start slow task");
   delay(5 * 60000); // 5 minutes
-  warn(F("End slow task"));
+  log_warn("End slow task");
 
   CR_END;
 }

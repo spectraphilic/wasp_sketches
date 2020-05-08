@@ -19,7 +19,7 @@ uint8_t WaspUIO::saveTime()
   uint8_t err = RTC.setTime(ts.year, ts.month, ts.date, ts.day, ts.hour, ts.minute, ts.second);
   if (err)
   {
-    warn(F("saveTime: RTC.setTime(%lu) failed"), time);
+    log_warn("saveTime: RTC.setTime(%lu) failed", time);
   }
 
   if (! rtcON) { RTC.OFF(); } // RTC OFF
@@ -33,7 +33,7 @@ uint8_t WaspUIO::saveTimeToSD()
 
   if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC | O_SYNC))
   {
-    warn(F("saveTimeToSD: Opening TIME.TXT failed"));
+    log_warn("saveTimeToSD: Opening TIME.TXT failed");
     return 1;
   }
 
@@ -84,10 +84,10 @@ void WaspUIO::loadTime()
   // If it's an old time, read it from the SD
   if (_epoch < 1541030400) // 2018-11-01 A date in the past
   {
-    warn(F("Wrong time detected"));
+    log_warn("Wrong time detected");
     if (sd_open(timeFilename, file, O_READ))
     {
-       warn(F("Opening TIME.TXT failed"));
+       log_warn("Opening TIME.TXT failed");
     }
     else
     {
@@ -95,14 +95,14 @@ void WaspUIO::loadTime()
       file.close();
       if (size != 10)
       {
-        warn(F("Reading TIME.TXT failed"));
+        log_warn("Reading TIME.TXT failed");
       }
       else
       {
         _epoch = strtoul(SD.buffer, NULL, 10);
         _epoch_millis = millis();
 	saveTime();
-        info(F("Time loaded from TIME.TXT"));
+        log_info("Time loaded from TIME.TXT");
       }
     }
   }
@@ -157,6 +157,6 @@ uint8_t WaspUIO::setTimeFromNetwork()
   }
 #endif
 
-  error(F("Setting time from network only supported in 4G networks"));
+  log_error("Setting time from network only supported in 4G networks");
   return err;
 }

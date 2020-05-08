@@ -27,7 +27,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
 
   if (SD.openFile("onewire.txt", &file, O_READ) == 0)
   {
-    error(F("Missing onewire.txt file"));
+    log_error("Missing onewire.txt file");
     return 0;
   }
 
@@ -48,7 +48,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
       WaspOneWire oneWire(_getPin(pin));
       if (! oneWire.reset())
       {
-        warn(F("OneWire no devices attached to %hhu pin"), pin);
+        log_warn("OneWire no devices attached to %hhu pin", pin);
         continue;
       }
 
@@ -61,7 +61,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
       {
         if (n >= max)
         {
-          warn(F("OneWire cannot read more than %hhu sensors"), max);
+          log_warn("OneWire cannot read more than %hhu sensors", max);
           break;
         }
 
@@ -71,7 +71,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
         {
           if (Utils.str2hex(word, addr, 8) < 8)
           {
-            warn(F("OneWire(%hhu) bad address '%s'"), pin, word);
+            log_warn("OneWire(%hhu) bad address '%s'", pin, word);
             continue;
           }
 
@@ -89,13 +89,13 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
             // Debug
             temp_f = (float) temp / 16;
             Utils.float2String(temp_f, temp_str, 3);
-            debug(F("OneWire(%hhu) %s=%d (%s)"), pin, word, temp, temp_str);
+            log_debug("OneWire(%hhu) %s=%d (%s)", pin, word, temp, temp_str);
           }
           else
           {
             temp = INT_MIN;
             Utils.hex2str(data, data_str, 8);
-            warn(F("OneWire(%hhu) %s=%d (CRC failed: %s %02X)"), pin, word, temp, data_str, crc);
+            log_warn("OneWire(%hhu) %s=%d (CRC failed: %s %02X)", pin, word, temp, data_str, crc);
           }
           values[n++] = temp;
         }
@@ -109,7 +109,7 @@ uint8_t WaspUIO::readDS18B20(int values[], uint8_t max)
   file.close();
   if (len == -2)
   {
-    warn(F("Could not close onewire.txt file"));
+    log_warn("Could not close onewire.txt file");
   }
 
   return n;

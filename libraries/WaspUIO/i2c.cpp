@@ -53,7 +53,7 @@ bool WaspUIO::i2c_acc(int &x, int &y, int &z)
   if (ACC.check() != 0x32)
   {
     err = 1;
-    error(F("ACC.check() failure"));
+    log_error("ACC.check() failure");
     goto exit;
   }
 
@@ -61,7 +61,7 @@ bool WaspUIO::i2c_acc(int &x, int &y, int &z)
   x = ACC.getX();
   y = ACC.getY();
   z = ACC.getZ();
-  info(F("ACC x=%d, y=%d, z=%d"), x, y, z);
+  log_info("ACC x=%d, y=%d, z=%d", x, y, z);
 
 exit:
   // Off
@@ -94,13 +94,13 @@ bool WaspUIO::i2c_AS7263(uint8_t &temp, float &r, float &s, float &t, float &u, 
 
   // Debug
   char str[20];
-  debug(F("AS7263 temp=%d"), temp);
-  debug(F("AS7263 r=%s"), Utils.float2String(r, str, 2));
-  debug(F("AS7263 s=%s"), Utils.float2String(s, str, 2));
-  debug(F("AS7263 t=%s"), Utils.float2String(t, str, 2));
-  debug(F("AS7263 u=%s"), Utils.float2String(u, str, 2));
-  debug(F("AS7263 v=%s"), Utils.float2String(v, str, 2));
-  debug(F("AS7263 w=%s"), Utils.float2String(w, str, 2));
+  log_debug("AS7263 temp=%d", temp);
+  log_debug("AS7263 r=%s", Utils.float2String(r, str, 2));
+  log_debug("AS7263 s=%s", Utils.float2String(s, str, 2));
+  log_debug("AS7263 t=%s", Utils.float2String(t, str, 2));
+  log_debug("AS7263 u=%s", Utils.float2String(u, str, 2));
+  log_debug("AS7263 v=%s", Utils.float2String(v, str, 2));
+  log_debug("AS7263 w=%s", Utils.float2String(w, str, 2));
 
   return 0;
 }
@@ -141,25 +141,25 @@ bool WaspUIO::i2c_AS7265(
 
   // DEBUG
   char str[20];
-  debug(F("AS7263 temp=%d"), temp);
-  debug(F("AS7265 A=%s"), Utils.float2String(A, str, 2));
-  debug(F("AS7265 B=%s"), Utils.float2String(B, str, 2));
-  debug(F("AS7265 C=%s"), Utils.float2String(C, str, 2));
-  debug(F("AS7265 D=%s"), Utils.float2String(D, str, 2));
-  debug(F("AS7265 E=%s"), Utils.float2String(E, str, 2));
-  debug(F("AS7265 F=%s"), Utils.float2String(F, str, 2));
-  debug(F("AS7265 G=%s"), Utils.float2String(G, str, 2));
-  debug(F("AS7265 H=%s"), Utils.float2String(H, str, 2));
-  debug(F("AS7265 I=%s"), Utils.float2String(I, str, 2));
-  debug(F("AS7265 J=%s"), Utils.float2String(J, str, 2));
-  debug(F("AS7265 K=%s"), Utils.float2String(K, str, 2));
-  debug(F("AS7265 L=%s"), Utils.float2String(L, str, 2));
-  debug(F("AS7265 R=%s"), Utils.float2String(R, str, 2));
-  debug(F("AS7265 S=%s"), Utils.float2String(S, str, 2));
-  debug(F("AS7265 T=%s"), Utils.float2String(T, str, 2));
-  debug(F("AS7265 U=%s"), Utils.float2String(U, str, 2));
-  debug(F("AS7265 V=%s"), Utils.float2String(V, str, 2));
-  debug(F("AS7265 W=%s"), Utils.float2String(W, str, 2));
+  log_debug("AS7263 temp=%d", temp);
+  log_debug("AS7265 A=%s", Utils.float2String(A, str, 2));
+  log_debug("AS7265 B=%s", Utils.float2String(B, str, 2));
+  log_debug("AS7265 C=%s", Utils.float2String(C, str, 2));
+  log_debug("AS7265 D=%s", Utils.float2String(D, str, 2));
+  log_debug("AS7265 E=%s", Utils.float2String(E, str, 2));
+  log_debug("AS7265 F=%s", Utils.float2String(F, str, 2));
+  log_debug("AS7265 G=%s", Utils.float2String(G, str, 2));
+  log_debug("AS7265 H=%s", Utils.float2String(H, str, 2));
+  log_debug("AS7265 I=%s", Utils.float2String(I, str, 2));
+  log_debug("AS7265 J=%s", Utils.float2String(J, str, 2));
+  log_debug("AS7265 K=%s", Utils.float2String(K, str, 2));
+  log_debug("AS7265 L=%s", Utils.float2String(L, str, 2));
+  log_debug("AS7265 R=%s", Utils.float2String(R, str, 2));
+  log_debug("AS7265 S=%s", Utils.float2String(S, str, 2));
+  log_debug("AS7265 T=%s", Utils.float2String(T, str, 2));
+  log_debug("AS7265 U=%s", Utils.float2String(U, str, 2));
+  log_debug("AS7265 V=%s", Utils.float2String(V, str, 2));
+  log_debug("AS7265 W=%s", Utils.float2String(W, str, 2));
 
   return 0;
 }
@@ -190,9 +190,9 @@ bool WaspUIO::i2c_BME280(float &temperature, float &humidity, float &pressure, u
 
   // Debug
   char aux[20];
-  debug(F("BME280 Temperature: %s Celsius Degrees"), Utils.float2String(temperature, aux, 2));
-  debug(F("BME280 Humidity   : %s %%RH"), Utils.float2String(humidity, aux, 2));
-  debug(F("BME280 Pressure   : %s Pa"), Utils.float2String(pressure, aux, 2));
+  log_debug("BME280 Temperature: %s Celsius Degrees", Utils.float2String(temperature, aux, 2));
+  log_debug("BME280 Humidity   : %s %%RH", Utils.float2String(humidity, aux, 2));
+  log_debug("BME280 Pressure   : %s Pa", Utils.float2String(pressure, aux, 2));
 
   return 0;
 }
@@ -219,8 +219,8 @@ bool WaspUIO::i2c_MLX90614(float &object, float &ambient)
 
   // Debug
   char str[20];
-  debug(F("MLX 90614 object=%s"), Utils.float2String(object, str, 2));
-  debug(F("MLX 90614 ambient=%s"), Utils.float2String(ambient, str, 2));
+  log_debug("MLX 90614 object=%s", Utils.float2String(object, str, 2));
+  log_debug("MLX 90614 ambient=%s", Utils.float2String(ambient, str, 2));
 
   return 0;
 }
@@ -241,7 +241,7 @@ bool WaspUIO::i2c_TMP102(float &temperature)
 
   // Debug
   char str[20];
-  debug(F("TMP102 %s Celsius"), Utils.float2String(temperature, str, 2));
+  log_debug("TMP102 %s Celsius", Utils.float2String(temperature, str, 2));
 
   return 0;
 }
@@ -260,7 +260,7 @@ bool WaspUIO::i2c_TMP117(double &temperature)
 
   // Debug
   char str[20];
-  debug(F("TMP117 %s Celsius"), Utils.float2String(temperature, str, 2));
+  log_debug("TMP117 %s Celsius", Utils.float2String(temperature, str, 2));
 
   return 0;
 }
@@ -296,7 +296,7 @@ uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
       delay(5);
 
       int16_t tmp = distanceSensor.getDistance();
-      debug(F("Distance %u (mm): %u"), n, tmp);
+      log_debug("Distance %u (mm): %u", n, tmp);
       distances[n++] = tmp;
       delay(200);
   }
@@ -321,15 +321,15 @@ bool WaspUIO::i2c_SHT31(float &temperature, float &humidity)
   temperature = sht31.readTemperature();
   humidity = sht31.readHumidity();
   if (isnan(temperature)) {  // check if 'is not a number'
-    debug(F("Temp NaN"));
+    log_debug("Temp NaN");
   } else {
-    debug(F("Temp %s C"), Utils.float2String(temperature, str, 2));
+    log_debug("Temp %s C", Utils.float2String(temperature, str, 2));
   }
 
   if (isnan(humidity)) {  // check if 'is not a number'
-    debug(F("Hum. NaN"));
+    log_debug("Hum. NaN");
   } else {
-    debug(F("Hum. %s %"), Utils.float2String(humidity, str, 2));
+    log_debug("Hum. %s %", Utils.float2String(humidity, str, 2));
   }
 
   return 0;

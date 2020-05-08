@@ -74,7 +74,7 @@ COMMAND(cmdI2C)
     uint8_t nbsamples = 3;
     int distance[nbsamples];
     uint8_t total = UIO.i2c_VL53L1X(distance, nbsamples);
-    debug(F("Total = %u"), total);
+    log_debug("Total = %u", total);
     err = (total == nbsamples) ? 0: 1;
   }
   else if (value == RUN_SHT31)

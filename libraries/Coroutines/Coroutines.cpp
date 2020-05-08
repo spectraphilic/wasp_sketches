@@ -12,19 +12,19 @@ int Loop::spawn(tstate_t (*fun)(), unsigned int delay)
 {
   if (delay > CR_MAX_DELAY)
   {
-    //trace(F("Cannot spawn, given delay too big"));
+    //log_trace("Cannot spawn, given delay too big");
     return -1;
   }
 
   if (next - first >= CR_QUEUE_SIZE)
   {
-    //trace(F("Cannot spawn, limit reached"));
+    //log_trace("Cannot spawn, limit reached");
     return -1;
   }
 
   if (next > CR_MAX_TID)
   {
-    //trace(F("Cannot spawn, task ids exhausted"));
+    //log_trace("Cannot spawn, task ids exhausted");
     return -1;
   }
 
@@ -41,8 +41,6 @@ int Loop::spawn(tstate_t (*fun)(), unsigned int delay)
 
 Task* Loop::get(tid_t tid)
 {
-  uint8_t idx;
-
   if (tid < first || tid >= next)
   {
     return NULL;
@@ -68,7 +66,7 @@ int8_t Loop::join(Task* task, tid_t tid, tid_t target_tid)
   // Simple system to prevent dead locks
   if (tid >= target_tid)
   {
-    //trace(F("Cannot join older or same task"));
+    //log_trace("Cannot join older or same task");
     return -1;
   }
 
@@ -87,7 +85,7 @@ void Loop::resume(Task* task, tid_t tid)
   if (state == CR_TASK_ERROR)
   {
     task->fun = NULL;
-    //trace(F("Task %d error"), tid);
+    //log_trace("Task %d error", tid);
     return;
   }
 
@@ -95,7 +93,7 @@ void Loop::resume(Task* task, tid_t tid)
   if (state == CR_TASK_STOP)
   {
     task->fun = NULL;
-    //trace(F("Task %d done"), tid);
+    //log_trace("Task %d done", tid);
     return;
   }
 
@@ -103,32 +101,30 @@ void Loop::resume(Task* task, tid_t tid)
   if (state >= CR_DELAY_OFFSET)
   {
     task->state = state;
-    //trace(F("Task %d suspended (delay = %lu)"), tid, state);
+    //log_trace("Task %d suspended (delay = %lu)", tid, state);
     return;
   }
 
   // Suspend: join
   join(task, tid, (tid_t) state);
-  //trace(F("Task %d suspended (join %lu)"), tid);
+  //log_trace("Task %d suspended (join %lu)", tid);
   return;
 }
 
 
 void Loop::run()
 {
-  uint32_t now; // Relative now (since start), plus offset
   int32_t task_wait;
-  int32_t delay_time;
   Task* task;
 
   start = millis();
 
   while (next - first)
   {
-    delay_time = 0;
+    int32_t delay_time = 0;
 
     //USB.printf((char*)"%d %d\n", first, next);
-    now = millis() - start + CR_DELAY_OFFSET;
+    uint32_t now = millis() - start + CR_DELAY_OFFSET; // Relative now (since start), plus offset
     for (uint16_t tid=first; tid < next; tid++)
     {
       task = get(tid);
@@ -142,7 +138,7 @@ void Loop::run()
           task_wait = state - now;
           if (task_wait <= 0)
           {
-            //trace(F("Task %d time threshold reached: run"), tid);
+            //log_trace("Task %d time threshold reached: run", tid);
             resume(task, tid);
           }
           else
@@ -160,7 +156,7 @@ void Loop::run()
         {
           if (get(state) == NULL)
           {
-            //trace(F("Task %d finished: resume task %d"), state, tid);
+            //log_trace("Task %d finished: resume task %d", state, tid);
             resume(task, tid);
           }
         }
@@ -201,28 +197,52 @@ bool Loop::timeout(uint32_t t0, uint32_t timeout)
  * but vlog can be overriden.
  */
 
-void Loop::log(loglevel_t level, const __FlashStringHelper * format, ...)
+void Loop::log(loglevel_t level, const __FlashStringHelper *message)
 {
   if (level <= loglevel)
   {
-    char message[150];
-    strncpy_F(message, format, sizeof(message));
+    // Copy to working memory
+    char buffer[150];
+    strncpy_F(buffer, message, sizeof(buffer));
 
-    va_list args;
-    va_start(args, format);
-    vlog(level, message, args);
-    va_end(args);
+    // Out
+    vlog(level, buffer);
   }
 }
 
-void Loop::log(loglevel_t level, const char * format, ...)
+void Loop::logf_P(loglevel_t level, PGM_P format, ...)
 {
   if (level <= loglevel)
   {
+    // Copy to working memory
+    char buffer[150];
+    strncpy_P(buffer, format, sizeof(buffer));
+
+    // Format string
+    char message[150];
     va_list args;
     va_start(args, format);
-    vlog(level, format, args);
+    vsnprintf(message, sizeof(message), buffer, args);
     va_end(args);
+
+    // Out
+    vlog(level, message);
+  }
+}
+
+void Loop::logf_(loglevel_t level, const char *format, ...)
+{
+  if (level <= loglevel)
+  {
+    // Format string
+    char message[150];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(message, sizeof(message), format, args);
+    va_end(args);
+
+    // Out
+    vlog(level, message);
   }
 }
 
@@ -251,15 +271,18 @@ const char* Loop::loglevel2str(loglevel_t level)
  * Free functions that can be redefined (because declared weak).
  */
 
-void vlog(loglevel_t level, const char* message, va_list args)
+void vlog(loglevel_t level, const char* message)
 {
   size_t size = 150;
   char buffer[size];
 
-  // Timestamp + Level + Message
+  // Timestamp + Level
   sprintf(buffer, "%lu %s ", millis(), cr.loglevel2str(level));
+  // + Message
   size_t len = strlen(buffer);
-  vsnprintf(buffer + len, size - len - 1, message, args);
+  strncat(buffer, message, size - len - 1);
+
+  // Out
   USB.println(buffer);
 }
 

@@ -26,7 +26,7 @@ uint8_t getPowerLevel()
   bool success = false;
   uint8_t powerLevel;
 
-  info(F("getPowerLevel() ..."));
+  log_info("getPowerLevel() ...");
   USB.OFF();
 
   // Action
@@ -51,12 +51,12 @@ uint8_t getPowerLevel()
   USB.flush();
   if (success)
   {
-    info(F("power level = %hhu"), powerLevel);
+    log_info("power level = %hhu", powerLevel);
     return 0;
   }
   else
   {
-    error(F("Failed to read the power level"));
+    log_error("Failed to read the power level");
     return 1;
   }
 }
@@ -78,7 +78,7 @@ void setup()
   // GPS
   if (GPS.ON() == 0)
   {
-    error(F("GPS.ON() Error: Shut down!!"));
+    log_error("GPS.ON() Error: Shut down!!");
     PWR.deepSleep("01:00:00:00", RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
   }
 }
@@ -91,12 +91,12 @@ void loop()
 
   // Wait until the next 30s slot
   wait = 30 - UIO.getEpochTime() % 30; // Every 30s
-  info(F("delay(%ds)"), wait); // Wait until the next minute
+  log_info("delay(%ds)", wait); // Wait until the next minute
   delay(wait * 1000);
 
   // Get data and create frame
   time = UIO.getEpochTime();
-  info(F("ping() ..."));
+  log_info("ping() ...");
 
 #if WITH_XBEE
   err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");

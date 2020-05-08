@@ -98,7 +98,7 @@ exit:
   //USB.flush();
   if (err)
   {
-    error(F("xbeeSend failed error=%d"), err);
+    log_error("xbeeSend failed error=%d", err);
     return 1;
   }
 

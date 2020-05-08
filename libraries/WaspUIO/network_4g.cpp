@@ -31,26 +31,26 @@ uint8_t WaspUIO::_4GStart()
   // Check pin number
   if (pin == 0 || pin > 9999)
   {
-    error(F("Bad pin number (%u), set pin in the menu"), pin);
+    log_error("Bad pin number (%u), set pin in the menu", pin);
     return 1;
   }
   snprintf(pin_str, sizeof pin_str, "%04d", pin);
 
   // Switch on (11s)
-  debug(F("4G Switch on"));
+  log_debug("4G Switch on");
   err = _4G.ON();
   if (err)
   {
-    error(F("_4G.ON error=%d %d"), err, _4G._errorCode);
+    log_error("_4G.ON error=%d %d", err, _4G._errorCode);
     return 1;
   }
 
   // Enter PIN (0.2s)
-  debug(F("4G Enter PIN"));
+  log_debug("4G Enter PIN");
   status = _4G.checkPIN();
   if (status == 0)
   {
-    debug(F("PIN READY"));
+    log_debug("PIN READY");
   }
   else if (status == 1)
   {
@@ -58,12 +58,12 @@ uint8_t WaspUIO::_4GStart()
     if (err)
     {
       pin = 0; updateEEPROM(EEPROM_UIO_PIN, pin); // Reset pin to avoid trying again
-      error(F("_4G.enterPIN(%s) error=%d %d"), pin_str, err, _4G._errorCode);
+      log_error("_4G.enterPIN(%s) error=%d %d", pin_str, err, _4G._errorCode);
     }
   }
   else
   {
-    error(F("unexpected SIM status=%%hhu"), status);
+    log_error("unexpected SIM status=%%hhu", status);
     err = 1;
   }
 
@@ -71,15 +71,15 @@ uint8_t WaspUIO::_4GStart()
   // would take 0.13s)
   if (err == 0)
   {
-    debug(F("4G Check data connection"));
+    log_debug("4G Check data connection");
     err = _4G.checkDataConnection(120);
     if (err)
     {
-      error(F("_4G.checkDataConnection error=%d %d"), err, _4G._errorCode);
+      log_error("_4G.checkDataConnection error=%d %d", err, _4G._errorCode);
     }
     else
     {
-      debug(F("4G Data connection OK"));
+      log_debug("4G Data connection OK");
     }
   }
 
@@ -94,11 +94,11 @@ uint8_t WaspUIO::_4GStart()
 
 uint8_t WaspUIO::_4GStop()
 {
-  debug(F("4G Switching off"));
+  log_debug("4G Switching off");
   uint8_t status = _4G.OFF();
   if (status == 0)
   {
-     error(F("_4G.OFF() timeout"));
+     log_error("_4G.OFF() timeout");
   }
   return 0;
 }
@@ -190,14 +190,14 @@ uint8_t WaspUIO::setTimeFrom4G(const char *value)
   // 19/04/11,00:00:00+08
   strcpy_P(format, (char*)pgm_read_word(&(table_4G[35])));
 
-  debug(F("4G time: %s"), _4G._buffer);
+  log_debug("4G time: %s", _4G._buffer);
   sscanf((char*)_4G._buffer, format, &year, &month, &day, &hour, &minute, &second, &timezone);
 
   // XXX Workaround: skip from 00:00 to 01:59
   // See https://github.com/spectraphilic/wasp_sketches/issues/69
   if (hour == 0 || hour == 1)
   {
-    warn(F("Skip this time because we know it doesn't work in Norway"));
+    log_warn("Skip this time because we know it doesn't work in Norway");
     return 0;
   }
 
@@ -239,14 +239,14 @@ uint8_t WaspUIO::_4GGPS()
   status = _4G.gpsStart(Wasp4G::GPS_MS_BASED, 3);
   if (status != 0)
   {
-    error(F("4G gpsStart status=%d error=%u"), status, _4G._errorCode);
+    log_error("4G gpsStart status=%d error=%u", status, _4G._errorCode);
     goto exit;
   }
 
   status = _4G.waitForSignal();
   if (status != 0)
   {
-    error(F("4G waitForSignal status=%d error=%u"), status, _4G._errorCode);
+    log_error("4G waitForSignal status=%d error=%u", status, _4G._errorCode);
   }
   else
   {
@@ -259,9 +259,9 @@ uint8_t WaspUIO::_4GGPS()
     char alt_str[15];
     Utils.float2String(lat, lat_str, 6);
     Utils.float2String(lon, lon_str, 6);
-    debug(F("GPS latitude  %s %c => %s"), _4G._latitude, _4G._latitudeNS, lat_str);
-    debug(F("GPS longitude %s %c => %s"), _4G._longitude, _4G._longitudeEW, lon_str);
-    debug(F("GPS altitude=%s course=%s speed=%s"),
+    log_debug("GPS latitude  %s %c => %s", _4G._latitude, _4G._latitudeNS, lat_str);
+    log_debug("GPS longitude %s %c => %s", _4G._longitude, _4G._longitudeEW, lon_str);
+    log_debug("GPS altitude=%s course=%s speed=%s",
       Utils.float2String(_4G._altitude, alt_str, 6),
       _4G._courseOG,
       _4G._speedOG
@@ -280,7 +280,7 @@ uint8_t WaspUIO::_4GGPS()
   status = _4G.gpsStop();
   if (status != 0)
   {
-    error(F("4G gpsStop status=%d error=%u"), status, _4G._errorCode);
+    log_error("4G gpsStop status=%d error=%u", status, _4G._errorCode);
   }
 
 exit:

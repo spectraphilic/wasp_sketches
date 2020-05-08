@@ -26,8 +26,8 @@ void setup()
   UIO.start_RTC_SD_USB(false);
   UIO.menu();
 
-  info(F("*** Booting (setup). Battery level is %d"), UIO.batteryLevel);
-  debug(F("Boot done"));
+  log_info("*** Booting (setup). Battery level is %d", UIO.batteryLevel);
+  log_debug("Boot done");
   UIO.stop_RTC_SD_USB();
   RTC.ON();
 

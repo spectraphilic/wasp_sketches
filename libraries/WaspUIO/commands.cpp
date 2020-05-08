@@ -176,7 +176,7 @@ cmd_status_t exeCommands(const char *str, bool interactive)
       else if (status == cmd_quiet)       { }
       else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
     } else {
-      info(F("Command \"%s\""), p);
+      log_info("Command \"%s\"", p);
       status = exeCommand(p);
     }
 
@@ -217,7 +217,7 @@ COMMAND(cmdAck)
 {
   if (UIO.ack_wait == 0)
   {
-    warn(F("unexpected ack command"));
+    log_warn("unexpected ack command");
     return cmd_quiet;
   }
 
@@ -490,7 +490,7 @@ COMMAND(cmdTime)
   // Error
   if (err != 0)
   {
-    error(F("Failed to save time %lu"), epoch);
+    log_error("Failed to save time %lu", epoch);
     return cmd_error;
   }
 

@@ -726,7 +726,7 @@ const char* WaspSDI12::readline()
         // Skip garbage at the beginning, expect address (0-9, A-Z, a-z)
         if (state == 0 && ! ('0' <= c <= 'z'))
         {
-	    warn(F("sdi1-12 readline garbage skipped: %d"), c);
+	    log_warn("sdi1-12 readline garbage skipped: %d", c);
             continue;
         }
         state = 1;
@@ -745,7 +745,7 @@ const char* WaspSDI12::readline()
 
     if (state != 2)
     {
-        warn(F("sdi-12 readline eol not found"));
+        log_warn("sdi-12 readline eol not found");
     }
 
     return buffer;
@@ -757,11 +757,11 @@ const char* WaspSDI12::readline()
  */
 const char* WaspSDI12::sendCommand(const char* cmd)
 {
-    debug(F("sdi-12 sendCommand(%s)"), cmd);
+    log_debug("sdi-12 sendCommand(%s)", cmd);
     sendCommand((char*)cmd, strlen(cmd));
     readCommandAnswer();
     readline();
-    debug(F("sdi-12 sendCommand(%s): '%s'"), cmd, buffer);
+    log_debug("sdi-12 sendCommand(%s): '%s'", cmd, buffer);
     return buffer;
 }
 

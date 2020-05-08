@@ -117,7 +117,7 @@ int8_t WaspUIO::walk(SdBaseFile &root,
       {
         if (before_cb != NULL && ! before_cb(subdir, name))
         {
-          warn(F("before_cb failed %s"), name);
+          log_warn("before_cb failed %s", name);
           return -1;
         }
         err = walk(subdir, before_cb, file_cb, after_cb);
@@ -127,13 +127,13 @@ int8_t WaspUIO::walk(SdBaseFile &root,
         }
         if (after_cb != NULL && ! after_cb(subdir, name))
         {
-          warn(F("after_cb failed %s"), name);
+          log_warn("after_cb failed %s", name);
           return -1;
         }
       }
       else
       {
-        debug(F("Error opening %s"), name);
+        log_debug("Error opening %s", name);
         return -1;
       }
     }
@@ -141,7 +141,7 @@ int8_t WaspUIO::walk(SdBaseFile &root,
     {
       if (file_cb != NULL && ! file_cb(root, name))
       {
-        warn(F("file_cb failed %s"), name);
+        log_warn("file_cb failed %s", name);
         return -1;
       }
     }

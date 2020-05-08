@@ -58,6 +58,10 @@
 #ifndef COROUTINES_H
 #define COROUTINES_H
 
+// Uncomment for the compiler to detect more format related errors. The program
+// will not fit into memory, so this is only used for QA purposes.
+//#define WFORMAT
+
 #include <inttypes.h>
 #include <limits.h> // ULONG_MAX
 #include <WaspClasses.h>
@@ -127,12 +131,21 @@ enum loglevel_t {
   LOG_LEN // Special value
 };
 
-#define fatal(fmt, ...) cr.log(LOG_FATAL, fmt, ## __VA_ARGS__)
-#define error(fmt, ...) cr.log(LOG_ERROR, fmt, ## __VA_ARGS__)
-#define warn(fmt, ...) cr.log(LOG_WARN, fmt, ## __VA_ARGS__)
-#define info(fmt, ...) cr.log(LOG_INFO, fmt, ## __VA_ARGS__)
-#define debug(fmt, ...) cr.log(LOG_DEBUG, fmt, ## __VA_ARGS__)
-#define trace(fmt, ...) cr.log(LOG_TRACE, fmt, ## __VA_ARGS__)
+#ifdef WFORMAT
+#define log_fatal(fmt, ...) cr.logf_(LOG_FATAL, fmt, ## __VA_ARGS__)
+#define log_error(fmt, ...) cr.logf_(LOG_ERROR, fmt, ## __VA_ARGS__)
+#define log_warn(fmt, ...) cr.logf_(LOG_WARN, fmt, ## __VA_ARGS__)
+#define log_info(fmt, ...) cr.logf_(LOG_INFO, fmt, ## __VA_ARGS__)
+#define log_debug(fmt, ...) cr.logf_(LOG_DEBUG, fmt, ## __VA_ARGS__)
+#define log_trace(fmt, ...) cr.logf_(LOG_TRACE, fmt, ## __VA_ARGS__)
+#else
+#define log_fatal(fmt, ...) cr.logf_P(LOG_FATAL, PSTR(fmt), ## __VA_ARGS__)
+#define log_error(fmt, ...) cr.logf_P(LOG_ERROR, PSTR(fmt), ## __VA_ARGS__)
+#define log_warn(fmt, ...) cr.logf_P(LOG_WARN, PSTR(fmt), ## __VA_ARGS__)
+#define log_info(fmt, ...) cr.logf_P(LOG_INFO, PSTR(fmt), ## __VA_ARGS__)
+#define log_debug(fmt, ...) cr.logf_P(LOG_DEBUG, PSTR(fmt), ## __VA_ARGS__)
+#define log_trace(fmt, ...) cr.logf_P(LOG_TRACE, PSTR(fmt), ## __VA_ARGS__)
+#endif
 
 /*
  * Weak free functions to be overriden. By default they do nothing.
@@ -140,7 +153,7 @@ enum loglevel_t {
  */
 
 /* Logging */
-extern void vlog(loglevel_t level, const char* message, va_list args) __attribute__((weak));
+extern void vlog(loglevel_t level, const char* message) __attribute__((weak));
 
 
 class Loop
@@ -185,9 +198,14 @@ class Loop
 
     // Logging
     loglevel_t loglevel = LOG_DEBUG;
-    void log(loglevel_t level, const __FlashStringHelper *, ...);
-    void log(loglevel_t level, const char *, ...);
     const char* loglevel2str(loglevel_t level);
+    void log(loglevel_t level, const __FlashStringHelper *);
+    void logf_P(loglevel_t level, PGM_P format, ...);
+
+    // The name is logf_ instead of logf because logf is a macro in math.h
+    __attribute__ ((format (printf, 3, 4)))
+    void logf_(loglevel_t level, const char *format, ...);
+
 };
 
 // Utility functions to work with program memory (flash)

@@ -14,18 +14,18 @@ CR_TASK(taskNetwork4G)
   // Check we've at least 30s to send something
   if (cr.timeout(UIO._epoch_millis, SEND_TIMEOUT - 30000L))
   {
-    warn(F("No time left to send anything"));
+    log_warn("No time left to send anything");
     CR_RETURN;
   }
 
   if (UIO._4GStart())
   {
-    error(F("_4GStart() failed"));
+    log_error("_4GStart() failed");
     CR_ERROR;
   }
 
   // Send frames
-  debug(F("Sending frames..."));
+  log_debug("Sending frames...");
   while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
   {
     t0 = millis();
@@ -38,17 +38,17 @@ CR_TASK(taskNetwork4G)
     status = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
     if (status)
     {
-      warn(F("_4G.sendFrameToMeshlium error=%d %d"), status, _4G._errorCode);
+      log_warn("_4G.sendFrameToMeshlium error=%d %d", status, _4G._errorCode);
       break;
     }
     if (_4G._httpCode != 200) // Check HTTP status code of the response
     {
-      error(F("Unexpect HTTP code %d"), _4G._httpCode);
+      log_error("Unexpect HTTP code %d", _4G._httpCode);
       break;
     }
 
     // Next
-    debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+    log_debug("%d frame(s) sent in %lu ms", n, cr.millisDiff(t0));
     UIO.ack_wait = n;
     cmdAck(""); // Move to the next frame
 
@@ -78,7 +78,7 @@ CR_TASK(taskNetworkIridium)
   // Check we've at least 1m30 to send something
   if (cr.timeout(UIO._epoch_millis, SEND_TIMEOUT - 90000L))
   {
-    warn(F("No time left to send anything"));
+    log_warn("No time left to send anything");
     CR_RETURN;
   }
 
@@ -92,11 +92,11 @@ CR_TASK(taskNetworkIridium)
   status = iridium.getSignalQuality(quality); // This takes ~4s
   if (status != ISBD_SUCCESS)
   {
-    error(F("iridium.getSignalQuality(..) error=%d"), status);
+    log_error("iridium.getSignalQuality(..) error=%d", status);
     UIO.iridium_stop();
     CR_ERROR;
   }
-  debug(F("Iridium signal quality %d"), quality);
+  log_debug("Iridium signal quality %d", quality);
   if (quality == 0)
   {
     UIO.iridium_stop();
@@ -104,7 +104,7 @@ CR_TASK(taskNetworkIridium)
   }
 
   // Send frames
-  debug(F("Sending frames..."));
+  log_debug("Sending frames...");
   while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
   {
     t0 = millis();
@@ -117,12 +117,12 @@ CR_TASK(taskNetworkIridium)
     status = iridium.sendSBDBinary((uint8_t*)SD.buffer, size);
     if (status != ISBD_SUCCESS)
     {
-      warn(F("iridium.sendSBDBinary(..) error=%d"), status);
+      log_warn("iridium.sendSBDBinary(..) error=%d", status);
       break;
     }
 
     // Next
-    debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+    log_debug("%d frame(s) sent in %lu ms", n, cr.millisDiff(t0));
     UIO.ack_wait = n;
     cmdAck(""); // Move to the next frame
 
@@ -149,11 +149,11 @@ CR_TASK(taskNetworkXBee)
   {
     if (xbeeDM.ON())
     {
-      error(F("startNetwork: xbeeDM.ON() failed"));
+      log_error("startNetwork: xbeeDM.ON() failed");
       CR_ERROR;
     }
   }
-  info(F("Network started"));
+  log_info("Network started");
 
   // Spawn first the receive task
   CR_SPAWN(taskNetworkXBeeReceive);
@@ -183,7 +183,7 @@ CR_TASK(taskNetworkXBee)
   if (xbeeDM.XBee_ON)
   {
     xbeeDM.OFF();
-    info(F("Network stopped"));
+    log_info("Network stopped");
   }
 
   CR_END;
@@ -211,13 +211,13 @@ CR_TASK(taskNetworkXBeeSend)
       t0 = millis();
       if (xbeeDM.send((char*)UIO.xbee.rx_address, (uint8_t*)SD.buffer, size) == 1)
       {
-        warn(F("xbeeDM.send(..) failure"));
+        log_warn("xbeeDM.send(..) failure");
         break;
       }
       sent = millis();
 
       // Next
-      debug(F("%d frame(s) sent in %lu ms"), n, cr.millisDiff(t0));
+      log_debug("%d frame(s) sent in %lu ms", n, cr.millisDiff(t0));
       UIO.ack_wait = n;
     }
     else if (cr.timeout(sent, 10 * 1000))
@@ -245,7 +245,7 @@ CR_TASK(taskNetworkXBeeReceive)
       // why we only timeout for 100ms, less should be enough
       if (xbeeDM.receivePacketTimeout(100))
       {
-        warn(F("receivePacket: timeout (we will retry)"));
+        log_warn("receivePacket: timeout (we will retry)");
       }
       else
       {
@@ -277,10 +277,10 @@ CR_TASK(taskNetworkLora)
 
   if (UIO.loraStart())
   {
-    error(F("taskNetworkLora loraStart() failed"));
+    log_error("taskNetworkLora loraStart() failed");
     CR_ERROR;
   }
-  info(F("Network started"));
+  log_info("Network started");
 
   // Schedule sending frames. Don't send with Lora if I'm the gateway.
   if (UIO.lora_addr != 1)
@@ -308,7 +308,7 @@ CR_TASK(taskNetworkLora)
   }
 
   UIO.loraStop();
-  info(F("Network stopped"));
+  log_info("Network stopped");
 
   CR_END;
 }
@@ -334,7 +334,7 @@ CR_TASK(taskNetworkLoraSend)
   // - Add a fixed offset depending on address to reduce the chance of collisions?
   // - Add a random value to reduce the chance of collisions?
   offset = 5000;//+ rand() % 1001;
-  info(F("Lora send: wait %d ms before sending"), offset);
+  log_info("Lora send: wait %d ms before sending", offset);
   CR_DELAY(offset); // 200-1200 ms
 
   // Discover destination address, auto mode routing (lora.dst 0)
@@ -348,7 +348,7 @@ CR_TASK(taskNetworkLoraSend)
     else
     {
       dst = UIO.lora_dst2;
-      info(F("Lora auto mode dst=%hhu"), dst);
+      log_info("Lora auto mode dst=%hhu", dst);
     }
   }
 
@@ -365,16 +365,16 @@ CR_TASK(taskNetworkLoraSend)
       t0 = millis();
       if (sx1272.sendPacketTimeout(dst, (uint8_t*)SD.buffer, size))
       {
-        warn(F("sx1272.send(..) failure timeout=%u"), sx1272._sendTime);
+        log_warn("sx1272.send(..) failure timeout=%u", sx1272._sendTime);
         break;
       }
       n_packages++;
-      info(F("Sent packet=%hhu with %hhu frame(s) to dst=%hhu in %lu ms"),
+      log_info("Sent packet=%hhu with %hhu frame(s) to dst=%hhu in %lu ms",
            sx1272.packet_sent.packnum, n_frames, dst, cr.millisDiff(t0));
 
       // Debug
 //    char str[50];
-//    debug(F("length=%u time-on-air=%s"),
+//    log_debug("length=%u time-on-air=%s",
 //          sx1272._payloadlength,
 //          Utils.float2String(sx1272.timeOnAir(), str, 2)
 //    );
@@ -389,7 +389,7 @@ CR_TASK(taskNetworkLoraSend)
       if (n_packages == 1)
       {
         UIO.lora_fails++;
-        warn(F("Didn't get an ACK in this loop, fails=%hhu"), UIO.lora_fails);
+        log_warn("Didn't get an ACK in this loop, fails=%hhu", UIO.lora_fails);
         // If too many fails reset dst2 (this only has an effect in auto routing mode)
         if (UIO.lora_fails >= LORA_MAX_FAILS)
         {
@@ -417,20 +417,20 @@ CR_TASK(taskNetworkLoraReceive)
     {
       data = (const char*)sx1272.packet_received.data;
       if (strncmp("ping", data, 4) == 0) {
-        info(F("ping received from lora address=%u"), sx1272.packet_received.src);
+        log_info("ping received from lora address=%u", sx1272.packet_received.src);
         if (sx1272.packet_received.dst == UIO.lora_addr || sx1272.packet_received.src > UIO.lora_addr)
         {
           if (sx1272.setACK() || sx1272.sendWithTimeout())
           {
-            warn(F("Lora: Failed to send ACK"));
+            log_warn("Lora: Failed to send ACK");
           }
         }
         else
         {
-          info(F("ignore ping"));
+          log_info("ignore ping");
         }
       } else if (strncmp("<=>", data, 3) == 0) {
-        info(F("frame received from lora address=%u"), sx1272.packet_received.src);
+        log_info("frame received from lora address=%u", sx1272.packet_received.src);
         uint8_t n = UIO.saveFrames(
           sx1272.packet_received.src,
           sx1272.packet_received.data,
@@ -446,14 +446,14 @@ CR_TASK(taskNetworkLoraReceive)
           UIO.loraSend(sx1272.packet_received.src, cmd, false);
         }
       } else {
-        //info(F("command received from lora address=%u"), sx1272.packet_received.src);
+        //log_info("command received from lora address=%u", sx1272.packet_received.src);
         exeCommands(data, false);
       }
 
 /*
       sx1272.showReceivedPacket();
-      info(F("Packet received from Lora network"));
-      info(F("dst=%u src=%u packnum=%u length=%u retry=%u"),
+      log_info("Packet received from Lora network");
+      log_info("dst=%u src=%u packnum=%u length=%u retry=%u",
         sx1272.packet_received.dst,
         sx1272.packet_received.src,
         sx1272.packet_received.packnum,

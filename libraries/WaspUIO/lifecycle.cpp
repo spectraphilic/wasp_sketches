@@ -138,10 +138,10 @@ void WaspUIO::boot()
   cr.println(F("."));
 
   // Now we can start logging
-  info(F("Welcome to wsn"));
+  log_info("Welcome to wsn");
   if (_boot_version < 'H')
   {
-    warn(F("Old boot version found (%c), only version H and above are supported"), _boot_version);
+    log_warn("Old boot version found (%c), only version H and above are supported", _boot_version);
   }
 
   // Command line interface
@@ -368,11 +368,11 @@ uint32_t WaspUIO::nextAlarm()
   RTC.ON();
   RTC.breakTimeAbsolute(next * 60, &ts);
   RTC.setAlarm1(ts.date, ts.hour, ts.minute, second, RTC_ABSOLUTE, RTC_ALM1_MODE3);
-  info(F("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)"), ts.date, ts.hour, ts.minute, second);
+  log_info("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)", ts.date, ts.hour, ts.minute, second);
   // Alarm-2
   RTC.breakTimeAbsolute((next + 2) * 60, &ts);
   RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
-  info(F("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)"), ts.date, ts.hour, ts.minute);
+  log_info("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)", ts.date, ts.hour, ts.minute);
   RTC.OFF();
 
   return 1;
@@ -385,7 +385,7 @@ void WaspUIO::deepSleep()
   // For robustness sake, reboot once in a while
   if (nloops >= MAX_LOOPS)
   {
-    info(F("Rebooting after %u loops"), nloops);
+    log_info("Rebooting after %u loops", nloops);
     reboot();
   }
 
@@ -412,7 +412,7 @@ void WaspUIO::deepSleep()
   onLoop();
 
   char buffer[50];
-  info(F("===== Loop %u battery=%s ====="), UIO.nloops,
+  log_info("===== Loop %u battery=%s =====", UIO.nloops,
        UIO.pprintBattery(buffer, sizeof buffer));
 }
 

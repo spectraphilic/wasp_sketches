@@ -261,7 +261,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
 
   if (frame.numFields >= max_fields)
   {
-    error(F("Max number of fields reached!"));
+    log_error("Max number of fields reached!");
     return -2;
   }
 
@@ -270,7 +270,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
   if (strlen(format) == 0)
   {
-    error(F("Unexpected frame type %hhu"), type);
+    log_error("Unexpected frame type %hhu", type);
     return -2;
   }
 
@@ -344,7 +344,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
     }
     else
     {
-      error(F("Programming error: unexpected frame format %c"), c);
+      log_error("Programming error: unexpected frame format %c", c);
       err = -2;
       break;
     }
@@ -357,7 +357,7 @@ exit:
   {
     if (err == -1)
     {
-      debug(F("No space left in frame"));
+      log_debug("No space left in frame");
     }
 
     frame.length = start;
@@ -446,7 +446,7 @@ uint8_t WaspUIO::getSequence(uint8_t *p)
      }
    }
 
-   error(F("getSequence error"));
+   log_error("getSequence error");
    return 0;
 }
 
@@ -656,7 +656,7 @@ uint8_t WaspUIO::getDataFilename(char* filename, uint8_t src, uint8_t year, uint
     sprintf(filename, "%s/%03u", archive_dir, src);
     if (sd_mkdir(filename))
     {
-      error(F("getDataFilename fail to mkdir %s"), filename);
+      log_error("getDataFilename fail to mkdir %s", filename);
       return 1;
     }
     sprintf(filename, "%s/%03u/%02u%02u%02u.TXT", archive_dir, src, year, month, date);
@@ -749,7 +749,7 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
   // (2) Store frame in archive file
   if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND | O_SYNC))
   {
-    error(F("Open data file failure"));
+    log_error("Open data file failure");
     return 1;
   }
   size = dataFile.fileSize();
@@ -757,7 +757,7 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
   if (sd_append(dataFile, buffer, length))
   {
     dataFile.close();
-    error(F("Append to data file failure"));
+    log_error("Append to data file failure");
     return 1;
   }
   dataFile.close();
@@ -792,7 +792,7 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
 #endif
 
   // Log
-  info(F("Frame saved to %s bytes=%d"), queue_name, length); // TODO Log frame sequence
+  log_info("Frame saved to %s bytes=%d", queue_name, length); // TODO Log frame sequence
 
   return 0;
 }
@@ -877,7 +877,7 @@ int WaspUIO::readFrame(uint8_t &n)
     if (getDataFilename(dataFilename, item[0], item[1], item[2], item[3])) { return -1; }
     if (!SD.openFile((char*)dataFilename, &dataFile, O_READ))
     {
-      error(F("readFrame fail to open %s"), dataFilename);
+      log_error("readFrame fail to open %s", dataFilename);
       return -1;
     }
     dataFile.seekSet(*(uint32_t *)(item + 4));
@@ -887,11 +887,11 @@ int WaspUIO::readFrame(uint8_t &n)
 
     if (readSize != size)
     {
-      error(F("readFrame fail to read frame from disk %s"), dataFilename);
+      log_error("readFrame fail to read frame from disk %s", dataFilename);
       return -1;
     }
 
-    debug(F("frame seq=%hhu size=%d"), UIO.getSequence(start), size);
+    log_debug("frame seq=%hhu size=%d", UIO.getSequence(start), size);
 
     totSize += size;
     n += 1;

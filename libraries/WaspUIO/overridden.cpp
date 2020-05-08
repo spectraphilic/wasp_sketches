@@ -19,7 +19,7 @@
  * The output message max length is 149 chars (not counting null char).
  */
 
-void vlog(loglevel_t level, const char* message, va_list args)
+void vlog(loglevel_t level, const char* message)
 {
   size_t size = 150;
   char buffer[size];
@@ -37,7 +37,7 @@ void vlog(loglevel_t level, const char* message, va_list args)
   sprintf(buffer + len, "%s ", cr.loglevel2str(level));
   len = strlen(buffer);
   // Message
-  vsnprintf(buffer + len, size - len - 1, message, args);
+  strncat(buffer, message, size - len - 1);
   len = strlen(buffer);
   // Newline
   if (len == max) { len--; } // Avoid buffer overflow

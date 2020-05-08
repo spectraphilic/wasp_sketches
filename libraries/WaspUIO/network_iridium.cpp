@@ -37,7 +37,7 @@ int WaspUIO::iridium_start()
   int status = iridium.begin(); // Wake up the 9602 and prepare it for communications.
   if (status != ISBD_SUCCESS)
   {
-    error(F("ERROR iridium.begin() error=%d"), status);
+    log_error("ERROR iridium.begin() error=%d", status);
     iridium_stop();
   }
 
@@ -49,7 +49,7 @@ int WaspUIO::iridium_stop()
   int status = iridium.sleep();
   if (status != ISBD_SUCCESS)
   {
-    error(F("ERROR iridium.sleep() error=%d"), status);
+    log_error("ERROR iridium.sleep() error=%d", status);
   }
 
   closeSerial(UART1);
@@ -89,7 +89,7 @@ int WaspUIO::iridium_ping()
 {
   int quality, size;
 
-  info(F("Iridium ping..."));
+  log_info("Iridium ping...");
   int status = UIO.iridium_start(); // This takes ~700ms
   if (status != ISBD_SUCCESS)
   {
@@ -100,31 +100,31 @@ int WaspUIO::iridium_ping()
   status = iridium.getSignalQuality(quality); // This takes ~4s
   if (status != ISBD_SUCCESS)
   {
-    error(F("iridium.getSignalQuality(..) error=%d"), status);
+    log_error("iridium.getSignalQuality(..) error=%d", status);
     UIO.iridium_stop();
     return 1;
   }
-  info(F("Quality = %d"), quality);
+  log_info("Quality = %d", quality);
 
   // Send
   status = iridium.sendSBDText("ping");
   if (status != ISBD_SUCCESS)
   {
-    error(F("iridium.sendSBDText(..) error=%d"), status);
+    log_error("iridium.sendSBDText(..) error=%d", status);
     return 1;
   }
 
-  info(F("Success!"));
+  log_info("Success!");
 
   // Quality
   status = iridium.getSignalQuality(quality); // This takes ~4s
   if (status != ISBD_SUCCESS)
   {
-    error(F("iridium.getSignalQuality(..) error=%d"), status);
+    log_error("iridium.getSignalQuality(..) error=%d", status);
     UIO.iridium_stop();
     return 1;
   }
-  debug(F("Quality = %d"), quality);
+  log_debug("Quality = %d", quality);
 
   return 0;
 }
