@@ -28,7 +28,7 @@ fork of waspmoteapi and the sketches:
 
     $ mkdir waspmote-uio
     $ cd waspmote-uio
-    $ git clone git@github.com:spectraphilic/waspmoteapi-uio.git
+    $ git clone git@github.com:spectraphilic/waspmoteapi-uio.git -b v044
     $ git clone git@github.com:spectraphilic/wasp_sketches.git
 
 (2) Download and install the IDE:
