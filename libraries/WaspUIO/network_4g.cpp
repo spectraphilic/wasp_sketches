@@ -67,12 +67,12 @@ uint8_t WaspUIO::_4GStart()
     err = 1;
   }
 
-  // Check data connection: usually ~11s sometimes close to 120s (a 2nd call
-  // would take 0.13s)
+  // Check data connection: usually 5-6s (from Svalbard data). Set timeout to
+  // 30s to avoid the Watchdog reboots we have observed (before it was 120s).
   if (err == 0)
   {
     log_debug("4G Check data connection");
-    err = _4G.checkDataConnection(120);
+    err = _4G.checkDataConnection(30);
     if (err)
     {
       log_error("_4G.checkDataConnection error=%d %d", err, _4G._errorCode);
