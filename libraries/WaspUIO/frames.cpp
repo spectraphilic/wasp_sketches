@@ -734,17 +734,15 @@ uint8_t WaspUIO::saveFrames(uint8_t src, uint8_t *buffer, uint16_t max_length)
  */
 uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
 {
-  uint8_t year, month, date;
   char dataFilename[21]; // /data/[SRC/]YYMMDD.txt (max length is 21)
   uint32_t size;
   uint8_t item[9];
   SdFile dataFile;
 
   // (1) Get the date
-  year = RTC.year;
-  month = RTC.month;
-  date = RTC.date;
-  if (getDataFilename(dataFilename, src, year, month, date)) { return 1; }
+  timestamp_t ts;
+  RTC.breakTimeAbsolute(_epoch, &ts);
+  if (getDataFilename(dataFilename, src, ts.year, ts.month, ts.date)) { return 1; }
 
   // (2) Store frame in archive file
   if (sd_open(dataFilename, dataFile, O_WRITE | O_CREAT | O_APPEND | O_SYNC))
@@ -764,9 +762,9 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
 
   // (3) Append to queue
   item[0] = src;
-  item[1] = year;
-  item[2] = month;
-  item[3] = date;
+  item[1] = ts.year;
+  item[2] = ts.month;
+  item[3] = ts.date;
   *(uint32_t *)(item + 4) = size;
   item[8] = (uint8_t) length;
 
@@ -838,7 +836,6 @@ int WaspUIO::readFrame(uint8_t &n)
   uint8_t item[9];
   char dataFilename[21]; // /data/[SRC/]YYMMDD.txt (max length is 21)
   SdFile dataFile;
-  int err;
 
   if (! hasSD)
   {
@@ -858,9 +855,9 @@ int WaspUIO::readFrame(uint8_t &n)
   while (true)
   {
 #if WITH_IRIDIUM
-    err = lifo.peek(item, idx - n);
+    int err = lifo.peek(item, idx - n);
 #else
-    err = fifo.peek(item, idx + n);
+    int err = fifo.peek(item, idx + n);
 #endif
 
     if (err == QUEUE_INDEX_ERROR) { break; }
