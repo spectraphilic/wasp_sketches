@@ -39,7 +39,7 @@ uint8_t WaspUIO::saveTimeToSD()
 
   char buffer[11];
   uint32_t time = getEpochTime();
-  snprintf_F(buffer, 11, F("%lu"), time);
+  snprintf_P(buffer, 11, PSTR("%lu"), time);
   file.write(buffer); // TODO Check error code
   file.close();
 

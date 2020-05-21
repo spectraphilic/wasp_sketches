@@ -490,7 +490,7 @@ public:
   // CLI
   void clint();
   const char* pprint4G(char* dst, size_t size);
-  const char* pprintAction(char* dst, size_t size, uint8_t action, const __FlashStringHelper* name);
+  const char* pprintAction(char* dst, size_t size, uint8_t action, PGM_P name);
   const char* pprintActions(char* dst, size_t size);
   const char* pprintBattery(char* dst, size_t size);
   const char* pprintBoard(char* dst, size_t size);

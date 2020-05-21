@@ -123,7 +123,7 @@ void Loop::run()
   {
     int32_t delay_time = 0;
 
-    //USB.printf((char*)"%d %d\n", first, next);
+    //cr_printf("%d %d\n", first, next);
     uint32_t now = millis() - start + CR_DELAY_OFFSET; // Relative now (since start), plus offset
     for (uint16_t tid=first; tid < next; tid++)
     {

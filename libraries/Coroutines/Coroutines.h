@@ -153,6 +153,7 @@ enum loglevel_t {
 
 #endif
 
+
 /*
  * Weak free functions to be overriden. By default they do nothing.
  * Override them to define behaviour.
@@ -216,8 +217,6 @@ class Loop
 char* strncpy_F(char* dst, const __FlashStringHelper * src, size_t num);
 char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size);
 char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, const __FlashStringHelper* src, ...);
-int vsnprintf_F(char* dst, size_t size, const __FlashStringHelper* format, va_list args);
-int snprintf_F(char* dst, size_t size, const __FlashStringHelper* format, ...);
 
 extern Loop cr;
 

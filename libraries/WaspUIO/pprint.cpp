@@ -11,7 +11,7 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
   }
   else
   {
-    //snprintf_F(dst, size, F("pin=%u"), pin);
+    //snprintf_P(dst, size, PSTR("pin=%u"), pin);
     strncpy_F(dst, F("pin=XXXX"), size);
   }
 
@@ -20,7 +20,7 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
 #endif
 
 
-const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t idx, const __FlashStringHelper* name)
+const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t idx, PGM_P name)
 {
   Action action = actions[idx];
 
@@ -28,17 +28,17 @@ const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t idx, const __F
   {
     size_t len;
 
-    len = strlen(dst); snprintf_F(dst + len, size - len, name);
-    len = strlen(dst); snprintf_F(dst + len, size - len, F("="));
+    len = strlen(dst); snprintf_P(dst + len, size - len, name);
+    len = strlen(dst); snprintf_P(dst + len, size - len, PSTR("="));
 
     len = strlen(dst);
     if (action.type == action_hours)
     {
-      snprintf_F(dst + len, size - len, F("%d:%02d "), action.hour, action.minute);
+      snprintf_P(dst + len, size - len, PSTR("%d:%02d "), action.hour, action.minute);
     }
     else if (action.type == action_minutes)
     {
-      snprintf_F(dst + len, size - len, F("%d "), action.minute);
+      snprintf_P(dst + len, size - len, PSTR("%d "), action.minute);
     }
   }
 
@@ -51,8 +51,8 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
 
   for (uint8_t i=0; i < RUN_LEN; i++)
   {
-    const char* name = (const char*)pgm_read_word(&(run_names[i]));
-    pprintAction(dst, size, i, (__FlashStringHelper*)name);
+    const char* name = (PGM_P)pgm_read_word(&(run_names[i]));
+    pprintAction(dst, size, i, name);
   }
 
   if (! dst[0]) strncpy_F(dst, F("(none)"), size);
@@ -67,11 +67,11 @@ const char* WaspUIO::pprintBattery(char* dst, size_t size)
   {
     char aux[10];
     Utils.float2String(UIO.batteryVolts, aux, 2);
-    snprintf_F(dst, size, F("3V3 regulator (%s volts)"), aux) ;
+    snprintf_P(dst, size, PSTR("3V3 regulator (%s volts)"), aux) ;
   }
   else // BATTERY_LITHIUM
   {
-    snprintf_F(dst, size, F("Lithium-ion (%d %%)"), UIO.batteryLevel);
+    snprintf_P(dst, size, PSTR("Lithium-ion (%d %%)"), UIO.batteryLevel);
   }
 
   return dst;
@@ -91,19 +91,19 @@ const char* WaspUIO::pprintFrames(char* dst, size_t size)
 #if WITH_CRYPTO
   if (strlen(password) > 0)
   {
-    snprintf_F(dst, size, F("payload-size=%u frame-size=%u encryption=enabled"), payloadSize, frameSize);
+    snprintf_P(dst, size, PSTR("payload-size=%u frame-size=%u encryption=enabled"), payloadSize, frameSize);
     return dst;
   }
 #endif
 
-  snprintf_F(dst, size, F("payload-size=%u frame-size=%u encryption=disabled"), payloadSize, frameSize);
+  snprintf_P(dst, size, PSTR("payload-size=%u frame-size=%u encryption=disabled"), payloadSize, frameSize);
   return dst;
 }
 
 #if WITH_IRIDIUM
 const char* WaspUIO::pprintIridium(char* dst, size_t size)
 {
-  snprintf_F(dst, size, F("fw=%s"), iridium_fw);
+  snprintf_P(dst, size, PSTR("fw=%s"), iridium_fw);
   return dst;
 }
 #endif
@@ -145,7 +145,7 @@ const char* WaspUIO::pprintTime(char* dst, size_t size)
     default: day = "???";
   }
 
-  snprintf_F(dst, size, F("%s, %02u/%02u/%02u, %02u:%02u:%02u"),
+  snprintf_P(dst, size, PSTR("%s, %02u/%02u/%02u, %02u:%02u:%02u"),
              day, ts.year, ts.month, ts.date, ts.hour, ts.minute, ts.second);
 
   return dst;
@@ -165,7 +165,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
-  snprintf_F(dst, size, F("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, lan_wait);
+  snprintf_P(dst, size, PSTR("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, lan_wait);
 
   return dst;
 }
@@ -174,7 +174,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
 #if WITH_LORA
 const char* WaspUIO::pprintLora(char* dst, size_t size)
 {
-  snprintf_F(dst, size, F("addr=%u dst=%u mode=%u wait=%d"), lora_addr, lora_dst, lora_mode, lan_wait);
+  snprintf_P(dst, size, PSTR("addr=%u dst=%u mode=%u wait=%d"), lora_addr, lora_dst, lora_mode, lan_wait);
   return dst;
 }
 #endif

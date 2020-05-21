@@ -28,7 +28,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.setChannel(xbee.channel);
   if (xbeeDM.error_AT)
   {
-    err = PSTR("ERROR in setChannel %d\n");
+    err = PSTR("setChannel");
     goto exit;
   }
 
@@ -36,7 +36,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.setPAN(xbee.panid);
   if (xbeeDM.error_AT)
   {
-    err = PSTR("ERROR in setPAN %d\n");
+    err = PSTR("setPAN");
     goto exit;
   }
 
@@ -44,7 +44,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.setEncryptionMode(0);
   if (xbeeDM.error_AT)
   {
-    err = PSTR("ERROR in setPAN %d\n");
+    err = PSTR("setEncryptionMode");
     goto exit;
   }
 
@@ -52,7 +52,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.writeValues();
   if (xbeeDM.error_AT)
   {
-    err = PSTR("ERROR in writeValues %d\n");
+    err = PSTR("writeValues");
     goto exit;
   }
 
@@ -60,7 +60,10 @@ exit:
   xbeeDM.OFF();
   if (err)
   {
-    cr.printf_P(err, xbeeDM.error_AT);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat"
+    cr_printf("ERROR in %S %d\n", err, xbeeDM.error_AT);
+#pragma GCC diagnostic pop
   }
 }
 

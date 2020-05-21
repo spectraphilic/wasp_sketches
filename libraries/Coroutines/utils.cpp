@@ -60,7 +60,6 @@ char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size)
 char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, const __FlashStringHelper* src, ...)
 {
   va_list args;
-  const char * __attribute__((progmem)) p = (const char * ) src;
   char aux[100];
 
   if (dst[0])
@@ -76,29 +75,4 @@ char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, c
   va_end(args);
 
   return dst;
-}
-
-/**
- * Version of snprintf that takes an F string.
- *
- */
-
-int vsnprintf_F(char* dst, size_t size, const __FlashStringHelper* format, va_list args)
-{
-  char aux[size];
-
-  strncpy_F(aux, format, size);
-  return vsnprintf(dst, size, aux, args);
-}
-
-int snprintf_F(char* dst, size_t size, const __FlashStringHelper* format, ...)
-{
-  va_list args;
-  int n;
-
-  va_start(args, format);
-  n = vsnprintf_F(dst, size, format, args);
-  va_end(args);
-
-  return n;
 }

@@ -179,7 +179,7 @@ COMMAND(cmd1WireScan)
     if (pin == 255) continue;
     pinMode(pin, INPUT);
 
-    snprintf_F(buffer, size, F("%hhu"), pins[i]);
+    snprintf_P(buffer, size, PSTR("%hhu"), pins[i]);
     USB.print(buffer); file.write(buffer);
     WaspOneWire oneWire(pin);
 
@@ -196,7 +196,7 @@ COMMAND(cmd1WireScan)
     while (oneWire.search(addr))
     {
       Utils.hex2str(addr, addr_str, 8);
-      snprintf_F(buffer, size, F(" %s"), addr_str);
+      snprintf_P(buffer, size, PSTR(" %s"), addr_str);
       USB.print(buffer); file.write(buffer);
 
       // Check address CRC

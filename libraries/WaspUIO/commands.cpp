@@ -130,7 +130,7 @@ void WaspUIO::clint()
         break;
       }
 
-      USB.print(buffer);
+      USB.println(buffer);
       if (exeCommands(buffer, true) == cmd_exit)
       {
         break;
@@ -403,7 +403,14 @@ COMMAND(cmdRun)
       const char* xname = (const char*)pgm_read_word(&(run_names[i]));
       if (strcmp_P("", xname) == 0)
         continue;
-      cr.printf("%s\n", xname);
+
+      // avr-libc uses %S for string stored in memory, this is very useful. But
+      // GCC uses %S for wide char strings, and so emits a warning for the line
+      // below; we choose to silence this warning.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat"
+      cr_printf("%S\n", xname);
+#pragma GCC diagnostic pop
     }
     return cmd_quiet;
   }
@@ -518,7 +525,10 @@ COMMAND(cmdVar)
     {
       const char* xname = (const char*)pgm_read_word(&(var_names[i]));
       const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
-      cr_printf("%s %s\n", xname, xhelp);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat"
+      cr_printf("%S %S\n", xname, xhelp);
+#pragma GCC diagnostic pop
     }
     return cmd_quiet;
   }
