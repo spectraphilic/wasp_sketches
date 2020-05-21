@@ -12,7 +12,7 @@ int LIFO::open(uint8_t mode)
   // If already open, do nothing. Then it's the responsability of the caller to
   // open with the right mode.
   if (_mode != 0) { return 0; }
-  //cr.println(F("LIFO::open(%s, %d -> %d)"), qname, _mode, mode);
+  //cr_printf("LIFO::open(%s, %d -> %d)\n", qname, _mode, mode);
 
   // Open
   if (sd_open(qname, queue, mode))
@@ -46,7 +46,7 @@ int LIFO::open(uint8_t mode)
 
 void LIFO::close()
 {
-  //cr.println(F("LIFO::close(%s)"), qname);
+  //cr_printf("LIFO::close(%s)\n", qname);
   if (queue.isOpen()) { queue.close(); }
   _mode = 0;
 }

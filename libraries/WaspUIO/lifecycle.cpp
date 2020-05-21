@@ -12,7 +12,7 @@ int upgradeFIFO()
   FIFO old = FIFO("TMP.TXT", "QSTART.BIN", 8);
   if (old.open(O_READ)) { return 1; } // Error
   int32_t nitems = old.len();
-  cr.println(F("Upgrading FIFO: %ld items (1 dot = 20 items)"), nitems);
+  cr_printf("Upgrading FIFO: %ld items (1 dot = 20 items)\n", nitems);
 
   // Create new (delete first in case previous upgrade was interrupted)
   SD.del("FIFO.BIN");
@@ -32,11 +32,11 @@ int upgradeFIFO()
     // Progress
     if ((idx+1) % progress_nth == 0)
     {
-      cr.print(F("."));
+      cr_printf(".");
       if ((idx+1) % progress_nl == 0)
       {
         if (fifo.sync()) { goto fail; }
-        cr.println();
+        cr_printf("\n");
       }
     }
   }
@@ -46,7 +46,7 @@ int upgradeFIFO()
   old.close();
   SD.del("TMP.TXT");
   SD.del("QSTART.BIN");
-  cr.println(F("Done."));
+  cr_printf("Done.\n");
   return 0;
 
 fail:
@@ -67,7 +67,7 @@ int upgradeLIFO()
   LIFO old = LIFO("LIFO.BIN", 8);
   if (old.open(O_READ)) { return 1; } // Error
   int32_t nitems = old.len();
-  cr.println(F("Upgrading LIFO: %ld items (1 dot = 20 items)"), nitems);
+  cr_printf("Upgrading LIFO: %ld items (1 dot = 20 items)\n", nitems);
 
   // Create new (delete first in case previous upgrade was interrupted)
   SD.del("LIFO2.BIN");
@@ -86,11 +86,11 @@ int upgradeLIFO()
     // Progress
     if ((idx+1) % progress_nth == 0)
     {
-      cr.print(F("."));
+      cr_printf(".");
       if ((idx+1) % progress_nl == 0)
       {
         if (lifo.sync()) { goto fail; }
-        cr.println();
+        cr_printf("\n");
       }
     }
   }
@@ -99,7 +99,7 @@ int upgradeLIFO()
   // Remove old
   old.close();
   SD.del("LIFO.BIN");
-  cr.println(F("Done."));
+  cr_printf("Done.\n");
   return 0;
 
 fail:
@@ -121,21 +121,21 @@ void WaspUIO::boot()
 
   USB.ON();
   RTC.ON();
-  cr.print(F("."));
+  cr_printf(".");
 
   // Read config from EEPROM
   UIO.bootConfig();
-  cr.print(F("."));
+  cr_printf(".");
 
   UIO.bootDetect();
-  cr.print(F("."));
+  cr_printf(".");
 
   UIO.networkInit();
-  cr.print(F("."));
+  cr_printf(".");
 
   // Load time and start SD
   UIO.onLoop();
-  cr.println(F("."));
+  cr_printf(".\n");
 
   // Now we can start logging
   log_info("Welcome to wsn");
@@ -150,9 +150,9 @@ void WaspUIO::boot()
   // Upgrade queues
   if (UIO.hasSD)
   {
-    if (upgradeFIFO()) { cr.println(F("ERROR Upgrading FIFO")); }
+    if (upgradeFIFO()) { cr_printf("ERROR Upgrading FIFO\n"); }
 #if WITH_IRIDIUM
-    if (upgradeLIFO()) { cr.println(F("ERROR Upgrading LIFO")); }
+    if (upgradeLIFO()) { cr_printf("ERROR Upgrading LIFO\n"); }
 #endif
   }
 
@@ -404,7 +404,7 @@ void WaspUIO::deepSleep()
   if (RTC.setWatchdog(LOOP_TIMEOUT))
   {
     // We cannot log because the SD is not started yet
-    cr.println(F("FATAL ERROR setting watchdog"));
+    cr_printf("FATAL ERROR setting watchdog\n");
     reboot();
   }
 

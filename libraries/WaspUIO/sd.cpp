@@ -21,7 +21,7 @@ void WaspUIO::startSD()
   }
   else
   {
-    cr.println(F("ERROR SD.ON() flag=%u %d"), SD.flag, SD.card.errorCode());
+    cr_printf("ERROR SD.ON() flag=%u %d\n", SD.flag, SD.card.errorCode());
   }
 }
 

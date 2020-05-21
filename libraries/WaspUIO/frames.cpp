@@ -464,30 +464,30 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
    char mote_id[17];
    uint8_t seq;
 
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("=== Binary Frame ==="));
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("=== Binary Frame ===\n");
 
    // Start delimiter
    if (strncmp((const char*) p, "<=>", 3) != 0)
    {
-     if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Error reading Start delimiter <=>"));
+     if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Error reading Start delimiter <=>\n");
      return 0;
    }
    p += 3;
 
    // Frame type
    frame_type = *p++;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Frame type: %d"), frame_type);
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Frame type: %d\n", frame_type);
    // TODO Print text identifier: info, timeout, ...
 
    // Number of bytes
    nbytes = *p++;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Number of bytes: %d"), nbytes);
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Number of bytes: %d\n", nbytes);
 
    length = 5 + nbytes;
    if (length > max_length)
    {
      if (log_usb && cr.loglevel >= LOG_DEBUG)
-       cr.println(F("Frame length (%u) greater than max-length (%u"), length, max_length);
+       cr_printf("Frame length (%u) greater than max-length (%u\n", length, max_length);
      return 0;
    }
 
@@ -495,7 +495,7 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
    Utils.hex2str(p, serial, 8);
    p += 8;
    nbytes -= 8;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Serial ID: 0x%s"), serial);
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Serial ID: 0x%s\n", serial);
 
    // Waspmote ID
    char c;
@@ -510,19 +510,19 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
      }
      mote_id[i] = c;
    }
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Waspmote ID: %s"), mote_id);
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Waspmote ID: %s\n", mote_id);
 
    // Separator
    if (c != '#')
    {
-     if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Error reading Waspmote ID"));
+     if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Error reading Waspmote ID\n");
      return 0;
    }
 
    // Sequence
    seq = *p++;
    nbytes--;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("Sequence: %d"), seq);
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Sequence: %d\n", seq);
 
    // Payload
    while (nbytes > 0)
@@ -536,7 +536,7 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
      if (strlen(format) == 0)
      {
        if (log_usb && cr.loglevel >= LOG_DEBUG)
-         cr.println(F("Unexpected frame type %hhu"), type);
+         cr_printf("Unexpected frame type %hhu\n", type);
        return 0;
      }
 
@@ -553,43 +553,43 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
        {
          Utils.float2String(*(float*)(void*)p, value_str, 4);
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
+           cr_printf("Sensor %d (%s): %s\n", type, name, value_str);
          p += 4; nbytes -= 4;
        }
        else if (c == 'i')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %d"), type, name, *(int8_t *)p);
+           cr_printf("Sensor %d (%s): %d\n", type, name, *(int8_t *)p);
          p += 1; nbytes -= 1;
        }
        else if (c == 'j')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %d"), type, name, *(int16_t *)p);
+           cr_printf("Sensor %d (%s): %d\n", type, name, *(int16_t *)p);
          p += 2; nbytes -= 2;
        }
        else if (c == 'k')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %ld"), type, name, *(int32_t *)p);
+           cr_printf("Sensor %d (%s): %ld\n", type, name, *(int32_t *)p);
          p += 4; nbytes -= 4;
        }
        else if (c == 'u')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %d"), type, name, *(uint8_t *)p);
+           cr_printf("Sensor %d (%s): %d\n", type, name, *(uint8_t *)p);
          p += 1; nbytes -= 1;
        }
        else if (c == 'v')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint16_t *)p);
+           cr_printf("Sensor %d (%s): %lu\n", type, name, *(uint16_t *)p);
          p += 2; nbytes -= 2;
        }
        else if (c == 'w')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %lu"), type, name, *(uint32_t *)p);
+           cr_printf("Sensor %d (%s): %lu\n", type, name, *(uint32_t *)p);
          p += 4; nbytes -= 4;
        }
        else if (c == 'n')
@@ -606,13 +606,13 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
              if (diff != -128)
              {
                if (log_usb && cr.loglevel >= LOG_DEBUG)
-                 cr.println(F("Sensor %d (%s): %hhd"), type, name, diff);
+                 cr_printf("Sensor %d (%s): %hhd\n", type, name, diff);
                continue;
              }
            }
 
            if (log_usb && cr.loglevel >= LOG_DEBUG)
-             cr.println(F("Sensor %d (%s): %d"), type, name, *(int *)p);
+             cr_printf("Sensor %d (%s): %d\n", type, name, *(int *)p);
            p += 2; nbytes -= 2;
          }
        }
@@ -623,23 +623,23 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
          if (len > sizeof(value_str) - 1)
          {
            if (log_usb && cr.loglevel >= LOG_DEBUG)
-             cr.println(F("Error reading sensor value, string too long %d"), len);
+             cr_printf("Error reading sensor value, string too long %d\n", len);
            return 0;
          }
          strncpy(value_str, (char*) p, len);
          p += len; nbytes -= len;
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): %s"), type, name, value_str);
+           cr_printf("Sensor %d (%s): %s\n", type, name, value_str);
        }
        else
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr.println(F("Sensor %d (%s): unexpected type %c"), type, name, c);
+           cr_printf("Sensor %d (%s): unexpected type %c\n", type, name, c);
        }
      }
    }
 
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr.println(F("===================="));
+   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("====================\n");
    return length;
 }
 

@@ -26,7 +26,7 @@ int FIFO::open(uint8_t mode)
   // If already open, do nothing. Then it's the responsability of the caller to
   // open with the right mode.
   if (_mode != 0) { return 0; }
-  //cr.println(F("FIFO::open(%s, %d -> %d)"), qname, _mode, mode);
+  //cr_printf("FIFO::open(%s, %d -> %d)\n", qname, _mode, mode);
 
   // Open
   if (sd_open(qname, queue, mode))
@@ -65,7 +65,7 @@ int FIFO::open(uint8_t mode)
 
 void FIFO::close()
 {
-  //cr.println(F("FIFO::close(%s)"), qname);
+  //cr_printf("FIFO::close(%s)\n", qname);
   if (queue.isOpen()) { queue.close(); }
   if (index.isOpen()) { index.close(); }
   _mode = 0;

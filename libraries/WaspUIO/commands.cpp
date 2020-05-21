@@ -113,25 +113,24 @@ void WaspUIO::clint()
   size_t size = sizeof(buffer);
 
   // Print info
-  cr.println();
+  cr_printf("\n");
   cmdPrint(NULL);
-  cr.println();
+  cr_printf("\n");
 
   // Go interactive or not
-  cr.println(F("Press Enter to start interactive mode. Wait 2 seconds to skip."));
+  cr_printf("Press Enter to start interactive mode. Wait 2 seconds to skip.\n");
   if (cr.input(buffer, sizeof(buffer), 2000) != NULL)
   {
-    cr.println(F("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity."));
+    cr_printf("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity.\n");
     do {
-      cr.print(F("> "));
+      cr_printf("> ");
       if (cr.input(buffer, size, 3 * 60 * 1000UL) == NULL)
       {
-        cr.println();
-        cr.println(F("Timeout!"));
+        cr_printf("\nTimeout!\n");
         break;
       }
 
-      cr.println(buffer);
+      USB.print(buffer);
       if (exeCommands(buffer, true) == cmd_exit)
       {
         break;
@@ -140,10 +139,10 @@ void WaspUIO::clint()
   }
   else
   {
-    cr.println(F("Timeout."));
+    cr_printf("Timeout.\n");
   }
 
-  cr.println();
+  cr_printf("\n");
 }
 
 
@@ -169,12 +168,12 @@ cmd_status_t exeCommands(const char *str, bool interactive)
     if (interactive)
     {
       status = exeCommand(p);
-      if      (status == cmd_bad_input)   { cr.println(F("I don't understand")); }
-      else if (status == cmd_unavailable) { cr.println(F("Feature not available")); }
-      else if (status == cmd_error)       { cr.println(F("Error")); }
-      else if (status == cmd_ok)          { cr.println(F("OK")); }
+      if      (status == cmd_bad_input)   { cr_printf("I don't understand\n"); }
+      else if (status == cmd_unavailable) { cr_printf("Feature not available\n"); }
+      else if (status == cmd_error)       { cr_printf("Error\n"); }
+      else if (status == cmd_ok)          { cr_printf("OK\n"); }
       else if (status == cmd_quiet)       { }
-      else if (status == cmd_exit)        { cr.println(F("Good bye!")); break; }
+      else if (status == cmd_exit)        { cr_printf("Good bye!\n"); break; }
     } else {
       log_info("Command \"%s\"", p);
       status = exeCommand(p);
@@ -281,7 +280,7 @@ COMMAND(cmdHelp)
     strncpy_P(help, cmd.help, sizeof help);
     if (strlen(help) > 0) // Do not print help for hidden commands
     {
-      cr.println(help);
+      USB.print(help);
     }
   }
 
@@ -317,7 +316,7 @@ COMMAND(cmdPassword)
   size_t len = strlen(value);
   if (len != 16 && len != 24 && len != 32)
   {
-    cr.println(F("Password disabled (valid passwords have 16, 24 or 32 chars)"));
+    cr_printf("Password disabled (valid passwords have 16, 24 or 32 chars)\n");
     UIO.password[0] = '\0';
   }
   else
@@ -347,29 +346,29 @@ COMMAND(cmdPrint)
 
   Utils.getID(name);
 
-  cr.println(F("Time      : %s"), UIO.pprintTime(buffer, size));
-  cr.println(F("Id        : %s Version=%c Name=%s"), UIO.pprintSerial(buffer, size), _boot_version, name);
-  cr.println(F("Battery   : %s"), UIO.pprintBattery(buffer, size));
-  cr.println(F("Hardware  : board=%s SD=%d GPS=%d"), UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
+  cr_printf("Time      : %s\n", UIO.pprintTime(buffer, size));
+  cr_printf("Id        : %s Version=%c Name=%s\n", UIO.pprintSerial(buffer, size), _boot_version, name);
+  cr_printf("Battery   : %s\n", UIO.pprintBattery(buffer, size));
+  cr_printf("Hardware  : board=%s SD=%d GPS=%d\n", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
 #if WITH_XBEE
   if (UIO.lan_type == LAN_XBEE)
-  { cr.println(F("XBee      : %s"), UIO.pprintXBee(buffer, size)); }
+  { cr_printf("XBee      : %s\n", UIO.pprintXBee(buffer, size)); }
 #endif
 #if WITH_LORA
   if (UIO.lan_type == LAN_LORA)
-  { cr.println(F("Lora      : %s"), UIO.pprintLora(buffer, size)); }
+  { cr_printf("Lora      : %s\n", UIO.pprintLora(buffer, size)); }
 #endif
 #if WITH_4G
   if (UIO.wan_type == WAN_4G)
-  { cr.println(F("4G        : %s"), UIO.pprint4G(buffer, size)); }
+  { cr_printf("4G        : %s\n", UIO.pprint4G(buffer, size)); }
 #endif
 #if WITH_IRIDIUM
   if (UIO.wan_type == WAN_IRIDIUM)
-  { cr.println(F("Iridium   : %s"), UIO.pprintIridium(buffer, size)); }
+  { cr_printf("Iridium   : %s\n", UIO.pprintIridium(buffer, size)); }
 #endif
-  cr.println(F("Frames    : %s"), UIO.pprintFrames(buffer, size));
-  cr.println(F("Log       : level=%s output=%s"), cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  cr.println(F("Actions   : %s"), UIO.pprintActions(buffer, size));
+  cr_printf("Frames    : %s\n", UIO.pprintFrames(buffer, size));
+  cr_printf("Log       : level=%s output=%s\n", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+  cr_printf("Actions   : %s\n", UIO.pprintActions(buffer, size));
 
   return cmd_quiet;
 }
@@ -377,7 +376,7 @@ COMMAND(cmdPrint)
 
 COMMAND(cmdReboot)
 {
-  cr.println(F("Waspmote will reboot in 2s..."));
+  cr_printf("Waspmote will reboot in 2s...\n");
   delay(2000);
 
   UIO.reboot();
@@ -404,7 +403,7 @@ COMMAND(cmdRun)
       const char* xname = (const char*)pgm_read_word(&(run_names[i]));
       if (strcmp_P("", xname) == 0)
         continue;
-      cr.println((__FlashStringHelper*)xname);
+      cr.printf("%s\n", xname);
     }
     return cmd_quiet;
   }
@@ -519,8 +518,7 @@ COMMAND(cmdVar)
     {
       const char* xname = (const char*)pgm_read_word(&(var_names[i]));
       const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
-      cr.print((__FlashStringHelper*)xname);
-      cr.println((__FlashStringHelper*)xhelp);
+      cr_printf("%s %s\n", xname, xhelp);
     }
     return cmd_quiet;
   }
@@ -651,6 +649,6 @@ COMMAND(cmdVar)
   }
 
   // Print
-  cr.println(F("%u"), value);
+  cr_printf("%u\n", value);
   return cmd_quiet;
 }

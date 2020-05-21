@@ -132,19 +132,25 @@ enum loglevel_t {
 };
 
 #ifdef WFORMAT
+
 #define log_fatal(fmt, ...) cr.logf_(LOG_FATAL, fmt, ## __VA_ARGS__)
 #define log_error(fmt, ...) cr.logf_(LOG_ERROR, fmt, ## __VA_ARGS__)
 #define log_warn(fmt, ...) cr.logf_(LOG_WARN, fmt, ## __VA_ARGS__)
 #define log_info(fmt, ...) cr.logf_(LOG_INFO, fmt, ## __VA_ARGS__)
 #define log_debug(fmt, ...) cr.logf_(LOG_DEBUG, fmt, ## __VA_ARGS__)
 #define log_trace(fmt, ...) cr.logf_(LOG_TRACE, fmt, ## __VA_ARGS__)
+#define cr_printf(fmt, ...) cr.printf(fmt, ## __VA_ARGS__)
+
 #else
+
 #define log_fatal(fmt, ...) cr.logf_P(LOG_FATAL, PSTR(fmt), ## __VA_ARGS__)
 #define log_error(fmt, ...) cr.logf_P(LOG_ERROR, PSTR(fmt), ## __VA_ARGS__)
 #define log_warn(fmt, ...) cr.logf_P(LOG_WARN, PSTR(fmt), ## __VA_ARGS__)
 #define log_info(fmt, ...) cr.logf_P(LOG_INFO, PSTR(fmt), ## __VA_ARGS__)
 #define log_debug(fmt, ...) cr.logf_P(LOG_DEBUG, PSTR(fmt), ## __VA_ARGS__)
 #define log_trace(fmt, ...) cr.logf_P(LOG_TRACE, PSTR(fmt), ## __VA_ARGS__)
+#define cr_printf(fmt, ...) cr.printf_P(PSTR(fmt), ## __VA_ARGS__)
+
 #endif
 
 /*
@@ -190,11 +196,9 @@ class Loop
     // Printing to USB done right. The print functions takes a formatted
     // string, either a regular string (char*) or one stored in the program
     // memory (F).  The println variant append a new line.
-    void print(const __FlashStringHelper *, ...);
-    void println(const __FlashStringHelper *, ...);
-    void println(const char *, ...);
-    void println();
     const char* input(char* buffer, size_t size, unsigned long timeout);
+    void printf(const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+    void printf_P(PGM_P format, ...);
 
     // Logging
     loglevel_t loglevel = LOG_DEBUG;

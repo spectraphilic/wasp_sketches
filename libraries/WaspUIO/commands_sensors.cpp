@@ -167,7 +167,7 @@ COMMAND(cmd1WireScan)
   // ON
   if (! SD.openFile("onewire.txt", &file, O_WRITE | O_CREAT | O_TRUNC))
   {
-    cr.print(F("Error opening onewire.txt"));
+    cr_printf("Error opening onewire.txt");
     return cmd_error;
   }
 
@@ -187,7 +187,7 @@ COMMAND(cmd1WireScan)
     // We assume we have a chain of DS1820 sensors, and read all of them.
     if (! oneWire.reset())
     {
-      cr.print(F(" nothing"));
+      cr_printf(" nothing");
       goto next;
     }
 
@@ -201,10 +201,10 @@ COMMAND(cmd1WireScan)
 
       // Check address CRC
       crc = oneWire.crc8(addr, 7);
-      if (crc != addr[7]) { cr.print(F("(crc error)")); continue; }
+      if (crc != addr[7]) { cr_printf("(crc error)"); continue; }
 
       // Only DS18B20 is supported for now
-      if (addr[0] != 0x28) { cr.print(F("(not DS18B20)")); continue; }
+      if (addr[0] != 0x28) { cr_printf("(not DS18B20)"); continue; }
     }
 
 next:

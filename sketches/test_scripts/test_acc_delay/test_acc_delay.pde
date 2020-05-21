@@ -9,7 +9,7 @@ void setup()
   ACC.ON();
   delay(ms);
 
-  cr.println(F("delay=%d"), ms);
+  cr_printf("delay=%d\n", ms);
 }
 
 
@@ -37,9 +37,9 @@ void loop()
     if (z > z_max) z_max = z;
   }
 
-  cr.println(F("min: %d %d %d"), x_min, y_min, z_min);
-  cr.println(F("max: %d %d %d"), x_max, y_max, z_max);
-  cr.println();
+  cr_printf("min: %d %d %d\n", x_min, y_min, z_min);
+  cr_printf("max: %d %d %d\n", x_max, y_max, z_max);
+  cr_printf("\n");
 
   delay(1000);
 }

@@ -58,13 +58,13 @@ void vlog(loglevel_t level, const char* message)
   {
     if (sd_open(UIO.logFilename, UIO.logFile, O_WRITE | O_CREAT | O_APPEND | O_SYNC))
     {
-      cr.println(F("Open log file failed"));
+      cr_printf("Open log file failed\n");
       return;
     }
 
     if (sd_append(UIO.logFile, buffer, strlen(buffer)))
     {
-      cr.println(F("Append to log file failed"));
+      cr_printf("Append to log file failed\n");
       UIO.logFile.close();
     }
   }

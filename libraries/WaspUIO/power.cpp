@@ -84,7 +84,7 @@ bool WaspUIO::_setState(uint8_t device, bool new_state)
 bool WaspUIO::pwr_switch(uint8_t device, uint8_t pin, bool new_state)
 {
   bool old_state = pwr_state & device;
-  //cr.println(F("*** pwr_switch(%d, %d, %d -> %d)"), device, pin, old_state, new_state);
+  //cr_printf("*** pwr_switch(%d, %d, %d -> %d)\n", device, pin, old_state, new_state);
   if (new_state == old_state) { return old_state; }
 
   if (pin != 0)
@@ -265,7 +265,7 @@ void WaspUIO::readBattery()
  */
 void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
 {
-	//cr.println(F("*** WaspUIO::setSensorPower(%d, %d)"), type, mode);
+	//cr_printf("*** WaspUIO::setSensorPower(%d, %d)\n", type, mode);
 	pinMode(SENS_PW_3V3,OUTPUT);
 	pinMode(SENS_PW_5V,OUTPUT);
 

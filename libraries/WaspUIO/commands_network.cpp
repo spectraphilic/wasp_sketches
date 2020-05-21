@@ -47,7 +47,7 @@ COMMAND(cmd4G_Pin)
   int n = sscanf(str, "%u", &pin);
   if (n == -1)
   {
-    //cr.println(F("%u"), UIO.pin);
+    //cr_printf("%u\n", UIO.pin);
   }
   else if (n == 1)
   {
@@ -74,19 +74,19 @@ COMMAND(cmdLora)
   UIO.loraInit();
 
   // uint8_t unless specified otherwise
-  cr.println(F("Mode BW=%u CR=%u SF=%u"), sx1272._bandwidth, sx1272._codingRate, sx1272._spreadingFactor);
-  cr.println(F("Header = %u"), sx1272._header);
-  cr.println(F("CRC = %u"), sx1272._CRC);
-  cr.println(F("Channel = %lX"), sx1272._channel); // uint32_t
-  cr.println(F("Power = %u"), sx1272._power);
-  cr.println(F("Preamble length = %u"), sx1272._preamblelength); // uint16_t
-  cr.println(F("Payload length = %u"), sx1272._payloadlength);
-  cr.println(F("Node address = %u"), sx1272._nodeAddress);
-  cr.println(F("Max current = %u mA"), sx1272._maxCurrent); // 0x00 to 0x1B (5 to 240 mA)
-  cr.println(F("Temp = %d"), sx1272._temp); // int
+  cr_printf("Mode BW=%u CR=%u SF=%u\n", sx1272._bandwidth, sx1272._codingRate, sx1272._spreadingFactor);
+  cr_printf("Header = %u\n", sx1272._header);
+  cr_printf("CRC = %u\n", sx1272._CRC);
+  cr_printf("Channel = %lX\n", sx1272._channel); // uint32_t
+  cr_printf("Power = %u\n", sx1272._power);
+  cr_printf("Preamble length = %u\n", sx1272._preamblelength); // uint16_t
+  cr_printf("Payload length = %u\n", sx1272._payloadlength);
+  cr_printf("Node address = %u\n", sx1272._nodeAddress);
+  cr_printf("Max current = %u mA\n", sx1272._maxCurrent); // 0x00 to 0x1B (5 to 240 mA)
+  cr_printf("Temp = %d\n", sx1272._temp); // int
 
   float Tpacket = sx1272.timeOnAir(250);
-  cr.println(F("time-on-air(250)=%u ms"), (uint16_t)Tpacket);
+  cr_printf("time-on-air(250)=%u ms\n", (uint16_t)Tpacket);
 
   return cmd_ok;
 }

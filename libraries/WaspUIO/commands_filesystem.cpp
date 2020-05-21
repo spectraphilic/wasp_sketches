@@ -105,13 +105,13 @@ COMMAND(cmdLs)
  */
 bool ls_before_cb(SdBaseFile &parent, char * name)
 {
-  cr.println(F("%s/"), name);
+  cr_printf("%s/\n", name);
   return true;
 }
 
 bool ls_file_cb(SdBaseFile &me, char * name)
 {
-  cr.println(F("%s"), name);
+  cr_printf("%s\n", name);
   return true;
 }
 
@@ -170,7 +170,7 @@ COMMAND(cmdTail)
   nc--; // do not include the last newline read
 
   // Read forward
-  cr.println(F("-------------------------"));
+  cr_printf("-------------------------\n");
   file.seekEnd(-nc);
   while (nc > 0)
   {
@@ -180,7 +180,7 @@ COMMAND(cmdTail)
     USB.print(SD.buffer);
     nc -= nread;
   }
-  cr.println(F("-------------------------"));
+  cr_printf("-------------------------\n");
 
   file.close();
   return cmd_quiet;

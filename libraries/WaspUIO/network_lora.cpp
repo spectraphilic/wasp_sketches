@@ -7,34 +7,34 @@ int WaspUIO::loraStart()
   int err;
 
   err = sx1272.ON();
-  if (err) { cr.println(F("sx1272.ON() error=%d"), err); return err; }
+  if (err) { cr_printf("sx1272.ON() error=%d\n", err); return err; }
 
   // Configuration is not saved in the module, so the module must be configured
   // every time it's switched ON
 
   err = sx1272.setMode(lora_mode);
-  if (err) { cr.println(F("sx1272.setMode(%u) error=%d"), lora_mode, err); goto exit; }
+  if (err) { cr_printf("sx1272.setMode(%u) error=%d\n", lora_mode, err); goto exit; }
 
   err = sx1272.setChannel(LORA_CHANNEL);
-  if (err) { cr.println(F("sx1272.setChannel(..) error=%d"), err); goto exit; }
+  if (err) { cr_printf("sx1272.setChannel(..) error=%d\n", err); goto exit; }
 
   err = sx1272.setNodeAddress(lora_addr); // 1 (Gateway) or 2-255
-  if (err) { cr.println(F("sx1272.setNodeAddress(%u) error=%d"), lora_addr, err); goto exit; }
+  if (err) { cr_printf("sx1272.setNodeAddress(%u) error=%d\n", lora_addr, err); goto exit; }
 
   err = sx1272.setPower(LORA_POWER);
-  if (err) { cr.println(F("sx1272.setPower(%u) error=%d"), lora_addr, err); goto exit; }
+  if (err) { cr_printf("sx1272.setPower(%u) error=%d\n", lora_addr, err); goto exit; }
 
   // Used for sending
   err = sx1272.setHeaderON();
-  if (err) { cr.println(F("sx1272.setHeaderON() error=%d"), err); goto exit; }
+  if (err) { cr_printf("sx1272.setHeaderON() error=%d\n", err); goto exit; }
 
   err = sx1272.setCRC_ON();
-  if (err) { cr.println(F("sx1272.setCRC_ON() error=%d"), err); goto exit; }
+  if (err) { cr_printf("sx1272.setCRC_ON() error=%d\n", err); goto exit; }
 
   // Read registers (read values should match the values above, for those that
   // have been set)
   err = sx1272.getRegs();
-  if (err) { cr.println(F("sx1272.getRegs() error=%d"), err); goto exit; }
+  if (err) { cr_printf("sx1272.getRegs() error=%d\n", err); goto exit; }
 
 exit:
   if (err) { loraStop(); }

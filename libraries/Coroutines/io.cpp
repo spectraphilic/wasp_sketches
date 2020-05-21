@@ -59,43 +59,33 @@ const char* Loop::input(char* buffer, size_t size, unsigned long timeout)
  * Flash).
  */
 
-void Loop::println(const char * format, ...)
+void Loop::printf_P(PGM_P format, ...)
 {
-  va_list args;
-  char out[150];
+  // Copy to working memory
+  char buffer[150];
+  strncpy_P(buffer, format, sizeof(buffer));
 
+  // Format string
+  char message[150];
+  va_list args;
   va_start(args, format);
-  vsnprintf(out, sizeof(out), format, args);
+  vsnprintf(message, sizeof(message), buffer, args);
   va_end(args);
 
-  USB.println(out);
+  // Out
+  USB.print(message);
 }
 
-void Loop::print(const __FlashStringHelper * format, ...)
-{
-  va_list args;
-  char out[150];
 
+void Loop::printf(const char *format, ...)
+{
+  // Format string
+  char message[150];
+  va_list args;
   va_start(args, format);
-  vsnprintf_F(out, sizeof(out), format, args);
+  vsnprintf(message, sizeof(message), format, args);
   va_end(args);
 
-  USB.print(out);
-}
-
-void Loop::println(const __FlashStringHelper * format, ...)
-{
-  va_list args;
-  char out[150];
-
-  va_start(args, format);
-  vsnprintf_F(out, sizeof(out), format, args);
-  va_end(args);
-
-  USB.println(out);
-}
-
-void Loop::println()
-{
-  USB.println();
+  // Out
+  USB.print(message);
 }

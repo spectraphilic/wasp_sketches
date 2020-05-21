@@ -16,18 +16,18 @@
 void WaspUIO::i2c_scan()
 {
   I2C.begin();
-  cr.println(F("EEPROM   (%02x) %hhu"), I2C_ADDRESS_EEPROM, I2C.scan(I2C_ADDRESS_EEPROM));
-  cr.println(F("RTC      (%02x) %hhu"), I2C_ADDRESS_WASP_RTC, I2C.scan(I2C_ADDRESS_WASP_RTC));
-  cr.println(F("ACC      (%02x) %hhu"), I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
-  cr.println(F("BME280   (%02x) %hhu"), I2C_ADDRESS_Lemming_BME280, I2C.scan(I2C_ADDRESS_Lemming_BME280));
+  cr_printf("EEPROM   (%02x) %hhu\n", I2C_ADDRESS_EEPROM, I2C.scan(I2C_ADDRESS_EEPROM));
+  cr_printf("RTC      (%02x) %hhu\n", I2C_ADDRESS_WASP_RTC, I2C.scan(I2C_ADDRESS_WASP_RTC));
+  cr_printf("ACC      (%02x) %hhu\n", I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
+  cr_printf("BME280   (%02x) %hhu\n", I2C_ADDRESS_Lemming_BME280, I2C.scan(I2C_ADDRESS_Lemming_BME280));
 
-  cr.println(F("AS726X   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
-  cr.println(F("BME280   (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
-  cr.println(F("MLX90614 (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
-  cr.println(F("TMP1XX   (%02x) %hhu"), I2C_ADDRESS_TMP117, I2C.scan(I2C_ADDRESS_TMP117));
-  cr.println(F("VL53L1X  (%02x) %hhu"), I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
-  cr.println(F("SHT31-D  (%02x) %hhu"), I2C_ADDRESS_SHT31, I2C.scan(I2C_ADDRESS_SHT31));
-  cr.println(F("0=success 1=no-state .. 5=protocol-error .. 10=busy .. 255=operation-in-progress"));
+  cr_printf("AS726X   (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
+  cr_printf("BME280   (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
+  cr_printf("MLX90614 (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
+  cr_printf("TMP1XX   (%02x) %hhu\n", I2C_ADDRESS_TMP117, I2C.scan(I2C_ADDRESS_TMP117));
+  cr_printf("VL53L1X  (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_VL53L1X, I2C.scan(I2C_ADDRESS_LAGOPUS_VL53L1X));
+  cr_printf("SHT31-D  (%02x) %hhu\n", I2C_ADDRESS_SHT31, I2C.scan(I2C_ADDRESS_SHT31));
+  cr_printf("0=success 1=no-state .. 5=protocol-error .. 10=busy .. 255=operation-in-progress\n");
 }
 
 
@@ -46,7 +46,7 @@ bool WaspUIO::i2c_acc(int &x, int &y, int &z)
   //ACC.getStatus();
 
   // The high-pass filter is by default 00, controlled by CTRL2
-  //cr.println(F("CTRL2 %d"), ACC.getCTRL2());
+  //cr_printf("CTRL2 %d\n", ACC.getCTRL2());
   //delay(100); // Needed for the accelerometers high-pass filter
 
   // Check

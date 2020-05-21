@@ -119,11 +119,11 @@ int WaspUIO::_4GPing()
   {
     char name[10];
     strcpy_P(name, (char*)pgm_read_word(&(_4G_networks[_4G._networkType])));
-    cr.println(F("Network: %s"), name);
+    cr_printf("Network: %s\n", name);
   }
   else
   {
-    cr.println(F("Network: ERROR"));
+    cr_printf("Network: ERROR\n");
   }
 
   // Operator
@@ -131,22 +131,22 @@ int WaspUIO::_4GPing()
   err = _4G.getOperator(operator_name);
   if (err == 0)
   {
-    cr.println(F("Operator: %s"), operator_name);
+    cr_printf("Operator: %s\n", operator_name);
   }
   else
   {
-    cr.println(F("Operator: ERROR"));
+    cr_printf("Operator: ERROR\n");
   }
 
   // RSSI
   err = _4G.getRSSI();
   if (err == 0)
   {
-    cr.println(F("RSSI: %d dBm"), _4G._rssi);
+    cr_printf("RSSI: %d dBm\n", _4G._rssi);
   }
   else
   {
-    cr.println(F("RSSI: ERROR"));
+    cr_printf("RSSI: ERROR\n");
   }
 
   UIO._4GStop();

@@ -16,7 +16,7 @@ void loop()
   y_acc = ACC.getY();
   z_acc = ACC.getZ();
 
-  cr.println(F("raw (mG): %d %d %d"), x_acc, y_acc, z_acc);
+  cr_printf("raw (mG): %d %d %d\n", x_acc, y_acc, z_acc);
 
   delay(500);
 }

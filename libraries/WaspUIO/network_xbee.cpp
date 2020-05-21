@@ -4,7 +4,7 @@
 #if WITH_XBEE
 void WaspUIO::xbeeInit()
 {
-  const __FlashStringHelper *err = NULL;
+  PGM_P err = NULL;
 
   // XBee network
   memcpy_P(&xbee, &xbees[xbee_network], sizeof xbee);
@@ -12,7 +12,7 @@ void WaspUIO::xbeeInit()
   // init XBee
   if (xbeeDM.ON())
   {
-    cr.println(F("ERROR xbeeDM.ON()"));
+    cr_printf("ERROR xbeeDM.ON()\n");
     return;
   }
 
@@ -28,7 +28,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.setChannel(xbee.channel);
   if (xbeeDM.error_AT)
   {
-    err = F("ERROR in setChannel %d");
+    err = PSTR("ERROR in setChannel %d\n");
     goto exit;
   }
 
@@ -36,7 +36,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.setPAN(xbee.panid);
   if (xbeeDM.error_AT)
   {
-    err = F("ERROR in setPAN %d");
+    err = PSTR("ERROR in setPAN %d\n");
     goto exit;
   }
 
@@ -44,7 +44,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.setEncryptionMode(0);
   if (xbeeDM.error_AT)
   {
-    err = F("ERROR in setPAN %d");
+    err = PSTR("ERROR in setPAN %d\n");
     goto exit;
   }
 
@@ -52,7 +52,7 @@ void WaspUIO::xbeeInit()
   xbeeDM.writeValues();
   if (xbeeDM.error_AT)
   {
-    err = F("ERROR in writeValues %d");
+    err = PSTR("ERROR in writeValues %d\n");
     goto exit;
   }
 
@@ -60,7 +60,7 @@ exit:
   xbeeDM.OFF();
   if (err)
   {
-    cr.println(err, xbeeDM.error_AT);
+    cr.printf_P(err, xbeeDM.error_AT);
   }
 }
 
