@@ -583,7 +583,7 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
        else if (c == 'v')
        {
          if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %lu\n", type, name, *(uint16_t *)p);
+           cr_printf("Sensor %d (%s): %u\n", type, name, *(uint16_t *)p);
          p += 2; nbytes -= 2;
        }
        else if (c == 'w')
