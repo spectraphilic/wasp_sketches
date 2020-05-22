@@ -3,7 +3,7 @@
 
 int8_t WaspUIO::gps(bool setTime, bool getPosition)
 {
-  const __FlashStringHelper * error_msg = NULL;
+  PGM_P error = NULL;
   uint8_t satellites;
 
   log_debug("GPS start");
@@ -19,7 +19,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   // Connect
   if (GPS.waitForSignal(150) == false) // 150s = 2m30s
   {
-    error_msg = F("GPS Timeout");
+    error = PSTR("GPS Timeout");
     goto exit;
   }
 
@@ -41,12 +41,12 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
       }
       else if (status == -1)
       {
-        error_msg = F("GPS.getPosition() No GPS signal");
+        error = PSTR("GPS.getPosition() No GPS signal");
         goto exit;
       }
       else // if (status == 0)
       {
-        error_msg = F("GPS.getPosition() Timeout");
+        error = PSTR("GPS.getPosition() Timeout");
         goto exit;
       }
     }
@@ -66,10 +66,6 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
   if (setTime)
   {
     UIO.loadTime();
-  }
-
-  if (setTime)
-  {
     log_info("GPS Time updated!");
   }
 
@@ -94,15 +90,14 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     ADD_SENSOR(SENSOR_GPS, lat, lon);
     ADD_SENSOR(SENSOR_ALTITUDE, alt)
     ADD_SENSOR(SENSOR_GPS_ACCURACY, satellites, acc);
-
   }
 
 exit:
-  if (error_msg)
+  if (error)
   {
     GPS.OFF();
     if (_boot_version >= 'J') { startSD(); }
-    cr.log(LOG_ERROR, error_msg);
+    cr.log_P(LOG_ERROR, error);
     return -1;
   }
   return 0;

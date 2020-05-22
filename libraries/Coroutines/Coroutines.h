@@ -133,22 +133,22 @@ enum loglevel_t {
 
 #ifdef WFORMAT
 
-#define log_fatal(fmt, ...) cr.logf_(LOG_FATAL, fmt, ## __VA_ARGS__)
-#define log_error(fmt, ...) cr.logf_(LOG_ERROR, fmt, ## __VA_ARGS__)
-#define log_warn(fmt, ...) cr.logf_(LOG_WARN, fmt, ## __VA_ARGS__)
-#define log_info(fmt, ...) cr.logf_(LOG_INFO, fmt, ## __VA_ARGS__)
-#define log_debug(fmt, ...) cr.logf_(LOG_DEBUG, fmt, ## __VA_ARGS__)
-#define log_trace(fmt, ...) cr.logf_(LOG_TRACE, fmt, ## __VA_ARGS__)
+#define log_fatal(fmt, ...) cr.log(LOG_FATAL, fmt, ## __VA_ARGS__)
+#define log_error(fmt, ...) cr.log(LOG_ERROR, fmt, ## __VA_ARGS__)
+#define log_warn(fmt, ...) cr.log(LOG_WARN, fmt, ## __VA_ARGS__)
+#define log_info(fmt, ...) cr.log(LOG_INFO, fmt, ## __VA_ARGS__)
+#define log_debug(fmt, ...) cr.log(LOG_DEBUG, fmt, ## __VA_ARGS__)
+#define log_trace(fmt, ...) cr.log(LOG_TRACE, fmt, ## __VA_ARGS__)
 #define cr_printf(fmt, ...) cr.printf(fmt, ## __VA_ARGS__)
 
 #else
 
-#define log_fatal(fmt, ...) cr.logf_P(LOG_FATAL, PSTR(fmt), ## __VA_ARGS__)
-#define log_error(fmt, ...) cr.logf_P(LOG_ERROR, PSTR(fmt), ## __VA_ARGS__)
-#define log_warn(fmt, ...) cr.logf_P(LOG_WARN, PSTR(fmt), ## __VA_ARGS__)
-#define log_info(fmt, ...) cr.logf_P(LOG_INFO, PSTR(fmt), ## __VA_ARGS__)
-#define log_debug(fmt, ...) cr.logf_P(LOG_DEBUG, PSTR(fmt), ## __VA_ARGS__)
-#define log_trace(fmt, ...) cr.logf_P(LOG_TRACE, PSTR(fmt), ## __VA_ARGS__)
+#define log_fatal(fmt, ...) cr.log_P(LOG_FATAL, PSTR(fmt), ## __VA_ARGS__)
+#define log_error(fmt, ...) cr.log_P(LOG_ERROR, PSTR(fmt), ## __VA_ARGS__)
+#define log_warn(fmt, ...) cr.log_P(LOG_WARN, PSTR(fmt), ## __VA_ARGS__)
+#define log_info(fmt, ...) cr.log_P(LOG_INFO, PSTR(fmt), ## __VA_ARGS__)
+#define log_debug(fmt, ...) cr.log_P(LOG_DEBUG, PSTR(fmt), ## __VA_ARGS__)
+#define log_trace(fmt, ...) cr.log_P(LOG_TRACE, PSTR(fmt), ## __VA_ARGS__)
 #define cr_printf(fmt, ...) cr.printf_P(PSTR(fmt), ## __VA_ARGS__)
 
 #endif
@@ -204,19 +204,10 @@ class Loop
     // Logging
     loglevel_t loglevel = LOG_DEBUG;
     const char* loglevel2str(loglevel_t level);
-    void log(loglevel_t level, const __FlashStringHelper *);
-    void logf_P(loglevel_t level, PGM_P format, ...);
-
-    // The name is logf_ instead of logf because logf is a macro in math.h
-    __attribute__ ((format (printf, 3, 4)))
-    void logf_(loglevel_t level, const char *format, ...);
+    void log(loglevel_t level, const char *format, ...) __attribute__ ((format (printf, 3, 4)));
+    void log_P(loglevel_t level, PGM_P format, ...);
 
 };
-
-// Utility functions to work with program memory (flash)
-char* strncpy_F(char* dst, const __FlashStringHelper * src, size_t num);
-char* strncat_F(char* dst, const __FlashStringHelper * src, size_t size);
-char* strnjoin_F(char* dst, size_t size, const __FlashStringHelper* delimiter, const __FlashStringHelper* src, ...);
 
 extern Loop cr;
 

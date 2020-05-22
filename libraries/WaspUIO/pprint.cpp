@@ -4,15 +4,16 @@
 #if WITH_4G
 const char* WaspUIO::pprint4G(char* dst, size_t size)
 {
-  // XXX Print some info from the module with _4G.getInfo(...) ??
+  // These are short fix-length strings, so we don't check the size
+  // TODO use assert to check size has a minimum length
   if (pin == 0 || pin > 9999)
   {
-    strncpy_F(dst, F("disabled, set pin"), size);
+    strcpy_P(dst, PSTR("disabled, set pin"));
   }
   else
   {
     //snprintf_P(dst, size, PSTR("pin=%u"), pin);
-    strncpy_F(dst, F("pin=XXXX"), size);
+    strcpy_P(dst, PSTR("pin=XXXX"));
   }
 
   return dst;
@@ -55,7 +56,7 @@ const char* WaspUIO::pprintActions(char* dst, size_t size)
     pprintAction(dst, size, i, name);
   }
 
-  if (! dst[0]) strncpy_F(dst, F("(none)"), size);
+  if (dst[0] == '\0') strcpy_P(dst, PSTR("(none)"));
 
   return dst;
 }
@@ -79,9 +80,10 @@ const char* WaspUIO::pprintBattery(char* dst, size_t size)
 
 const char* WaspUIO::pprintBoard(char* dst, size_t size)
 {
-  dst[0] = '\0';
-  if (boardType == BOARD_LEMMING) { strncat_F(dst, F("lemming"), size); }
-  else                            { strncat_F(dst, F("none"), size); }
+  // These are short fix-length strings, so we don't check the size
+  // TODO use assert to check size has a minimum length
+  if (boardType == BOARD_LEMMING) { strcpy_P(dst, PSTR("lemming")); }
+  else                            { strcpy_P(dst, PSTR("none")); }
 
   return dst;
 }
@@ -110,9 +112,20 @@ const char* WaspUIO::pprintIridium(char* dst, size_t size)
 
 const char* WaspUIO::pprintLog(char* dst, size_t size)
 {
+  // These are short fix-length strings, so we don't check the size
+  // TODO use assert to check size has a minimum length
+
   dst[0] = '\0';
-  if (log_usb) strnjoin_F(dst, size, F(", "), F("USB"));
-  if (log_sd)  strnjoin_F(dst, size, F(", "), F("SD"));
+  if (log_usb) {
+    strcpy_P(dst, PSTR("USB"));
+  }
+
+  if (log_sd)
+  {
+    if (log_usb) strcat_P(dst, PSTR(", "));
+    strcat_P(dst, PSTR("SD"));
+  }
+
   return dst;
 }
 

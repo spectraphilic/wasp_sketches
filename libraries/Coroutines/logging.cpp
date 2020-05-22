@@ -9,55 +9,6 @@
  * but vlog can be overriden.
  */
 
-void Loop::log(loglevel_t level, const __FlashStringHelper *message)
-{
-  if (level <= loglevel)
-  {
-    // Copy to working memory
-    char buffer[150];
-    strncpy_F(buffer, message, sizeof(buffer));
-
-    // Out
-    vlog(level, buffer);
-  }
-}
-
-void Loop::logf_P(loglevel_t level, PGM_P format, ...)
-{
-  if (level <= loglevel)
-  {
-    // Copy to working memory
-    char buffer[150];
-    strncpy_P(buffer, format, sizeof(buffer));
-
-    // Format string
-    char message[150];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(message, sizeof(message), buffer, args);
-    va_end(args);
-
-    // Out
-    vlog(level, message);
-  }
-}
-
-void Loop::logf_(loglevel_t level, const char *format, ...)
-{
-  if (level <= loglevel)
-  {
-    // Format string
-    char message[150];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(message, sizeof(message), format, args);
-    va_end(args);
-
-    // Out
-    vlog(level, message);
-  }
-}
-
 const char* Loop::loglevel2str(loglevel_t level)
 {
   switch (level)
@@ -77,6 +28,42 @@ const char* Loop::loglevel2str(loglevel_t level)
   }
 
   return "";
+}
+
+void Loop::log(loglevel_t level, const char *format, ...)
+{
+  if (level <= loglevel)
+  {
+    // Format string
+    char message[150];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(message, sizeof(message), format, args);
+    va_end(args);
+
+    // Out
+    vlog(level, message);
+  }
+}
+
+void Loop::log_P(loglevel_t level, PGM_P format, ...)
+{
+  if (level <= loglevel)
+  {
+    // Copy to working memory
+    char buffer[150];
+    strncpy_P(buffer, format, sizeof(buffer));
+
+    // Format string
+    char message[150];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(message, sizeof(message), buffer, args);
+    va_end(args);
+
+    // Out
+    vlog(level, message);
+  }
 }
 
 /*
