@@ -653,15 +653,15 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
 uint8_t WaspUIO::getDataFilename(char* filename, uint8_t src, uint8_t year, uint8_t month, uint8_t date)
 {
   if (src) {
-    sprintf(filename, "%s/%03u", archive_dir, src);
+    cr_sprintf(filename, "%s/%03u", archive_dir, src);
     if (sd_mkdir(filename))
     {
       log_error("getDataFilename fail to mkdir %s", filename);
       return 1;
     }
-    sprintf(filename, "%s/%03u/%02u%02u%02u.TXT", archive_dir, src, year, month, date);
+    cr_sprintf(filename, "%s/%03u/%02u%02u%02u.TXT", archive_dir, src, year, month, date);
   } else {
-    sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
+    cr_sprintf(filename, "%s/%02u%02u%02u.TXT", archive_dir, year, month, date);
   }
 
   return 0;

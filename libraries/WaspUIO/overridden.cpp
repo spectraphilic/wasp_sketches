@@ -31,10 +31,10 @@ void vlog(loglevel_t level, const char* message)
   // (1) Prepare message
   // Timestamp
   seconds = UIO.getEpochTime(ms);
-  sprintf(buffer, "%lu.%03u ", seconds, ms);
+  cr_sprintf(buffer, "%lu.%03u ", seconds, ms);
   len = strlen(buffer);
   // Level
-  sprintf(buffer + len, "%s ", cr.loglevel2str(level));
+  cr_sprintf(buffer + len, "%s ", cr.loglevel2str(level));
   len = strlen(buffer);
   // Message
   strncat(buffer, message, size - len - 1);

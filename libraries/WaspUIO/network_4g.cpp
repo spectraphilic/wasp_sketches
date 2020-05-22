@@ -34,7 +34,7 @@ uint8_t WaspUIO::_4GStart()
     log_error("Bad pin number (%u), set pin in the menu", pin);
     return 1;
   }
-  snprintf(pin_str, sizeof pin_str, "%04d", pin);
+  cr_snprintf(pin_str, sizeof pin_str, "%04d", pin);
 
   // Switch on (11s)
   log_debug("4G Switch on");
