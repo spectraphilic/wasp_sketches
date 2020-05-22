@@ -12,7 +12,7 @@ const char* WaspUIO::pprint4G(char* dst, size_t size)
   }
   else
   {
-    //snprintf_P(dst, size, PSTR("pin=%u"), pin);
+    //cr_snprintf(dst, size, "pin=%u", pin);
     strcpy_P(dst, PSTR("pin=XXXX"));
   }
 
@@ -29,17 +29,17 @@ const char* WaspUIO::pprintAction(char* dst, size_t size, uint8_t idx, PGM_P nam
   {
     size_t len;
 
-    len = strlen(dst); snprintf_P(dst + len, size - len, name);
-    len = strlen(dst); snprintf_P(dst + len, size - len, PSTR("="));
+    len = strlen(dst);
+    snprintf_P(dst + len, size - len, PSTR("%S="), name);
 
     len = strlen(dst);
     if (action.type == action_hours)
     {
-      snprintf_P(dst + len, size - len, PSTR("%d:%02d "), action.hour, action.minute);
+      cr_snprintf(dst + len, size - len, "%d:%02d ", action.hour, action.minute);
     }
     else if (action.type == action_minutes)
     {
-      snprintf_P(dst + len, size - len, PSTR("%d "), action.minute);
+      cr_snprintf(dst + len, size - len, "%d ", action.minute);
     }
   }
 
@@ -68,11 +68,11 @@ const char* WaspUIO::pprintBattery(char* dst, size_t size)
   {
     char aux[10];
     Utils.float2String(UIO.batteryVolts, aux, 2);
-    snprintf_P(dst, size, PSTR("3V3 regulator (%s volts)"), aux) ;
+    cr_snprintf(dst, size, "3V3 regulator (%s volts)", aux) ;
   }
   else // BATTERY_LITHIUM
   {
-    snprintf_P(dst, size, PSTR("Lithium-ion (%d %%)"), UIO.batteryLevel);
+    cr_snprintf(dst, size, "Lithium-ion (%d %%)", UIO.batteryLevel);
   }
 
   return dst;
@@ -93,19 +93,19 @@ const char* WaspUIO::pprintFrames(char* dst, size_t size)
 #if WITH_CRYPTO
   if (strlen(password) > 0)
   {
-    snprintf_P(dst, size, PSTR("payload-size=%u frame-size=%u encryption=enabled"), payloadSize, frameSize);
+    cr_snprintf(dst, size, "payload-size=%u frame-size=%u encryption=enabled", payloadSize, frameSize);
     return dst;
   }
 #endif
 
-  snprintf_P(dst, size, PSTR("payload-size=%u frame-size=%u encryption=disabled"), payloadSize, frameSize);
+  cr_snprintf(dst, size, "payload-size=%u frame-size=%u encryption=disabled", payloadSize, frameSize);
   return dst;
 }
 
 #if WITH_IRIDIUM
 const char* WaspUIO::pprintIridium(char* dst, size_t size)
 {
-  snprintf_P(dst, size, PSTR("fw=%s"), iridium_fw);
+  cr_snprintf(dst, size, "fw=%s", iridium_fw);
   return dst;
 }
 #endif
@@ -158,8 +158,8 @@ const char* WaspUIO::pprintTime(char* dst, size_t size)
     default: day = "???";
   }
 
-  snprintf_P(dst, size, PSTR("%s, %02u/%02u/%02u, %02u:%02u:%02u"),
-             day, ts.year, ts.month, ts.date, ts.hour, ts.minute, ts.second);
+  cr_snprintf(dst, size, "%s, %02u/%02u/%02u, %02u:%02u:%02u",
+              day, ts.year, ts.month, ts.date, ts.hour, ts.minute, ts.second);
 
   return dst;
 }
@@ -178,7 +178,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
   Utils.hex2str(xbeeDM.sourceMacHigh, macH, 4);
   Utils.hex2str(xbeeDM.sourceMacLow, macL, 4);
   strncpy_P(name, xbee.name, sizeof name);
-  snprintf_P(dst, size, PSTR("mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d"), macH, macL, hw, sw, name, lan_wait);
+  cr_snprintf(dst, size, "mac=%s%s hw=%s sw=%s network=\"%s\" wait=%d", macH, macL, hw, sw, name, lan_wait);
 
   return dst;
 }
@@ -187,7 +187,7 @@ const char* WaspUIO::pprintXBee(char* dst, size_t size)
 #if WITH_LORA
 const char* WaspUIO::pprintLora(char* dst, size_t size)
 {
-  snprintf_P(dst, size, PSTR("addr=%u dst=%u mode=%u wait=%d"), lora_addr, lora_dst, lora_mode, lan_wait);
+  cr_snprintf(dst, size, "addr=%u dst=%u mode=%u wait=%d", lora_addr, lora_dst, lora_mode, lan_wait);
   return dst;
 }
 #endif

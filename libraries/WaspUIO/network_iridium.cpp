@@ -70,14 +70,14 @@ void WaspUIO::iridiumInit()
   int status = iridium_start();
   if (status != ISBD_SUCCESS)
   {
-    snprintf_P(iridium_fw, size, PSTR("err %d"), status);
+    cr_snprintf(iridium_fw, size, "err %d", status);
   }
   else
   {
     status = iridium.getFirmwareVersion(iridium_fw, size);
     if (status != ISBD_SUCCESS)
     {
-      snprintf_P(iridium_fw, size, PSTR("err %d"), status);
+      cr_snprintf(iridium_fw, size, "err %d", status);
     }
   }
 

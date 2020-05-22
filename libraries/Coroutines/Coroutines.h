@@ -133,23 +133,25 @@ enum loglevel_t {
 
 #ifdef WFORMAT
 
+#define cr_printf(fmt, ...) cr.printf(fmt, ## __VA_ARGS__)
+#define cr_snprintf(s, n, format, ...) snprintf(s, n, format, ## __VA_ARGS__)
 #define log_fatal(fmt, ...) cr.log(LOG_FATAL, fmt, ## __VA_ARGS__)
 #define log_error(fmt, ...) cr.log(LOG_ERROR, fmt, ## __VA_ARGS__)
 #define log_warn(fmt, ...) cr.log(LOG_WARN, fmt, ## __VA_ARGS__)
 #define log_info(fmt, ...) cr.log(LOG_INFO, fmt, ## __VA_ARGS__)
 #define log_debug(fmt, ...) cr.log(LOG_DEBUG, fmt, ## __VA_ARGS__)
 #define log_trace(fmt, ...) cr.log(LOG_TRACE, fmt, ## __VA_ARGS__)
-#define cr_printf(fmt, ...) cr.printf(fmt, ## __VA_ARGS__)
 
 #else
 
+#define cr_printf(fmt, ...) cr.printf_P(PSTR(fmt), ## __VA_ARGS__)
+#define cr_snprintf(s, n, format, ...) snprintf_P(s, n, PSTR(format), ## __VA_ARGS__)
 #define log_fatal(fmt, ...) cr.log_P(LOG_FATAL, PSTR(fmt), ## __VA_ARGS__)
 #define log_error(fmt, ...) cr.log_P(LOG_ERROR, PSTR(fmt), ## __VA_ARGS__)
 #define log_warn(fmt, ...) cr.log_P(LOG_WARN, PSTR(fmt), ## __VA_ARGS__)
 #define log_info(fmt, ...) cr.log_P(LOG_INFO, PSTR(fmt), ## __VA_ARGS__)
 #define log_debug(fmt, ...) cr.log_P(LOG_DEBUG, PSTR(fmt), ## __VA_ARGS__)
 #define log_trace(fmt, ...) cr.log_P(LOG_TRACE, PSTR(fmt), ## __VA_ARGS__)
-#define cr_printf(fmt, ...) cr.printf_P(PSTR(fmt), ## __VA_ARGS__)
 
 #endif
 

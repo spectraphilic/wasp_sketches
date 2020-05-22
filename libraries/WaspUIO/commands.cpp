@@ -406,11 +406,9 @@ COMMAND(cmdRun)
 
       // avr-libc uses %S for string stored in memory, this is very useful. But
       // GCC uses %S for wide char strings, and so emits a warning for the line
-      // below; we choose to silence this warning.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat"
-      cr_printf("%S\n", xname);
-#pragma GCC diagnostic pop
+      // below. We silence this warning using cr.printf_P instead of the
+      // cr_printf macro.
+      cr.printf_P(PSTR("%S\n"), xname);
     }
     return cmd_quiet;
   }
@@ -525,10 +523,7 @@ COMMAND(cmdVar)
     {
       const char* xname = (const char*)pgm_read_word(&(var_names[i]));
       const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat"
-      cr_printf("%S %S\n", xname, xhelp);
-#pragma GCC diagnostic pop
+      cr.printf_P(PSTR("%S %S\n"), xname, xhelp);
     }
     return cmd_quiet;
   }

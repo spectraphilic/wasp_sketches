@@ -442,7 +442,7 @@ CR_TASK(taskNetworkLoraReceive)
           char cmd[size];
           float timeOnAir = sx1272.timeOnAir(21); // strlen(cmd)
           uint32_t time = UIO.getEpochTime() + (uint32_t)round(timeOnAir/1000);
-          snprintf_P(cmd, size, PSTR("time %lu;ack %u"), time, n);
+          cr_snprintf(cmd, size, "time %lu;ack %u", time, n);
           UIO.loraSend(sx1272.packet_received.src, cmd, false);
         }
       } else {
