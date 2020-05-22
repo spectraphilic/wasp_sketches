@@ -1,3 +1,7 @@
+// Uncomment for the compiler to detect more format related errors. The program
+// will not fit into memory, so this is only used for QA purposes.
+//#define WFORMAT
+
 // Features: because we don't have enough program memory to compile everything
 #define WITH_GPS TRUE
 #define WITH_CRYPTO FALSE

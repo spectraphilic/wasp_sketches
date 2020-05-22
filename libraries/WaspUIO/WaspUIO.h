@@ -8,11 +8,11 @@
  * Includes
  ******************************************************************************/
 
+#include "config.h"
+
 #include <inttypes.h>
 #include <Coroutines.h>
 #include <Queue.h>
-
-#include "config.h"
 
 #include <WaspFrame.h>
 #include <WaspGPS.h>

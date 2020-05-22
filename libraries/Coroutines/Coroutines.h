@@ -58,10 +58,6 @@
 #ifndef COROUTINES_H
 #define COROUTINES_H
 
-// Uncomment for the compiler to detect more format related errors. The program
-// will not fit into memory, so this is only used for QA purposes.
-//#define WFORMAT
-
 #include <inttypes.h>
 #include <limits.h> // ULONG_MAX
 #include <WaspClasses.h>
