@@ -87,7 +87,7 @@ void WaspUIO::iridiumInit()
 
 int WaspUIO::iridium_ping()
 {
-  int quality, size;
+  int quality;
 
   log_info("Iridium ping...");
   int status = UIO.iridium_start(); // This takes ~700ms

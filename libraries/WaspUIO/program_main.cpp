@@ -47,7 +47,7 @@ CR_TASK(taskMain)
 {
   static tid_t health_id, sensors_id;
 #if WITH_LORA || WITH_XBEE || WITH_4G || WITH_IRIDIUM
-  static network_id;
+  static tid_t network_id;
 #endif
 #if WITH_GPS
   static tid_t gps_id;

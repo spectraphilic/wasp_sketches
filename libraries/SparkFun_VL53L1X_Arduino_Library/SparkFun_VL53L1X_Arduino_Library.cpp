@@ -83,7 +83,7 @@ boolean VL53L1X::begin(uint8_t deviceAddress)
 
   //Polls the bit 0 of the FIRMWARE__SYSTEM_STATUS register to see if the firmware is ready
   int counter = 0;
-  while (readRegister16(VL53L1_FIRMWARE__SYSTEM_STATUS) & 0x01 == 0)
+  while ((readRegister16(VL53L1_FIRMWARE__SYSTEM_STATUS) & 0x01) == 0)
   {
     if (counter++ == 100) return (false); //Sensor timed out
     delay(10);

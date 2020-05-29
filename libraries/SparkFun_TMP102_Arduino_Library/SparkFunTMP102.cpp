@@ -263,7 +263,6 @@ float TMP102::readLowTempC(void)
   uint8_t registerByte[2];	// Store the data from the register here
   bool extendedMode;	// Store extended mode bit here 0:-55C to +128C, 1:-55C to +150C
   int16_t digitalTemp;		// Store the digital temperature value here
-  float temperature;	// Store the analog temperature value here
   
   // Check if temperature should be 12 or 13 bits
   I2C.read(_address, CONFIG_REGISTER, registerByte, 2);
@@ -303,7 +302,6 @@ float TMP102::readHighTempC(void)
   uint8_t registerByte[2];	// Store the data from the register here
   bool extendedMode;	// Store extended mode bit here 0:-55C to +128C, 1:-55C to +150C
   int16_t digitalTemp;		// Store the digital temperature value here
-  float temperature;	// Store the analog temperature value here
   
   // Check if temperature should be 12 or 13 bits
   I2C.read(_address, CONFIG_REGISTER, registerByte, 2);

@@ -395,7 +395,7 @@ byte AS726X::virtualReadRegister(byte virtualAddr)
 	if ((status & AS72XX_SLAVE_RX_VALID) != 0) //There is data to be read
 	{
 		//USB.println("Premptive read");
-		byte incoming = readRegister(AS72XX_SLAVE_READ_REG); //Read the byte but do nothing with it
+		readRegister(AS72XX_SLAVE_READ_REG); //Read the byte but do nothing with it
 	}
 
 	//Wait for WRITE flag to clear

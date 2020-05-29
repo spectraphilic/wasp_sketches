@@ -298,32 +298,29 @@ int16_t IRTherm::calcRawTemp(float calcTemp)
 {
 	int16_t rawTemp; // Value to eventually be returned
 	
-	if (_defaultUnit == TEMP_RAW)
+	float tempFloat;
+	// First convert each temperature to Kelvin:
+	if (_defaultUnit == TEMP_F)
+	{
+		// Convert from farenheit to Kelvin
+		tempFloat = (calcTemp - 32.0) * 5.0 / 9.0 + 273.15;
+	}
+	else if (_defaultUnit == TEMP_C)
+	{
+		tempFloat = calcTemp + 273.15;
+	}
+	else if (_defaultUnit == TEMP_K)
+	{
+		tempFloat = calcTemp;
+	}
+	else // TEMP_RAW
 	{
 		// If unit is set to raw, just return that:
-		rawTemp = (int16_t) calcTemp;
+		return (int16_t) calcTemp;
 	}
-	else
-	{
-		float tempFloat;
-		// First convert each temperature to Kelvin:
-		if (_defaultUnit == TEMP_F)
-		{
-			// Convert from farenheit to Kelvin
-			tempFloat = (calcTemp - 32.0) * 5.0 / 9.0 + 273.15;
-		}
-		else if (_defaultUnit == TEMP_C)
-		{
-			tempFloat = calcTemp + 273.15;
-		}
-		else if (_defaultUnit == TEMP_K)
-		{
-			tempFloat = calcTemp;
-		}
-		// Then multiply by 0.02 degK / bit
-		tempFloat *= 50;
-		rawTemp = (int16_t) tempFloat;
-	}
+	// Then multiply by 0.02 degK / bit
+	tempFloat *= 50;
+	rawTemp = (int16_t) tempFloat;
 	return rawTemp;
 }
 
