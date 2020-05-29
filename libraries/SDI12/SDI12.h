@@ -88,6 +88,7 @@ class WaspSDI12
 		
 		uint8_t readMeasures(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
 							char *sensorSerialNumber,
+							uint8_t sensorSerialNumberLength,
 							float &parameter1, 
 							float &parameter2, 
 							float &parameter3, 

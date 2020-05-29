@@ -156,7 +156,7 @@ void WaspSDI12::receiveChar()
 		}
 		
 		// skip parity adn stop bit
-		delayMicroseconds(SPACING); // XXX Should we check parity?
+		delayMicroseconds(SPACING);
 		delayMicroseconds(SPACING);
 		
 		// Overflow? If not, proceed.
@@ -425,7 +425,6 @@ uint8_t WaspSDI12::startSensor()
 {
 	char aux[3];
 	char command[6];
-	char numberOfMeasures = 0;
 	char timeToNextMeasure_string[4];
 	
 	memset(timeToNextMeasure_string, 0x00, sizeof(timeToNextMeasure_string));
@@ -453,7 +452,15 @@ uint8_t WaspSDI12::startSensor()
 		
 		timeToNextMeasure = atoi(timeToNextMeasure_string);
 		// Number of values returned
-		numberOfMeasures = read();
+		#if SDI12DEBUG > 1
+		        char numberOfMeasures = read();
+			PRINT_SDI12(F("timeToNextMeasure:"));
+			USB.println(timeToNextMeasure, DEC);
+			PRINT_SDI12(F("numberOfMeasures:"));
+			USB.println(numberOfMeasures);
+		#else
+		        read();
+		#endif
 	}
 	else
 	{
@@ -466,13 +473,6 @@ uint8_t WaspSDI12::startSensor()
 		#endif
 		return 0;
 	}
-
-	#if SDI12DEBUG > 1
-		PRINT_SDI12(F("timeToNextMeasure:"));
-		USB.println(timeToNextMeasure, DEC);
-		PRINT_SDI12(F("numberOfMeasures:"));
-		USB.println(numberOfMeasures);
-	#endif
 
 	return 1;
 }
@@ -491,6 +491,7 @@ uint8_t WaspSDI12::startSensor()
  */
 uint8_t WaspSDI12::readMeasures(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
 								char *sensorSerialNumber,
+								uint8_t sensorSerialNumberLength,
 								float &parameter1, 
 								float &parameter2, 
 								float &parameter3, 
@@ -525,7 +526,7 @@ uint8_t WaspSDI12::readMeasures(char *sensorSearchedName, uint8_t sensorSearched
 	//check if correct SDI12 sensor connected   
 	if (isSensor(sensorSearchedName, sensorSearchedNameLength, sensorSerialNumber) == 0)
 	{
-		memset(sensorSerialNumber, 0x00, sizeof(sensorSerialNumber));
+		memset(sensorSerialNumber, 0x00, sensorSerialNumberLength);
 		setState(DISABLED);
 		return 0;
 	}
@@ -724,7 +725,7 @@ const char* WaspSDI12::readline()
     while ((c = read()) != -1)
     {
         // Skip garbage at the beginning, expect address (0-9, A-Z, a-z)
-        if (state == 0 && ! ('0' <= c <= 'z'))
+        if (state == 0 && (c < '0' || c > 'z'))
         {
 	    log_warn("sdi1-12 readline garbage skipped: %d", c);
             continue;
@@ -780,7 +781,7 @@ const char* WaspSDI12::sendCommand(uint8_t address, const char* cmd)
     }
 
     n = snprintf(aux, max, "%d%s!", address, cmd);
-    if (n < 0 || n >= max)
+    if (n < 0 || (size_t)n >= max)
     {
         return NULL;
     }
@@ -837,13 +838,8 @@ uint8_t WaspSDI12::set_address(uint8_t current_address, uint8_t new_address)
 {
     char aux[5];
 
-    snprintf(aux, sizeof(aux), "%dA%d!", current_address, new_address);
+    snprintf(aux, sizeof(aux), "%hhuA%hhu!", current_address, new_address);
     sendCommand(aux);
-
-    if (buffer == NULL)
-    {
-        return 1;
-    }
 
     if (buffer[0] != new_address)
     {
