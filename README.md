@@ -64,14 +64,11 @@ Debian and Ubuntu (though the compiler won't be much newer, just 5.4):
 
     apt-get install avr-libc gcc-avr
 
-Now, to change the compiler used edit the hardware/waspmote/avr/platform.txt
-file and do the following changes:
+Now, to change the compiler used add the new file
+hardware/waspmote/avr/platform.local.txt and add the following line:
 
     $ vi hardware/waspmote/avr/platform.txt
-    [...]
-    #compiler.path={runtime.tools.avr-gcc.path}/bin/
     compiler.path=/usr/bin/
-    [...]
 
 
 # Contents
