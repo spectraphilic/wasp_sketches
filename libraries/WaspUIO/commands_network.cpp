@@ -30,7 +30,7 @@ COMMAND(cmd4G_APN)
 
 COMMAND(cmd4G_GPS)
 {
-  if (UIO.hasGPS & GPS_4G == 0) { return cmd_unavailable; }
+  if ((UIO.hasGPS & GPS_4G) == 0) { return cmd_unavailable; }
 
   if (UIO._4GGPS() != 0)
   {

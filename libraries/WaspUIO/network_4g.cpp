@@ -63,7 +63,7 @@ uint8_t WaspUIO::_4GStart()
   }
   else
   {
-    log_error("unexpected SIM status=%%hhu", status);
+    log_error("unexpected SIM status=%hhu", status);
     err = 1;
   }
 
