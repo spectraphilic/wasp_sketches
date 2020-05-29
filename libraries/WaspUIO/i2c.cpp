@@ -292,13 +292,14 @@ uint8_t WaspUIO::i2c_VL53L1X(int distances[], uint8_t nbsample)
 
   while(n < nbsample){
     // Poll for completion of measurement. Takes 40-50ms.
-    while (distanceSensor.newDataReady() == false)
+    while (distanceSensor.newDataReady() == false) {
       delay(5);
+    }
 
-      int16_t tmp = distanceSensor.getDistance();
-      log_debug("Distance %u (mm): %u", n, tmp);
-      distances[n++] = tmp;
-      delay(200);
+    int16_t tmp = distanceSensor.getDistance();
+    log_debug("Distance %u (mm): %u", n, tmp);
+    distances[n++] = tmp;
+    delay(200);
   }
   return n;
 }

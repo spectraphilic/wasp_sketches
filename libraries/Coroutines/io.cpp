@@ -15,7 +15,7 @@
 
 const char* Loop::input(char* buffer, size_t size, unsigned long timeout)
 {
-  int i = 0;
+  size_t i = 0;
 
   USB.flush();
 

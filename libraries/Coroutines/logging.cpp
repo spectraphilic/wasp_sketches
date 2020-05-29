@@ -13,6 +13,8 @@ const char* Loop::loglevel2str(loglevel_t level)
 {
   switch (level)
   {
+    case LOG_OFF:
+      return "OFF";
     case LOG_FATAL:
       return "FATAL";
     case LOG_ERROR:
@@ -25,9 +27,9 @@ const char* Loop::loglevel2str(loglevel_t level)
       return "DEBUG";
     case LOG_TRACE:
       return "TRACE";
+    default:
+      return "";
   }
-
-  return "";
 }
 
 void Loop::log(loglevel_t level, const char *format, ...)

@@ -70,6 +70,12 @@ hardware/waspmote/avr/platform.local.txt and add the following line:
     $ vi hardware/waspmote/avr/platform.txt
     compiler.path=/usr/bin/
 
+# Warnings
+
+It's recommented to enable all compiler warnings.
+
+To do so go to ``File -> Preferences -> Compiler warnings`` and choose ``All``.
+
 
 # Contents
 

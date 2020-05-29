@@ -152,7 +152,7 @@ void WaspUIO::clint()
 
 cmd_status_t exeCommands(const char *str, bool interactive)
 {
-  cmd_status_t status;
+  cmd_status_t status = cmd_bad_input;
   const char *p = str;
 
   while (p != NULL)
@@ -254,7 +254,7 @@ COMMAND(cmdExit)
 COMMAND(cmdGPS)
 {
   // Check feature availability
-  if (UIO.hasGPS & GPS_YES == 0) { return cmd_unavailable; }
+  if ((UIO.hasGPS & GPS_YES) == 0) { return cmd_unavailable; }
 
   if (UIO.gps(false, true) == -1)
   {
@@ -462,7 +462,6 @@ COMMAND(cmdTime)
 {
   unsigned short year, month, day, hour, minute, second;
   unsigned long epoch;
-  timestamp_t time;
   uint8_t err;
 
   if (strcmp(str, "network") == 0)

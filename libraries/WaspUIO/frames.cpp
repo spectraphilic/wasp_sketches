@@ -256,7 +256,6 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
 {
   va_list args;
   int8_t err = 0; // 0=ok -1=no-space -2=other-error
-  uint8_t len = 0;
   uint16_t start;
 
   if (frame.numFields >= max_fields)
@@ -546,7 +545,7 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
 
      // Values
      char value_str[50];
-     for (int i=0; i < strlen(format); i++)
+     for (size_t i=0; i < strlen(format); i++)
      {
        c = format[i];
        if (c == 'f')

@@ -35,7 +35,9 @@ CR_TASK(taskHealthFrame)
 
 CR_TASK(taskSensors)
 {
+#if WITH_I2C || WITH_SDI || WITH_1WIRE || WITH_MB
   static tid_t id;
+#endif
 
   CR_BEGIN;
 

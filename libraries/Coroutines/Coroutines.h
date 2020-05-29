@@ -71,7 +71,7 @@
  * Types and macros related to the multitasking system
  */
 
-typedef unsigned int tid_t;
+typedef uint16_t tid_t;
 typedef uint32_t tstate_t;
 
 #define CR_TASK(name) tstate_t name(void)
@@ -167,7 +167,7 @@ class Loop
 {
   private:
     Task queue[CR_QUEUE_SIZE]; // Task queue
-    int16_t first, next; // Id of the first and next task id in the queue.
+    uint16_t first, next; // Id of the first and next task id in the queue.
 
     // Private functions
     int8_t join(Task* task, tid_t tid, tid_t target_id);
