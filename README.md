@@ -67,7 +67,7 @@ Debian and Ubuntu (though the compiler won't be much newer, just 5.4):
 Now, to change the compiler used add the new file
 hardware/waspmote/avr/platform.local.txt and add the following line:
 
-    $ vi hardware/waspmote/avr/platform.txt
+    $ vi hardware/waspmote/avr/platform.local.txt
     compiler.path=/usr/bin/
 
 # Warnings
