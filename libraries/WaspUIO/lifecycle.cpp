@@ -364,15 +364,31 @@ uint32_t WaspUIO::nextAlarm()
   // It may be 1 to be different from Alarm-2, but both are clearly different already, by 2 minutes
   timestamp_t ts;
   uint8_t second = 0;
+  uint8_t error;
 
   RTC.ON();
+
+  // Alarm-1
   RTC.breakTimeAbsolute(next * 60, &ts);
-  RTC.setAlarm1(ts.date, ts.hour, ts.minute, second, RTC_ABSOLUTE, RTC_ALM1_MODE3);
-  log_info("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)", ts.date, ts.hour, ts.minute, second);
+  error = RTC.setAlarm1(ts.date, ts.hour, ts.minute, second, RTC_ABSOLUTE, RTC_ALM1_MODE3);
+  if (error) {
+    log_error("Failed to set Alarm 1");
+    reboot();
+  } else {
+    log_info("Alarm 1 at %02d:%02d:%02d:%02d mode=3 (only hour/min/sec match)",
+             ts.date, ts.hour, ts.minute, second);
+  }
+
   // Alarm-2
   RTC.breakTimeAbsolute((next + 2) * 60, &ts);
-  RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
-  log_info("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)", ts.date, ts.hour, ts.minute);
+  error = RTC.setAlarm2(ts.date, ts.hour, ts.minute, RTC_ABSOLUTE, RTC_ALM2_MODE3);
+  if (error) {
+    log_error("Failed to set Alarm 2");
+    reboot();
+  } else {
+    log_info("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)", ts.date, ts.hour, ts.minute);
+  }
+
   RTC.OFF();
 
   return 1;
