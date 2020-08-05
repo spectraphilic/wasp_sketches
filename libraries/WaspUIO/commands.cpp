@@ -280,7 +280,7 @@ COMMAND(cmdHelp)
     strncpy_P(help, cmd.help, sizeof help);
     if (strlen(help) > 0) // Do not print help for hidden commands
     {
-      USB.print(help);
+      USB.println(help);
     }
   }
 
