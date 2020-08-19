@@ -4,8 +4,11 @@
 #include <BME280.h>
 
 // Forks of SparkFun libraries
+#if WITH_AS7265
 #include "AS726X.h"
 #include "SparkFun_AS7265X.h"
+#endif
+
 #include "SparkFunMLX90614.h"
 #include "SparkFunTMP102.h"
 #include "SparkFun_TMP117.h"
@@ -21,7 +24,10 @@ void WaspUIO::i2c_scan()
   cr_printf("ACC      (%02x) %hhu\n", I2C_ADDRESS_WASP_ACC, I2C.scan(I2C_ADDRESS_WASP_ACC));
   cr_printf("BME280   (%02x) %hhu\n", I2C_ADDRESS_Lemming_BME280, I2C.scan(I2C_ADDRESS_Lemming_BME280));
 
+  #if WITH_AS7265
   cr_printf("AS726X   (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
+  #endif
+  
   cr_printf("BME280   (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
   cr_printf("MLX90614 (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
   cr_printf("TMP1XX   (%02x) %hhu\n", I2C_ADDRESS_TMP117, I2C.scan(I2C_ADDRESS_TMP117));
@@ -77,6 +83,7 @@ exit:
  * Returns: bool      - 0 if success, 1 if error
  */
 
+#if WITH_AS7265
 bool WaspUIO::i2c_AS7263(uint8_t &temp, float &r, float &s, float &t, float &u, float &v, float &w)
 {
   AS726X sensor;
@@ -163,7 +170,7 @@ bool WaspUIO::i2c_AS7265(
 
   return 0;
 }
-
+#endif
 
 /** i2c_BME280
  *

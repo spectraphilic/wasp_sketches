@@ -3,21 +3,23 @@
 //#define WFORMAT
 
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS TRUE
+#define WITH_GPS FALSE
 #define WITH_CRYPTO FALSE
-#define WITH_EXT_CHARGE TRUE
+#define WITH_EXT_CHARGE FALSE
 
 // Networking
-#define WITH_XBEE FALSE
-#define WITH_4G TRUE
+#define WITH_XBEE TRUE
+#define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
-#define WITH_LORA TRUE
+#define WITH_LORA FALSE
 
 // Sensors
-#define WITH_I2C FALSE
-#define WITH_SDI FALSE
+#define WITH_I2C TRUE
+#define WITH_SDI TRUE
 #define WITH_1WIRE FALSE
-#define WITH_MB FALSE
+#define WITH_MB TRUE
+
+#define  WITH_AS7265 FALSE
 
 // Timeouts
 #define LOOP_TIMEOUT 4 // minutes
@@ -54,7 +56,7 @@
 // For example if sensors=5m and gps=1h then with SAVE_TO_LIFO 6 / 0 the GPS
 // frame will always be sent, because the frames will be saved to LIFO every 6h
 // at :00
-#define SAVE_TO_LIFO_HOUR 6
+#define SAVE_TO_LIFO_HOUR 4
 #define SAVE_TO_LIFO_MINUTE 0
 
 // Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest

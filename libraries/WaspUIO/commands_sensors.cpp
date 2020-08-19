@@ -37,6 +37,7 @@ COMMAND(cmdI2C)
     float temperature, humidity, pressure;
     err = UIO.i2c_BME280(temperature, humidity, pressure);
   }
+  #if WITH_AS7265
   else if (value == RUN_LAGOPUS_AS7263)
   {
     uint8_t temp;
@@ -49,6 +50,7 @@ COMMAND(cmdI2C)
     float A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W;
     err = UIO.i2c_AS7265(temp, A, B, C, D, E, F, G, H, I, J, K, L, R, S, T, U, V, W);
   }
+  #endif
   else if (value == RUN_LAGOPUS_BME280)
   {
     float temperature, humidity, pressure;
