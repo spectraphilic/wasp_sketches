@@ -42,7 +42,7 @@ CR_TASK(taskSensors)
   CR_BEGIN;
 
   // I2C
-#if WITH_I2C & WITH_AS7265
+#if WITH_I2C
   if (UIO.action(10, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
                  RUN_LAGOPUS_AS7265, RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
                  RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X, RUN_TMP117,
@@ -54,23 +54,6 @@ CR_TASK(taskSensors)
     UIO.pwr_i2c(0);
   }
 #endif
-
-#if WITH_I2C & !WITH_AS7265
-  if (UIO.action(8, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7265, 
-                RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
-                 RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X, RUN_TMP117,
-                 RUN_SHT31))
-  {
-    UIO.pwr_i2c(1);
-    CR_SPAWN2(taskI2C, id);
-    CR_JOIN(id);
-    UIO.pwr_i2c(0);
-  }
-#endif
-
-
-
-
 
   // SDI-12
 #if WITH_SDI
