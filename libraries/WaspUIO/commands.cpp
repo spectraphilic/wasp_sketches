@@ -510,12 +510,12 @@ COMMAND(cmdVar)
   // Number of variables
   uint8_t nvars = sizeof var_names / sizeof var_names[0];
   // Input data
-  char name[11];
+  char name[16];
   int n;
   uint8_t value;
 
   // Read input
-  n = sscanf(str, "%10s %hhu", name, &value);
+  n = sscanf(str, "%15s %hhu", name, &value);
   if (n == -1)
   {
     for (uint8_t i=0; i < nvars; i++)
