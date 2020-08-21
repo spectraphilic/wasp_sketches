@@ -3,7 +3,7 @@
 //#define WFORMAT
 
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS FALSE
+#define WITH_GPS TRUE
 #define WITH_CRYPTO FALSE
 #define WITH_EXT_CHARGE FALSE
 
