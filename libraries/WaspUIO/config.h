@@ -8,16 +8,16 @@
 #define WITH_EXT_CHARGE FALSE
 
 // Networking
-#define WITH_XBEE TRUE
-#define WITH_4G FALSE
+#define WITH_XBEE FALSE
+#define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA FALSE
 
 // Sensors
 #define WITH_I2C TRUE
-#define WITH_SDI TRUE
-#define WITH_1WIRE FALSE
-#define WITH_MB TRUE
+#define WITH_SDI FALSE
+#define WITH_1WIRE TRUE
+#define WITH_MB FALSE
 
 #define  WITH_AS7265 FALSE
 
