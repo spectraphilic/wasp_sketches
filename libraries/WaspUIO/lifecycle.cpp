@@ -167,8 +167,6 @@ void WaspUIO::bootConfig()
   Utils.getID(name);
 
   // Variables
-  batteryType = (battery_type_t)Utils.readEEPROM(EEPROM_UIO_VARS + VAR_BAT_IDX);
-  boardType = (board_type_t)Utils.readEEPROM(EEPROM_UIO_VARS + VAR_BOARD_IDX);
   cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_LEVEL_IDX);
   log_sd = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_SD_IDX);
   log_usb = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_USB_IDX);
@@ -182,8 +180,6 @@ void WaspUIO::bootConfig()
 
   // Defaults for safety
   if (cr.loglevel >= LOG_LEN) { cr.loglevel = LOG_DEBUG; }
-  if (batteryType >= BATTERY_LEN) { batteryType = BATTERY_LITHIUM; }
-  if (boardType >= BOARD_LEN) { boardType = BOARD_NONE; }
 
 #if WITH_CRYPTO
   // Frame encryption

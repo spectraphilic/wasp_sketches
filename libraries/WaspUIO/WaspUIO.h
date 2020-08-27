@@ -54,19 +54,6 @@
 #define GPS_YES 1
 #define GPS_4G 2
 
-enum battery_type_t {
-  BATTERY_LITHIUM,
-  BATTERY_LEAD, // Unused
-  BATTERY_REG3V3,
-  BATTERY_LEN
-};
-
-enum board_type_t {
-  BOARD_NONE,
-  BOARD_LEMMING,
-  BOARD_LEN
-};
-
 enum battery_t {
   BATTERY_LOW,
   BATTERY_MIDDLE,
@@ -162,8 +149,8 @@ const char* const run_names[] PROGMEM = {
 };
 
 enum var_indexes {
-  VAR_BAT_IDX,
-  VAR_BOARD_IDX,
+  VAR_BAT_IDX, // Unused
+  VAR_BOARD_IDX, // Unused
   VAR_LOG_LEVEL_IDX,
   VAR_LOG_SD_IDX,
   VAR_LOG_USB_IDX,
@@ -339,7 +326,7 @@ public:
 
   // General configuration
   char name[17];
-  board_type_t boardType = BOARD_LEN; // Defaults to undefined
+  uint8_t boardType = BOARD_TYPE;
 
   // Variables configured with the 'var' command
   uint8_t log_sd;
@@ -353,7 +340,7 @@ public:
   uint8_t xbee_network;
 
   // Power related
-  battery_type_t batteryType = BATTERY_LEN; // Defaults to undefined
+  uint8_t batteryType = BATTERY_TYPE; // Defaults to undefined
   float batteryVolts;
   uint8_t batteryLevel;
   battery_t battery;

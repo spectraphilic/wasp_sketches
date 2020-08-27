@@ -2,6 +2,14 @@
 // will not fit into memory, so this is only used for QA purposes.
 //#define WFORMAT
 
+#define BOARD_NONE 0
+#define BOARD_LEMMING 1
+#define BOARD_TYPE BOARD_LEMMING
+
+#define BATTERY_LITHIUM 0
+#define BATTERY_REG3V3 2
+#define BATTERY_TYPE BATTERY_LITHIUM
+
 // Features: because we don't have enough program memory to compile everything
 #define WITH_GPS TRUE
 #define WITH_CRYPTO FALSE

@@ -538,23 +538,9 @@ COMMAND(cmdVar)
   {
     case -1:
       return cmd_bad_input;
-    case VAR_BAT_IDX:
-      if (n == 1) {
-        value = (uint8_t)UIO.batteryType;
-      } else {
-        if (value >= BATTERY_LEN) { return cmd_bad_input; }
-        UIO.batteryType = (battery_type_t)value;
-        UIO.readBattery();
-      }
+    case VAR_BAT_IDX: // Unused
       break;
-    case VAR_BOARD_IDX:
-      if (n == 1) {
-        value = (uint8_t)UIO.boardType;
-      } else {
-        if (value >= BOARD_LEN) { return cmd_bad_input; }
-        UIO.boardType = (board_type_t)value;
-        UIO.readBattery();
-      }
+    case VAR_BOARD_IDX: // Unused
       break;
     case VAR_LOG_LEVEL_IDX:
       if (n == 1) {
