@@ -385,6 +385,7 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
+<<<<<<< HEAD
   // The payload & frame sizes are set for outgoing messages, so WAN takes
   // priority over LAN
 
@@ -395,6 +396,22 @@ void WaspUIO::setFrameSize()
   } else if (wan_type == WAN_IRIDIUM) {
     payloadSize = 340;
   } else if (lan_type == LAN_XBEE) {
+=======
+  // Default to 255, will be used when there's not any network module
+  payloadSize = 255;
+
+#if WITH_4G
+  // XXX Documentation says "Depends on the protocol used"
+  if (networkType == NETWORK_4G) { payloadSize = 255; }
+#endif
+
+#if WITH_XBEE
+  if (networkType == NETWORK_XBEE)
+  {
+    // We don't call frame.getMaxSizeForXBee to save memory, and because we
+    // know already the value.
+    // frame.getMaxSizeForXBee(DIGIMESH, addressing, DISABLED, encryption);
+>>>>>>> parent of 023ef1a... Upgrade to API v043 (from v039)
     payloadSize = 73;
     #if WITH_CRYPTO
     if (strlen(password) > 0) { payloadSize = 48; }
