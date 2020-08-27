@@ -49,7 +49,7 @@ CR_TASK(taskMain)
 #if WITH_LORA || WITH_XBEE || WITH_4G || WITH_IRIDIUM
   static tid_t network_id;
 #endif
-#if WITH_GPS
+#if WITH_GPS || WITH_4G
   static tid_t gps_id;
 #endif
 
