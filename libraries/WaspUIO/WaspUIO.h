@@ -149,9 +149,7 @@ const char* const run_names[] PROGMEM = {
 };
 
 enum var_indexes {
-  VAR_BAT_IDX, // Unused
-  VAR_BOARD_IDX, // Unused
-  VAR_LOG_LEVEL_IDX,
+  VAR_LOG_LEVEL_IDX = 2,
   VAR_LOG_SD_IDX,
   VAR_LOG_USB_IDX,
   VAR_LAN_TYPE_IDX,
@@ -163,8 +161,7 @@ enum var_indexes {
   VAR_LORA_DST_IDX,
 };
 
-const char VAR_BAT       [] PROGMEM = "bat";
-const char VAR_BOARD     [] PROGMEM = "board";
+const char VAR_UNUSED    [] PROGMEM = "";
 const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
 const char VAR_LOG_SD    [] PROGMEM = "log.sd";
 const char VAR_LOG_USB   [] PROGMEM = "log.usb";
@@ -176,8 +173,8 @@ const char VAR_XBEE_NETWORK [] PROGMEM = "xbee.network";
 const char VAR_LAN_WAIT  [] PROGMEM = "lan.wait";
 const char VAR_LORA_DST  [] PROGMEM = "lora.dst";
 
-const char VAR_BAT_HELP          [] PROGMEM = ": 0=lithium 1=lead 2=3V3 regulator";
-const char VAR_BOARD_HELP        [] PROGMEM = ": 0=none 1=lemming";
+const char VAR_UNUSED_HELP       [] PROGMEM = "";
+const char VAR_BOARD_HELP        [] PROGMEM = "";
 const char VAR_LOG_LEVEL_HELP    [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char VAR_LOG_FLAG_HELP     [] PROGMEM = ": 0/1";
 const char VAR_LAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
@@ -189,8 +186,8 @@ const char VAR_LAN_WAIT_HELP     [] PROGMEM = ": 0-255 seconds to keep LAN open 
 const char VAR_LORA_DST_HELP     [] PROGMEM = ": destination address";
 
 const char* const var_names[] PROGMEM = {
-  VAR_BAT,
-  VAR_BOARD,
+  VAR_UNUSED,
+  VAR_UNUSED,
   VAR_LOG_LEVEL,
   VAR_LOG_SD,
   VAR_LOG_USB,
@@ -204,8 +201,8 @@ const char* const var_names[] PROGMEM = {
 };
 
 const char* const var_help[] PROGMEM = {
-  VAR_BAT_HELP,
-  VAR_BOARD_HELP,
+  VAR_UNUSED_HELP,
+  VAR_UNUSED_HELP,
   VAR_LOG_LEVEL_HELP,
   VAR_LOG_FLAG_HELP,
   VAR_LOG_FLAG_HELP,

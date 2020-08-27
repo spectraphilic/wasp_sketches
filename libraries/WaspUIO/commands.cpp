@@ -521,6 +521,9 @@ COMMAND(cmdVar)
     for (uint8_t i=0; i < nvars; i++)
     {
       const char* xname = (const char*)pgm_read_word(&(var_names[i]));
+      if (strcmp_P("", xname) == 0)
+        continue;
+
       const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
       cr.printf_P(PSTR("%S %S\n"), xname, xhelp);
     }
@@ -538,10 +541,6 @@ COMMAND(cmdVar)
   {
     case -1:
       return cmd_bad_input;
-    case VAR_BAT_IDX: // Unused
-      break;
-    case VAR_BOARD_IDX: // Unused
-      break;
     case VAR_LOG_LEVEL_IDX:
       if (n == 1) {
         value = (uint8_t)cr.loglevel;
