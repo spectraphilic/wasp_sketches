@@ -51,9 +51,7 @@ const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read
   const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]       - Set 4G Access Point Name";
   const char CMD_4G_GPS    [] PROGMEM = "4g gps             - Get position from 4G's GPS";
   const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE       - Set pin for the 4G module (0=disabled)";
-#endif
-
-                                    
+#endif                                 
 #if WITH_LORA
   const char CMD_LORA      [] PROGMEM = "lora               - Print Lora info";
   const char CMD_LS        [] PROGMEM = "ls                 - List files in SD";

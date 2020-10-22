@@ -110,11 +110,11 @@ const char RUN_BATTERY_NAME [] PROGMEM = "bat";             // 1 battery
 const char RUN_GPS_NAME     [] PROGMEM = "gps";             // 2 gps
 const char RUN_ACC_NAME     [] PROGMEM = "acc";             // 3 accelerometer
 // Sensors
-const char RUN_CTD10_NAME   [] PROGMEM = "ctd";             // 4 water
-const char RUN_DS2_NAME     [] PROGMEM = "ds2";             // 5 wind
-const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";          // 6 temperature string
+const char RUN_CTD10_NAME   [] PROGMEM = "ctd     [SDI-12]";             // 4 water
+const char RUN_DS2_NAME     [] PROGMEM = "ds2     [SDI-12]";             // 5 wind
+const char RUN_DS1820_NAME  [] PROGMEM = "ds18b20     [1wire]";          // 6 temperature string
 const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
-const char RUN_WS100_NAME   [] PROGMEM = "ws100";           // 9 rain
+//const char RUN_WS100_NAME   [] PROGMEM = "ws100";           // 9 rain
 // I2C
 const char RUN_BME280_NAME  [] PROGMEM = "bme_int     [Lemming]";           // 7 atmospheric (internal)
 const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
@@ -140,7 +140,7 @@ const char* const run_names[] PROGMEM = {
   RUN_DS1820_NAME,
   RUN_BME280_NAME,
   RUN_MB_NAME,
-  RUN_WS100_NAME,
+//  RUN_WS100_NAME,
   RUN_LAGOPUS_AS7263_NAME,
   RUN_LAGOPUS_AS7265_NAME,
   RUN_LAGOPUS_BME280_NAME,
