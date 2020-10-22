@@ -50,6 +50,12 @@
 // 17 bytes available
 #define EEPROM_UIO_VARS (EEPROM_START + 100) // 100 bytes reserved
 
+#define BOARD_NONE 0
+#define BOARD_LEMMING 1
+
+#define BATTERY_LITHIUM 0
+#define BATTERY_REG3V3 2
+
 #define GPS_NO 0
 #define GPS_YES 1
 #define GPS_4G 2
@@ -110,7 +116,7 @@ const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";          // 6 temperature str
 const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
 const char RUN_WS100_NAME   [] PROGMEM = "ws100";           // 9 rain
 // I2C
-const char RUN_BME280_NAME  [] PROGMEM = "bme76";           // 7 atmospheric (internal)
+const char RUN_BME280_NAME  [] PROGMEM = "bme_int     [Lemming]";           // 7 atmospheric (internal)
 const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
 const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265"; // 11 spectrum
 const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme";    // 12 atmospheric
@@ -121,7 +127,7 @@ const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";     // 15 distance
 const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
 const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
 const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
-const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
+const char RUN_TMP117_NAME  [] PROGMEM = "tmp117     [Lagopus B v2]";          // 19 digital temperature
 const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
 
 const char* const run_names[] PROGMEM = {

@@ -24,35 +24,50 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_1WIRE_READ[] PROGMEM = "1wire read         - Read DS18B20 string";
-const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+    - Scan DS18B20 in the given pins, save to onewire.txt";
-const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]       - Set 4G Access Point Name";
-const char CMD_4G_GPS    [] PROGMEM = "4g gps             - Get position from 4G's GPS";
-const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE       - Set pin for the 4G module (0=disabled)";
+const char CMD_HELP      [] PROGMEM = "help               - Print the commands list";
+const char CMD_PRINT     [] PROGMEM = "print              - Print configuration and other information";
+const char CMD_NAME      [] PROGMEM = "name               - Give a name to the mote (max 16 chars)";
 const char CMD_CAT       [] PROGMEM = "cat FILENAME       - Print FILENAME contents to USB";
 const char CMD_CATX      [] PROGMEM = "catx FILENAME      - Print FILENAME contents in hexadecimal to USB";
 const char CMD_EXIT      [] PROGMEM = "exit               - Exit the command line interface";
 const char CMD_FORMAT    [] PROGMEM = "format             - Format SD";
-const char CMD_GPS       [] PROGMEM = "gps                - Get position from GPS";
-const char CMD_HELP      [] PROGMEM = "help               - Print the commands list";
-const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read values from NAME: "
-                                      "as7263 as7265 bme bm76 mlx tmp vl";
-const char CMD_LORA      [] PROGMEM = "lora               - Print Lora info";
-const char CMD_LS        [] PROGMEM = "ls                 - List files in SD";
-const char CMD_MB        [] PROGMEM = "mb                 - Read the MB7389";
-const char CMD_NAME      [] PROGMEM = "name               - Give a name to the mote (max 16 chars)";
-const char CMD_PASSWORD  [] PROGMEM = "password VALUE     - Password for frame encryption";
-const char CMD_PING      [] PROGMEM = "ping               - Network test";
-const char CMD_PRINT     [] PROGMEM = "print              - Print configuration and other information";
-const char CMD_REBOOT    [] PROGMEM = "reboot             - Reboot waspmote";
 const char CMD_RM        [] PROGMEM = "rm FILENAME        - Remove file";
+const char CMD_PING      [] PROGMEM = "ping               - Network test";
+const char CMD_REBOOT    [] PROGMEM = "reboot             - Reboot waspmote";
 const char CMD_RUN       [] PROGMEM = "run [NAME H[:MM]]  - run (list names), run name 0 (disable), "
                                       "run name 5 (every 5m), run name 1:07 (every 1h at :07)";
-const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]   - Identify SDI-12 sensors";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME    - Print last N lines of FILENAME to USB";
 const char CMD_TIME      [] PROGMEM = "time VALUE         - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";
 const char CMD_VAR       [] PROGMEM = "var [NAME [VALUE]] - type 'var' to list the variable names";
+const char CMD_GPS       [] PROGMEM = "gps                - Get position from GPS";
+const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read values from NAME: "
+                                      "as7263 as7265 bme bm76 mlx tmp vl";
+#if WITH_1WIRE
+  const char CMD_1WIRE_READ[] PROGMEM = "1wire read         - Read DS18B20 string";
+  const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+    - Scan DS18B20 in the given pins, save to onewire.txt";
+#endif
+#if WITH_4G
+  const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]       - Set 4G Access Point Name";
+  const char CMD_4G_GPS    [] PROGMEM = "4g gps             - Get position from 4G's GPS";
+  const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE       - Set pin for the 4G module (0=disabled)";
+#endif
+
+                                    
+#if WITH_LORA
+  const char CMD_LORA      [] PROGMEM = "lora               - Print Lora info";
+  const char CMD_LS        [] PROGMEM = "ls                 - List files in SD";
+#endif
+#if WITH_MB
+  const char CMD_MB        [] PROGMEM = "mb                 - Read the MB7389";
+#endif
+#if WITH_CRYPTO
+  const char CMD_PASSWORD  [] PROGMEM = "password VALUE     - Password for frame encryption";
+#endif                               
+#if WITH_SDI
+  const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]   - Identify SDI-12 sensors";
+#endif
+
 
 const Command commands[] PROGMEM = {
 #if WITH_1WIRE

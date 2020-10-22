@@ -2,36 +2,60 @@
 // will not fit into memory, so this is only used for QA purposes.
 //#define WFORMAT
 
-#define BOARD_NONE 0
-#define BOARD_LEMMING 1
-#define BOARD_TYPE BOARD_LEMMING
+//=========== BOARD AND BATTERY =========
+// Presence-absence Lemming board: 
+#define BOARD_TYPE BOARD_LEMMING		// BOARD_LEMMING, BOARD_NONE
 
-#define BATTERY_LITHIUM 0
-#define BATTERY_REG3V3 2
-#define BATTERY_TYPE BATTERY_LITHIUM
+// Battery type: 
+#define BATTERY_TYPE BATTERY_LITHIUM	// BATTERY_LITHIUM, BATTERY_REG3V3
 
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS TRUE
-#define WITH_CRYPTO FALSE
-#define WITH_EXT_CHARGE FALSE
+#define WITH_GPS TRUE 			// External Libelium GPS
+#define WITH_EXT_CHARGE FALSE	// Power management for Lora/4G gateway 12V external power supply
 
-// Networking
-#define WITH_XBEE FALSE
+//=========== NETWORK CONFIG ==============================
+// WLAN Networking - wireless
 #define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
-#define WITH_LORA FALSE
+// Iridium specific.
+// Save frames to lifo instead of fifo every n hours since epoch at the :mm
+// minutes (like actions).
+// For example if sensors=5m and gps=1h then with SAVE_TO_LIFO 6 / 0 the GPS
+// frame will always be sent, because the frames will be saved to LIFO every 6h
+// at :00
+#define SAVE_TO_LIFO_HOUR 4
+#define SAVE_TO_LIFO_MINUTE 0
 
+// LAN Networking - local radio network, xbee or lora
+#define WITH_XBEE FALSE
+#define WITH_LORA TRUE
+// Lora network configuration
+#define LORA_CHANNEL CH_10_868 	// From 10 (865.20 MHz) to 17 (868 MHz)
+#define LORA_POWER 'H' 			// Low = 0 dBm / High = 7 dBm / Max = 14 dBm
+#define LORA_MAX_FAILS 3 		// In auto mode (lora.dst=0), after 3 fails forget dst and ping again
+
+
+//=========== SENSOR CONFIG ==============================
 // Sensors
-#define WITH_I2C TRUE
-#define WITH_SDI FALSE
-#define WITH_1WIRE TRUE
-#define WITH_MB FALSE
+#define WITH_I2C FALSE			// I2C protocol for all external I2C sensors (lagopus and lemming boards)
+#define WITH_SDI FALSE			// SDI12 protocol for DS2, CTD, ATMOS22
+#define WITH_1WIRE FALSE		// 1wire protocol for DS18b20
+#define WITH_MB FALSE			// Maxbotix sensor
+#define WITH_AS7265 FALSE		// Radiation sensor, I2C 
 
-#define  WITH_AS7265 FALSE
+// Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
+#define MB_SAMPLES 5     		// maximum number of samples for Maxbotix is 25
+#define VL_SAMPLES 30    		// maximum number of samples for VL53L1X  is 99
+
+
+//=======================================================
+//================== WARNING: DEV. ONLY ZONE =================
+// Cryptogrphy of frames
+#define WITH_CRYPTO FALSE		// Enable cryptography (not implemented)
 
 // Timeouts
-#define LOOP_TIMEOUT 4 // minutes
-#define SEND_TIMEOUT 300000L // ms
+#define LOOP_TIMEOUT 4 			// [minutes]  Loop max timeout
+#define SEND_TIMEOUT 300000L 	// [ms]	LAN max waiting time
 
 // Reboot every N loops
 #define MAX_LOOPS 1000
@@ -58,20 +82,3 @@
 #define I2C_ADDRESS_Lemming_BME280     0x76 // Internal temperature, Relative humidity and atmospheric pressure
 #define I2C_ADDRESS_LAGOPUS_BME280     0x77 // Air temperature, Relative humidity and atmospheric pressure
 
-// Iridium specific.
-// Save frames to lifo instead of fifo every n hours since epoch at the :mm
-// minutes (like actions).
-// For example if sensors=5m and gps=1h then with SAVE_TO_LIFO 6 / 0 the GPS
-// frame will always be sent, because the frames will be saved to LIFO every 6h
-// at :00
-#define SAVE_TO_LIFO_HOUR 4
-#define SAVE_TO_LIFO_MINUTE 0
-
-// Maxbotix and VL53L1X number of samples. These valuse set the length of the array retruned by the sensor of interest
-#define MB_SAMPLES 5     // maximum number of samples for Maxbotix is 25
-#define VL_SAMPLES 30    // maximum number of samples for VL53L1X  is 99
-
-// Lora configuration
-#define LORA_CHANNEL CH_10_868 // From 10 (865.20 MHz) to 17 (868 MHz)
-#define LORA_POWER 'H' // Low = 0 dBm / High = 7 dBm / Max = 14 dBm
-#define LORA_MAX_FAILS 3 // In auto mode (lora.dst=0), after 3 fails forget dst and ping again
