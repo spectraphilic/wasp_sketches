@@ -25,19 +25,20 @@ typedef struct {
 } Command;
 
 const char CMD_HELP      [] PROGMEM = "help               - Print the commands list";
-const char CMD_PRINT     [] PROGMEM = "print              - Print configuration and other information";
+const char CMD_PRINT     [] PROGMEM = "print              - Print configuration and other information\n";
 const char CMD_NAME      [] PROGMEM = "name               - Give a name to the mote (max 16 chars)";
 const char CMD_CAT       [] PROGMEM = "cat FILENAME       - Print FILENAME contents to USB";
 const char CMD_CATX      [] PROGMEM = "catx FILENAME      - Print FILENAME contents in hexadecimal to USB";
-const char CMD_EXIT      [] PROGMEM = "exit               - Exit the command line interface";
+const char CMD_LS        [] PROGMEM = "ls                 - List files in SD\n";
+const char CMD_EXIT      [] PROGMEM = "exit               - Exit the command line interface\n";
 const char CMD_FORMAT    [] PROGMEM = "format             - Format SD";
 const char CMD_RM        [] PROGMEM = "rm FILENAME        - Remove file";
 const char CMD_PING      [] PROGMEM = "ping               - Network test";
 const char CMD_REBOOT    [] PROGMEM = "reboot             - Reboot waspmote";
 const char CMD_RUN       [] PROGMEM = "run [NAME H[:MM]]  - run (list names), run name 0 (disable), "
-                                      "run name 5 (every 5m), run name 1:07 (every 1h at :07)";
+                                      "run name 5 (every 5m), run name 1:07 (every 1h at :07)\n";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME    - Print last N lines of FILENAME to USB";
-const char CMD_TIME      [] PROGMEM = "time VALUE         - Set time, value can be 'network', 'gps', "
+const char CMD_TIME      [] PROGMEM = "\ntime VALUE         - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";
 const char CMD_VAR       [] PROGMEM = "var [NAME [VALUE]] - type 'var' to list the variable names";
 const char CMD_GPS       [] PROGMEM = "gps                - Get position from GPS";
@@ -54,7 +55,6 @@ const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read
 #endif                                 
 #if WITH_LORA
   const char CMD_LORA      [] PROGMEM = "lora               - Print Lora info";
-  const char CMD_LS        [] PROGMEM = "ls                 - List files in SD";
 #endif
 #if WITH_MB
   const char CMD_MB        [] PROGMEM = "mb                 - Read the MB7389";
@@ -68,6 +68,25 @@ const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read
 
 
 const Command commands[] PROGMEM = {
+// Main command
+  {"time ",         &cmdTime,        CMD_TIME},
+  {"name",          &cmdName,        CMD_NAME},
+  {"var",           &cmdVar,         CMD_VAR},
+  {"run",           &cmdRun,         CMD_RUN},
+
+  {"cat ",          &cmdCat,         CMD_CAT},
+  {"catx ",         &cmdCatx,        CMD_CATX},
+  {"rm ",           &cmdRm,          CMD_RM},
+  {"format",        &cmdFormat,      CMD_FORMAT},
+  {"tail",          &cmdTail,        CMD_TAIL},
+  {"ls",            &cmdLs,          CMD_LS},
+    
+  {"ping",          &cmdPing,        CMD_PING},
+  {"help",          &cmdHelp,        CMD_HELP},
+  {"print",         &cmdPrint,       CMD_PRINT},
+
+  {"reboot",        &cmdReboot,      CMD_REBOOT},
+  {"exit",          &cmdExit,        CMD_EXIT},
 #if WITH_1WIRE
   {"1wire read",    &cmd1WireRead,   CMD_1WIRE_READ},
   {"1wire scan ",   &cmd1WireScan,   CMD_1WIRE_SCAN},
@@ -77,40 +96,31 @@ const Command commands[] PROGMEM = {
   {"4g gps",        &cmd4G_GPS,      CMD_4G_GPS},
   {"4g pin ",       &cmd4G_Pin,      CMD_4G_PIN},
 #endif
-  {"ack",           &cmdAck,         EMPTY_STRING}, // Internal use only
-  {"cat ",          &cmdCat,         CMD_CAT},
-  {"catx ",         &cmdCatx,        CMD_CATX},
-  {"exit",          &cmdExit,        CMD_EXIT},
-  {"format",        &cmdFormat,      CMD_FORMAT},
-#if WITH_GPS
-  {"gps",           &cmdGPS,         CMD_GPS},
-#endif
-  {"help",          &cmdHelp,        CMD_HELP},
-#if WITH_I2C
-  {"i2c",           &cmdI2C,         CMD_I2C},
-#endif
 #if WITH_LORA
   {"lora",          &cmdLora,        CMD_LORA},
 #endif
-  {"ls",            &cmdLs,          CMD_LS},
+  {"ack",           &cmdAck,         EMPTY_STRING}, // Internal use only
+
+#if WITH_GPS
+  {"gps",           &cmdGPS,         CMD_GPS},
+#endif
+  
+#if WITH_I2C
+  {"i2c",           &cmdI2C,         CMD_I2C},
+#endif
+
+  
 #if WITH_MB
   {"mb",            &cmdMB,          CMD_MB},
 #endif
-  {"name",          &cmdName,        CMD_NAME},
+  
 #if WITH_CRYPTO
   {"password ",     &cmdPassword,    CMD_PASSWORD},
 #endif
-  {"ping",          &cmdPing,        CMD_PING},
-  {"print",         &cmdPrint,       CMD_PRINT},
-  {"reboot",        &cmdReboot,      CMD_REBOOT},
-  {"rm ",           &cmdRm,          CMD_RM},
-  {"run",           &cmdRun,         CMD_RUN},
 #if WITH_SDI
   {"sdi",           &cmdSDI12,       CMD_SDI12},
 #endif
-  {"tail",          &cmdTail,        CMD_TAIL},
-  {"time ",         &cmdTime,        CMD_TIME},
-  {"var",           &cmdVar,         CMD_VAR},
+
 };
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
@@ -381,7 +391,7 @@ COMMAND(cmdPrint)
 #endif
   cr_printf("Frames    : %s\n", UIO.pprintFrames(buffer, size));
   cr_printf("Log       : level=%s output=%s\n", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  cr_printf("Actions   : %s\n", UIO.pprintActions(buffer, size));
+  cr_printf("Run       : %s\n", UIO.pprintActions(buffer, size));
 
   return cmd_quiet;
 }
@@ -399,7 +409,6 @@ COMMAND(cmdReboot)
 /**
  * Running things at time intervals.
  */
-
 COMMAND(cmdRun)
 {
   char name[11];
@@ -421,7 +430,9 @@ COMMAND(cmdRun)
       // GCC uses %S for wide char strings, and so emits a warning for the line
       // below. We silence this warning using cr.printf_P instead of the
       // cr_printf macro.
-      cr.printf_P(PSTR("%S\n"), xname);
+      //cr.printf_P(PSTR("%S\n"), xname);
+      const char* xhelp = (const char*)pgm_read_word(&(run_help[i]));
+      cr.printf_P(PSTR("%S %S\n"), xname, xhelp);
     }
     return cmd_quiet;
   }
@@ -578,6 +589,7 @@ COMMAND(cmdVar)
         UIO.log_usb = value;
       }
       break;
+    #if WITH_LORA || WITH_XBEE
     case VAR_LAN_TYPE_IDX:
       if (n == 1) {
         value = (uint8_t)UIO.lan_type;
@@ -587,42 +599,6 @@ COMMAND(cmdVar)
         UIO.setFrameSize();
       }
       break;
-    case VAR_WAN_TYPE_IDX:
-      if (n == 1) {
-        value = (uint8_t)UIO.wan_type;
-      } else {
-        if (value >= WAN_LEN) { return cmd_bad_input; }
-        UIO.wan_type = (wan_type_t)value;
-        UIO.setFrameSize();
-      }
-      break;
-    case VAR_LORA_ADDR_IDX:
-      if (n == 1) {
-        value = UIO.lora_addr;
-      } else {
-        if (value == 0) { return cmd_bad_input; }
-        UIO.lora_addr = value;
-      }
-      break;
-    case VAR_LORA_MODE_IDX:
-      if (n == 1) {
-        value = UIO.lora_mode;
-      } else {
-        if (value == 0 || value > 10) { return cmd_bad_input; }
-        UIO.lora_mode = value;
-      }
-      break;
-    case VAR_XBEE_NETWORK_IDX:
-      if (n == 1) {
-        value = UIO.xbee_network;
-      } else {
-        if (value >= xbee_len) { return cmd_bad_input; }
-        UIO.xbee_network = value;
-#if WITH_XBEE
-        UIO.xbeeInit();
-#endif
-      }
-      break;
     case VAR_LAN_WAIT_IDX:
       if (n == 1) {
         value = UIO.lan_wait;
@@ -630,13 +606,57 @@ COMMAND(cmdVar)
         UIO.lan_wait = value;
       }
       break;
-    case VAR_LORA_DST_IDX:
+    #endif
+    #if WITH_IRIDIUM || WITH_4G
+      case VAR_WAN_TYPE_IDX:
+        if (n == 1) {
+          value = (uint8_t)UIO.wan_type;
+        } else {
+          if (value >= WAN_LEN) { return cmd_bad_input; }
+          UIO.wan_type = (wan_type_t)value;
+          UIO.setFrameSize();
+        }
+        break;
+    #endif
+    #if WITH_LORA
+      case VAR_LORA_ADDR_IDX:
+        if (n == 1) {
+          value = UIO.lora_addr;
+        } else {
+          if (value == 0) { return cmd_bad_input; }
+          UIO.lora_addr = value;
+        }
+        break;
+      case VAR_LORA_MODE_IDX:
+        if (n == 1) {
+          value = UIO.lora_mode;
+        } else {
+          if (value == 0 || value > 10) { return cmd_bad_input; }
+          UIO.lora_mode = value;
+        }
+        break;
+      case VAR_LORA_DST_IDX:
+        if (n == 1) {
+          value = UIO.lora_dst;
+        } else {
+          UIO.lora_dst = value;
+        }
+        break;
+    #endif
+    #if WITH_XBEE
+    case VAR_XBEE_NETWORK_IDX:
       if (n == 1) {
-        value = UIO.lora_dst;
+        value = UIO.xbee_network;
       } else {
-        UIO.lora_dst = value;
+        if (value >= xbee_len) { return cmd_bad_input; }
+        UIO.xbee_network = value;
+
+        UIO.xbeeInit();
+
       }
       break;
+  #endif  
+    
     default:
       return cmd_bad_input;
   }

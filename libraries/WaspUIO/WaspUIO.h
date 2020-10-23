@@ -8,6 +8,12 @@
  * Includes
  ******************************************************************************/
 
+#define BOARD_NONE 0
+#define BOARD_LEMMING 1
+
+#define BATTERY_LITHIUM 0
+#define BATTERY_REG3V3 2
+
 #include "config.h"
 
 #include <inttypes.h>
@@ -50,11 +56,7 @@
 // 17 bytes available
 #define EEPROM_UIO_VARS (EEPROM_START + 100) // 100 bytes reserved
 
-#define BOARD_NONE 0
-#define BOARD_LEMMING 1
 
-#define BATTERY_LITHIUM 0
-#define BATTERY_REG3V3 2
 
 #define GPS_NO 0
 #define GPS_YES 1
@@ -104,67 +106,174 @@ enum run_t {
   RUN_LEN // Special value
 };
 
-const char EMPTY_STRING     [] PROGMEM = "";
 
+const char RUN_BATTERY_HELP [] PROGMEM = "\t[Wasp]";             // 1 battery
+const char RUN_GPS_HELP     [] PROGMEM = "";             // 2 gps
+const char RUN_ACC_HELP     [] PROGMEM = "\t[Wasp]";             // 3 accelerometer
+// Sensors
+#if WITH_1WIRE
+  const char RUN_DS1820_HELP  [] PROGMEM = "\t[1wire]";          // 6 temperature string
+#endif
+
+#if WITH_MB
+  const char RUN_MB_HELP      [] PROGMEM = "";              // 8 sonar
+#endif
+//const char RUN_WS100_HELP   [] PROGMEM = "ws100";           // 9 rain
+// I2C
+const char RUN_BME280_HELP  [] PROGMEM = "\t[Lemming]";           // 7 atmospheric (internal)
+const char RUN_LAGOPUS_BME280_HELP   [] PROGMEM = "\t[Lagopus A]";    // 12 atmospheric
+const char RUN_LAGOPUS_MLX90614_HELP [] PROGMEM = "\t[Lagopus B v1]";    // 13 infrared thermometer
+const char RUN_LAGOPUS_TMP102_HELP   [] PROGMEM = "\t[Lagopus A]"; // 14 digital temperature
+const char RUN_LAGOPUS_VL53L1X_HELP  [] PROGMEM = "\t[Lagopus A]";     // 15 distance
+const char RUN_TMP117_HELP  [] PROGMEM = "\t[Lagopus B v2]";          // 19 digital temperature
+const char RUN_SHT31_HELP   [] PROGMEM = "\t[Lagopus B v2]";           // 20 temperature & humidity
+#if WITH_AS7265
+  const char RUN_LAGOPUS_AS7263_HELP   [] PROGMEM = ""; // 10 spectrum
+  const char RUN_LAGOPUS_AS7265_HELP   [] PROGMEM = "\t[Lagopus A]"; // 11 spectrum
+#endif
+// More
+#if WITH_SDI
+  const char RUN_ATMOS_HELP   [] PROGMEM = "\t[SDI-12]";           // 16 wind
+  const char RUN_CTD10_HELP   [] PROGMEM = "\t[SDI-12]";             // 4 water
+  const char RUN_DS2_HELP     [] PROGMEM = "\t[SDI-12]";             // 5 wind
+#endif
+#if WITH_LORA || WITH_XBEE
+  const char RUN_LAN_HELP     [] PROGMEM = "\t[Lora, Xbee net]";             // 17 Network: LAN
+#endif
+#if WITH_IRIDIUM || WITH_4G
+  const char RUN_WAN_HELP     [] PROGMEM = "\t[4G, Iridium net]";             // 18 Network: WAN
+#endif
+
+
+const char EMPTY_STRING     [] PROGMEM = "";
 const char RUN_BATTERY_NAME [] PROGMEM = "bat";             // 1 battery
 const char RUN_GPS_NAME     [] PROGMEM = "gps";             // 2 gps
 const char RUN_ACC_NAME     [] PROGMEM = "acc";             // 3 accelerometer
 // Sensors
-const char RUN_CTD10_NAME   [] PROGMEM = "ctd     [SDI-12]";             // 4 water
-const char RUN_DS2_NAME     [] PROGMEM = "ds2     [SDI-12]";             // 5 wind
-const char RUN_DS1820_NAME  [] PROGMEM = "ds18b20     [1wire]";          // 6 temperature string
-const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
+#if WITH_1WIRE
+  const char RUN_DS1820_NAME  [] PROGMEM = "ds18b20";          // 6 temperature string
+#endif
+#if WITH_MB
+  const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
+#endif
 //const char RUN_WS100_NAME   [] PROGMEM = "ws100";           // 9 rain
 // I2C
-const char RUN_BME280_NAME  [] PROGMEM = "bme_int     [Lemming]";           // 7 atmospheric (internal)
-const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
-const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265"; // 11 spectrum
-const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme";    // 12 atmospheric
+const char RUN_BME280_NAME  [] PROGMEM = "bme_int";           // 7 atmospheric (internal)
+const char RUN_LAGOPUS_BME280_NAME   [] PROGMEM = "bme_ext";    // 12 atmospheric
 const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx";    // 13 infrared thermometer
 const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp102"; // 14 digital temperature
 const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";     // 15 distance
-// More
-const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
-const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
-const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
-const char RUN_TMP117_NAME  [] PROGMEM = "tmp117     [Lagopus B v2]";          // 19 digital temperature
+const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
 const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
+#if WITH_AS7265
+  const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
+  const char RUN_LAGOPUS_AS7265_NAME   [] PROGMEM = "as7265"; // 11 spectrum
+#endif
+// More
+#if WITH_SDI
+  const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
+  const char RUN_CTD10_NAME   [] PROGMEM = "ctd";             // 4 water
+  const char RUN_DS2_NAME     [] PROGMEM = "ds2";             // 5 wind
+#endif
+#if WITH_LORA || WITH_XBEE
+  const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
+#endif
+#if WITH_IRIDIUM || WITH_4G
+  const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
+#endif
+
+const char* const run_help[] PROGMEM = {
+  //EMPTY_STRING,
+  RUN_BATTERY_HELP,
+  RUN_GPS_HELP,
+  RUN_ACC_HELP,
+  #if WITH_SDI
+    RUN_CTD10_HELP,
+    RUN_DS2_HELP,
+    RUN_ATMOS_HELP,
+  #endif
+  #if WITH_1WIRE
+    RUN_DS1820_HELP,
+  #endif
+  RUN_BME280_HELP,
+  #if WITH_MB
+    RUN_MB_HELP,
+  #endif
+//  RUN_WS100_HELP,
+  #if WITH_AS7265
+    RUN_LAGOPUS_AS7263_HELP,
+    RUN_LAGOPUS_AS7265_HELP,
+  #endif
+  RUN_LAGOPUS_BME280_HELP,
+  RUN_LAGOPUS_MLX90614_HELP,
+  RUN_LAGOPUS_TMP102_HELP,
+  RUN_LAGOPUS_VL53L1X_HELP,
+  RUN_TMP117_HELP,
+  RUN_SHT31_HELP,
+  #if WITH_LORA || WITH_XBEE
+    RUN_LAN_HELP,
+  #endif
+  #if WITH_IRIDIUM || WITH_4G
+    RUN_WAN_HELP,
+  #endif
+};
 
 const char* const run_names[] PROGMEM = {
-  EMPTY_STRING,
+  //EMPTY_STRING,
   RUN_BATTERY_NAME,
   RUN_GPS_NAME,
   RUN_ACC_NAME,
-  RUN_CTD10_NAME,
-  RUN_DS2_NAME,
-  RUN_DS1820_NAME,
+  #if WITH_SDI
+    RUN_CTD10_NAME,
+    RUN_DS2_NAME,
+    RUN_ATMOS_NAME,
+  #endif
+  #if WITH_1WIRE
+    RUN_DS1820_NAME,
+  #endif
   RUN_BME280_NAME,
-  RUN_MB_NAME,
+  #if WITH_MB
+    RUN_MB_NAME,
+  #endif
 //  RUN_WS100_NAME,
-  RUN_LAGOPUS_AS7263_NAME,
-  RUN_LAGOPUS_AS7265_NAME,
+  #if WITH_AS7265
+    RUN_LAGOPUS_AS7263_NAME,
+    RUN_LAGOPUS_AS7265_NAME,
+  #endif
   RUN_LAGOPUS_BME280_NAME,
   RUN_LAGOPUS_MLX90614_NAME,
   RUN_LAGOPUS_TMP102_NAME,
   RUN_LAGOPUS_VL53L1X_NAME,
-  RUN_ATMOS_NAME,
-  RUN_LAN_NAME,
-  RUN_WAN_NAME,
   RUN_TMP117_NAME,
   RUN_SHT31_NAME,
+  #if WITH_LORA || WITH_XBEE
+    RUN_LAN_NAME,
+  #endif
+  #if WITH_IRIDIUM || WITH_4G
+    RUN_WAN_NAME,
+  #endif
 };
 
 enum var_indexes {
   VAR_LOG_LEVEL_IDX = 2,
   VAR_LOG_SD_IDX,
   VAR_LOG_USB_IDX,
-  VAR_LAN_TYPE_IDX,
-  VAR_WAN_TYPE_IDX,
-  VAR_LORA_ADDR_IDX,
-  VAR_LORA_MODE_IDX,
-  VAR_XBEE_NETWORK_IDX,
-  VAR_LAN_WAIT_IDX,
-  VAR_LORA_DST_IDX,
+  #if WITH_XBEE || WITH_LORA
+    VAR_LAN_TYPE_IDX,
+    VAR_LAN_WAIT_IDX,
+  #endif
+  #if WITH_IRIDIUM || WITH_4G
+    VAR_WAN_TYPE_IDX,
+  #endif
+  #if WITH_LORA
+    VAR_LORA_ADDR_IDX,
+    VAR_LORA_MODE_IDX,
+    VAR_LORA_DST_IDX,
+  #endif
+  #if WITH_XBEE
+    VAR_XBEE_NETWORK_IDX,
+  #endif
+  
 };
 
 const char VAR_UNUSED    [] PROGMEM = "";
@@ -197,13 +306,22 @@ const char* const var_names[] PROGMEM = {
   VAR_LOG_LEVEL,
   VAR_LOG_SD,
   VAR_LOG_USB,
-  VAR_LAN_TYPE,
-  VAR_WAN_TYPE,
-  VAR_LORA_ADDR,
-  VAR_LORA_MODE,
-  VAR_XBEE_NETWORK,
-  VAR_LAN_WAIT,
-  VAR_LORA_DST,
+  #if WITH_XBEE || WITH_LORA
+    VAR_LAN_TYPE,
+    VAR_LAN_WAIT,
+  #endif
+  #if WITH_IRIDIUM || WITH_4G
+    VAR_WAN_TYPE,
+  #endif
+  #if WITH_LORA
+    VAR_LORA_ADDR,
+    VAR_LORA_MODE,
+    VAR_LORA_DST,
+  #endif
+  #if WITH_XBEE
+    VAR_XBEE_NETWORK,
+  #endif  
+  
 };
 
 const char* const var_help[] PROGMEM = {
@@ -212,13 +330,22 @@ const char* const var_help[] PROGMEM = {
   VAR_LOG_LEVEL_HELP,
   VAR_LOG_FLAG_HELP,
   VAR_LOG_FLAG_HELP,
-  VAR_LAN_TYPE_HELP,
-  VAR_WAN_TYPE_HELP,
-  VAR_LORA_ADDR_HELP,
-  VAR_LORA_MODE_HELP,
-  VAR_XBEE_NETWORK_HELP,
-  VAR_LAN_WAIT_HELP,
-  VAR_LORA_DST_HELP,
+  #if WITH_XBEE || WITH_LORA
+    VAR_LAN_TYPE_HELP,
+    VAR_LAN_WAIT_HELP,
+  #endif
+  #if WITH_4G || WITH_IRIDIUM
+    VAR_WAN_TYPE_HELP,
+  #endif
+  #if WITH_LORA
+    VAR_LORA_ADDR_HELP,
+    VAR_LORA_MODE_HELP,
+    VAR_LORA_DST_HELP,
+  #endif
+  #if WITH_XBEE
+    VAR_XBEE_NETWORK_HELP,
+  #endif
+  
 };
 
 
@@ -250,6 +377,7 @@ struct Action {
 /*
  * Network
  */
+
 
 /* XBee stuff */
 struct XBee {
@@ -337,9 +465,12 @@ public:
   lan_type_t lan_type;
   uint8_t lan_wait;
   wan_type_t wan_type;
+  #if WITH_LORA
   uint8_t lora_addr;
   uint8_t lora_mode;
   uint8_t lora_dst;
+  #endif
+
   uint8_t xbee_network;
 
   // Power related
@@ -413,42 +544,42 @@ public:
   void networkInit();
   int rssi, snr;
   #if WITH_XBEE
-  // Network: Xbee
-  XBee xbee;
-  void xbeeInit();
-  int xbeeSend(const char* dst, const char* msg);
-  int xbeeQuality();
+    // Network: Xbee
+    XBee xbee;
+    void xbeeInit();
+    int xbeeSend(const char* dst, const char* msg);
+    int xbeeQuality();
   #endif
   #if WITH_LORA
-  // Network: Lora
-  int loraStart();
-  void loraStop();
-  int loraInit();
-  int loraSend(uint8_t dst, const char* msg, bool ack=false);
-  int loraQuality();
-  uint8_t lora_dst2;
-  uint8_t lora_fails;
+    // Network: Lora
+    int loraStart();
+    void loraStop();
+    int loraInit();
+    int loraSend(uint8_t dst, const char* msg, bool ack=false);
+    int loraQuality();
+    uint8_t lora_dst2;
+    uint8_t lora_fails;
   #endif
   #if WITH_4G
-  // Network: 4G
-  uint16_t pin; // Pin for 4G module
-  void _4GInit();
-  uint8_t _4GStart();
-  uint8_t _4GStop();
-  uint8_t _4GGPS();
-  int _4GPing();
-  uint8_t setTimeFrom4G(const char* value=NULL);
+    // Network: 4G
+    uint16_t pin; // Pin for 4G module
+    void _4GInit();
+    uint8_t _4GStart();
+    uint8_t _4GStop();
+    uint8_t _4GGPS();
+    int _4GPing();
+    uint8_t setTimeFrom4G(const char* value=NULL);
   #endif
   #if WITH_IRIDIUM
-  char iridium_fw[9]; // firmware version
-  void iridiumInit();
-  int iridium_start();
-  int iridium_stop();
-  int iridium_ping();
+    char iridium_fw[9]; // firmware version
+    void iridiumInit();
+    int iridium_start();
+    int iridium_stop();
+    int iridium_ping();
   #endif
   #if WITH_CRYPTO
-  // Crypto
-  char password[33]; // To encrypt frames
+    // Crypto
+    char password[33]; // To encrypt frames
   #endif
 
   // GPS
@@ -526,9 +657,7 @@ extern IridiumSBD iridium;
 extern LIFO lifo;
 #endif
 
-
 void vlog(loglevel_t level, const char* message);
-
 
 /*
  * Commands

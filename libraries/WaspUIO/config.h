@@ -15,7 +15,7 @@
 
 //=========== NETWORK CONFIG ==============================
 // WLAN Networking - wireless
-#define WITH_4G TRUE
+#define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
 // Iridium specific.
 // Save frames to lifo instead of fifo every n hours since epoch at the :mm
@@ -37,7 +37,7 @@
 
 //=========== SENSOR CONFIG ==============================
 // Sensors
-#define WITH_I2C FALSE			// I2C protocol for all external I2C sensors (lagopus and lemming boards)
+#define WITH_I2C TRUE			// I2C protocol for all external I2C sensors (lagopus and lemming boards)
 #define WITH_SDI FALSE			// SDI12 protocol for DS2, CTD, ATMOS22
 #define WITH_1WIRE FALSE		// 1wire protocol for DS18b20
 #define WITH_MB FALSE			// Maxbotix sensor
