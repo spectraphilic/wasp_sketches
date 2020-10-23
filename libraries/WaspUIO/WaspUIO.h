@@ -86,23 +86,35 @@ enum run_t {
   RUN_BATTERY = 1,
   RUN_GPS,
   RUN_ACC,
+#if WITH_SDI
+  RUN_ATMOS, // SDI-12
   RUN_CTD10, // SDI-12
   RUN_DS2,
-  RUN_DS1820, // OneWire
+  //RUN_WS100, // SDI-12
+#endif
+#if WITH_1WIRE
+  RUN_DS1820, // OneWire  
+#endif
   RUN_BME280, // I2C
+#if WITH_MB
   RUN_MB, // TTL
-  RUN_WS100, // SDI-12
+#endif
+  #if WITH_AS7265
   RUN_LAGOPUS_AS7263,
   RUN_LAGOPUS_AS7265,
+#endif
   RUN_LAGOPUS_BME280,
   RUN_LAGOPUS_MLX90614,
   RUN_LAGOPUS_TMP102,
   RUN_LAGOPUS_VL53L1X,
-  RUN_ATMOS, // SDI-12
-  RUN_LAN, // Lora or XBee
-  RUN_WAN, // 4G or Iridium
   RUN_TMP117,
   RUN_SHT31,
+#if WITH_LORA || WITH_XBEE
+  RUN_LAN, // Lora or XBee
+#endif
+#if WITH_IRIDIUM || WITH_4G
+  RUN_WAN, // 4G or Iridium
+#endif
   RUN_LEN // Special value
 };
 
@@ -768,7 +780,7 @@ CR_TASK(taskSdiDs2);
 CR_TASK(taskSdiAtmos);
 // Externally powered devices
 CR_TASK(taskExt);
-CR_TASK(taskSdiWS100); // Uses SDI-12
+//CR_TASK(taskSdiWS100); // Uses SDI-12
 // 3V3
 CR_TASK(task1Wire);
 CR_TASK(taskI2C);
@@ -805,7 +817,7 @@ CR_TASK(taskSlow);
 #define SENSOR_DS18B20      203
 #define SENSOR_GPS_ACCURACY 205
 #define SENSOR_VOLTS        206
-#define SENSOR_WS100        207
+//#define SENSOR_WS100        207
 #define SENSOR_BME_76       209
 #define SENSOR_BME_77       210
 #define SENSOR_MLX90614     211

@@ -116,8 +116,11 @@ CR_TASK(taskMain)
     }
 #endif
   }
-
+#if WITH_IRIDIUM || WITH_4G
   if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_WAN))
+#else
+  if ((UIO.battery > BATTERY_LOW))
+#endif
   {
 #if WITH_4G
     if (UIO.wan_type == WAN_4G)

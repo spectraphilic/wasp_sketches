@@ -1,4 +1,6 @@
 #include "WaspUIO.h"
+#if WITH_SDI
+
 #include <SDI12.h>
 
 
@@ -194,50 +196,53 @@ CR_TASK(taskSdiAtmos)
  * Tasks: WS100
  */
 
-CR_TASK(taskExt)
-{
-  static tid_t tid;
+// CR_TASK(taskExt)
+// {
+//   static tid_t tid;
 
-  CR_BEGIN;
+//   CR_BEGIN;
 
-  // WS100
-  if (UIO.action(1, RUN_WS100))
-  {
-    CR_SPAWN2(taskSdiWS100, tid);
-    CR_JOIN(tid);
-  }
+//   // WS100
+//   if (UIO.action(1, RUN_WS100))
+//   {
+//     CR_SPAWN2(taskSdiWS100, tid);
+//     CR_JOIN(tid);
+//   }
 
-  CR_END;
-}
+//   CR_END;
+// }
 
-CR_TASK(taskSdiWS100)
-{
-  CR_BEGIN;
 
-  uint8_t retries = 3;
-  while (retries > 0 && sdi.sendCommand(2, "") == NULL)
-  {
-    retries--;
-    delay(100);
-  }
-  if (retries == 0)
-  {
-    CR_ERROR;
-  }
+// CR_TASK(taskSdiWS100)
+// {
+//   CR_BEGIN;
 
-  if (sdi.sendCommand(2, "R0") == NULL)
-  {
-    CR_ERROR;
-  }
+//   uint8_t retries = 3;
+//   while (retries > 0 && sdi.sendCommand(2, "") == NULL)
+//   {
+//     retries--;
+//     delay(100);
+//   }
+//   if (retries == 0)
+//   {
+//     CR_ERROR;
+//   }
 
-  // Frame. The result looks like 2+23.5+0.2+3.2+60
-  char *next;
-  float a = strtod(sdi.buffer+1, &next);
-  float b = strtod(next, &next);
-  float c = strtod(next, &next);
-  uint8_t d = (uint8_t) strtoul(next, &next, 10);
-  float e = strtod(next, &next);
-  ADD_SENSOR(SENSOR_WS100, a, b, c, d, e);
+//   if (sdi.sendCommand(2, "R0") == NULL)
+//   {
+//     CR_ERROR;
+//   }
 
-  CR_END;
-}
+//   // Frame. The result looks like 2+23.5+0.2+3.2+60
+//   char *next;
+//   float a = strtod(sdi.buffer+1, &next);
+//   float b = strtod(next, &next);
+//   float c = strtod(next, &next);
+//   uint8_t d = (uint8_t) strtoul(next, &next, 10);
+//   float e = strtod(next, &next);
+//   ADD_SENSOR(SENSOR_WS100, a, b, c, d, e);
+
+//   CR_END;
+// }
+
+#endif
