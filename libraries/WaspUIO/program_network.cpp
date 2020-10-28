@@ -430,7 +430,7 @@ CR_TASK(taskNetworkLoraReceive)
           log_info("ignore ping");
         }
       } else if (strncmp("<=>", data, 3) == 0) {
-        log_info("frame received from lora address=%u", sx1272.packet_received.src);
+        log_debug("frame received from lora address=%u", sx1272.packet_received.src);
         uint8_t n = UIO.saveFrames(
           sx1272.packet_received.src,
           sx1272.packet_received.data,
