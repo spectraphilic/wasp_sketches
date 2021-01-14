@@ -23,6 +23,10 @@ const char* WaspUIO::sdi_command(const char *cmd)
     while (begin <= end && isspace(*begin))
         begin++;
 
+    // Empty
+    if (*begin == '\0' || isspace(*begin))
+        return NULL;
+
     // Copy and finish command string
     size_t n = end - begin + 1;
     if (n > size - 2)
