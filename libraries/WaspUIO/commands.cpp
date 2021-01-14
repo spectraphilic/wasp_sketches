@@ -48,7 +48,7 @@ const char CMD_REBOOT    [] PROGMEM = "reboot             - Reboot waspmote";
 const char CMD_RM        [] PROGMEM = "rm FILENAME        - Remove file";
 const char CMD_RUN       [] PROGMEM = "run [NAME H[:MM]]  - run (list names), run name 0 (disable), "
                                       "run name 5 (every 5m), run name 1:07 (every 1h at :07)";
-const char CMD_SDI12     [] PROGMEM = "sdi [ADDR] [NEW]   - Identify SDI-12 sensors";
+const char CMD_SDI12     [] PROGMEM = "sdi COMMAND        - examples: ? (query) 5I (identity) 5A4 (change address)";
 const char CMD_TAIL      [] PROGMEM = "tail N FILENAME    - Print last N lines of FILENAME to USB";
 const char CMD_TIME      [] PROGMEM = "time VALUE         - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";

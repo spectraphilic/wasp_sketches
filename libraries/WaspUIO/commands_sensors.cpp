@@ -227,23 +227,7 @@ next:
 
 COMMAND(cmdSDI12)
 {
-  uint8_t address, new_address;
-
-  int n = sscanf(str, "%hhu %hhu", &address, &new_address);
-
-  UIO.pwr_sdi12(1);
-  if (n <= 0)
-  {
-    UIO.sdi_read_address();
-  }
-  else if (n == 1)
-  {
-    UIO.sdi_identify(address);
-  }
-  else if (n == 2)
-  {
-    UIO.sdi_set_address(address, new_address);
-  }
+  UIO.sdi_command(str);
 
   return cmd_quiet;
 }

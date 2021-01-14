@@ -507,9 +507,7 @@ public:
   uint8_t i2c_VL53L1X(int distances[], uint8_t nbsample);
 
   // SDI-12
-  char sdi_read_address();
-  const char* sdi_identify(uint8_t address);
-  uint8_t sdi_set_address(uint8_t current_address, uint8_t new_address);
+  const char* sdi_command(const char *cmd);
 };
 
 

@@ -8,20 +8,31 @@
 
 WaspSDI12 sdi(PIN_SDI12);
 
-
-const char* WaspUIO::sdi_identify(uint8_t address)
+const char* WaspUIO::sdi_command(const char *cmd)
 {
-    return sdi.identify(address);
-}
+    size_t size = 80;
+    char buffer[size];
 
-char WaspUIO::sdi_read_address()
-{
-    return sdi.read_address();
-}
+    // rstrip
+    const char *end = cmd + strlen(cmd) - 1;
+    while (end >= cmd && isspace(*end))
+        end--;
 
-uint8_t WaspUIO::sdi_set_address(uint8_t current_address, uint8_t new_address)
-{
-    return sdi.set_address(current_address, new_address);
+    // lstrip
+    const char *begin = cmd;
+    while (begin <= end && isspace(*begin))
+        begin++;
+
+    // Copy and finish command string
+    size_t n = end - begin + 1;
+    if (n > size - 2)
+        n = size - 2;
+    memcpy(buffer, begin, n);
+    buffer[n] = '!';
+    buffer[n+1] = '\0';
+
+    // Send command
+    return sdi.sendCommand(buffer);
 }
 
 /*
