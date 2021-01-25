@@ -24,7 +24,6 @@ const char frame_format_f     [] PROGMEM = "f";
 const char frame_format_ff    [] PROGMEM = "ff";
 const char frame_format_fff   [] PROGMEM = "fff";
 const char frame_format_n     [] PROGMEM = "n";
-const char frame_format_fffuf [] PROGMEM = "fffuf";
 const char frame_format_uf    [] PROGMEM = "uf";
 const char frame_format_jjk   [] PROGMEM = "jjk";
 const char frame_format_jjjjjj[] PROGMEM = "jjjjjj";
@@ -78,7 +77,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null,                 // 204 Reserved (was MB73XX)
   frame_format_uf,      // 205 GPS number of satellites and accuracy
   frame_format_f,       // 206 Battery Volts
-  frame_format_fffuf,   // 207 WS100-UMB
+  null,                 // 207 Reserved (was WS100-UMB)
   null,                 // 208 Reserved (was DS-2)
   frame_format_fff,     // 209 BME 0x76 (internal)
   // 21x
@@ -103,7 +102,6 @@ const char frame_name_tst         [] PROGMEM = "TST";
 const char frame_name_ds18b20     [] PROGMEM = "DS18B20";
 const char frame_name_gps_accuracy[] PROGMEM = "GPS Accuracy";
 const char frame_name_bat_volts   [] PROGMEM = "BAT VOLTS";
-const char frame_name_ws100       [] PROGMEM = "WS100";
 const char frame_name_bme76       [] PROGMEM = "BME int";
 const char frame_name_bme77       [] PROGMEM = "BME ext";
 const char frame_name_mlx         [] PROGMEM = "MLX";
@@ -165,7 +163,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null,                                                       // 204 Reserved (was MB73XX)
   frame_name_gps_accuracy,                                    // 205 GPS Accuracy
   frame_name_bat_volts,                                       // 206 Battery Volts
-  frame_name_ws100,                                           // 207 WS100-UMB
+  null,                                                       // 207 Reserved (was WS100-UMB)
   null,                                                       // 208 Reserved (was DS-2)
   frame_name_bme76,                                           // 209 BME 0x76
   // 21x

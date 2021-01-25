@@ -80,7 +80,7 @@ enum run_t {
   RUN_DS1820, // OneWire
   RUN_BME280, // I2C
   RUN_MB, // TTL
-  RUN_WS100, // SDI-12
+  RUN_XXX, // XXX Unused (available)
   RUN_LAGOPUS_AS7263,
   RUN_LAGOPUS_AS7265, // (11)
   RUN_LAGOPUS_BME280,
@@ -108,7 +108,6 @@ const char RUN_CTD10_NAME   [] PROGMEM = "ctd";             // 4 water
 const char RUN_DS2_NAME     [] PROGMEM = "ds2";             // 5 wind
 const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";          // 6 temperature string
 const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
-const char RUN_WS100_NAME   [] PROGMEM = "ws100";           // 9 rain
 // I2C
 const char RUN_BME280_NAME  [] PROGMEM = "bme76";           // 7 atmospheric (internal)
 const char RUN_LAGOPUS_AS7263_NAME   [] PROGMEM = "as7263"; // 10 spectrum
@@ -139,7 +138,7 @@ const char* const run_names[] PROGMEM = {
   RUN_DS1820_NAME,
   RUN_BME280_NAME,
   RUN_MB_NAME,
-  RUN_WS100_NAME,
+  EMPTY_STRING,
   RUN_LAGOPUS_AS7263_NAME,
   RUN_LAGOPUS_AS7265_NAME,
   RUN_LAGOPUS_BME280_NAME,
@@ -633,9 +632,6 @@ CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
 CR_TASK(taskSdiAtmos);
-// Externally powered devices
-CR_TASK(taskExt);
-CR_TASK(taskSdiWS100); // Uses SDI-12
 // 3V3
 CR_TASK(task1Wire);
 CR_TASK(taskI2C);
@@ -668,13 +664,14 @@ CR_TASK(taskGPS4G);
 CR_TASK(taskSlow);
 
 
+// Our sensors start at 200. Do not fill the gaps, missing numbers are retired
+// sensors. Just append new sensors to the end.
 #define SENSOR_BAT           52
 #define SENSOR_GPS           53
 #define SENSOR_TST          123
 #define SENSOR_DS18B20      203
 #define SENSOR_GPS_ACCURACY 205
 #define SENSOR_VOLTS        206
-#define SENSOR_WS100        207
 #define SENSOR_BME_76       209
 #define SENSOR_BME_77       210
 #define SENSOR_MLX90614     211

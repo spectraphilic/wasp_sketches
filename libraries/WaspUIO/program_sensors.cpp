@@ -64,11 +64,6 @@ CR_TASK(taskSensors)
     CR_JOIN(id);
     UIO.pwr_sdi12(0);
   }
-  if (UIO.action(1, RUN_WS100)) // Externally powered
-  {
-    CR_SPAWN2(taskExt, id);
-    CR_JOIN(id);
-  }
 #endif
 
 #if WITH_1WIRE
