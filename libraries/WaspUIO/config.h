@@ -4,30 +4,30 @@
 
 #define BOARD_NONE 0
 #define BOARD_LEMMING 1
-#define BOARD_TYPE BOARD_LEMMING
+#define BOARD_TYPE BOARD_NONE
 
 #define BATTERY_LITHIUM 0
 #define BATTERY_REG3V3 2
 #define BATTERY_TYPE BATTERY_LITHIUM
 
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS TRUE
+#define WITH_GPS FALSE
 #define WITH_CRYPTO FALSE
 #define WITH_EXT_CHARGE FALSE
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G TRUE
+#define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA FALSE
 
 // Sensors
-#define WITH_I2C TRUE
-#define WITH_SDI FALSE
-#define WITH_1WIRE TRUE
+#define WITH_I2C FALSE
+#define WITH_SDI TRUE
+#define WITH_1WIRE FALSE
 #define WITH_MB FALSE
 
-#define  WITH_AS7265 FALSE
+#define WITH_AS7265 FALSE
 
 // Timeouts
 #define LOOP_TIMEOUT 4 // minutes
