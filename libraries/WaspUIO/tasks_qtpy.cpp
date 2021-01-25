@@ -11,6 +11,8 @@ CR_TASK(taskQTPY)
 
     CR_BEGIN;
 
+    CR_DELAY(4000); // Give 4s for the QT Py to start
+
     if (UIO.action(1, RUN_QTPY_BME280)) {
         ttt = sdi.measure(5);
         if (ttt < 0) { CR_ERROR; }
