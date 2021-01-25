@@ -58,7 +58,7 @@ CR_TASK(taskQTPY_SHT31)
     ttt = sdi.measure(5, 1);
     if (ttt < 0) { CR_ERROR; }
     if (ttt > 0) { CR_DELAY(ttt * 1000); }
-    if (sdi.sendCommand(5, "D1") == NULL) { CR_ERROR; }
+    if (sdi.sendCommand(5, "D0") == NULL) { CR_ERROR; }
 
     float sht_t = strtod(sdi.buffer+1, &next);
     float sht_h = strtod(next, &next);
@@ -77,7 +77,7 @@ CR_TASK(taskQTPY_TMP117)
     ttt = sdi.measure(5, 2);
     if (ttt < 0) { CR_ERROR; }
     if (ttt > 0) { CR_DELAY(ttt * 1000); }
-    if (sdi.sendCommand(5, "D2") == NULL) { CR_ERROR; }
+    if (sdi.sendCommand(5, "D0") == NULL) { CR_ERROR; }
 
     float temp = strtod(sdi.buffer+1, &next);
     ADD_SENSOR(SENSOR_TMP1XX, temp);
