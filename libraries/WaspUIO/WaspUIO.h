@@ -652,9 +652,6 @@ CR_TASK(taskI2C_SHT31);
 CR_TASK(taskTTL);
 // SDI-12 QT-Py
 CR_TASK(taskQTPY);
-CR_TASK(taskQTPY_BME280);
-CR_TASK(taskQTPY_SHT31);
-CR_TASK(taskQTPY_TMP117);
 // Network
 CR_TASK(taskNetwork4G);
 CR_TASK(taskNetworkIridium);
