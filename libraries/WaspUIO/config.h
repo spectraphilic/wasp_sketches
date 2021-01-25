@@ -25,6 +25,7 @@
 #define WITH_SDI TRUE
 #define WITH_1WIRE FALSE
 #define WITH_MB FALSE
+#define WITH_QTPY TRUE // Requires WITH_SDI
 
 #define WITH_AS7265 FALSE
 

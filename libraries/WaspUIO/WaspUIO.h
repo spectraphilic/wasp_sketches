@@ -82,7 +82,7 @@ enum run_t {
   RUN_MB, // TTL
   RUN_WS100, // SDI-12
   RUN_LAGOPUS_AS7263,
-  RUN_LAGOPUS_AS7265,
+  RUN_LAGOPUS_AS7265, // (11)
   RUN_LAGOPUS_BME280,
   RUN_LAGOPUS_MLX90614,
   RUN_LAGOPUS_TMP102,
@@ -92,6 +92,9 @@ enum run_t {
   RUN_WAN, // 4G or Iridium
   RUN_TMP117,
   RUN_SHT31,
+  RUN_QTPY_BME280, // 5M 5D0 (21)
+  RUN_QTPY_TMP117, // 5M2 5D2
+  RUN_QTPY_SHT31,  // 5M1 5D1
   RUN_LEN // Special value
 };
 
@@ -120,6 +123,11 @@ const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
 const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
 const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
+// SDI-12 slave
+const char RUN_QTPY_BME280_NAME  [] PROGMEM = "sdi_bme280"; // 21 atmospheric
+const char RUN_QTPY_SHT31_NAME   [] PROGMEM = "sdi_sht31";  // 22 temperature & humidity
+const char RUN_QTPY_TMP117_NAME  [] PROGMEM = "sdi_tmp117"; // 23 digital temperature
+
 
 const char* const run_names[] PROGMEM = {
   EMPTY_STRING,
@@ -143,6 +151,9 @@ const char* const run_names[] PROGMEM = {
   RUN_WAN_NAME,
   RUN_TMP117_NAME,
   RUN_SHT31_NAME,
+  RUN_QTPY_BME280_NAME,
+  RUN_QTPY_SHT31_NAME,
+  RUN_QTPY_TMP117_NAME,
 };
 
 enum var_indexes {
@@ -639,6 +650,11 @@ CR_TASK(taskI2C_VL53L1X);
 CR_TASK(taskI2C_TMP117);
 CR_TASK(taskI2C_SHT31);
 CR_TASK(taskTTL);
+// SDI-12 QT-Py
+CR_TASK(taskQTPY);
+CR_TASK(taskQTPY_BME280);
+CR_TASK(taskQTPY_SHT31);
+CR_TASK(taskQTPY_TMP117);
 // Network
 CR_TASK(taskNetwork4G);
 CR_TASK(taskNetworkIridium);

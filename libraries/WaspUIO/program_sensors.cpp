@@ -41,8 +41,8 @@ CR_TASK(taskSensors)
 
   CR_BEGIN;
 
-  // I2C
 #if WITH_I2C
+  // I2C
   if (UIO.action(10, RUN_ACC, RUN_BME280, RUN_LAGOPUS_AS7263,
                  RUN_LAGOPUS_AS7265, RUN_LAGOPUS_BME280, RUN_LAGOPUS_MLX90614,
                  RUN_LAGOPUS_TMP102, RUN_LAGOPUS_VL53L1X, RUN_TMP117,
@@ -55,8 +55,8 @@ CR_TASK(taskSensors)
   }
 #endif
 
-  // SDI-12
 #if WITH_SDI
+  // SDI-12
   if (UIO.action(3, RUN_CTD10, RUN_DS2, RUN_ATMOS))
   {
     UIO.pwr_sdi12(1);
@@ -71,8 +71,8 @@ CR_TASK(taskSensors)
   }
 #endif
 
-  // OneWire
 #if WITH_1WIRE
+  // OneWire
   if (UIO.action(1, RUN_DS1820))
   {
     UIO.pwr_1wire(1);
@@ -82,14 +82,25 @@ CR_TASK(taskSensors)
   }
 #endif
 
-  // Maxbotix
 #if WITH_MB
+  // Maxbotix
   if (UIO.action(1, RUN_MB))
   {
     UIO.pwr_mb(1);
     CR_SPAWN2(taskTTL, id);
     CR_JOIN(id);
     UIO.pwr_mb(0);
+  }
+#endif
+
+#if WITH_QTPY
+  // SDI-12 QT-Py
+  if (UIO.action(3, RUN_QTPY_BME280, RUN_QTPY_SHT31, RUN_QTPY_TMP117))
+  {
+    UIO.pwr_3v3(1);
+    CR_SPAWN2(taskQTPY, id);
+    CR_JOIN(id);
+    UIO.pwr_3v3(0);
   }
 #endif
 

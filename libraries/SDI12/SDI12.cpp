@@ -805,18 +805,25 @@ const char* WaspSDI12::identify(uint8_t address)
 
 /* Sends measure command to address. Returns the number of seconds to wait for
  * the data to be available; or -1 if error. */
-int WaspSDI12::measure(uint8_t address)
+int WaspSDI12::measure(uint8_t address, uint8_t number)
 {
-    char aux[4];
+    size_t size = 5;
+    char buffer[size];
 
-    if (sendCommand(address, "M") == NULL)
-    {
+    int n = (number == 0) ? snprintf(buffer, size, "%dM!", address)
+                          : snprintf(buffer, size, "%dM%d!", address, number);
+
+    if (n < 0 || (size_t)n >= size) {
+        return -1;
+    }
+
+    if (sendCommand(buffer) == NULL) {
       return -1;
     }
 
-    memcpy(aux, buffer+1, 3);
-    aux[3] = 0;
-    return atoi(aux);
+    memcpy(buffer, buffer+1, 3);
+    buffer[3] = 0;
+    return atoi(buffer);
 }
 
 /* Sends data command to address. Always to the buffer 0 (TODO Specify buffer
