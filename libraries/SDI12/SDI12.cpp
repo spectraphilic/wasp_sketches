@@ -672,44 +672,45 @@ uint8_t WaspSDI12::readMeasures(char *sensorSearchedName, uint8_t sensorSearched
  * From the University of Oslo
  */
 
-void WaspSDI12::readCommandAnswer(unsigned long timeout)
+int WaspSDI12::readCommandAnswer(unsigned long timeout)
 {
-	uint8_t state = 0;
+    uint8_t state = 0;
 
-	j = 0;
-	unsigned long previous = millis();
-	while (millis() - previous < timeout)
-	{
-		receiveChar();
+    j = 0;
+    unsigned long previous = millis();
+    while (millis() - previous < timeout)
+    {
+        receiveChar();
 
-		if (state == 0)
-		{
-			if (peek() == '\r')
-			{
-				state = 1;
-			}
-		}
-		else if (state == 1)
-		{
-			if (peek() == '\n')
-			{
-				break;
-			}
-		}
-		
-		// Condition to avoid an overflow (DO NOT REMOVE)
-		if( millis() < previous ) previous=millis();
-		
-	}
-	#if SDI12DEBUG
-	PRINT_SDI12(F("[RX]"));
-	for (int i = _rxBufferHead; i < _rxBufferTail; i++)
-	{
-		USB.print(_rxBuffer[i]);
-	}
-	USB.println();
-	#endif
-	
+        if (state == 0) {
+            if (peek() == '\r') {
+                state = 1;
+            }
+        } else if (state == 1) {
+            if (peek() == '\n') {
+                state = 2;
+                break;
+            }
+        }
+
+        // Condition to avoid an overflow (DO NOT REMOVE)
+        if( millis() < previous ) previous=millis();
+    }
+
+    #if SDI12DEBUG
+    PRINT_SDI12(F("[RX]"));
+    for (int i = _rxBufferHead; i < _rxBufferTail; i++) {
+        USB.print(_rxBuffer[i]);
+    }
+    USB.println();
+    #endif
+
+/*  if (state != 2) {
+        log_debug("sdi1-12 timeout");
+        return -1;
+    }*/
+
+    return 0;
 }
 
 /*
@@ -722,20 +723,17 @@ const char* WaspSDI12::readline()
     char* p = buffer;
     uint8_t state = 0; // 0: start, 1: reading, 2: eol found
 
-    while ((c = read()) != -1)
-    {
+    while ((c = read()) != -1) {
         // Skip garbage at the beginning, expect address (0-9, A-Z, a-z)
-        if (state == 0 && (c < '0' || c > 'z'))
-        {
-	    log_warn("sdi1-12 readline garbage skipped: %d", c);
+        if (state == 0 && (c < '0' || c > 'z')) {
+            log_info("sdi1-12 readline garbage skipped: %d", c);
             continue;
         }
         state = 1;
 
         // Stop condition, check only for \r
-        if (c == '\r')
-        {
-	    state = 2;
+        if (c == '\r') {
+            state = 2;
             break;
         }
 
@@ -744,8 +742,7 @@ const char* WaspSDI12::readline()
 
     *p = '\0';
 
-    if (state != 2)
-    {
+    if (state != 2) {
         log_warn("sdi-12 readline eol not found");
     }
 
@@ -760,7 +757,10 @@ const char* WaspSDI12::sendCommand(const char* cmd)
 {
     log_debug("sdi-12 sendCommand(%s)", cmd);
     sendCommand((char*)cmd, strlen(cmd));
-    readCommandAnswer();
+    if (readCommandAnswer() == -1) {
+        return NULL;
+    }
+
     readline();
     log_debug("sdi-12 sendCommand(%s): '%s'", cmd, buffer);
     return buffer;
@@ -818,7 +818,7 @@ int WaspSDI12::measure(uint8_t address, uint8_t number)
     }
 
     if (sendCommand(buffer) == NULL) {
-      return -1;
+        return -1;
     }
 
     memcpy(buffer, buffer+1, 3);

@@ -106,7 +106,7 @@ class WaspSDI12
 						char *sensorSerialNumber);
 
 		// From University of Oslo
-		void readCommandAnswer(unsigned long timeout = LISTEN_TIME);
+		int readCommandAnswer(unsigned long timeout = LISTEN_TIME);
 		char buffer[_BUFFER_SIZE + 1];
 		const char* readline();
 		const char* sendCommand(const char* cmd);
