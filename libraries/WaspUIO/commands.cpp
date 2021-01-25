@@ -84,9 +84,6 @@ const Command commands[] PROGMEM = {
   {"mb",            &cmdMB,          CMD_MB},
 #endif
   {"name",          &cmdName,        CMD_NAME},
-#if WITH_CRYPTO
-  {"password ",     &cmdPassword,    CMD_PASSWORD},
-#endif
   {"ping",          &cmdPing,        CMD_PING},
   {"print",         &cmdPrint,       CMD_PRINT},
   {"reboot",        &cmdReboot,      CMD_REBOOT},
@@ -303,35 +300,6 @@ COMMAND(cmdName)
   Utils.setID(value);
   return cmd_ok;
 }
-
-
-#if WITH_CRYPTO
-COMMAND(cmdPassword)
-{
-  char value[33];
-
-  // Check input
-  if (sscanf(str, "%32s", value) != 1) { return cmd_bad_input; }
-
-  size_t len = strlen(value);
-  if (len != 16 && len != 24 && len != 32)
-  {
-    cr_printf("Password disabled (valid passwords have 16, 24 or 32 chars)\n");
-    UIO.password[0] = '\0';
-  }
-  else
-  {
-    strcpy(UIO.password, value);
-  }
-
-  UIO.writeEEPROM(EEPROM_UIO_PWD, UIO.password, sizeof UIO.password);
-
-  // Frame size depends on whether there's encryption or not
-  UIO.setFrameSize();
-
-  return cmd_ok;
-}
-#endif
 
 
 /**

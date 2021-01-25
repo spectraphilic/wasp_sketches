@@ -46,8 +46,7 @@
                                           // (every action takes 2 bytes)
 #define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
 #define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
-#define EEPROM_UIO_PWD (EEPROM_START + 82) // 33 bytes
-// 17 bytes available
+// 50 bytes available
 #define EEPROM_UIO_VARS (EEPROM_START + 100) // 100 bytes reserved
 
 #define GPS_NO 0
@@ -439,10 +438,6 @@ public:
   int iridium_start();
   int iridium_stop();
   int iridium_ping();
-  #endif
-  #if WITH_CRYPTO
-  // Crypto
-  char password[33]; // To encrypt frames
   #endif
 
   // GPS

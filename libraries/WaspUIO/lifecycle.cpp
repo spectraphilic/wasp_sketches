@@ -181,16 +181,6 @@ void WaspUIO::bootConfig()
   // Defaults for safety
   if (cr.loglevel >= LOG_LEN) { cr.loglevel = LOG_DEBUG; }
 
-#if WITH_CRYPTO
-  // Frame encryption
-  UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
-  size_t len = strlen(password);
-  if (len != 0 && len != 16 && len != 24 && len != 32)
-  {
-    password[0] = '\0';
-  }
-#endif
-
 #if WITH_4G
   // 4G network
   char apn[30];
