@@ -24,77 +24,93 @@ typedef struct {
   const char* help;
 } Command;
 
-const char CMD_1WIRE_READ[] PROGMEM = "1wire read         - Read DS18B20 string";
-const char CMD_1WIRE_SCAN[] PROGMEM = "1wire scan PIN+    - Scan DS18B20 in the given pins, save to onewire.txt";
-const char CMD_4G_APN    [] PROGMEM = "4g apn [APN]       - Set 4G Access Point Name";
-const char CMD_4G_GPS    [] PROGMEM = "4g gps             - Get position from 4G's GPS";
-const char CMD_4G_PIN    [] PROGMEM = "4g pin VALUE       - Set pin for the 4G module (0=disabled)";
-const char CMD_CAT       [] PROGMEM = "cat FILENAME       - Print FILENAME contents to USB";
-const char CMD_CATX      [] PROGMEM = "catx FILENAME      - Print FILENAME contents in hexadecimal to USB";
-const char CMD_EXIT      [] PROGMEM = "exit               - Exit the command line interface";
-const char CMD_FORMAT    [] PROGMEM = "format             - Format SD";
-const char CMD_GPS       [] PROGMEM = "gps                - Get position from GPS";
-const char CMD_HELP      [] PROGMEM = "help               - Print the commands list";
-const char CMD_I2C       [] PROGMEM = "i2c [NAME]         - Scan I2C bus or read values from NAME: "
-                                      "as7263 as7265 bme bm76 mlx tmp vl";
-const char CMD_LORA      [] PROGMEM = "lora               - Print Lora info";
-const char CMD_LS        [] PROGMEM = "ls                 - List files in SD";
-const char CMD_MB        [] PROGMEM = "mb                 - Read the MB7389";
-const char CMD_NAME      [] PROGMEM = "name               - Give a name to the mote (max 16 chars)";
-const char CMD_PASSWORD  [] PROGMEM = "password VALUE     - Password for frame encryption";
-const char CMD_PING      [] PROGMEM = "ping               - Network test";
-const char CMD_PRINT     [] PROGMEM = "print              - Print configuration and other information";
-const char CMD_REBOOT    [] PROGMEM = "reboot             - Reboot waspmote";
-const char CMD_RM        [] PROGMEM = "rm FILENAME        - Remove file";
-const char CMD_RUN       [] PROGMEM = "run [NAME H[:MM]]  - run (list names), run name 0 (disable), "
+const char CAT_MAIN      [] PROGMEM = "\nMain commands:";
+const char CMD_EXIT      [] PROGMEM = "  exit               - Exit the command line interface";
+const char CMD_HELP      [] PROGMEM = "  help               - Print the commands list";
+const char CMD_NAME      [] PROGMEM = "  name               - Give a name to the mote (max 16 chars)";
+const char CMD_PRINT     [] PROGMEM = "  print              - Print configuration and other information";
+const char CMD_REBOOT    [] PROGMEM = "  reboot             - Reboot waspmote";
+const char CMD_RUN       [] PROGMEM = "  run [NAME H[:MM]]  - run (list names), run name 0 (disable), "
                                       "run name 5 (every 5m), run name 1:07 (every 1h at :07)";
-const char CMD_SDI12     [] PROGMEM = "sdi COMMAND        - examples: ? (query) 5I (identity) 5A4 (change address)";
-const char CMD_TAIL      [] PROGMEM = "tail N FILENAME    - Print last N lines of FILENAME to USB";
-const char CMD_TIME      [] PROGMEM = "time VALUE         - Set time, value can be 'network', 'gps', "
+const char CMD_TIME      [] PROGMEM = "  time VALUE         - Set time, value can be 'network', 'gps', "
                                       "yy:mm:dd:hh:mm:ss or epoch";
-const char CMD_VAR       [] PROGMEM = "var [NAME [VALUE]] - type 'var' to list the variable names";
+const char CMD_VAR       [] PROGMEM = "  var [NAME [VALUE]] - type 'var' to list the variable names";
+const char CAT_FS        [] PROGMEM = "\nFilesystem commands:";
+const char CMD_CAT       [] PROGMEM = "  cat FILENAME       - Print FILENAME contents to USB";
+const char CMD_CATX      [] PROGMEM = "  catx FILENAME      - Print FILENAME contents in hexadecimal to USB";
+const char CMD_FORMAT    [] PROGMEM = "  format             - Format SD";
+const char CMD_LS        [] PROGMEM = "  ls                 - List files in SD";
+const char CMD_RM        [] PROGMEM = "  rm FILENAME        - Remove file";
+const char CMD_TAIL      [] PROGMEM = "  tail N FILENAME    - Print last N lines of FILENAME to USB";
+const char CAT_SENSORS   [] PROGMEM = "\nSensor commands:";
+const char CMD_1WIRE_READ[] PROGMEM = "  1wire read         - Read DS18B20 string";
+const char CMD_1WIRE_SCAN[] PROGMEM = "  1wire scan PIN+    - Scan DS18B20 in the given pins, save to onewire.txt";
+const char CMD_I2C       [] PROGMEM = "  i2c [NAME]         - Scan I2C bus or read values from NAME: "
+                                      "as7263 as7265 bme bm76 mlx tmp vl";
+const char CMD_MB        [] PROGMEM = "  mb                 - Read the MB7389";
+const char CMD_SDI12     [] PROGMEM = "  sdi COMMAND        - examples: ? (query) 5I (identity) 5A4 (change address)";
+const char CAT_NETWORK   [] PROGMEM = "\nNetwork commands:";
+const char CMD_4G_APN    [] PROGMEM = "  4g apn [APN]       - Set 4G Access Point Name";
+const char CMD_4G_GPS    [] PROGMEM = "  4g gps             - Get position from 4G's GPS";
+const char CMD_4G_PIN    [] PROGMEM = "  4g pin VALUE       - Set pin for the 4G module (0=disabled)";
+const char CMD_LORA      [] PROGMEM = "  lora               - Print Lora info";
+const char CMD_PING      [] PROGMEM = "  ping               - Network test";
+const char CAT_OTHER     [] PROGMEM = "\nOther commands:";
+const char CMD_GPS       [] PROGMEM = "  gps                - Get position from GPS";
 
 const Command commands[] PROGMEM = {
-#if WITH_1WIRE
-  {"1wire read",    &cmd1WireRead,   CMD_1WIRE_READ},
-  {"1wire scan ",   &cmd1WireScan,   CMD_1WIRE_SCAN},
+    // Main commands
+    {"",              NULL,            CAT_MAIN},
+    {"exit",          &cmdExit,        CMD_EXIT},
+    {"help",          &cmdHelp,        CMD_HELP},
+    {"name",          &cmdName,        CMD_NAME},
+    {"print",         &cmdPrint,       CMD_PRINT},
+    {"reboot",        &cmdReboot,      CMD_REBOOT},
+    {"run",           &cmdRun,         CMD_RUN},
+    {"time ",         &cmdTime,        CMD_TIME},
+    {"var",           &cmdVar,         CMD_VAR},
+    {"",              NULL,            CAT_FS},
+    {"cat ",          &cmdCat,         CMD_CAT},
+    {"catx ",         &cmdCatx,        CMD_CATX},
+    {"format",        &cmdFormat,      CMD_FORMAT},
+    {"ls",            &cmdLs,          CMD_LS},
+    {"rm ",           &cmdRm,          CMD_RM},
+    {"tail",          &cmdTail,        CMD_TAIL},
+    // Sensors
+#if WITH_1WIRE || WITH_I2C || WITH_MB || WITH_SDI
+    {"",              NULL,            CAT_SENSORS},
+    #if WITH_1WIRE
+    {"1wire read",    &cmd1WireRead,   CMD_1WIRE_READ},
+    {"1wire scan ",   &cmd1WireScan,   CMD_1WIRE_SCAN},
+    #endif
+    #if WITH_I2C
+    {"i2c",           &cmdI2C,         CMD_I2C},
+    #endif
+    #if WITH_MB
+    {"mb",            &cmdMB,          CMD_MB},
+    #endif
+    #if WITH_SDI
+    {"sdi",           &cmdSDI12,       CMD_SDI12},
+    #endif
 #endif
-#if WITH_4G
-  {"4g apn",        &cmd4G_APN,      CMD_4G_APN},
-  {"4g gps",        &cmd4G_GPS,      CMD_4G_GPS},
-  {"4g pin ",       &cmd4G_Pin,      CMD_4G_PIN},
-#endif
-  {"ack",           &cmdAck,         EMPTY_STRING}, // Internal use only
-  {"cat ",          &cmdCat,         CMD_CAT},
-  {"catx ",         &cmdCatx,        CMD_CATX},
-  {"exit",          &cmdExit,        CMD_EXIT},
-  {"format",        &cmdFormat,      CMD_FORMAT},
+    // Network
+    {"",              NULL,            CAT_NETWORK},
+    #if WITH_4G
+    {"4g apn",        &cmd4G_APN,      CMD_4G_APN},
+    {"4g gps",        &cmd4G_GPS,      CMD_4G_GPS},
+    {"4g pin ",       &cmd4G_Pin,      CMD_4G_PIN},
+    #endif
+    #if WITH_LORA
+    {"lora",          &cmdLora,        CMD_LORA},
+    #endif
+    {"ping",          &cmdPing,        CMD_PING},
+    // Other
 #if WITH_GPS
-  {"gps",           &cmdGPS,         CMD_GPS},
+    {"",              NULL,            CAT_OTHER},
+    {"gps",           &cmdGPS,         CMD_GPS},
 #endif
-  {"help",          &cmdHelp,        CMD_HELP},
-#if WITH_I2C
-  {"i2c",           &cmdI2C,         CMD_I2C},
-#endif
-#if WITH_LORA
-  {"lora",          &cmdLora,        CMD_LORA},
-#endif
-  {"ls",            &cmdLs,          CMD_LS},
-#if WITH_MB
-  {"mb",            &cmdMB,          CMD_MB},
-#endif
-  {"name",          &cmdName,        CMD_NAME},
-  {"ping",          &cmdPing,        CMD_PING},
-  {"print",         &cmdPrint,       CMD_PRINT},
-  {"reboot",        &cmdReboot,      CMD_REBOOT},
-  {"rm ",           &cmdRm,          CMD_RM},
-  {"run",           &cmdRun,         CMD_RUN},
-#if WITH_SDI
-  {"sdi",           &cmdSDI12,       CMD_SDI12},
-#endif
-  {"tail",          &cmdTail,        CMD_TAIL},
-  {"time ",         &cmdTime,        CMD_TIME},
-  {"var",           &cmdVar,         CMD_VAR},
+    // Internal use only
+    {"ack",           &cmdAck,         EMPTY_STRING},
 };
 
 const uint8_t nCommands = sizeof commands / sizeof commands[0];
@@ -185,23 +201,21 @@ cmd_status_t exeCommands(const char *str, bool interactive)
 
 COMMAND(exeCommand)
 {
-  Command cmd;
-  cmd_status_t status;
+    Command cmd;
+    cmd_status_t status;
 
-  for (uint8_t i=0; i < nCommands; i++)
-  {
-    memcpy_P(&cmd, &commands[i], sizeof cmd);
-    size_t len = strlen(cmd.prefix);
-    if (strncmp(cmd.prefix, str, len) == 0)
-    {
-      UIO.saveState();
-      status = cmd.function(&(str[len]));
-      UIO.loadState();
-      return status;
+    for (uint8_t i=0; i < nCommands; i++) {
+        memcpy_P(&cmd, &commands[i], sizeof cmd);
+        size_t len = strlen(cmd.prefix);
+        if (len > 0 && strncmp(cmd.prefix, str, len) == 0) {
+            UIO.saveState();
+            status = cmd.function(&(str[len]));
+            UIO.loadState();
+            return status;
+        }
     }
-  }
 
-  return cmd_bad_input;
+    return cmd_bad_input;
 }
 
 
@@ -268,20 +282,18 @@ COMMAND(cmdGPS)
 
 COMMAND(cmdHelp)
 {
-  Command cmd;
-  char help[120];
+    Command cmd;
+    char help[130];
 
-  for (uint8_t i=0; i < nCommands; i++)
-  {
-    memcpy_P(&cmd, &commands[i], sizeof cmd);
-    strncpy_P(help, cmd.help, sizeof help);
-    if (strlen(help) > 0) // Do not print help for hidden commands
-    {
-      USB.println(help);
+    for (uint8_t i=0; i < nCommands; i++) {
+        memcpy_P(&cmd, &commands[i], sizeof cmd);
+        strncpy_P(help, cmd.help, sizeof help);
+        if (strlen(help) > 0) { // Do not print help for hidden commands
+            USB.println(help);
+        }
     }
-  }
 
-  return cmd_quiet;
+    return cmd_quiet;
 }
 
 
