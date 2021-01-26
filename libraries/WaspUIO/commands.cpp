@@ -509,14 +509,6 @@ COMMAND(cmdVar)
   {
     case -1:
       return cmd_bad_input;
-    case VAR_LOG_LEVEL_IDX:
-      if (n == 1) {
-        value = (uint8_t)cr.loglevel;
-      } else {
-        if (value >= LOG_LEN) { return cmd_bad_input; }
-        cr.loglevel = (loglevel_t) value;
-      }
-      break;
     case VAR_LOG_SD_IDX:
       if (n == 1) {
         value = UIO.log_sd;

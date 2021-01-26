@@ -167,7 +167,7 @@ void WaspUIO::bootConfig()
   Utils.getID(name);
 
   // Variables
-  cr.loglevel = (loglevel_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_LEVEL_IDX);
+  cr.loglevel = (loglevel_t) LOG_LEVEL;
   log_sd = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_SD_IDX);
   log_usb = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LOG_USB_IDX);
   lan_type = (lan_type_t) Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LAN_TYPE_IDX);
@@ -177,9 +177,6 @@ void WaspUIO::bootConfig()
   lora_mode = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_MODE_IDX);
   lora_dst = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_DST_IDX);
   xbee_network = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_NETWORK_IDX);
-
-  // Defaults for safety
-  if (cr.loglevel >= LOG_LEN) { cr.loglevel = LOG_DEBUG; }
 
 #if WITH_4G
   // 4G network

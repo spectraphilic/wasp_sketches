@@ -161,8 +161,7 @@ const char* const run_names[] PROGMEM = {
 };
 
 enum var_indexes {
-  VAR_LOG_LEVEL_IDX = 2,
-  VAR_LOG_SD_IDX,
+  VAR_LOG_SD_IDX = 3,
   VAR_LOG_USB_IDX,
   VAR_LAN_TYPE_IDX,
   VAR_WAN_TYPE_IDX,
@@ -174,7 +173,6 @@ enum var_indexes {
 };
 
 const char VAR_UNUSED    [] PROGMEM = "";
-const char VAR_LOG_LEVEL [] PROGMEM = "log.level";
 const char VAR_LOG_SD    [] PROGMEM = "log.sd";
 const char VAR_LOG_USB   [] PROGMEM = "log.usb";
 const char VAR_LAN_TYPE  [] PROGMEM = "lan.type";
@@ -187,7 +185,6 @@ const char VAR_LORA_DST  [] PROGMEM = "lora.dst";
 
 const char VAR_UNUSED_HELP       [] PROGMEM = "";
 const char VAR_BOARD_HELP        [] PROGMEM = "";
-const char VAR_LOG_LEVEL_HELP    [] PROGMEM = ": 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace";
 const char VAR_LOG_FLAG_HELP     [] PROGMEM = ": 0/1";
 const char VAR_LAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
 const char VAR_WAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
@@ -200,7 +197,7 @@ const char VAR_LORA_DST_HELP     [] PROGMEM = ": destination address";
 const char* const var_names[] PROGMEM = {
   VAR_UNUSED,
   VAR_UNUSED,
-  VAR_LOG_LEVEL,
+  VAR_UNUSED,
   VAR_LOG_SD,
   VAR_LOG_USB,
   VAR_LAN_TYPE,
@@ -215,7 +212,7 @@ const char* const var_names[] PROGMEM = {
 const char* const var_help[] PROGMEM = {
   VAR_UNUSED_HELP,
   VAR_UNUSED_HELP,
-  VAR_LOG_LEVEL_HELP,
+  VAR_UNUSED_HELP,
   VAR_LOG_FLAG_HELP,
   VAR_LOG_FLAG_HELP,
   VAR_LAN_TYPE_HELP,

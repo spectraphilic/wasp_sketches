@@ -116,7 +116,7 @@ typedef struct Task
  * Types and macros related to the logging system
  */
 
-enum loglevel_t {
+typedef enum {
   LOG_OFF,
   LOG_FATAL,
   LOG_ERROR,
@@ -125,7 +125,7 @@ enum loglevel_t {
   LOG_DEBUG,
   LOG_TRACE,
   LOG_LEN // Special value
-};
+} loglevel_t;
 
 #ifdef WFORMAT
 

@@ -2,6 +2,9 @@
 // will not fit into memory, so this is only used for QA purposes.
 //#define WFORMAT
 
+// 0=off 1=fatal 2=error 3=warn 4=info 5=debug 6=trace
+#define LOG_LEVEL (loglevel_t) 5
+
 #define BATTERY_TYPE BATTERY_LITHIUM
 #define BOARD_TYPE BOARD_NONE
 
