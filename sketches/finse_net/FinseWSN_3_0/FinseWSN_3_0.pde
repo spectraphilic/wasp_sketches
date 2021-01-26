@@ -48,7 +48,7 @@ void setup()
   #endif
   log_info("Frames    : %s", UIO.pprintFrames(buffer, size));
   log_info("Log       : level=%s output=%s", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  log_info("Actions   : %s", UIO.pprintActions(buffer, size));
+  log_info("Run       : %s", UIO.pprintActions(buffer, size));
 }
 
 void loop()
