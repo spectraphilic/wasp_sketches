@@ -27,8 +27,8 @@ typedef struct {
 const char CAT_MAIN      [] PROGMEM = "\nMain commands:";
 const char CMD_EXIT      [] PROGMEM = "  exit               - Exit the command line interface";
 const char CMD_HELP      [] PROGMEM = "  help               - Print the commands list";
+const char CMD_INFO      [] PROGMEM = "  info               - Print configuration and other information";
 const char CMD_NAME      [] PROGMEM = "  name               - Give a name to the mote (max 16 chars)";
-const char CMD_PRINT     [] PROGMEM = "  print              - Print configuration and other information";
 const char CMD_REBOOT    [] PROGMEM = "  reboot             - Reboot waspmote";
 const char CMD_RUN       [] PROGMEM = "  run [NAME H[:MM]]  - run (list names), run name 0 (disable), "
                                       "run name 5 (every 5m), run name 1:07 (every 1h at :07)";
@@ -63,8 +63,8 @@ const Command commands[] PROGMEM = {
     {"",              NULL,            CAT_MAIN},
     {"exit",          &cmdExit,        CMD_EXIT},
     {"help",          &cmdHelp,        CMD_HELP},
+    {"info",          &cmdInfo,        CMD_INFO},
     {"name",          &cmdName,        CMD_NAME},
-    {"print",         &cmdPrint,       CMD_PRINT},
     {"reboot",        &cmdReboot,      CMD_REBOOT},
     {"run",           &cmdRun,         CMD_RUN},
     {"time ",         &cmdTime,        CMD_TIME},
@@ -127,7 +127,7 @@ void WaspUIO::clint()
 
   // Print info
   cr_printf("\n");
-  cmdPrint(NULL);
+  cmdInfo(NULL);
   cr_printf("\n");
 
   // Go interactive or not
@@ -318,7 +318,7 @@ COMMAND(cmdName)
  * Print configuration and other information
  */
 
-COMMAND(cmdPrint)
+COMMAND(cmdInfo)
 {
   char name[17];
   char buffer[150];
