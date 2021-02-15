@@ -77,6 +77,7 @@ enum wan_type_t {
 };
 
 enum run_t {
+  // 0x
   RUN_BATTERY = 1,
   RUN_GPS,
   RUN_ACC,
@@ -85,9 +86,10 @@ enum run_t {
   RUN_DS1820, // OneWire
   RUN_BME280, // I2C
   RUN_MB, // TTL
-  RUN_XXX, // XXX Unused (available)
+  RUN_XXX, // Unused, available
+  // 1x
   RUN_LAGOPUS_AS7263,
-  RUN_LAGOPUS_AS7265, // (11)
+  RUN_LAGOPUS_AS7265,
   RUN_LAGOPUS_BME280,
   RUN_LAGOPUS_MLX90614,
   RUN_LAGOPUS_TMP102,
@@ -96,10 +98,13 @@ enum run_t {
   RUN_LAN, // Lora or XBee
   RUN_WAN, // 4G or Iridium
   RUN_TMP117,
+  // 2x
   RUN_SHT31,
-  RUN_QTPY_BME280, // 5M 5D0 (21)
-  RUN_QTPY_TMP117, // 5M2 5D2
-  RUN_QTPY_SHT31,  // 5M1 5D1
+  RUN_QTPY_BME280,   // 5M 5D0
+  RUN_QTPY_TMP117,   // 5M2 5D0
+  RUN_QTPY_SHT31,    // 5M1 5D0
+  RUN_QTPY_VL53L1,   // 5M3 5D0
+  RUN_QTPY_MLX90614, // 5M4 5D0
   RUN_LEN // Special value
 };
 
@@ -128,9 +133,11 @@ const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
 const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
 // SDI-12 slave
-const char RUN_QTPY_BME280_NAME  [] PROGMEM = "sdi_bme280"; // 21 atmospheric
-const char RUN_QTPY_SHT31_NAME   [] PROGMEM = "sdi_sht31";  // 22 temperature & humidity
-const char RUN_QTPY_TMP117_NAME  [] PROGMEM = "sdi_tmp117"; // 23 digital temperature
+const char RUN_QTPY_BME280_NAME   [] PROGMEM = "sdi_bme280"; // 21 atmospheric
+const char RUN_QTPY_SHT31_NAME    [] PROGMEM = "sdi_sht31";  // 22 temperature & humidity
+const char RUN_QTPY_TMP117_NAME   [] PROGMEM = "sdi_tmp117"; // 23 digital temperature
+const char RUN_QTPY_VL53L1_NAME   [] PROGMEM = "sdi_vl";     // 24 distance
+const char RUN_QTPY_MLX90614_NAME [] PROGMEM = "sdi_mlx";    // 25 infrared thermometer
 
 
 const char* const run_names[] PROGMEM = {
@@ -158,6 +165,8 @@ const char* const run_names[] PROGMEM = {
   RUN_QTPY_BME280_NAME,
   RUN_QTPY_SHT31_NAME,
   RUN_QTPY_TMP117_NAME,
+  RUN_QTPY_VL53L1_NAME,
+  RUN_QTPY_MLX90614_NAME,
 };
 
 enum var_indexes {

@@ -46,5 +46,26 @@ CR_TASK(taskQTPY)
         ADD_SENSOR(SENSOR_TMP1XX, temp);
     }
 
+    if (UIO.action(1, RUN_QTPY_VL53L1)) {
+        ttt = sdi.measure(5, 3);
+        if (ttt < 0) { CR_ERROR; }
+        if (ttt > 0) { CR_DELAY(ttt * 1000); }
+        if (sdi.sendCommand(5, "D0") == NULL) { CR_ERROR; }
+
+        int16_t distance = strtol(sdi.buffer+1, &next, 10);
+        ADD_SENSOR(SENSOR_VL53L1X, 0, &distance);
+    }
+
+    if (UIO.action(1, RUN_QTPY_MLX90614)) {
+        ttt = sdi.measure(5, 4);
+        if (ttt < 0) { CR_ERROR; }
+        if (ttt > 0) { CR_DELAY(ttt * 1000); }
+        if (sdi.sendCommand(5, "D0") == NULL) { CR_ERROR; }
+
+        float mlx_a = strtod(sdi.buffer+1, &next);
+        float mlx_o = strtod(next, &next);
+        ADD_SENSOR(SENSOR_MLX90614, mlx_o, mlx_a); // object, ambient
+    }
+
     CR_END;
 }
