@@ -762,6 +762,10 @@ const char* WaspSDI12::sendCommand(const char* cmd)
     }
 
     readline();
+    if (strlen(buffer) == 0) {
+        return NULL;
+    }
+
     log_debug("sdi-12 sendCommand(%s): '%s'", cmd, buffer);
     return buffer;
 }
