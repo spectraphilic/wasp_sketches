@@ -100,11 +100,14 @@ enum run_t {
   RUN_TMP117,
   // 2x
   RUN_SHT31,
-  RUN_QTPY_BME280,   // 5M 5D0
-  RUN_QTPY_TMP117,   // 5M2 5D0
-  RUN_QTPY_SHT31,    // 5M1 5D0
-  RUN_QTPY_VL53L1,   // 5M3 5D0
-  RUN_QTPY_MLX90614, // 5M4 5D0
+  RUN_QTPY_AS7341,   // 5M 5D0
+  RUN_QTPY_BME280,   // 5M1 5D0
+  RUN_QTPY_ICM20X,   // 5M2 5D0
+  RUN_QTPY_MLX90614, // 5M3 5D0
+  RUN_QTPY_SHT31,    // 5M4 5D0
+  RUN_QTPY_TMP117,   // 5M5 5D0
+  RUN_QTPY_VEML7700, // 5M6 5D0
+  RUN_QTPY_VL53L1,   // 5M7 5D0
   RUN_LEN // Special value
 };
 
@@ -133,11 +136,14 @@ const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
 const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
 // SDI-12 slave
-const char RUN_QTPY_BME280_NAME   [] PROGMEM = "sdi_bme280"; // 21 atmospheric
-const char RUN_QTPY_SHT31_NAME    [] PROGMEM = "sdi_sht31";  // 22 temperature & humidity
-const char RUN_QTPY_TMP117_NAME   [] PROGMEM = "sdi_tmp117"; // 23 digital temperature
-const char RUN_QTPY_VL53L1_NAME   [] PROGMEM = "sdi_vl";     // 24 distance
-const char RUN_QTPY_MLX90614_NAME [] PROGMEM = "sdi_mlx";    // 25 infrared thermometer
+const char RUN_QTPY_AS7341_NAME   [] PROGMEM = "sdi_as7341"; // 21 Specrometer
+const char RUN_QTPY_BME280_NAME   [] PROGMEM = "sdi_bme280"; // 22 Atmospheric
+const char RUN_QTPY_ICM20X_NAME   [] PROGMEM = "sdi_icm";    // 23 Accel/Magenetic/Gyro
+const char RUN_QTPY_MLX90614_NAME [] PROGMEM = "sdi_mlx";    // 24 Infrared thermometer
+const char RUN_QTPY_SHT31_NAME    [] PROGMEM = "sdi_sht";    // 25 temperature & humidity
+const char RUN_QTPY_TMP117_NAME   [] PROGMEM = "sdi_tmp117"; // 26 Digital temperature
+const char RUN_QTPY_VEML7700_NAME [] PROGMEM = "sdi_veml";   // 27 Ambient light
+const char RUN_QTPY_VL53L1_NAME   [] PROGMEM = "sdi_vl";     // 28 Distance
 
 
 const char* const run_names[] PROGMEM = {
@@ -162,11 +168,14 @@ const char* const run_names[] PROGMEM = {
   RUN_WAN_NAME,
   RUN_TMP117_NAME,
   RUN_SHT31_NAME,
+  RUN_QTPY_AS7341_NAME,
   RUN_QTPY_BME280_NAME,
+  RUN_QTPY_ICM20X_NAME,
+  RUN_QTPY_MLX90614_NAME,
   RUN_QTPY_SHT31_NAME,
   RUN_QTPY_TMP117_NAME,
+  RUN_QTPY_VEML7700_NAME,
   RUN_QTPY_VL53L1_NAME,
-  RUN_QTPY_MLX90614_NAME,
 };
 
 enum var_indexes {
@@ -693,5 +702,8 @@ CR_TASK(taskSlow);
 #define SENSOR_DS2          217
 #define SENSOR_ATMOS        218
 #define SENSOR_SHT31        219
+#define SENSOR_AS7341       220
+#define SENSOR_ICM20X       221
+#define SENSOR_VEML7700     222
 
 #endif
