@@ -757,14 +757,12 @@ const char* WaspSDI12::sendCommand(const char* cmd)
 {
     log_debug("sdi-12 sendCommand(%s)", cmd);
     sendCommand((char*)cmd, strlen(cmd));
-    if (readCommandAnswer() == -1) {
+    if (readCommandAnswer() == -1)
         return NULL;
-    }
 
     readline();
-    if (strlen(buffer) == 0) {
+    if (strlen(buffer) == 0)
         return NULL;
-    }
 
     log_debug("sdi-12 sendCommand(%s): '%s'", cmd, buffer);
     return buffer;
@@ -780,23 +778,17 @@ const char* WaspSDI12::sendCommand(uint8_t address, const char* cmd)
     int n;
 
     if (address > 9)
-    {
         return NULL;
-    }
 
     n = snprintf(aux, max, "%d%s!", address, cmd);
     if (n < 0 || (size_t)n >= max)
-    {
         return NULL;
-    }
 
     sendCommand(aux);
 
     // Check address
     if (aux[0] != buffer[0])
-    {
         return NULL;
-    }
 
     return buffer;
 }
@@ -817,24 +809,42 @@ int WaspSDI12::measure(uint8_t address, uint8_t number)
     int n = (number == 0) ? snprintf(buffer, size, "%dM!", address)
                           : snprintf(buffer, size, "%dM%d!", address, number);
 
-    if (n < 0 || (size_t)n >= size) {
+    if (n < 0 || (size_t)n >= size)
         return -1;
-    }
 
-    if (sendCommand(buffer) == NULL) {
+    if (sendCommand(buffer) == NULL)
         return -1;
-    }
 
+    // Verify response, must be atttn\r\n
+    if (strlen(buffer) < 5)
+        return -1;
+
+    // Return error if n is zero
+    n = buffer[4] - '0';
+    if (n == 0)
+        return -1;
+
+    // Return the number of seconds
     memcpy(buffer, buffer+1, 3);
     buffer[3] = 0;
-    return atoi(buffer);
+    int ttt = atoi(buffer);
+    return ttt;
 }
 
 /* Sends data command to address. Always to the buffer 0 (TODO Specify buffer
  * in parameter) */
 const char* WaspSDI12::data(uint8_t address)
 {
-    return sendCommand(address, "D0");
+    const char *response = sendCommand(address, "D0");
+    if (response == NULL)
+        return NULL;
+
+    // Check abort measurement: a\r\n
+    // We already remove the \r\n part, so just test response length > 1
+    if (strlen(buffer) <= 1)
+        return NULL;
+
+    return response;
 }
 
 /* Sends the query address command. Returns the address. */
