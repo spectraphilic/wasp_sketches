@@ -134,8 +134,12 @@ CR_TASK(taskQTPY)
         if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
-                int16_t distance = strtol(sdi.buffer+1, &next, 10);
-                ADD_SENSOR(SENSOR_VL53L1X, 0, &distance);
+                next = sdi.buffer + 1;
+                unsigned int distances[n];
+                for (int i = 0; i < n; i++) {
+                    distances[i] = strtol(next, &next, 10);
+                }
+                ADD_SENSOR(SENSOR_VL53L1X, n, distances);
             }
         }
     }
