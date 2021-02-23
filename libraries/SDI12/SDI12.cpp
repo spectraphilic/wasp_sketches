@@ -799,9 +799,10 @@ const char* WaspSDI12::identify(uint8_t address)
     return sendCommand(address, "I");
 }
 
-/* Sends measure command to address. Returns the number of seconds to wait for
- * the data to be available; or -1 if error. */
-int WaspSDI12::measure(uint8_t address, uint8_t number)
+/* Sends measure command to address. Returns the number of values the sensor
+ * will send, or -1 if error. It return as well the max number of seconds
+ * needed for the sensor to have the values available. */
+int WaspSDI12::measure(unsigned int *ttt, uint8_t address, uint8_t number)
 {
     size_t size = 5;
     char cmd[size];
@@ -815,21 +816,14 @@ int WaspSDI12::measure(uint8_t address, uint8_t number)
     if (sendCommand(cmd) == NULL)
         return -1;
 
-    // Verify response, must be atttn\r\n
+    // Parse response: atttn\r\n
     // Not standard, but we support atttnn\r\n as well
-    if (strlen(buffer) < 5)
+    unsigned int a, nn;
+    int count = sscanf(buffer, "%1u%3u%2u", &a, ttt, &nn);
+    if (count < 3)
         return -1;
 
-    // Return error if n is zero
-    n = buffer[4] - '0';
-    if (n == 0)
-        return -1;
-
-    // Return the number of seconds
-    memcpy(buffer, buffer+1, 3);
-    buffer[3] = 0;
-    int ttt = atoi(buffer);
-    return ttt;
+    return nn;
 }
 
 /* Sends data command to address. Always to the buffer 0 (TODO Specify buffer

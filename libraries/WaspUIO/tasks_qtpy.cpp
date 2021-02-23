@@ -6,7 +6,8 @@ extern WaspSDI12 sdi;
 
 CR_TASK(taskQTPY)
 {
-    int ttt;
+    int n;
+    unsigned int ttt;
     char *next;
     const int address = 5;
 
@@ -15,8 +16,8 @@ CR_TASK(taskQTPY)
     CR_DELAY(5000); // Wait 4s for the QT Py to start
 
     if (UIO.action(1, RUN_QTPY_AS7341)) {
-        ttt = sdi.measure(address);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 uint16_t f1 = strtoul(sdi.buffer+1, &next, 10);
@@ -35,8 +36,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_BME280)) {
-        ttt = sdi.measure(address, 1);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 1);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float bme_t = strtod(sdi.buffer+1, &next);
@@ -48,8 +49,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_ICM20X)) {
-        ttt = sdi.measure(address, 2);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 2);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float temp = strtod(sdi.buffer+1, &next);
@@ -68,8 +69,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_MLX90614)) {
-        ttt = sdi.measure(address, 3);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 3);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float mlx_o = strtod(sdi.buffer+1, &next);
@@ -80,8 +81,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_SHT31)) {
-        ttt = sdi.measure(address, 4);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 4);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float sht_t = strtod(sdi.buffer+1, &next);
@@ -92,8 +93,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_TMP117)) {
-        ttt = sdi.measure(address, 5);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 5);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float temp = strtod(sdi.buffer+1, &next);
@@ -103,8 +104,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_VCNL4040)) {
-        ttt = sdi.measure(address, 6);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 6);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 uint16_t prox = strtoul(sdi.buffer+1, &next, 10);
@@ -116,8 +117,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_VEML7700)) {
-        ttt = sdi.measure(address, 7);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 7);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float lux = strtod(sdi.buffer+1, &next);
@@ -129,8 +130,8 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_VL53L1)) {
-        ttt = sdi.measure(address, 8);
-        if (ttt >= 0) {
+        n = sdi.measure(&ttt, address, 8);
+        if (n > 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 int16_t distance = strtol(sdi.buffer+1, &next, 10);

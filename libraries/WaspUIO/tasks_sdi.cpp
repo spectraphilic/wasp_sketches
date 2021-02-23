@@ -49,13 +49,14 @@ CR_TASK(taskSdi)
 
 CR_TASK(taskSdiCtd10)
 {
-  int ttt;
+  unsigned int ttt;
+  int n;
 
   CR_BEGIN;
 
   // Send the measure command
-  ttt = sdi.measure(0);
-  if (ttt < 0) { CR_ERROR; }
+  n = sdi.measure(&ttt, 0);
+  if (n < 1) { CR_ERROR; }
 
   // TODO We could listen every n ms for a "Service Request" from the sensor
   if (ttt > 0) { CR_DELAY(ttt * 1000); }
