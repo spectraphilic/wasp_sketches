@@ -804,18 +804,19 @@ const char* WaspSDI12::identify(uint8_t address)
 int WaspSDI12::measure(uint8_t address, uint8_t number)
 {
     size_t size = 5;
-    char buffer[size];
+    char cmd[size];
 
-    int n = (number == 0) ? snprintf(buffer, size, "%dM!", address)
-                          : snprintf(buffer, size, "%dM%d!", address, number);
+    int n = (number == 0) ? snprintf(cmd, size, "%dM!", address)
+                          : snprintf(cmd, size, "%dM%d!", address, number);
 
     if (n < 0 || (size_t)n >= size)
         return -1;
 
-    if (sendCommand(buffer) == NULL)
+    if (sendCommand(cmd) == NULL)
         return -1;
 
     // Verify response, must be atttn\r\n
+    // Not standard, but we support atttnn\r\n as well
     if (strlen(buffer) < 5)
         return -1;
 

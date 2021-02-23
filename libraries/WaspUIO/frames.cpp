@@ -17,16 +17,18 @@ const char null               [] PROGMEM = "";
 const char frame_format_j     [] PROGMEM = "j";
 const char frame_format_jjj   [] PROGMEM = "jjj";
 const char frame_format_u     [] PROGMEM = "u";
-//const char frame_format_v     [] PROGMEM = "v";
+const char frame_format_vvv   [] PROGMEM = "vvv";
 const char frame_format_w     [] PROGMEM = "w";
-//const char frame_format_ww    [] PROGMEM = "ww";
 const char frame_format_f     [] PROGMEM = "f";
 const char frame_format_ff    [] PROGMEM = "ff";
 const char frame_format_fff   [] PROGMEM = "fff";
+const char frame_format_ffv   [] PROGMEM = "ffv";
 const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_uf    [] PROGMEM = "uf";
 const char frame_format_jjk   [] PROGMEM = "jjk";
-const char frame_format_jjjjjj[] PROGMEM = "jjjjjj";
+const char frame_format_6j    [] PROGMEM = "jjjjjj";
+const char frame_format_10v   [] PROGMEM = "vvvvvvvvvv";
+const char frame_format_10f   [] PROGMEM = "ffffffffff";
 
 const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   null, null, null, null, null, null, null, null, null, null, // 00x
@@ -88,9 +90,13 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_n,       // 214 MB73XX
   null,                 // 215 Reserved (was ATMOS-22)
   frame_format_jjk,     // 216 CTD-10
-  frame_format_jjjjjj,  // 217 DS-2
-  frame_format_jjjjjj,  // 218 ATMOS-22
+  frame_format_6j,      // 217 DS-2
+  frame_format_6j,      // 218 ATMOS-22
   frame_format_ff,      // 219 SHT31
+  frame_format_10v,     // 220 AS7341
+  frame_format_10f,     // 221 ICM20X
+  frame_format_vvv,     // 222 VCNL4040
+  frame_format_ffv,     // 223 VEML7700
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
@@ -112,6 +118,10 @@ const char frame_name_ctd10       [] PROGMEM = "CTD10";
 const char frame_name_ds2         [] PROGMEM = "DS-2";
 const char frame_name_atmos       [] PROGMEM = "ATMOS";
 const char frame_name_sht31       [] PROGMEM = "SHT31";
+const char frame_name_as7341      [] PROGMEM = "AS7341";
+const char frame_name_icm20x      [] PROGMEM = "ICM20X";
+const char frame_name_vcnl4040    [] PROGMEM = "VCNL4040";
+const char frame_name_veml7700    [] PROGMEM = "VEML7700";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -177,6 +187,10 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_ds2,                                             // 217 DS-2
   frame_name_atmos,                                           // 218 ATMOS-22
   frame_name_sht31,                                           // 219 SHT31
+  frame_name_as7341,                                          // 220 AS7341
+  frame_name_icm20x,                                          // 221 ICM20X
+  frame_name_vcnl4040,                                        // 222 VCNL4040
+  frame_name_veml7700,                                        // 223 VEML7700
 };
 
 /**
@@ -256,17 +270,15 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   int8_t err = 0; // 0=ok -1=no-space -2=other-error
   uint16_t start;
 
-  if (frame.numFields >= max_fields)
-  {
+  if (frame.numFields >= max_fields) {
     log_error("Max number of fields reached!");
     return -2;
   }
 
   // Read format from program memory
-  char format[10];
+  char format[11];
   strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
-  if (strlen(format) == 0)
-  {
+  if (strlen(format) == 0) {
     log_error("Unexpected frame type %hhu", type);
     return -2;
   }
@@ -277,57 +289,38 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   if (addSensorValue(type) == 0) { err = -1; goto exit; }
 
   // Values
-  for (uint8_t i=0; i < strlen(format); i++)
-  {
+  for (uint8_t i=0; i < strlen(format); i++) {
     char c = format[i];
-    if (c == 'f')
-    {
+    if (c == 'f') {
       float value = (float) va_arg(args, double);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
-    }
-//  else if (c == 'i')
-//  {
+//  } else if (c == 'i') {
 //    int8_t value = va_arg(args, int8_t);
 //    if (addSensorValue(value) == 0) { err = -1; goto exit; }
-//  }
-    else if (c == 'j')
-    {
+    } else if (c == 'j') {
       int16_t value = va_arg(args, int16_t);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
-    }
-    else if (c == 'k')
-    {
+    } else if (c == 'k') {
       int32_t value = va_arg(args, int32_t);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
-    }
-    else if (c == 'u')
-    {
+    } else if (c == 'u') {
       uint8_t value = (uint8_t) va_arg(args, uint16_t);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
-    }
-    else if (c == 'v')
-    {
+    } else if (c == 'v') {
       uint16_t value = va_arg(args, uint16_t);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
-    }
-    else if (c == 'w')
-    {
+    } else if (c == 'w') {
       uint32_t value = va_arg(args, uint32_t);
       if (addSensorValue(value) == 0) { err = -1; goto exit; }
-    }
-    else if (c == 'n')
-    {
+    } else if (c == 'n') {
       uint8_t n = (uint8_t) va_arg(args, uint16_t);
       if (addSensorValue(n) == 0) { err = -1; goto exit; }
       const int* values = va_arg(args, const int*);
       int32_t value;
-      for (uint8_t j = 0; j < n; j++)
-      {
-        if (j > 0)
-        {
+      for (uint8_t j = 0; j < n; j++) {
+        if (j > 0) {
           value = values[j] - values[j-1];
-          if (value > -128 && value < 128)
-          {
+          if (value > -128 && value < 128) {
             if (addSensorValue((int8_t)value) == 0) { err = -1; goto exit; }
             continue;
           }
@@ -338,9 +331,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
 
         if (addSensorValue(values[j]) == 0) { err = -1; goto exit; }
       }
-    }
-    else
-    {
+    } else {
       log_error("Programming error: unexpected frame format %c", c);
       err = -2;
       break;
@@ -450,191 +441,170 @@ uint8_t WaspUIO::getSequence(uint8_t *p)
  */
 uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
 {
-   uint16_t length;
-   // Header
-   uint8_t frame_type;
-   uint8_t nbytes;
-   char serial[17];
-   char mote_id[17];
-   uint8_t seq;
+    uint16_t length;
+    // Header
+    uint8_t frame_type;
+    uint8_t nbytes;
+    char serial[17];
+    char mote_id[17];
+    uint8_t seq;
 
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("=== Binary Frame ===\n");
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("=== Binary Frame ===\n");
 
-   // Start delimiter
-   if (strncmp((const char*) p, "<=>", 3) != 0)
-   {
-     if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Error reading Start delimiter <=>\n");
-     return 0;
-   }
-   p += 3;
+    // Start delimiter
+    if (strncmp((const char*) p, "<=>", 3) != 0) {
+        if (log_usb && cr.loglevel >= LOG_DEBUG)
+            cr_printf("Error reading Start delimiter <=>\n");
+        return 0;
+    }
+    p += 3;
 
-   // Frame type
-   frame_type = *p++;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Frame type: %d\n", frame_type);
-   // TODO Print text identifier: info, timeout, ...
+    // Frame type
+    frame_type = *p++;
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("Frame type: %d\n", frame_type);
+    // TODO Print text identifier: info, timeout, ...
 
-   // Number of bytes
-   nbytes = *p++;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Number of bytes: %d\n", nbytes);
+    // Number of bytes
+    nbytes = *p++;
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("Number of bytes: %d\n", nbytes);
 
-   length = 5 + nbytes;
-   if (length > max_length)
-   {
-     if (log_usb && cr.loglevel >= LOG_DEBUG)
-       cr_printf("Frame length (%u) greater than max-length (%u\n", length, max_length);
-     return 0;
-   }
+    length = 5 + nbytes;
+    if (length > max_length) {
+        if (log_usb && cr.loglevel >= LOG_DEBUG)
+            cr_printf("Frame length (%u) greater than max-length (%u\n", length, max_length);
+        return 0;
+    }
 
-   // Serial ID
-   Utils.hex2str(p, serial, 8);
-   p += 8;
-   nbytes -= 8;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Serial ID: 0x%s\n", serial);
+    // Serial ID
+    Utils.hex2str(p, serial, 8);
+    p += 8;
+    nbytes -= 8;
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("Serial ID: 0x%s\n", serial);
 
-   // Waspmote ID
-   char c;
-   for (uint8_t i = 0; i < 17 ; i++)
-   {
-     c = (char) *p++;
-     nbytes--;
-     if (c == '#')
-     {
-       mote_id[i] = '\0';
-       break;
-     }
-     mote_id[i] = c;
-   }
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Waspmote ID: %s\n", mote_id);
+    // Waspmote ID
+    char c;
+    for (uint8_t i = 0; i < 17 ; i++) {
+        c = (char) *p++;
+        nbytes--;
+        if (c == '#') {
+            mote_id[i] = '\0';
+            break;
+        }
+        mote_id[i] = c;
+    }
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("Waspmote ID: %s\n", mote_id);
 
-   // Separator
-   if (c != '#')
-   {
-     if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Error reading Waspmote ID\n");
-     return 0;
-   }
+    // Separator
+    if (c != '#') {
+        if (log_usb && cr.loglevel >= LOG_DEBUG)
+            cr_printf("Error reading Waspmote ID\n");
+        return 0;
+    }
 
-   // Sequence
-   seq = *p++;
-   nbytes--;
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("Sequence: %d\n", seq);
+    // Sequence
+    seq = *p++;
+    nbytes--;
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("Sequence: %d\n", seq);
 
-   // Payload
-   while (nbytes > 0)
-   {
-     uint8_t type = *p++;
-     nbytes--;
+    // Payload
+    while (nbytes > 0) {
+        uint8_t type = *p++;
+        nbytes--;
 
-     // Read format string
-     char format[10];
-     strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
-     if (strlen(format) == 0)
-     {
-       if (log_usb && cr.loglevel >= LOG_DEBUG)
-         cr_printf("Unexpected frame type %hhu\n", type);
-       return 0;
-     }
+        // Read format string
+        char format[11];
+        strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
+        if (strlen(format) == 0) {
+            if (log_usb && cr.loglevel >= LOG_DEBUG)
+                cr_printf("Unexpected frame type %hhu\n", type);
+            return 0;
+        }
 
-     // Read name
-     char name[20];
-     strcpy_P(name, (char*)pgm_read_word(&(FRAME_NAME_TABLE[type])));
+        // Read name
+        char name[20];
+        strcpy_P(name, (char*)pgm_read_word(&(FRAME_NAME_TABLE[type])));
 
-     // Values
-     char value_str[50];
-     for (size_t i=0; i < strlen(format); i++)
-     {
-       c = format[i];
-       if (c == 'f')
-       {
-         Utils.float2String(*(float*)(void*)p, value_str, 4);
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %s\n", type, name, value_str);
-         p += 4; nbytes -= 4;
-       }
-       else if (c == 'i')
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %d\n", type, name, *(int8_t *)p);
-         p += 1; nbytes -= 1;
-       }
-       else if (c == 'j')
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %d\n", type, name, *(int16_t *)p);
-         p += 2; nbytes -= 2;
-       }
-       else if (c == 'k')
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %ld\n", type, name, *(int32_t *)p);
-         p += 4; nbytes -= 4;
-       }
-       else if (c == 'u')
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %d\n", type, name, *(uint8_t *)p);
-         p += 1; nbytes -= 1;
-       }
-       else if (c == 'v')
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %u\n", type, name, *(uint16_t *)p);
-         p += 2; nbytes -= 2;
-       }
-       else if (c == 'w')
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %lu\n", type, name, *(uint32_t *)p);
-         p += 4; nbytes -= 4;
-       }
-       else if (c == 'n')
-       {
-         uint8_t nfields = *p++;
-         nbytes--;
-         // Special case, we store ints in a compressed format
-         for (uint8_t j=0; j < nfields; j++)
-         {
-           if (j > 0)
-           {
-             int8_t diff = *(int8_t *)p; p++;
-             nbytes--;
-             if (diff != -128)
-             {
-               if (log_usb && cr.loglevel >= LOG_DEBUG)
-                 cr_printf("Sensor %d (%s): %hhd\n", type, name, diff);
-               continue;
-             }
-           }
+        // Values
+        char value_str[50];
+        for (size_t i=0; i < strlen(format); i++) {
+            c = format[i];
+            if (c == 'f') {
+                Utils.float2String(*(float*)(void*)p, value_str, 4);
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %s\n", type, name, value_str);
+                p += 4; nbytes -= 4;
+            } else if (c == 'i') {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %d\n", type, name, *(int8_t *)p);
+                p += 1; nbytes -= 1;
+            } else if (c == 'j') {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %d\n", type, name, *(int16_t *)p);
+                p += 2; nbytes -= 2;
+            } else if (c == 'k') {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %ld\n", type, name, *(int32_t *)p);
+                p += 4; nbytes -= 4;
+            } else if (c == 'u') {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %d\n", type, name, *(uint8_t *)p);
+                p += 1; nbytes -= 1;
+            } else if (c == 'v') {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %u\n", type, name, *(uint16_t *)p);
+                p += 2; nbytes -= 2;
+            } else if (c == 'w') {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %lu\n", type, name, *(uint32_t *)p);
+                p += 4; nbytes -= 4;
+            } else if (c == 'n') {
+                uint8_t nfields = *p++;
+                nbytes--;
+                // Special case, we store ints in a compressed format
+                for (uint8_t j=0; j < nfields; j++) {
+                    if (j > 0) {
+                        int8_t diff = *(int8_t *)p; p++;
+                        nbytes--;
+                        if (diff != -128) {
+                            if (log_usb && cr.loglevel >= LOG_DEBUG)
+                                cr_printf("Sensor %d (%s): %hhd\n", type, name, diff);
+                            continue;
+                        }
+                    }
 
-           if (log_usb && cr.loglevel >= LOG_DEBUG)
-             cr_printf("Sensor %d (%s): %d\n", type, name, *(int *)p);
-           p += 2; nbytes -= 2;
-         }
-       }
-       else if (c == 's')
-       {
-         uint8_t len = *p++;
-         nbytes--;
-         if (len > sizeof(value_str) - 1)
-         {
-           if (log_usb && cr.loglevel >= LOG_DEBUG)
-             cr_printf("Error reading sensor value, string too long %d\n", len);
-           return 0;
-         }
-         strncpy(value_str, (char*) p, len);
-         p += len; nbytes -= len;
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): %s\n", type, name, value_str);
-       }
-       else
-       {
-         if (log_usb && cr.loglevel >= LOG_DEBUG)
-           cr_printf("Sensor %d (%s): unexpected type %c\n", type, name, c);
-       }
-     }
-   }
+                    if (log_usb && cr.loglevel >= LOG_DEBUG)
+                        cr_printf("Sensor %d (%s): %d\n", type, name, *(int *)p);
+                    p += 2; nbytes -= 2;
+                }
+            } else if (c == 's') {
+                uint8_t len = *p++;
+                nbytes--;
+                if (len > sizeof(value_str) - 1) {
+                    if (log_usb && cr.loglevel >= LOG_DEBUG)
+                        cr_printf("Error reading sensor value, string too long %d\n", len);
+                    return 0;
+                }
+                strncpy(value_str, (char*) p, len);
+                p += len; nbytes -= len;
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): %s\n", type, name, value_str);
+            } else {
+                if (log_usb && cr.loglevel >= LOG_DEBUG)
+                    cr_printf("Sensor %d (%s): unexpected type %c\n", type, name, c);
+            }
+        }
+    }
 
-   if (log_usb && cr.loglevel >= LOG_DEBUG) cr_printf("====================\n");
-   return length;
+    if (log_usb && cr.loglevel >= LOG_DEBUG)
+        cr_printf("====================\n");
+
+    return length;
 }
 
 

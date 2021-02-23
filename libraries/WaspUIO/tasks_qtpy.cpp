@@ -12,23 +12,23 @@ CR_TASK(taskQTPY)
 
     CR_BEGIN;
 
-    CR_DELAY(4000); // Wait 4s for the QT Py to start
+    CR_DELAY(5000); // Wait 4s for the QT Py to start
 
     if (UIO.action(1, RUN_QTPY_AS7341)) {
         ttt = sdi.measure(address);
         if (ttt >= 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
-                float f1 = strtod(sdi.buffer+1, &next);
-                float f2 = strtod(next, &next);
-                float f3 = strtod(next, &next);
-                float f4 = strtod(next, &next);
-                float f5 = strtod(next, &next);
-                float f6 = strtod(next, &next);
-                float f7 = strtod(next, &next);
-                float f8 = strtod(next, &next);
-                float clear = strtod(next, &next);
-                float nir = strtod(next, &next);
+                uint16_t f1 = strtoul(sdi.buffer+1, &next, 10);
+                uint16_t f2 = strtoul(next, &next, 10);
+                uint16_t f3 = strtoul(next, &next, 10);
+                uint16_t f4 = strtoul(next, &next, 10);
+                uint16_t f5 = strtoul(next, &next, 10);
+                uint16_t f6 = strtoul(next, &next, 10);
+                uint16_t f7 = strtoul(next, &next, 10);
+                uint16_t f8 = strtoul(next, &next, 10);
+                uint16_t clear = strtoul(next, &next, 10);
+                uint16_t nir = strtoul(next, &next, 10);
                 ADD_SENSOR(SENSOR_AS7341, f1, f2, f3, f4, f5, f6, f7, f8, clear, nir);
             }
         }
@@ -40,8 +40,8 @@ CR_TASK(taskQTPY)
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
                 float bme_t = strtod(sdi.buffer+1, &next);
-                float bme_p = strtod(next, &next);
                 float bme_h = strtod(next, &next);
+                float bme_p = strtod(next, &next);
                 ADD_SENSOR(SENSOR_BME_77, bme_t, bme_h, bme_p);
             }
         }
@@ -102,8 +102,21 @@ CR_TASK(taskQTPY)
         }
     }
 
-    if (UIO.action(1, RUN_QTPY_VEML7700)) {
+    if (UIO.action(1, RUN_QTPY_VCNL4040)) {
         ttt = sdi.measure(address, 6);
+        if (ttt >= 0) {
+            if (ttt > 0) { CR_DELAY(ttt * 1000); }
+            if (sdi.data(address) != NULL) {
+                uint16_t prox = strtoul(sdi.buffer+1, &next, 10);
+                uint16_t lux = strtoul(next, &next, 10);
+                uint16_t white = strtoul(next, &next, 10);
+                ADD_SENSOR(SENSOR_VCNL4040, prox, lux, white);
+            }
+        }
+    }
+
+    if (UIO.action(1, RUN_QTPY_VEML7700)) {
+        ttt = sdi.measure(address, 7);
         if (ttt >= 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {
@@ -116,7 +129,7 @@ CR_TASK(taskQTPY)
     }
 
     if (UIO.action(1, RUN_QTPY_VL53L1)) {
-        ttt = sdi.measure(address, 7);
+        ttt = sdi.measure(address, 8);
         if (ttt >= 0) {
             if (ttt > 0) { CR_DELAY(ttt * 1000); }
             if (sdi.data(address) != NULL) {

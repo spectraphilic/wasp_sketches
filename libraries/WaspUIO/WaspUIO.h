@@ -106,8 +106,10 @@ enum run_t {
   RUN_QTPY_MLX90614, // 5M3 5D0
   RUN_QTPY_SHT31,    // 5M4 5D0
   RUN_QTPY_TMP117,   // 5M5 5D0
-  RUN_QTPY_VEML7700, // 5M6 5D0
-  RUN_QTPY_VL53L1,   // 5M7 5D0
+  RUN_QTPY_VCNL4040, // 5M6 5D0
+  RUN_QTPY_VEML7700, // 5M7 5D0
+  RUN_QTPY_VL53L1,   // 5M8 5D0
+  // 3x
   RUN_LEN // Special value
 };
 
@@ -142,8 +144,9 @@ const char RUN_QTPY_ICM20X_NAME   [] PROGMEM = "sdi_icm";    // 23 Accel/Magenet
 const char RUN_QTPY_MLX90614_NAME [] PROGMEM = "sdi_mlx";    // 24 Infrared thermometer
 const char RUN_QTPY_SHT31_NAME    [] PROGMEM = "sdi_sht";    // 25 temperature & humidity
 const char RUN_QTPY_TMP117_NAME   [] PROGMEM = "sdi_tmp117"; // 26 Digital temperature
-const char RUN_QTPY_VEML7700_NAME [] PROGMEM = "sdi_veml";   // 27 Ambient light
-const char RUN_QTPY_VL53L1_NAME   [] PROGMEM = "sdi_vl";     // 28 Distance
+const char RUN_QTPY_VCNL4040_NAME [] PROGMEM = "sdi_vcnl";   // 27 Proximity & Light
+const char RUN_QTPY_VEML7700_NAME [] PROGMEM = "sdi_veml";   // 28 Ambient light
+const char RUN_QTPY_VL53L1_NAME   [] PROGMEM = "sdi_vl";     // 29 Distance
 
 
 const char* const run_names[] PROGMEM = {
@@ -174,6 +177,7 @@ const char* const run_names[] PROGMEM = {
   RUN_QTPY_MLX90614_NAME,
   RUN_QTPY_SHT31_NAME,
   RUN_QTPY_TMP117_NAME,
+  RUN_QTPY_VCNL4040_NAME,
   RUN_QTPY_VEML7700_NAME,
   RUN_QTPY_VL53L1_NAME,
 };
@@ -704,6 +708,7 @@ CR_TASK(taskSlow);
 #define SENSOR_SHT31        219
 #define SENSOR_AS7341       220
 #define SENSOR_ICM20X       221
-#define SENSOR_VEML7700     222
+#define SENSOR_VCNL4040     222
+#define SENSOR_VEML7700     223
 
 #endif

@@ -10,14 +10,10 @@
 CR_TASK(taskHealthFrame)
 {
   // Battery level
-  if (UIO.action(1, RUN_BATTERY))
-  {
-    if (UIO.batteryType == BATTERY_LITHIUM)
-    {
+  if (UIO.action(1, RUN_BATTERY)) {
+    if (UIO.batteryType == BATTERY_LITHIUM) {
       ADD_SENSOR(SENSOR_BAT, UIO.batteryLevel);
-    }
-    else
-    {
+    } else {
       ADD_SENSOR(SENSOR_VOLTS, UIO.batteryVolts);
     }
   }
@@ -90,9 +86,9 @@ CR_TASK(taskSensors)
 
 #if WITH_QTPY
   // SDI-12 QT-Py
-  if (UIO.action(8, RUN_QTPY_AS7341, RUN_QTPY_BME280, RUN_QTPY_ICM20X,
+  if (UIO.action(9, RUN_QTPY_AS7341, RUN_QTPY_BME280, RUN_QTPY_ICM20X,
                  RUN_QTPY_MLX90614, RUN_QTPY_SHT31, RUN_QTPY_TMP117,
-                 RUN_QTPY_VEML7700, RUN_QTPY_VL53L1))
+                 RUN_QTPY_VCNL4040, RUN_QTPY_VEML7700, RUN_QTPY_VL53L1))
   {
     UIO.pwr_3v3(1);
     CR_SPAWN2(taskQTPY, id);
