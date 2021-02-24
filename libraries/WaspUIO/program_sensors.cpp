@@ -86,10 +86,7 @@ CR_TASK(taskSensors)
 
 #if WITH_QTPY
   // SDI-12 QT-Py
-  if (UIO.action(9, RUN_QTPY_AS7341, RUN_QTPY_BME280, RUN_QTPY_ICM20X,
-                 RUN_QTPY_MLX90614, RUN_QTPY_SHT31, RUN_QTPY_TMP117,
-                 RUN_QTPY_VCNL4040, RUN_QTPY_VEML7700, RUN_QTPY_VL53L1))
-  {
+  if (UIO.action(1, RUN_QTPY)) {
     UIO.pwr_3v3(1);
     CR_SPAWN2(taskQTPY, id);
     CR_JOIN(id);
