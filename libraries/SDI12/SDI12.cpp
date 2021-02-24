@@ -755,14 +755,17 @@ const char* WaspSDI12::readline()
  */
 const char* WaspSDI12::sendCommand(const char* cmd)
 {
-    log_debug("sdi-12 sendCommand(%s)", cmd);
     sendCommand((char*)cmd, strlen(cmd));
-    if (readCommandAnswer() == -1)
+    if (readCommandAnswer() == -1) {
+        log_warn("sdi-12 sendCommand(%s) ERROR", cmd);
         return NULL;
+    }
 
     readline();
-    if (strlen(buffer) == 0)
+    if (strlen(buffer) == 0) {
+        log_warn("sdi-12 sendCommand(%s) ERROR in call to readline()", cmd);
         return NULL;
+    }
 
     log_debug("sdi-12 sendCommand(%s): '%s'", cmd, buffer);
     return buffer;

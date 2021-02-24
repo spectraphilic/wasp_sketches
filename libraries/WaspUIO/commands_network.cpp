@@ -105,22 +105,19 @@ COMMAND(cmdPing)
    * host.
    */
 #if WITH_4G
-  if (UIO.wan_type == WAN_4G)
-  {
+  if (UIO.wan_type == WAN_4G) {
     UIO._4GPing();
     return cmd_quiet;
   }
 #endif
 #if WITH_IRIDIUM
-  if (UIO.wan_type == WAN_IRIDIUM)
-  {
+  if (UIO.wan_type == WAN_IRIDIUM) {
     UIO.iridium_ping();
     return cmd_quiet;
   }
 #endif
 #if WITH_XBEE
-  if (UIO.lan_type == LAN_XBEE)
-  {
+  if (UIO.lan_type == LAN_XBEE) {
     if (UIO.xbeeSend(UIO.xbee.rx_address, "ping"))
       return cmd_error;
     log_info("RSSI(dBm) = %d", UIO.rssi);
@@ -128,8 +125,7 @@ COMMAND(cmdPing)
   }
 #endif
 #if WITH_LORA
-  if (UIO.lan_type == LAN_LORA)
-  {
+  if (UIO.lan_type == LAN_LORA) {
     if (UIO.loraSend(UIO.lora_dst, "ping", true))
       return cmd_error;
     log_info("RSSI(dBm) = %d SNR = %d", UIO.rssi, UIO.snr);
