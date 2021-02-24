@@ -6,7 +6,7 @@ extern WaspSDI12 sdi;
 
 CR_TASK(taskQTPY)
 {
-    int n;
+    static int n;
     unsigned int ttt;
     char *next;
     const int address = 5;
