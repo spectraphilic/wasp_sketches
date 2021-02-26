@@ -49,36 +49,39 @@ CR_TASK(taskSdi)
 
 CR_TASK(taskSdiCtd10)
 {
-  unsigned int ttt;
-  int n;
+    unsigned int ttt;
+    int n;
+    float values[5];
 
-  CR_BEGIN;
+    CR_BEGIN;
 
-  // Send the measure command
-  n = sdi.measure(&ttt, 0);
-  if (n < 1) { CR_ERROR; }
+    // Send the measure command
+    n = sdi.measure(&ttt, 0);
+    if (n < 1)
+        CR_ERROR;
 
-  // TODO We could listen every n ms for a "Service Request" from the sensor
-  if (ttt > 0) { CR_DELAY(ttt * 1000); }
+    // TODO We could listen every n ms for a "Service Request" from the sensor
+    if (ttt > 0)
+        CR_DELAY(ttt * 1000);
 
-  // Send the data command
-  if (sdi.data(0) == NULL) { CR_ERROR; }
+    // Send the data command
+    if (sdi.data(values, 0, n) < n)
+        CR_ERROR;
 
-  // Frame. The result looks like 0+167+17.5+103
-  char *next;
-  double depth, temp, cond;
+    // Frame. The result looks like 0+167+17.5+103
+    double depth, temp, cond;
 
-  depth = strtod(sdi.buffer+1, &next);
-  temp = strtod(next, &next);
-  cond = strtod(next, &next);
-  ADD_SENSOR(SENSOR_CTD10,
+    depth = values[0];
+    temp = values[1];
+    cond = values[2];
+    ADD_SENSOR(SENSOR_CTD10,
         (int16_t)round(depth),
         (int16_t)round(temp*10),
         (int32_t)round(cond)
-  );
+    );
 
-  // Success
-  CR_END;
+    // Success
+    CR_END;
 }
 
 

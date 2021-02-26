@@ -829,20 +829,33 @@ int WaspSDI12::measure(unsigned int *ttt, uint8_t address, uint8_t number)
     return nn;
 }
 
-/* Sends data command to address. Always to the buffer 0 (TODO Specify buffer
- * in parameter) */
-const char* WaspSDI12::data(uint8_t address)
+/* Gets n data values from the SDI-12 sensor at the given address. The float
+ * data is returned in the values argument. Returns the number of values, -1
+ * on error.
+ */
+int WaspSDI12::data(float values[], uint8_t address, uint8_t n)
 {
-    const char *response = sendCommand(address, "D0");
-    if (response == NULL)
-        return NULL;
+    char command[3];
+    char d = 0;
 
-    // Check abort measurement: a\r\n
-    // We already remove the \r\n part, so just test response length > 1
-    if (strlen(buffer) <= 1)
-        return NULL;
+    int i = 0;
+    while (i < n) {
+        sprintf(command, "D%d", d);
+        const char *response = sendCommand(address, command);
+        if (response == NULL)
+            return -1;
 
-    return response;
+        if (strlen(response) <= 1) // a\r\n
+            return -1;
+
+        char *next = (char*) response + 1;
+        while (next[0] != '\0')
+            values[i++] = strtod(next, &next);
+
+        d++;
+    }
+
+    return i;
 }
 
 /* Sends the query address command. Returns the address. */

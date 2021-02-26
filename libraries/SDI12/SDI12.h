@@ -113,7 +113,7 @@ class WaspSDI12
 		const char* sendCommand(uint8_t address, const char* cmd);
 		const char* identify(uint8_t address);
 		int measure(unsigned int *ttt, uint8_t address, uint8_t number = 0);
-		const char* data(uint8_t address);
+		int data(float values[], uint8_t address, uint8_t n);
 		char read_address();
 		uint8_t set_address(uint8_t current_address, uint8_t new_address);
 		
