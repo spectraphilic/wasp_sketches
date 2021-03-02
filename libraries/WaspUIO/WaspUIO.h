@@ -46,10 +46,10 @@
  ******************************************************************************/
 
 // EEPROM addresses used by the library
-#define EEPROM_UIO_PIN (EEPROM_START + 0) // 2 bytes
-// 7 bytes available
-#define EEPROM_UIO_RUN (EEPROM_START + 9) // 90 bytes reserved, every action takes 2 bytes
-// 1 byte available
+#define EEPROM_UIO_RUN (EEPROM_START + 0) // 50 bytes reserved, every action takes 2 bytes
+#define EEPROM_UIO_PIN (EEPROM_START + 50) // 2 bytes
+#define EEPROM_UIO_APN (EEPROM_START + 52) // 30 bytes
+// 18 bytes available
 #define EEPROM_UIO_VARS (EEPROM_START + 100) // 100 bytes reserved
 
 #define GPS_NO 0
