@@ -185,7 +185,7 @@ const char VAR_BOARD_HELP        [] PROGMEM = "";
 const char VAR_LOG_FLAG_HELP     [] PROGMEM = ": 0/1";
 const char VAR_LAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
 const char VAR_WAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
-const char VAR_LORA_ADDR_HELP    [] PROGMEM = ": 1-255 (1=Gateway)";
+const char VAR_LORA_ADDR_HELP    [] PROGMEM = ": 1-255"
 const char VAR_LORA_MODE_HELP    [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
 const char VAR_XBEE_NETWORK_HELP [] PROGMEM = ": 0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
 const char VAR_LAN_WAIT_HELP     [] PROGMEM = ": 0-255 seconds to keep LAN open (zero means use default)";

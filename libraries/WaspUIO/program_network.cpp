@@ -283,7 +283,7 @@ CR_TASK(taskNetworkLora)
   log_info("Network started");
 
   // Schedule sending frames. Don't send with Lora if I'm the gateway.
-  if (UIO.lora_addr != 1)
+  if (UIO.wan_type == WAN_DISABLED)
   {
     CR_SPAWN2(taskNetworkLoraSend, tid);
   }
@@ -295,7 +295,7 @@ CR_TASK(taskNetworkLora)
   wait = UIO.lan_wait ? (UIO.lan_wait * 1000UL) : 45000UL;
   CR_DELAY(wait);
 
-  if (UIO.lora_addr != 1)
+  if (UIO.wan_type == WAN_DISABLED)
   {
     CR_JOIN(tid);
   }

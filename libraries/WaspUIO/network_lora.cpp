@@ -18,7 +18,7 @@ int WaspUIO::loraStart()
   err = sx1272.setChannel(LORA_CHANNEL);
   if (err) { cr_printf("sx1272.setChannel(..) error=%d\n", err); goto exit; }
 
-  err = sx1272.setNodeAddress(lora_addr); // 1 (Gateway) or 2-255
+  err = sx1272.setNodeAddress(lora_addr); // 1-255
   if (err) { cr_printf("sx1272.setNodeAddress(%u) error=%d\n", lora_addr, err); goto exit; }
 
   err = sx1272.setPower(LORA_POWER);
