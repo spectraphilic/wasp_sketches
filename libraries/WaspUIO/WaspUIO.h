@@ -73,6 +73,7 @@ enum wan_type_t {
   WAN_DISABLED,
   WAN_4G,
   WAN_IRIDIUM,
+  WAN_USB,
   WAN_LEN
 };
 
@@ -184,7 +185,7 @@ const char VAR_UNUSED_HELP       [] PROGMEM = "";
 const char VAR_BOARD_HELP        [] PROGMEM = "";
 const char VAR_LOG_FLAG_HELP     [] PROGMEM = ": 0/1";
 const char VAR_LAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=xbee 2=lora";
-const char VAR_WAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=4g 2=iridium";
+const char VAR_WAN_TYPE_HELP     [] PROGMEM = ": 0=disabled 1=4g 2=iridium 3=usb";
 const char VAR_LORA_ADDR_HELP    [] PROGMEM = ": 1-255";
 const char VAR_LORA_MODE_HELP    [] PROGMEM = ": 1-10 (1 = higher range, 10 = lower energy)";
 const char VAR_XBEE_NETWORK_HELP [] PROGMEM = ": 0=Finse 1=<unused> 2=Broadcast 3=Pi@UiO 4=Pi@Finse 5=Pi@Spain";
@@ -650,12 +651,13 @@ CR_TASK(taskQTPY);
 // Network
 CR_TASK(taskNetwork4G);
 CR_TASK(taskNetworkIridium);
-CR_TASK(taskNetworkXBee);
-CR_TASK(taskNetworkXBeeSend);
-CR_TASK(taskNetworkXBeeReceive);
 CR_TASK(taskNetworkLora);
 CR_TASK(taskNetworkLoraSend);
 CR_TASK(taskNetworkLoraReceive);
+CR_TASK(taskNetworkUSB);
+CR_TASK(taskNetworkXBee);
+CR_TASK(taskNetworkXBeeSend);
+CR_TASK(taskNetworkXBeeReceive);
 // GPS
 CR_TASK(taskGPS);
 CR_TASK(taskGPS4G);

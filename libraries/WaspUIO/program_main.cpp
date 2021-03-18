@@ -126,6 +126,11 @@ CR_TASK(taskMain)
             CR_JOIN(network_id);
         }
 #endif
+
+        if (UIO.wan_type == WAN_USB) {
+            CR_SPAWN2(taskNetworkUSB, network_id);
+            CR_JOIN(network_id);
+        }
     }
 
     // Uncomment this to verify the watchdog works

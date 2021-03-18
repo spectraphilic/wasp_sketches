@@ -137,6 +137,41 @@ CR_TASK(taskNetworkIridium)
 #endif
 
 
+CR_TASK(taskNetworkUSB)
+{
+    static unsigned long sent;
+    uint8_t n;
+    char buffer[80];
+
+    CR_BEGIN;
+    UIO.ack_wait = 0;
+
+    while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT)) {
+        // Read
+        if (UIO.ack_wait == 0) {
+            int size = UIO.readFrame(n);
+            if (size <= 0)
+                break;
+
+            // Dump the frame
+            USB.print((uint8_t*)SD.buffer, size);
+
+            // Next
+            UIO.ack_wait = n;
+        } else if (cr.timeout(sent, 10 * 1000)) {
+            break; // If waiting for an ACK more than 10s, stop sending.
+        }
+
+        CR_DELAY(5); // Give control back
+        if (cr.input(buffer, sizeof(buffer), 20) != NULL) {
+            exeCommands(buffer, false);
+        }
+    }
+
+    CR_END;
+}
+
+
 #if WITH_XBEE
 CR_TASK(taskNetworkXBee)
 {
