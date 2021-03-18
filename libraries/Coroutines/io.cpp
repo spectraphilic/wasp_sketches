@@ -15,42 +15,35 @@
 
 const char* Loop::input(char* buffer, size_t size, unsigned long timeout)
 {
-  size_t i = 0;
+    size_t i = 0;
 
-  USB.flush();
+    USB.flush();
 
-  // Wait for available data, or timeout
-  if (timeout > 0)
-  {
-    unsigned long timeStart = millis();
-    while (USB.available() == 0)
-    {
-      if (cr.timeout(timeStart, timeout))
-      {
-        return NULL;
-      }
+    // Wait for available data, or timeout
+    if (timeout > 0) {
+        unsigned long timeStart = millis();
+        while (USB.available() == 0) {
+            if (cr.timeout(timeStart, timeout))
+                return NULL;
+        }
+    } else {
+        while (USB.available() == 0);
     }
-  }
-  else
-  {
-    while (USB.available() == 0);
-  }
 
-  // Read the data
-  for (i=0; i < size - 1; i++)
-  {
-    // Could be optimized to read as many chars as USB.available says in one
-    // go. But this is a cold path, do don't bother.
-    if (USB.available() == 0)
-      break;
+    // Read the data
+    for (i=0; i < size - 1; i++) {
+        // Could be optimized to read as many chars as USB.available says in
+        // one go. But this is a cold path, do don't bother.
+        if (USB.available() == 0)
+            break;
 
-    buffer[i] = (char) USB.read();
-    if ((buffer[i] == '\r') || (buffer[i] == '\n'))
-      break;
-  }
+        buffer[i] = (char) USB.read();
+        if ((buffer[i] == '\r') || (buffer[i] == '\n'))
+            break;
+    }
 
-  buffer[i] = '\0';
-  return buffer;
+    buffer[i] = '\0';
+    return buffer;
 }
 
 

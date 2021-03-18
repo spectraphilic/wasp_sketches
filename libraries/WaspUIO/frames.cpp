@@ -374,37 +374,31 @@ exit:
  */
 void WaspUIO::setFrameSize()
 {
-  // The payload & frame sizes are set for outgoing messages, so WAN takes
-  // priority over LAN
+    // The payload & frame sizes are set for outgoing messages, so WAN takes
+    // priority over LAN
 
-  // Set payloadSize
-  // Avoid calling getMaxSizeForXXX functions to avoid using extra memory
-  if (wan_type == WAN_4G) {
-    payloadSize = 255;
-  } else if (wan_type == WAN_IRIDIUM) {
-    payloadSize = 340;
-  } else if (lan_type == LAN_XBEE) {
-    payloadSize = 73;
-  } else if (lan_type == LAN_LORA) {
-    // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
-    // (page 32) it looks to me it's 250, so better to be extra sure.
-    payloadSize = 250;
-  } else {
-    // Default to 255, will be used when there's not any network module
-    payloadSize = 255;
-  }
+    // Set payloadSize
+    // Avoid calling getMaxSizeForXXX functions to avoid using extra memory
+    if (wan_type == WAN_4G) {
+        payloadSize = 255;
+    } else if (wan_type == WAN_IRIDIUM) {
+        payloadSize = 340;
+    } else if (lan_type == LAN_XBEE) {
+        payloadSize = 73;
+    } else if (lan_type == LAN_LORA) {
+        // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
+        // (page 32) it looks to me it's 250, so better to be extra sure.
+        payloadSize = 250;
+    } else {
+        // Default to 255, will be used when there's not any network module
+        payloadSize = 255;
+    }
 
-  // Set frameSize
-  if (payloadSize > 255)
-  {
-    frameSize = 255;
-  }
-  else
-  {
-    frameSize = (uint8_t) payloadSize;
-  }
+    // Set frameSize
+    frameSize = (payloadSize > 255) ? 255 : (uint8_t) payloadSize;
 
-  frame.setFrameSize(frameSize); // XXX Do we need this?
+    // XXX Do we need this?
+    frame.setFrameSize(frameSize);
 }
 
 
