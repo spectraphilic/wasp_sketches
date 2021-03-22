@@ -154,7 +154,7 @@ CR_TASK(taskNetworkUSB)
                 break;
 
             // Dump the frame
-            USB.print((uint8_t*)SD.buffer, size);
+            USB.println((uint8_t*)SD.buffer, size);
 
             // Next
             UIO.ack_wait = n;
@@ -175,53 +175,44 @@ CR_TASK(taskNetworkUSB)
 #if WITH_XBEE
 CR_TASK(taskNetworkXBee)
 {
-  static tid_t tid;
-  uint32_t wait;
+    static tid_t tid;
+    uint32_t wait;
 
-  CR_BEGIN;
+    CR_BEGIN;
 
-  if (!xbeeDM.XBee_ON)
-  {
-    if (xbeeDM.ON())
-    {
-      log_error("startNetwork: xbeeDM.ON() failed");
-      CR_ERROR;
+    if (!xbeeDM.XBee_ON) {
+        if (xbeeDM.ON()) {
+            log_error("startNetwork: xbeeDM.ON() failed");
+            CR_ERROR;
+        }
     }
-  }
-  log_info("Network started");
+    log_info("Xbee started");
 
-  // Spawn first the receive task
-  CR_SPAWN(taskNetworkXBeeReceive);
+    // Spawn first the receive task
+    CR_SPAWN(taskNetworkXBeeReceive);
 
-  // Schedule sending frames
-  if (UIO.hasSD)
-  {
-    CR_SPAWN2(taskNetworkXBeeSend, tid);
-  }
+    // Schedule sending frames
+    if (UIO.hasSD)
+        CR_SPAWN2(taskNetworkXBeeSend, tid);
 
-  // Keep the network open, default is 45s
-  wait = UIO.lan_wait ? (UIO.lan_wait * 1000UL) : 45000UL;
-  CR_DELAY(wait);
+    // Keep the network open, default is 45s
+    wait = UIO.lan_wait ? (UIO.lan_wait * 1000UL) : 45000UL;
+    CR_DELAY(wait);
 
-  if (UIO.hasSD)
-  {
-    CR_JOIN(tid);
-  }
+    if (UIO.hasSD)
+        CR_JOIN(tid);
 
-  // RSSI
-  if (UIO.xbeeQuality() == 0) // FIXME This outputs garbage to USB ??
-  {
-    ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
-  }
+    // RSSI
+    if (UIO.xbeeQuality() == 0) // FIXME This outputs garbage to USB ??
+        ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
 
-  // Stop network
-  if (xbeeDM.XBee_ON)
-  {
-    xbeeDM.OFF();
-    log_info("Network stopped");
-  }
+    // Stop network
+    if (xbeeDM.XBee_ON) {
+        xbeeDM.OFF();
+        log_info("XBee stopped");
+    }
 
-  CR_END;
+    CR_END;
 }
 
 CR_TASK(taskNetworkXBeeSend)
@@ -300,209 +291,181 @@ CR_TASK(taskNetworkXBeeReceive)
 #if WITH_LORA
 CR_TASK(taskNetworkLora)
 {
-  static tid_t tid;
-  uint32_t wait;
+    static tid_t tid;
+    uint32_t wait;
 
-  CR_BEGIN;
+    CR_BEGIN;
 
-  if (! UIO.hasSD)
-  {
-    CR_ERROR;
-  }
+    if (! UIO.hasSD)
+        CR_ERROR;
 
-  if (UIO.loraStart())
-  {
-    log_error("taskNetworkLora loraStart() failed");
-    CR_ERROR;
-  }
-  log_info("Network started");
+    if (UIO.loraStart()) {
+        log_error("taskNetworkLora loraStart() failed");
+        CR_ERROR;
+    }
+    log_info("LoRa started");
 
-  // Schedule sending frames. Don't send with Lora if I'm the gateway.
-  if (UIO.wan_type == WAN_DISABLED)
-  {
-    CR_SPAWN2(taskNetworkLoraSend, tid);
-  }
+    // Schedule sending frames. Don't send with Lora if I'm the gateway.
+    if (UIO.wan_type == WAN_DISABLED)
+        CR_SPAWN2(taskNetworkLoraSend, tid);
 
-  // Receive: Senders need to listen as well for cmdAck
-  CR_SPAWN(taskNetworkLoraReceive);
+    // Receive: Senders need to listen as well for cmdAck
+    CR_SPAWN(taskNetworkLoraReceive);
 
-  // Keep the network open, default is 45s
-  wait = UIO.lan_wait ? (UIO.lan_wait * 1000UL) : 45000UL;
-  CR_DELAY(wait);
+    // Keep the network open, default is 45s
+    wait = UIO.lan_wait ? (UIO.lan_wait * 1000UL) : 45000UL;
+    CR_DELAY(wait);
 
-  if (UIO.wan_type == WAN_DISABLED)
-  {
-    CR_JOIN(tid);
-  }
+    if (UIO.wan_type == WAN_DISABLED)
+        CR_JOIN(tid);
 
-  // RSSI
-  if (UIO.loraQuality() == 0)
-  {
-    ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
-    //ADD_SENSOR(SENSOR_SNR, UIO.snr);
-  }
+    // RSSI
+    if (UIO.loraQuality() == 0) {
+        ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
+        //ADD_SENSOR(SENSOR_SNR, UIO.snr);
+    }
 
-  UIO.loraStop();
-  log_info("Network stopped");
+    UIO.loraStop();
+    log_info("LoRa stopped");
 
-  CR_END;
+    CR_END;
 }
 
 CR_TASK(taskNetworkLoraSend)
 {
-  static uint32_t t0;
-  static uint8_t dst;
-  static uint8_t n_packages; // Number of packages sent in one loop
-  uint8_t n_frames;
-  int offset;
+    static uint32_t t0;
+    static uint8_t dst;
+    static uint8_t n_packages; // Number of packages sent in one loop
+    uint8_t n_frames;
+    int offset;
 
-  CR_BEGIN;
-  UIO.ack_wait = 0;
-  n_packages = 0;
+    CR_BEGIN;
+    UIO.ack_wait = 0;
+    n_packages = 0;
 
-  // Higher modes have lower time-on-air, this improves channel availability,
-  // so we should have higher rates of successful messages sent; choose the
-  // higher mode that has enough range). See pages 41-42.
+    // Higher modes have lower time-on-air, this improves channel availability,
+    // so we should have higher rates of successful messages sent; choose the
+    // higher mode that has enough range). See pages 41-42.
 
-  // Wait at least 5s before sending, so when we send there's a fair chance
-  // for the receiver to be listening.
-  // - Add a fixed offset depending on address to reduce the chance of collisions?
-  // - Add a random value to reduce the chance of collisions?
-  offset = 5000;//+ rand() % 1001;
-  log_info("Lora send: wait %d ms before sending", offset);
-  CR_DELAY(offset); // 200-1200 ms
+    // Wait at least 5s before sending, so when we send there's a fair chance
+    // for the receiver to be listening.
+    // - Add a fixed offset depending on address to reduce the chance of collisions?
+    // - Add a random value to reduce the chance of collisions?
+    offset = 5000;//+ rand() % 1001;
+    log_info("Lora send: wait %d ms before sending", offset);
+    CR_DELAY(offset); // 200-1200 ms
 
-  // Discover destination address, auto mode routing (lora.dst 0)
-  dst = UIO.lora_dst ? UIO.lora_dst : UIO.lora_dst2;
-  if (dst == 0)
-  {
-    if (UIO.loraSend(UIO.lora_dst, "ping", true))
-    {
-      CR_ERROR;
-    }
-    else
-    {
-      dst = UIO.lora_dst2;
-      log_info("Lora auto mode dst=%hhu", dst);
-    }
-  }
-
-  // Send frames
-  while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT))
-  {
-    if (UIO.ack_wait == 0)
-    {
-      // Read
-      int size = UIO.readFrame(n_frames);
-      if (size <= 0) { break; }
-
-      // Send the frame. The timeout is calculated by sx1272
-      t0 = millis();
-      if (sx1272.sendPacketTimeout(dst, (uint8_t*)SD.buffer, size))
-      {
-        log_warn("sx1272.send(..) failure timeout=%u", sx1272._sendTime);
-        break;
-      }
-      n_packages++;
-      log_info("Sent packet=%hhu with %hhu frame(s) to dst=%hhu in %lu ms",
-           sx1272.packet_sent.packnum, n_frames, dst, cr.millisDiff(t0));
-
-      // Debug
-//    char str[50];
-//    log_debug("length=%u time-on-air=%s",
-//          sx1272._payloadlength,
-//          Utils.float2String(sx1272.timeOnAir(), str, 2)
-//    );
-
-      // Next
-      UIO.ack_wait = n_frames;
-    }
-    else if (cr.timeout(t0, 10 * 1000))
-    {
-      // Max 10s waiting for an ACK
-      // If didn't receive the ACK for the 1st frame consider it a failure
-      if (n_packages == 1)
-      {
-        UIO.lora_fails++;
-        log_warn("Didn't get an ACK in this loop, fails=%hhu", UIO.lora_fails);
-        // If too many fails reset dst2 (this only has an effect in auto routing mode)
-        if (UIO.lora_fails >= LORA_MAX_FAILS)
-        {
-          UIO.lora_dst2 = 0;
+    // Discover destination address, auto mode routing (lora.dst 0)
+    dst = UIO.lora_dst ? UIO.lora_dst : UIO.lora_dst2;
+    if (dst == 0) {
+        if (UIO.loraSend(UIO.lora_dst, "ping", true)) {
+            CR_ERROR;
+        } else {
+            dst = UIO.lora_dst2;
+        log_info("Lora auto mode dst=%hhu", dst);
         }
-      }
-      break;
     }
 
-    CR_DELAY(100); // Give control back
-  }
+    // Send frames
+    while (!cr.timeout(UIO._epoch_millis, SEND_TIMEOUT)) {
+        if (UIO.ack_wait == 0) {
+            // Read
+            int size = UIO.readFrame(n_frames);
+            if (size <= 0)
+                break;
 
-  CR_END;
+            // Send the frame. The timeout is calculated by sx1272
+            t0 = millis();
+            if (sx1272.sendPacketTimeout(dst, (uint8_t*)SD.buffer, size)) {
+                log_warn("sx1272.send(..) failure timeout=%u", sx1272._sendTime);
+                break;
+            }
+            n_packages++;
+            log_info("Sent packet=%hhu with %hhu frame(s) to dst=%hhu in %lu ms",
+                sx1272.packet_sent.packnum, n_frames, dst, cr.millisDiff(t0));
+
+            // Debug
+//          char str[50];
+//          log_debug("length=%u time-on-air=%s",
+//              sx1272._payloadlength,
+//              Utils.float2String(sx1272.timeOnAir(), str, 2)
+//          );
+
+        // Next
+        UIO.ack_wait = n_frames;
+        } else if (cr.timeout(t0, 10 * 1000)) {
+            // Max 10s waiting for an ACK
+            // If didn't receive the ACK for the 1st frame consider it a failure
+            if (n_packages == 1) {
+                UIO.lora_fails++;
+                log_warn("Didn't get an ACK in this loop, fails=%hhu", UIO.lora_fails);
+                // If too many fails reset dst2 (this only has an effect in auto routing mode)
+                if (UIO.lora_fails >= LORA_MAX_FAILS)
+                    UIO.lora_dst2 = 0;
+            }
+            break;
+        }
+
+        CR_DELAY(100); // Give control back
+    }
+
+    CR_END;
 }
 
 CR_TASK(taskNetworkLoraReceive)
 {
-  const char *data;
+    const char *data;
 
-  CR_BEGIN;
+    CR_BEGIN;
 
-  while (SPI.isSocket0)
-  {
-    if (sx1272.receivePacketTimeout() == 0)
-    {
-      data = (const char*)sx1272.packet_received.data;
-      if (strncmp("ping", data, 4) == 0) {
-        log_info("ping received from lora address=%u", sx1272.packet_received.src);
-        if (sx1272.packet_received.dst == UIO.lora_addr || sx1272.packet_received.src > UIO.lora_addr)
-        {
-          if (sx1272.setACK() || sx1272.sendWithTimeout())
-          {
-            log_warn("Lora: Failed to send ACK");
-          }
-        }
-        else
-        {
-          log_info("ignore ping");
-        }
-      } else if (strncmp("<=>", data, 3) == 0) {
-        log_debug("frame received from lora address=%u", sx1272.packet_received.src);
-        uint8_t n = UIO.saveFrames(
-          sx1272.packet_received.src,
-          sx1272.packet_received.data,
-          sx1272.packet_received.length - 5 // dst(1) + src(1) + packnum(1) + length(1) + data + retry(1)
-        );
-        if (n > 0)
-        {
-          const int size = 25;
-          char cmd[size];
-          float timeOnAir = sx1272.timeOnAir(21); // strlen(cmd)
-          uint32_t time = UIO.getEpochTime() + (uint32_t)round(timeOnAir/1000);
-          cr_snprintf(cmd, size, "time %lu;ack %u", time, n);
-          UIO.loraSend(sx1272.packet_received.src, cmd, false);
-        }
-      } else {
-        //log_info("command received from lora address=%u", sx1272.packet_received.src);
-        exeCommands(data, false);
-      }
+    while (SPI.isSocket0) {
+        if (sx1272.receivePacketTimeout() == 0) {
+            data = (const char*)sx1272.packet_received.data;
+            if (strncmp("ping", data, 4) == 0) {
+                log_info("ping received from lora address=%u", sx1272.packet_received.src);
+                if (sx1272.packet_received.dst == UIO.lora_addr || sx1272.packet_received.src > UIO.lora_addr) {
+                    if (sx1272.setACK() || sx1272.sendWithTimeout())
+                        log_warn("Lora: Failed to send ACK");
+                } else {
+                    log_info("ignore ping");
+                }
+            } else if (strncmp("<=>", data, 3) == 0) {
+                log_debug("frame received from lora address=%u", sx1272.packet_received.src);
+                uint8_t n = UIO.saveFrames(
+                    sx1272.packet_received.src,
+                    sx1272.packet_received.data,
+                    sx1272.packet_received.length - 5 // dst(1) + src(1) + packnum(1) + length(1) + data + retry(1)
+                );
+                if (n > 0) {
+                    const int size = 25;
+                    char cmd[size];
+                    float timeOnAir = sx1272.timeOnAir(21); // strlen(cmd)
+                    uint32_t time = UIO.getEpochTime() + (uint32_t)round(timeOnAir/1000);
+                    cr_snprintf(cmd, size, "time %lu;ack %u", time, n);
+                    UIO.loraSend(sx1272.packet_received.src, cmd, false);
+                }
+            } else {
+                //log_info("command received from lora address=%u", sx1272.packet_received.src);
+                exeCommands(data, false);
+            }
 
 /*
-      sx1272.showReceivedPacket();
-      log_info("Packet received from Lora network");
-      log_info("dst=%u src=%u packnum=%u length=%u retry=%u",
-        sx1272.packet_received.dst,
-        sx1272.packet_received.src,
-        sx1272.packet_received.packnum,
-        sx1272.packet_received.length,
-        sx1272.packet_received.retry,
-      );
+            sx1272.showReceivedPacket();
+            log_info("Packet received from Lora network");
+            log_info("dst=%u src=%u packnum=%u length=%u retry=%u",
+                sx1272.packet_received.dst,
+                sx1272.packet_received.src,
+                sx1272.packet_received.packnum,
+                sx1272.packet_received.length,
+                sx1272.packet_received.retry
+            );
 */
+        }
 
+        // Give control back
+        CR_DELAY(0);
     }
 
-    // Give control back
-    CR_DELAY(0);
-  }
-
-  CR_END;
+    CR_END;
 }
 #endif

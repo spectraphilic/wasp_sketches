@@ -10,45 +10,48 @@
 
 void setup()
 {
-  // Boot process
-  UIO.boot();
+    // Boot process
+    UIO.boot();
 
-  // Boot frame
-  frame.setID(UIO.name);
-  frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
-  frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
-  UIO.addSensor(SENSOR_TST, UIO._epoch);
-  UIO.saveFrame();
-  #if WITH_XBEE
-  frame.setID((char*)""); // We only want to send the name once
-  #endif
+    // Boot frame
+    frame.setID(UIO.name);
+    frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
+    frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
+    UIO.addSensor(SENSOR_TST, UIO._epoch);
+    UIO.saveFrame();
+    #if WITH_XBEE
+    frame.setID((char*)""); // We only want to send the name once
+    #endif
 
-  // Log configuration
-  char buffer[150];
-  size_t size = sizeof(buffer);
-  log_info("Time      : %s", UIO.pprintTime(buffer, size));
-  log_info("Id        : %s Version=%c Name=%s", UIO.pprintSerial(buffer, sizeof buffer), _boot_version, UIO.name);
-  log_info("Battery   : %s", UIO.pprintBattery(buffer, size));
-  log_info("Hardware  : board=%s SD=%d GPS=%d", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
-  #if WITH_XBEE
-  if (UIO.lan_type == LAN_XBEE)
-  { log_info("XBee      : %s", UIO.pprintXBee(buffer, size)); }
-  #endif
-  #if WITH_LORA
-  if (UIO.lan_type == LAN_LORA)
-  { log_info("Lora      : %s", UIO.pprintLora(buffer, size)); }
-  #endif
-  #if WITH_4G
-  if (UIO.wan_type == WAN_4G)
-  { log_info("4G        : %s", UIO.pprint4G(buffer, size)); }
-  #endif
-  #if WITH_IRIDIUM
-  if (UIO.wan_type == WAN_IRIDIUM)
-  { log_info("Iridium   : %s", UIO.pprintIridium(buffer, size)); }
-  #endif
-  log_info("Frames    : %s", UIO.pprintFrames(buffer, size));
-  log_info("Log       : level=%s output=%s", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  log_info("Run       : %s", UIO.pprintActions(buffer, size));
+    // Log configuration
+    char buffer[150];
+    size_t size = sizeof(buffer);
+    log_info("Time      : %s", UIO.pprintTime(buffer, size));
+    log_info("Id        : %s Version=%c Name=%s", UIO.pprintSerial(buffer, sizeof buffer), _boot_version, UIO.name);
+    log_info("Battery   : %s", UIO.pprintBattery(buffer, size));
+    log_info("Hardware  : board=%s SD=%d GPS=%d", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
+    #if WITH_XBEE
+    if (UIO.lan_type == LAN_XBEE)
+        log_info("XBee      : %s", UIO.pprintXBee(buffer, size));
+    #endif
+    #if WITH_LORA
+    if (UIO.lan_type == LAN_LORA)
+        log_info("Lora      : %s", UIO.pprintLora(buffer, size));
+    #endif
+    #if WITH_4G
+    if (UIO.wan_type == WAN_4G)
+        log_info("4G        : %s", UIO.pprint4G(buffer, size));
+    #endif
+    #if WITH_IRIDIUM
+    if (UIO.wan_type == WAN_IRIDIUM)
+        log_info("Iridium   : %s", UIO.pprintIridium(buffer, size));
+    #endif
+    if (UIO.wan_type == WAN_USB)
+        log_info("Dump frames to USB");
+
+    log_info("Frames    : %s", UIO.pprintFrames(buffer, size));
+    log_info("Log       : level=%s output=%s", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+    log_info("Run       : %s", UIO.pprintActions(buffer, size));
 }
 
 void loop()

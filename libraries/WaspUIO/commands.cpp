@@ -320,37 +320,39 @@ COMMAND(cmdName)
 
 COMMAND(cmdInfo)
 {
-  char name[17];
-  char buffer[150];
-  size_t size = sizeof(buffer);
+    char name[17];
+    char buffer[150];
+    size_t size = sizeof(buffer);
 
-  Utils.getID(name);
+    Utils.getID(name);
 
-  cr_printf("Time     : %s\n", UIO.pprintTime(buffer, size));
-  cr_printf("Id       : %s Version=%c Name=%s\n", UIO.pprintSerial(buffer, size), _boot_version, name);
-  cr_printf("Battery  : %s\n", UIO.pprintBattery(buffer, size));
-  cr_printf("Hardware : board=%s SD=%d GPS=%d\n", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
-#if WITH_XBEE
-  if (UIO.lan_type == LAN_XBEE)
-    cr_printf("XBee     : %s\n", UIO.pprintXBee(buffer, size));
-#endif
-#if WITH_LORA
-  if (UIO.lan_type == LAN_LORA)
-    cr_printf("Lora     : %s\n", UIO.pprintLora(buffer, size));
-#endif
-#if WITH_4G
-  if (UIO.wan_type == WAN_4G)
-    cr_printf("4G        : %s\n", UIO.pprint4G(buffer, size));
-#endif
-#if WITH_IRIDIUM
-  if (UIO.wan_type == WAN_IRIDIUM)
-    cr_printf("Iridium  : %s\n", UIO.pprintIridium(buffer, size));
-#endif
-  cr_printf("Frames   : %s\n", UIO.pprintFrames(buffer, size));
-  cr_printf("Log      : level=%s output=%s\n", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
-  cr_printf("Run      : %s\n", UIO.pprintActions(buffer, size));
+    cr_printf("Time     : %s\n", UIO.pprintTime(buffer, size));
+    cr_printf("Id       : %s Version=%c Name=%s\n", UIO.pprintSerial(buffer, size), _boot_version, name);
+    cr_printf("Battery  : %s\n", UIO.pprintBattery(buffer, size));
+    cr_printf("Hardware : board=%s SD=%d GPS=%d\n", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
+    #if WITH_XBEE
+    if (UIO.lan_type == LAN_XBEE)
+        cr_printf("XBee     : %s\n", UIO.pprintXBee(buffer, size));
+    #endif
+    #if WITH_LORA
+    if (UIO.lan_type == LAN_LORA)
+        cr_printf("Lora     : %s\n", UIO.pprintLora(buffer, size));
+    #endif
+    #if WITH_4G
+    if (UIO.wan_type == WAN_4G)
+        cr_printf("4G        : %s\n", UIO.pprint4G(buffer, size));
+    #endif
+    #if WITH_IRIDIUM
+    if (UIO.wan_type == WAN_IRIDIUM)
+        cr_printf("Iridium  : %s\n", UIO.pprintIridium(buffer, size));
+    #endif
+    if (UIO.wan_type == WAN_USB)
+        cr_printf("Dump frames to USB\n");
+    cr_printf("Frames   : %s\n", UIO.pprintFrames(buffer, size));
+    cr_printf("Log      : level=%s output=%s\n", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
+    cr_printf("Run      : %s\n", UIO.pprintActions(buffer, size));
 
-  return cmd_quiet;
+    return cmd_quiet;
 }
 
 
