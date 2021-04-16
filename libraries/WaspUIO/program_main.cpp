@@ -46,9 +46,7 @@ bool WaspUIO::action(uint8_t n, ...)
 CR_TASK(taskMain)
 {
     static tid_t health_id, sensors_id;
-#if WITH_LORA || WITH_XBEE || WITH_4G || WITH_IRIDIUM
     static tid_t network_id;
-#endif
 #if WITH_GPS || WITH_4G
     static tid_t gps_id;
 #endif
