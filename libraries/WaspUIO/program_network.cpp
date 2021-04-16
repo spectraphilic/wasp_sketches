@@ -362,7 +362,7 @@ CR_TASK(taskNetworkLoraSend)
             CR_ERROR;
         } else {
             dst = UIO.lora_dst2;
-        log_info("Lora auto mode dst=%hhu", dst);
+            log_info("Lora auto mode dst=%hhu", dst);
         }
     }
 
@@ -445,7 +445,7 @@ CR_TASK(taskNetworkLoraReceive)
                     UIO.loraSend(sx1272.packet_received.src, cmd, false);
                 }
             } else {
-                //log_info("command received from lora address=%u", sx1272.packet_received.src);
+                log_debug("command received from lora address=%u", sx1272.packet_received.src);
                 exeCommands(data, false);
             }
 
@@ -465,6 +465,8 @@ CR_TASK(taskNetworkLoraReceive)
         // Give control back
         CR_DELAY(0);
     }
+
+    log_debug("taskNetworkLoraReceive exit");
 
     CR_END;
 }
