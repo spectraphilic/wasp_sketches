@@ -179,6 +179,10 @@ void WaspUIO::bootConfig()
   lora_dst = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_LORA_DST_IDX);
   xbee_network = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_NETWORK_IDX);
 
+  // Defaults
+  if (wan_type >= WAN_LEN)
+    wan_type = WAN_DISABLED;
+
 #if WITH_4G
   // 4G network
   char apn[30];
