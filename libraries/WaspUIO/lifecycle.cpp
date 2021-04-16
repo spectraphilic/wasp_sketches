@@ -116,6 +116,7 @@ fail:
 
 void WaspUIO::boot()
 {
+  Utils.setLED(LED0, LED_ON);
   nloops = 0;
   SdFile::dateTimeCallback(WaspUIO::dateTime);
 
@@ -396,7 +397,10 @@ void WaspUIO::deepSleep()
   PWR.clearInterruptionPin();
 
   // Power off and Sleep
+  Utils.setLED(LED0, LED_OFF);
+  Utils.setLED(LED1, LED_OFF);
   PWR.sleep(ALL_OFF);
+  Utils.setLED(LED1, LED_ON);
 
   // Awake
   nloops++;                 // Next loop
