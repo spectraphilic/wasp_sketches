@@ -180,8 +180,8 @@ void WaspUIO::bootConfig()
   xbee_network = Utils.readEEPROM(EEPROM_UIO_VARS + VAR_XBEE_NETWORK_IDX);
 
   // Defaults
-  if (wan_type >= WAN_LEN)
-    wan_type = WAN_DISABLED;
+  if (lan_type >= LAN_LEN) lan_type = LAN_DISABLED;
+  if (wan_type >= WAN_LEN) wan_type = WAN_DISABLED;
 
 #if WITH_4G
   // 4G network
