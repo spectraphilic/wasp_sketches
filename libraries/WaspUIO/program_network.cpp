@@ -351,7 +351,7 @@ CR_TASK(taskNetworkLoraSend)
     // for the receiver to be listening.
     // - Add a fixed offset depending on address to reduce the chance of collisions?
     // - Add a random value to reduce the chance of collisions?
-    offset = 5000;//+ rand() % 1001;
+    offset = 4000 + (rand() % 5) * 1000; // 4-8 seconds
     log_info("Lora send: wait %d ms before sending", offset);
     CR_DELAY(offset); // 200-1200 ms
 
