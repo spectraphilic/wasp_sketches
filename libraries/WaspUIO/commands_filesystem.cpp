@@ -136,56 +136,62 @@ COMMAND(cmdRm)
  */
 COMMAND(cmdTail)
 {
-  unsigned int maxnl, nl;
-  char filename[80];
-  SdFile file;
-  uint32_t size, nc;
-  uint16_t max = DOS_BUFFER_SIZE - 1;
-  int16_t c;
-  size_t nbyte;
-  int nread;
+    unsigned int maxnl, nl;
+    char filename[80];
+    SdFile file;
+    uint32_t size, nc;
+    uint16_t max = DOS_BUFFER_SIZE - 1;
+    int16_t c;
+    size_t nbyte;
+    int nread;
 
-  // Check feature availability
-  if (! UIO.hasSD) { return cmd_unavailable; }
+    // Check feature availability
+    if (! UIO.hasSD)
+        return cmd_unavailable;
 
-  // Check input
-  if (sscanf(str, "%u %79s", &maxnl, filename) != 2) { return cmd_bad_input; }
-  if (strlen(filename) == 0) { return cmd_bad_input; }
+    // Check input
+    if (sscanf(str, "%u %79s", &maxnl, filename) != 2)
+        return cmd_bad_input;
+    if (strlen(filename) == 0)
+        return cmd_bad_input;
 
-  // Open file
-  if (!SD.openFile(filename, &file, O_READ)) { return cmd_error; }
+    // Open file
+    if (!SD.openFile(filename, &file, O_READ))
+        return cmd_error;
 
-  // Read backwards
-  maxnl++;
-  size = file.fileSize();
-  nc = 0;
-  nl = 0;
-  while (nc < size && nl < maxnl)
-  {
-    nc++;
+    // Read backwards
+    maxnl++;
+    size = file.fileSize();
+    nc = 0;
+    nl = 0;
+    while (nc < size && nl < maxnl) {
+        nc++;
+        file.seekEnd(-nc);
+        if ((c = file.read()) < 0)
+            goto error;
+        if (c == '\n')
+            nl++;
+    }
+    nc--; // do not include the last newline read
+
+    // Read forward
+    cr_printf("-------------------------\n");
     file.seekEnd(-nc);
-    if ((c = file.read()) < 0) { goto error; }
-    if (c == '\n') { nl++; }
-  }
-  nc--; // do not include the last newline read
+    while (nc > 0) {
+        nbyte = (nc < max) ? nc : max;
+        nread = file.read(SD.buffer, nbyte);
+        if (nread < 0)
+            goto error;
+        SD.buffer[nread] = '\0';
+        USB.print(SD.buffer);
+        nc -= nread;
+    }
+    cr_printf("-------------------------\n");
 
-  // Read forward
-  cr_printf("-------------------------\n");
-  file.seekEnd(-nc);
-  while (nc > 0)
-  {
-    nbyte = (nc < max) ? nc : max;
-    nread = file.read(SD.buffer, nbyte);
-    if (nread < 0) { goto error; }
-    USB.print(SD.buffer);
-    nc -= nread;
-  }
-  cr_printf("-------------------------\n");
-
-  file.close();
-  return cmd_quiet;
+    file.close();
+    return cmd_quiet;
 
 error:
-  file.close();
-  return cmd_error;
+    file.close();
+    return cmd_error;
 }
