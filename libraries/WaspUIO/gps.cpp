@@ -12,6 +12,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
 
     // On
     if (GPS.ON() == 0) {
+        startSD();
         log_error("GPS.ON() failure");
         return -1;
     }
@@ -49,8 +50,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
         GPS.setTimeFromGPS(); // Save time to RTC
 
     GPS.OFF();
-    if (_boot_version >= 'J')
-        startSD();
+    startSD();
 
     // Set system time. Do this here because we need the SD
     if (setTime) {
@@ -83,8 +83,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
 exit:
     if (error) {
         GPS.OFF();
-        if (_boot_version >= 'J')
-            startSD();
+        startSD();
 
         cr.log_P(LOG_ERROR, error);
         return -1;

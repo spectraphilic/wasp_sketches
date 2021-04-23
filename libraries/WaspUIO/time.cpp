@@ -32,7 +32,7 @@ uint8_t WaspUIO::saveTimeToSD()
     SdFile file;
 
     if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC | O_SYNC)) {
-        log_warn("saveTimeToSD: Opening TIME.TXT failed");
+        log_warn("sd_open(TIME.TXT) failure  flag=%u %d", SD.flag, SD.card.errorCode());
         return 1;
     }
 

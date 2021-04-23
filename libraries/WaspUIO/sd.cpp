@@ -13,7 +13,7 @@ void WaspUIO::startSD()
     // This fixs a bug with J firmware, see
     // https://github.com/spectraphilic/wasp_sketches/issues/52
     SD.OFF();
-    hasSD = SD.ON();
+    hasSD = SD.ON(); // ~ 270ms
 
     if (hasSD) {
         baselayout();
@@ -45,17 +45,23 @@ void WaspUIO::stopSD()
  */
 int WaspUIO::baselayout()
 {
-  int error = 0;
+    int error = 0;
 
-  if (sd_mkdir(archive_dir))  { error = 1; } // Data directory
-  if (sd_mkfile(logFilename)) { error = 1; } // Log file
-  // Queue
-  if (fifo.make()) { error = 1; }
+    if (sd_mkdir(archive_dir)) // Data directory
+        error = 1;
+
+    if (sd_mkfile(logFilename)) // Log file
+        error = 1;
+
+    if (fifo.make()) // Queue (first-in-first-out)
+        error = 1;
+
 #if WITH_IRIDIUM
-  if (lifo.make()) { error = 1; }
+    if (lifo.make()) // Queue (last-in-first-out)
+        error = 1;
 #endif
 
-  return error;
+    return error;
 }
 
 

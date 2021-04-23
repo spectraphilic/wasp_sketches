@@ -56,12 +56,12 @@ void vlog(loglevel_t level, const char* message)
     // (3) Print to log file
     if (UIO.hasSD && UIO.log_sd) {
         if (sd_open(UIO.logFilename, UIO.logFile, O_WRITE | O_CREAT | O_APPEND | O_SYNC)) {
-            cr_printf("Open log file failed\n");
+            cr_printf("sd_open(LOG.TXT) error flag=%u %d\n", SD.flag, SD.card.errorCode());
             return;
         }
 
         if (sd_append(UIO.logFile, buffer, strlen(buffer))) {
-            cr_printf("Append to log file failed\n");
+            cr_printf("sd_append(LOG.TXT) error flag=%u %d\n", SD.flag, SD.card.errorCode());
             UIO.logFile.close();
         }
     }
