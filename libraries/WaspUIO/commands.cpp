@@ -122,40 +122,36 @@ const uint8_t nCommands = sizeof commands / sizeof commands[0];
 
 void WaspUIO::clint()
 {
-  char buffer[180];
-  size_t size = sizeof(buffer);
+    char buffer[180];
+    size_t size = sizeof(buffer);
 
-  // Print info
-  cr_printf("\n");
-  cmdInfo(NULL);
-  cr_printf("\n");
+    // Print info
+    cr_printf("\n");
+    cmdInfo(NULL);
+    cr_printf("\n");
 
-  // Go interactive or not
-  cr_printf("Press Enter to start interactive mode. Wait 2 seconds to skip.\n");
-  if (cr.input(buffer, sizeof(buffer), 2000) != NULL)
-  {
-    cr_printf("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity.\n");
-    do {
-      cr_printf("> ");
-      if (cr.input(buffer, size, 3 * 60 * 1000UL) == NULL)
-      {
-        cr_printf("\nTimeout!\n");
-        break;
-      }
+    // Go interactive or not
+    cr_printf("Press Enter to start interactive mode. Wait 2 seconds to skip.\n");
+    if (cr.input(buffer, sizeof(buffer), 2000) != NULL) {
+        log_info("Entered interactive mode");
+        cr_printf("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity.\n");
+        do {
+            cr_printf("> ");
+            if (cr.input(buffer, size, 3 * 60 * 1000UL) == NULL) {
+                cr_printf("\nTimeout!\n");
+                break;
+            }
 
-      USB.println(buffer);
-      if (exeCommands(buffer, true) == cmd_exit)
-      {
-        break;
-      }
-    } while (true);
-  }
-  else
-  {
-    cr_printf("Timeout.\n");
-  }
+            USB.println(buffer);
+            if (exeCommands(buffer, true) == cmd_exit)
+                break;
 
-  cr_printf("\n");
+        } while (true);
+    } else {
+        cr_printf("Timeout.\n");
+    }
+
+    cr_printf("\n");
 }
 
 
