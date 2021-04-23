@@ -7,38 +7,35 @@
 
 void WaspUIO::startSD()
 {
-  if (WaspRegister & REG_SD)
-    return;
+    if (WaspRegister & REG_SD)
+        return;
 
-  // This fixs a bug with J firmware, see
-  // https://github.com/spectraphilic/wasp_sketches/issues/52
-  SD.OFF();
-  hasSD = SD.ON();
+    // This fixs a bug with J firmware, see
+    // https://github.com/spectraphilic/wasp_sketches/issues/52
+    SD.OFF();
+    hasSD = SD.ON();
 
-  if (hasSD)
-  {
-    baselayout();
-  }
-  else
-  {
-    cr_printf("ERROR SD.ON() flag=%u %d\n", SD.flag, SD.card.errorCode());
-  }
+    if (hasSD) {
+        baselayout();
+    } else {
+        cr_printf("ERROR SD.ON() flag=%u %d\n", SD.flag, SD.card.errorCode());
+    }
 }
 
 void WaspUIO::stopSD()
 {
-  if (SPI.isSD)
-  {
-    // Close files
-    if (logFile.isOpen()) { logFile.close(); }
+    if (SPI.isSD) {
+        // Close files
+        if (logFile.isOpen())
+            logFile.close();
 
-    // There's already a delay(100) in SD.OFF()
-    // With this extra dealy the SD will have 150ms to handle pending operations
-    delay(50);
+        // There's already a delay(100) in SD.OFF()
+        // With this extra dealy the SD will have 150ms to handle pending operations
+        delay(50);
 
-    // Off
-    SD.OFF();
-  }
+        // Off
+        SD.OFF();
+    }
 }
 
 

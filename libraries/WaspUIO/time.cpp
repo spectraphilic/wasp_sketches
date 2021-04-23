@@ -29,21 +29,20 @@ uint8_t WaspUIO::saveTime()
 
 uint8_t WaspUIO::saveTimeToSD()
 {
-  SdFile file;
+    SdFile file;
 
-  if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC | O_SYNC))
-  {
-    log_warn("saveTimeToSD: Opening TIME.TXT failed");
-    return 1;
-  }
+    if (sd_open(timeFilename, file, O_WRITE | O_CREAT | O_TRUNC | O_SYNC)) {
+        log_warn("saveTimeToSD: Opening TIME.TXT failed");
+        return 1;
+    }
 
-  char buffer[11];
-  uint32_t time = getEpochTime();
-  cr_snprintf(buffer, 11, "%lu", time);
-  file.write(buffer); // TODO Check error code
-  file.close();
+    char buffer[11];
+    uint32_t time = getEpochTime();
+    cr_snprintf(buffer, 11, "%lu", time);
+    file.write(buffer); // TODO Check error code
+    file.close();
 
-  return 0;
+    return 0;
 }
 
 
