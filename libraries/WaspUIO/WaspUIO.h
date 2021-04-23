@@ -398,7 +398,6 @@ public:
   const char* archive_dir = "/data";
   const char* logFilename = "LOG.TXT";
   const char* timeFilename = "TIME.TXT"; //
-  SdFile logFile;
   uint8_t ack_wait;
   int baselayout();
   void startSD();

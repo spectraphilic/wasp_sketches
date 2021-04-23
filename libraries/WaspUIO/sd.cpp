@@ -25,10 +25,6 @@ void WaspUIO::startSD()
 void WaspUIO::stopSD()
 {
     if (SPI.isSD) {
-        // Close files
-        if (logFile.isOpen())
-            logFile.close();
-
         // There's already a delay(100) in SD.OFF()
         // With this extra dealy the SD will have 150ms to handle pending operations
         delay(50);
