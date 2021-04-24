@@ -836,11 +836,11 @@ int WaspSDI12::measure(unsigned int *ttt, uint8_t address, uint8_t number)
 int WaspSDI12::data(float values[], uint8_t address, uint8_t n)
 {
     char command[3];
-    char d = 0;
+    uint8_t d = 0;
 
     int i = 0;
     while (i < n) {
-        sprintf(command, "D%d", d);
+        sprintf(command, "D%hhu", d);
         const char *response = sendCommand(address, command);
         if (response == NULL)
             return -1;
