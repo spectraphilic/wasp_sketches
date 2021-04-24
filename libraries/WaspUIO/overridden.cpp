@@ -61,8 +61,8 @@ void vlog(loglevel_t level, const char* message)
             return;
         }
 
-        if (sd_append(logFile, buffer, strlen(buffer)))
-            cr_printf("sd_append(LOG.TXT) error flag=%u %d\n", SD.flag, SD.card.errorCode());
+        if (sd_write(logFile, buffer, strlen(buffer)))
+            cr_printf("sd_write(LOG.TXT) error flag=%u %d\n", SD.flag, SD.card.errorCode());
 
         logFile.close();
     }

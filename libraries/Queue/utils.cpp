@@ -48,8 +48,10 @@ int sd_open(const char* filename, SdFile &file, uint8_t mode)
 int sd_write(SdFile &file, const void* buf, size_t size)
 {
     int n = file.write(buf, size);
-    if (n < 0 || (size_t)n < size)
+    if (n < 0 || (size_t)n < size) {
+        cr_printf("XXX size=%d n=%d\n", size, n);
         return 1;
+    }
 
     return 0;
 }
