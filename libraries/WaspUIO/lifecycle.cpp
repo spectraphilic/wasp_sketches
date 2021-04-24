@@ -148,6 +148,7 @@ void WaspUIO::boot()
   // Command line interface
   clint();
 
+/*
   // Upgrade queues
   if (UIO.hasSD)
   {
@@ -156,6 +157,7 @@ void WaspUIO::boot()
     if (upgradeLIFO()) { cr_printf("ERROR Upgrading LIFO\n"); }
 #endif
   }
+*/
 
   RTC.OFF();
   USB.OFF();
