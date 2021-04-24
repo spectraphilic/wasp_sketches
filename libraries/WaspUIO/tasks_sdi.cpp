@@ -49,8 +49,8 @@ CR_TASK(taskSdi)
 
 CR_TASK(taskSdiCtd10)
 {
+    static int n;
     unsigned int ttt;
-    int n;
     float values[5];
 
     CR_BEGIN;
