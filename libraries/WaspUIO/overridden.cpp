@@ -73,12 +73,12 @@ void vlog(loglevel_t level, const char* message)
     // (3) Print to log file
     if (UIO.hasSD && UIO.log_sd) {
         if (append_to_log_file(buffer)) {
-            cr_printf("RETRY\n");
-            UIO.stopSD();
-            UIO.startSD();
-            if (append_to_log_file(buffer)) {
-                cr_printf("FAILED 2nd ATTEMPT\n");
-            }
+//          cr_printf("RETRY\n");
+//          UIO.stopSD();
+//          UIO.startSD();
+//          if (append_to_log_file(buffer)) {
+//              cr_printf("FAILED 2nd ATTEMPT\n");
+//          }
         }
     }
 }

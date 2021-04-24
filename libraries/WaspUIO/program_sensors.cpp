@@ -90,7 +90,7 @@ CR_TASK(taskSensors)
     UIO.pwr_3v3(1);
     CR_SPAWN2(taskQTPY, id);
     CR_JOIN(id);
-    UIO.pwr_3v3(0);
+    //UIO.pwr_3v3(0);
   }
 #endif
 
