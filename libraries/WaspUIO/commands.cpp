@@ -221,24 +221,25 @@ COMMAND(exeCommand)
 
 COMMAND(cmdAck)
 {
-  if (UIO.ack_wait == 0)
-  {
-    log_warn("unexpected ack command");
-    return cmd_quiet;
-  }
+    if (UIO.ack_wait == 0) {
+        log_warn("unexpected ack command");
+        return cmd_quiet;
+    }
 
 #if WITH_IRIDIUM
-  if (lifo.drop_end(UIO.ack_wait)) { return cmd_error; }
+    if (lifo.drop_end(UIO.ack_wait))
+        return cmd_error;
 #else
-  if (fifo.drop_begin(UIO.ack_wait)) { return cmd_error; }
+    if (fifo.drop_begin(UIO.ack_wait))
+        return cmd_error;
 #endif
 
 #if WITH_LORA
-  UIO.lora_fails = 0;
+    UIO.lora_fails = 0;
 #endif
 
-  UIO.ack_wait = 0; // Ready for next frame!
-  return cmd_ok;
+    UIO.ack_wait = 0; // Ready for next frame!
+    return cmd_ok;
 }
 
 /**
@@ -438,44 +439,34 @@ COMMAND(cmdRun)
 
 COMMAND(cmdTime)
 {
-  unsigned short year, month, day, hour, minute, second;
-  unsigned long epoch;
-  uint8_t err;
+    unsigned short year, month, day, hour, minute, second;
+    unsigned long epoch;
+    uint8_t err;
 
-  if (strcmp(str, "network") == 0)
-  {
-    return (UIO.setTimeFromNetwork()) ? cmd_error : cmd_ok;
-  }
+    if (strcmp(str, "network") == 0)
+        return (UIO.setTimeFromNetwork()) ? cmd_error : cmd_ok;
 
-  if (strcmp(str, "gps") == 0)
-  {
-    return (UIO.gps(true, false) == -1) ? cmd_error : cmd_ok;
-  }
+    if (strcmp(str, "gps") == 0)
+        return (UIO.gps(true, false) == -1) ? cmd_error : cmd_ok;
 
-  if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6)
-  {
-    // time yy:mm:dd:hh:mm:ss
-    err = UIO.setTime(year, month, day, hour, minute, second);
-  }
-  else if (sscanf(str, "%lu", &epoch) == 1)
-  {
-    // time epoch
-    // XXX Add half the round trip time to epoch (if command comes from network)
-    err = UIO.setTime(epoch);
-  }
-  else
-  {
-    return cmd_bad_input;
-  }
+    if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6) {
+        // time yy:mm:dd:hh:mm:ss
+        err = UIO.setTime(year, month, day, hour, minute, second);
+    } else if (sscanf(str, "%lu", &epoch) == 1) {
+        // time epoch
+        // XXX Add half the round trip time to epoch (if command comes from network)
+        err = UIO.setTime(epoch);
+    } else {
+        return cmd_bad_input;
+    }
 
-  // Error
-  if (err != 0)
-  {
-    log_error("Failed to save time %lu", epoch);
-    return cmd_error;
-  }
+    // Error
+    if (err != 0) {
+        log_error("Failed to save time %lu", epoch);
+        return cmd_error;
+    }
 
-  return cmd_ok;
+    return cmd_ok;
 }
 
 
