@@ -386,43 +386,41 @@ uint32_t WaspUIO::nextAlarm()
 
 void WaspUIO::deepSleep()
 {
-  saveTimeToSD();
+    saveTimeToSD();
 
-  // For robustness sake, reboot once in a while
-  if (nloops >= MAX_LOOPS)
-  {
-    log_info("Rebooting after %u loops", nloops);
-    reboot();
-  }
+    // For robustness sake, reboot once in a while
+    if (nloops >= MAX_LOOPS) {
+        log_info("Rebooting after %u loops", nloops);
+        reboot();
+    }
 
-  nextAlarm();  // Set next alarm
-  UIO.stopSD(); // Stop SD, logging ends here
+    nextAlarm();  // Set next alarm
+    UIO.stopSD(); // Stop SD, logging ends here
 
-  // Clear interruption flag & pin
-  intFlag = 0;
-  PWR.clearInterruptionPin();
+    // Clear interruption flag & pin
+    intFlag = 0;
+    PWR.clearInterruptionPin();
 
-  // Power off and Sleep
-  Utils.setLED(LED0, LED_OFF);
-  Utils.setLED(LED1, LED_OFF);
-  PWR.sleep(ALL_OFF);
-  Utils.setLED(LED1, LED_ON);
+    // Power off and Sleep
+    Utils.setLED(LED0, LED_OFF);
+    Utils.setLED(LED1, LED_OFF);
+    PWR.sleep(ALL_OFF);
+    Utils.setLED(LED1, LED_ON);
 
-  // Awake
-  nloops++;                 // Next loop
-  if (RTC.setWatchdog(LOOP_TIMEOUT))
-  {
-    // We cannot log because the SD is not started yet
-    cr_printf("FATAL ERROR setting watchdog\n");
-    reboot();
-  }
+    // Awake
+    nloops++;                 // Next loop
+    if (RTC.setWatchdog(LOOP_TIMEOUT)) {
+        // We cannot log because the SD is not started yet
+        cr_printf("FATAL ERROR setting watchdog\n");
+        reboot();
+    }
 
-  // Starts time and SD
-  onLoop();
+    // Starts time and SD
+    onLoop();
 
-  char buffer[50];
-  log_info("===== Loop %u battery=%s =====", UIO.nloops,
-       UIO.pprintBattery(buffer, sizeof buffer));
+    char buffer[50];
+    log_info("===== Loop %u battery=%s =====", UIO.nloops,
+             UIO.pprintBattery(buffer, sizeof buffer));
 }
 
 
