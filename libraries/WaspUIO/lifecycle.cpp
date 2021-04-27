@@ -110,6 +110,43 @@ fail:
 #endif
 
 
+
+/**
+ * Verify that what we read is what we have written
+ */
+void assertAlarms()
+{
+    // Keep current values
+    uint8_t second_alarm1 = RTC.second_alarm1;
+    uint8_t minute_alarm1 = RTC.minute_alarm1;
+    uint8_t hour_alarm1 = RTC.hour_alarm1;
+    uint8_t day_alarm1 = RTC.day_alarm1;
+    uint8_t minute_alarm2 = RTC.minute_alarm2;
+    uint8_t hour_alarm2 = RTC.hour_alarm2;
+    uint8_t day_alarm2 = RTC.day_alarm2;
+
+    // Read RTC registers
+    RTC.readRTC(RTC_ALARM2_ADDRESS);
+
+    // Return 0 on success, 1 on error
+    int success = (
+        second_alarm1 == RTC.second_alarm1 &&
+        minute_alarm1 == RTC.minute_alarm1 &&
+        hour_alarm1 == RTC.hour_alarm1 &&
+        day_alarm1 == RTC.day_alarm1 &&
+        minute_alarm2 == RTC.minute_alarm2 &&
+        hour_alarm2 == RTC.hour_alarm2 &&
+        day_alarm2 == RTC.day_alarm2
+    );
+
+    if (! success) {
+        log_error("RTC error, what we read is not we we wrote");
+        UIO.reboot();
+    }
+}
+
+
+
 /**
  * Function to be called first in setup()
  */
@@ -378,6 +415,7 @@ uint32_t WaspUIO::nextAlarm()
   } else {
     log_info("Alarm 2 at %02d:%02d:%02d mode=3 (only hour/min match)", ts.date, ts.hour, ts.minute);
   }
+  assertAlarms(); // Reboot if the RTC was not written as expected
 
   RTC.OFF();
 
@@ -414,6 +452,7 @@ void WaspUIO::deepSleep()
         cr_printf("FATAL ERROR setting watchdog\n");
         reboot();
     }
+    assertAlarms(); // Reboot if the RTC was not written as expected
 
     // Starts time and SD
     onLoop();
