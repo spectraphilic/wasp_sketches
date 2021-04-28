@@ -72,8 +72,8 @@ void setup()
 
     // GPS
     if (GPS.ON() == 0) {
-        log_error("GPS.ON() Error: Shut down!!");
-        PWR.deepSleep("01:00:00:00", RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
+        log_error("GPS.ON() Error: reboot!");
+        UIO.reboot();
     }
 }
 
@@ -107,18 +107,19 @@ void loop()
 #if WITH_LORA
         //ADD_SENSOR(SENSOR_SNR, UIO.snr);
 #endif
-        if (gps(false, true) == 0)
+        if (gps(true) == 0)
             UIO.saveFrame();
     }
 }
 
 
 
-int8_t gps(bool setTime, bool getPosition)
+int8_t gps(bool getPosition)
 {
     PGM_P error = NULL;
     uint8_t satellites;
 
+/*
     log_debug("GPS start");
     if (_boot_version >= 'J')
         UIO.stopSD();
@@ -129,8 +130,10 @@ int8_t gps(bool setTime, bool getPosition)
         log_error("GPS.ON() failure");
         return -1;
     }
+*/
 
     // Connect
+    log_info("GPS waiting for signal...");
     if (GPS.waitForSignal(150) == false) { // 150s = 2m30s
         error = PSTR("GPS Timeout");
         goto exit;
@@ -156,20 +159,10 @@ int8_t gps(bool setTime, bool getPosition)
         }
     }
 
-    // Time
-    // TODO optimize, part of the work in setTimeFromGPS is already done in
-    // getPosition above
-    if (setTime)
-        GPS.setTimeFromGPS(); // Save time to RTC
-
-    //GPS.OFF();
+/*
+    GPS.OFF();
     UIO.startSD();
-
-    // Set system time. Do this here because we need the SD
-    if (setTime) {
-        UIO.loadTime();
-        log_info("GPS Time updated!");
-    }
+*/
 
     if (getPosition) {
         float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
@@ -195,8 +188,10 @@ int8_t gps(bool setTime, bool getPosition)
 
 exit:
     if (error) {
+/*
         GPS.OFF();
         UIO.startSD();
+*/
 
         cr.log_P(LOG_ERROR, error);
         return -1;
@@ -204,4 +199,3 @@ exit:
 
     return 0;
 }
-
