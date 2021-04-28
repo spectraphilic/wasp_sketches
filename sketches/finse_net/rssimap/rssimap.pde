@@ -23,102 +23,93 @@
 
 uint8_t getPowerLevel()
 {
-  bool success = false;
-  uint8_t powerLevel;
+    bool success = false;
+    uint8_t powerLevel;
 
-  log_info("getPowerLevel() ...");
-  USB.OFF();
+    log_info("getPowerLevel() ...");
+    USB.OFF();
 
   // Action
 #if WITH_XBEE
-  if (xbeeDM.ON() == 0 && xbeeDM.getPowerLevel() == 0)
-  {
-    powerLevel = xbeeDM.powerLevel;
-    success = true;
-  }
-  xbeeDM.OFF();
+    if (xbeeDM.ON() == 0 && xbeeDM.getPowerLevel() == 0) {
+        powerLevel = xbeeDM.powerLevel;
+        success = true;
+    }
+    xbeeDM.OFF();
 #elif WITH_LORA
-  if (UIO.loraStart() == 0 && sx1272.getPower() == 0)
-  {
-    powerLevel = sx1272._power;
-    success = true;
-  }
-  UIO.loraStop();
+    if (UIO.loraStart() == 0 && sx1272.getPower() == 0) {
+        powerLevel = sx1272._power;
+        success = true;
+    }
+    UIO.loraStop();
 #endif
 
-  // Print
-  USB.ON();
-  USB.flush();
-  if (success)
-  {
-    log_info("power level = %hhu", powerLevel);
-    return 0;
-  }
-  else
-  {
-    log_error("Failed to read the power level");
-    return 1;
-  }
+    // Print
+    USB.ON();
+    USB.flush();
+    if (success) {
+        log_info("power level = %hhu", powerLevel);
+        return 0;
+    } else {
+        log_error("Failed to read the power level");
+        return 1;
+    }
 }
 
 
 void setup()
 {
-  USB.ON();
-  UIO.boot();
-  USB.println();
+    USB.ON();
+    UIO.boot();
+    USB.println();
 
-  // SD
-  UIO.startSD();
-  RTC.ON();
+    // SD
+    UIO.startSD();
+    RTC.ON();
 
-  // XBee Power level
-  getPowerLevel();
+    // XBee Power level
+    getPowerLevel();
 
-  // GPS
-  if (GPS.ON() == 0)
-  {
-    log_error("GPS.ON() Error: Shut down!!");
-    PWR.deepSleep("01:00:00:00", RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
-  }
+    // GPS
+    if (GPS.ON() == 0) {
+        log_error("GPS.ON() Error: Shut down!!");
+        PWR.deepSleep("01:00:00:00", RTC_OFFSET, RTC_ALM1_MODE2, ALL_OFF);
+    }
 }
 
 
 void loop()
 {
-  uint32_t time, wait;
-  int err;
+    uint32_t time, wait;
+    int err;
 
-  // Wait until the next 30s slot
-  wait = 30 - UIO.getEpochTime() % 30; // Every 30s
-  log_info("delay(%ds)", wait); // Wait until the next minute
-  delay(wait * 1000);
+    // Wait until the next 30s slot
+    wait = 30 - UIO.getEpochTime() % 30; // Every 30s
+    log_info("delay(%ds)", wait); // Wait until the next minute
+    delay(wait * 1000);
 
-  // Get data and create frame
-  time = UIO.getEpochTime();
-  log_info("ping() ...");
+    // Get data and create frame
+    time = UIO.getEpochTime();
+    log_info("ping() ...");
 
 #if WITH_XBEE
-  err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");
+    err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");
 #elif WITH_LORA
-  err = UIO.loraSend(UIO.lora_dst, "ping", true);
-  log_info("RSSI(dBm) = %d SNR = %d", UIO.rssi, UIO.snr);
+    err = UIO.loraSend(UIO.lora_dst, "ping", true);
+    log_info("RSSI(dBm) = %d SNR = %d", UIO.rssi, UIO.snr);
 #endif
 
-  if (err == 0)
-  {
-    // Frame
-    frame.createFrameBin(BINARY);
-    ADD_SENSOR(SENSOR_TST, time);
-    ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
+    if (err == 0) {
+        // Frame
+        frame.createFrameBin(BINARY);
+        ADD_SENSOR(SENSOR_TST, time);
+        ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
 #if WITH_LORA
-    //ADD_SENSOR(SENSOR_SNR, UIO.snr);
+        //ADD_SENSOR(SENSOR_SNR, UIO.snr);
 #endif
-    if (gps(false, true) == 0)
-    {
-      UIO.saveFrame();
+        if (gps(false, true) == 0)
+            UIO.saveFrame();
     }
-  }
 }
 
 
