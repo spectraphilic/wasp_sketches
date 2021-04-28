@@ -77,7 +77,8 @@ int WaspUIO::loraSend(uint8_t dst, const char* msg, bool ack)
   }
 
   if (ack) {
-    err = sx1272.sendPacketTimeoutACK(dst, (char*)msg);
+    //err = sx1272.sendPacketTimeoutACK(dst, (char*)msg);
+    err = sx1272.sendPacketMAXTimeoutACKRetries(dst, (char*)msg);
     if (err == 0)
     {
       err = loraQuality();
