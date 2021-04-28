@@ -21,119 +21,54 @@
  */
 
 
-uint8_t getPowerLevel()
+#define GPS_SD_BUG true
+bool gps_is_on = false;
+
+
+void gps_on()
 {
-    bool success = false;
-    uint8_t powerLevel;
+    if (gps_is_on)
+        return;
 
-    log_info("getPowerLevel() ...");
-    USB.OFF();
+    if (GPS_SD_BUG)
+        UIO.stopSD();
 
-  // Action
-#if WITH_XBEE
-    if (xbeeDM.ON() == 0 && xbeeDM.getPowerLevel() == 0) {
-        powerLevel = xbeeDM.powerLevel;
-        success = true;
-    }
-    xbeeDM.OFF();
-#elif WITH_LORA
-    if (UIO.loraStart() == 0 && sx1272.getPower() == 0) {
-        powerLevel = sx1272._power;
-        success = true;
-    }
-    UIO.loraStop();
-#endif
-
-    // Print
-    USB.ON();
-    USB.flush();
-    if (success) {
-        log_info("power level = %hhu", powerLevel);
-        return 0;
-    } else {
-        log_error("Failed to read the power level");
-        return 1;
-    }
-}
-
-
-void setup()
-{
-    USB.ON();
-    UIO.boot();
-    USB.println();
-
-    // SD
-    UIO.startSD();
-    RTC.ON();
-
-    // XBee Power level
-    getPowerLevel();
-
-    // GPS
     if (GPS.ON() == 0) {
-        log_error("GPS.ON() Error: reboot!");
+        if (GPS_SD_BUG)
+            UIO.startSD();
+
+        log_error("GPS.ON() ERROR: reboot!");
         UIO.reboot();
     }
+
+    gps_is_on = true;
 }
 
 
-void loop()
+void gps_off()
 {
-    uint32_t time, wait;
-    int err;
+    if (! gps_is_on)
+        return;
 
-    // Wait until the next 30s slot
-    wait = 30 - UIO.getEpochTime() % 30; // Every 30s
-    log_info("delay(%ds)", wait); // Wait until the next minute
-    delay(wait * 1000);
+    if (! GPS_SD_BUG)
+        return;
 
-    // Get data and create frame
-    time = UIO.getEpochTime();
-    log_info("ping() ...");
-
-#if WITH_XBEE
-    err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");
-#elif WITH_LORA
-    err = UIO.loraSend(UIO.lora_dst, "ping", true);
-    log_info("RSSI(dBm) = %d SNR = %d", UIO.rssi, UIO.snr);
-#endif
-
-    if (err == 0) {
-        // Frame
-        frame.createFrameBin(BINARY);
-        ADD_SENSOR(SENSOR_TST, time);
-        ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
-#if WITH_LORA
-        //ADD_SENSOR(SENSOR_SNR, UIO.snr);
-#endif
-        if (gps(true) == 0)
-            UIO.saveFrame();
-    }
+    GPS.OFF();
+    gps_is_on = false;
+    if (GPS_SD_BUG)
+        UIO.startSD();
 }
-
-
 
 int8_t gps(bool getPosition)
 {
     PGM_P error = NULL;
     uint8_t satellites;
 
-/*
-    log_debug("GPS start");
-    if (_boot_version >= 'J')
-        UIO.stopSD();
-
     // On
-    if (GPS.ON() == 0) {
-        UIO.startSD();
-        log_error("GPS.ON() failure");
-        return -1;
-    }
-*/
+    log_info("GPS...");
+    gps_on();
 
     // Connect
-    log_info("GPS waiting for signal...");
     if (GPS.waitForSignal(150) == false) { // 150s = 2m30s
         error = PSTR("GPS Timeout");
         goto exit;
@@ -159,10 +94,7 @@ int8_t gps(bool getPosition)
         }
     }
 
-/*
-    GPS.OFF();
-    UIO.startSD();
-*/
+    gps_off();
 
     if (getPosition) {
         float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
@@ -188,14 +120,100 @@ int8_t gps(bool getPosition)
 
 exit:
     if (error) {
-/*
         GPS.OFF();
         UIO.startSD();
-*/
 
         cr.log_P(LOG_ERROR, error);
         return -1;
     }
 
     return 0;
+}
+
+
+uint8_t getPowerLevel()
+{
+    bool success = false;
+    uint8_t powerLevel;
+
+    USB.flush();
+    USB.OFF();
+
+  // Action
+#if WITH_XBEE
+    if (xbeeDM.ON() == 0 && xbeeDM.getPowerLevel() == 0) {
+        powerLevel = xbeeDM.powerLevel;
+        success = true;
+    }
+    xbeeDM.OFF();
+#elif WITH_LORA
+    if (UIO.loraStart() == 0 && sx1272.getPower() == 0) {
+        powerLevel = sx1272._power;
+        success = true;
+    }
+    UIO.loraStop();
+#endif
+
+    USB.ON();
+    USB.flush();
+
+    // Print
+    if (success) {
+        log_info("Power level = %hhu", powerLevel);
+        return 0;
+    } else {
+        log_error("Failed to read the power level");
+        return 1;
+    }
+}
+
+
+void setup()
+{
+    // Boot
+    USB.ON();
+    UIO.boot();
+    USB.println();
+    RTC.ON();
+
+    // Network power level
+    UIO.startSD();
+    getPowerLevel();
+
+    // GPS
+    gps_is_on = false;
+    if (! GPS_SD_BUG)
+        gps_on();
+}
+
+
+void loop()
+{
+    uint32_t time, wait;
+    int err;
+
+    // Wait until the next 30s slot
+    wait = 30 - UIO.getEpochTime() % 30; // Every 30s
+    log_info("Wait %ds", wait); // Wait until the next minute
+    delay(wait * 1000);
+
+    // Get data and create frame
+    time = UIO.getEpochTime();
+    log_info("Ping...");
+
+#if WITH_XBEE
+    err = UIO.xbeeSend(UIO.xbee.rx_address, "ping");
+#elif WITH_LORA
+    err = UIO.loraSend(UIO.lora_dst, "ping", true);
+#endif
+
+    if (err == 0) {
+        log_info("RSSI(dBm) = %d", UIO.rssi);
+        frame.createFrameBin(BINARY);
+        ADD_SENSOR(SENSOR_TST, time);
+        ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
+        //ADD_SENSOR(SENSOR_SNR, UIO.snr);
+        if (gps(true) == 0)
+            UIO.saveFrame();
+    }
 }
