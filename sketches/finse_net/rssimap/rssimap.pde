@@ -208,10 +208,7 @@ void loop()
 #endif
 
     if (err == 0) {
-#if WITH_LORA
-        log_info("RSSI(channel)=%d RSSI(packet)=%d SNR=%d",
-                 UIO.rssi, UIO.rssi_packet, UIO.snr);
-#else
+#if WITH_XBEE
         log_info("RSSI=%d", UIO.rssi);
 #endif
         frame.createFrameBin(BINARY);

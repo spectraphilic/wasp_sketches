@@ -115,6 +115,8 @@ int WaspUIO::loraQuality()
         rssi = sx1272._RSSI;
         rssi_packet = sx1272._RSSIpacket;
         snr = sx1272._SNR;
+        log_debug("RSSI(channel)=%d RSSI(packet)=%d SNR=%d",
+                  rssi, rssi_packet, snr);
     }
 
     return err;
