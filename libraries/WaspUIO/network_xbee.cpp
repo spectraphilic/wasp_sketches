@@ -68,41 +68,36 @@ exit:
 // With XBee we always use network ACK
 int WaspUIO::xbeeSend(const char* dst, const char* msg)
 {
-  int err;
+    int err;
 
-  // UART0 is shared by USB and Socket0 (XBee, Lora)
-  USB.OFF();
+    // UART0 is shared by USB and Socket0 (XBee, Lora)
+    USB.OFF();
 
-  // Switch ON
-  bool isOn = xbeeDM.XBee_ON;
-  if (! isOn)
-  {
-    err = xbeeDM.ON();
-    if (err) goto exit;
-  }
+    // Switch ON
+    bool isOn = xbeeDM.XBee_ON;
+    if (! isOn) {
+        err = xbeeDM.ON();
+        if (err)
+            goto exit;
+    }
 
-  err = xbeeDM.send((char*)dst, (char*)msg);
-  if (err == 0)
-  {
-    err = xbeeQuality();
-  }
+    err = xbeeDM.send((char*)dst, (char*)msg);
+    if (err == 0)
+        err = xbeeQuality();
 
 exit:
-  if (! isOn)
-  {
-    xbeeDM.OFF();
-  }
+    if (! isOn)
+        xbeeDM.OFF();
 
-  // Print
-  //USB.ON();
-  //USB.flush();
-  if (err)
-  {
-    log_error("xbeeSend failed error=%d", err);
-    return 1;
-  }
+    // Print
+    //USB.ON();
+    //USB.flush();
+    if (err) {
+        log_error("xbeeSend failed error=%d", err);
+        return 1;
+    }
 
-  return 0;
+    return 0;
 }
 
 int WaspUIO::xbeeQuality()

@@ -61,58 +61,51 @@ int WaspUIO::loraInit()
 
 int WaspUIO::loraSend(uint8_t dst, const char* msg, bool ack)
 {
-  int err;
+    int err;
 
-  log_debug("loraSend(dst=%d, msg=\"%s\", ack=%d)", dst, msg, ack);
+    log_debug("loraSend(dst=%d, msg=\"%s\", ack=%d)", dst, msg, ack);
 
-  // UART0 is shared by USB and Socket0 (XBee, Lora)
-  USB.OFF();
+    // UART0 is shared by USB and Socket0 (XBee, Lora)
+    USB.OFF();
 
-  // Switch ON
-  bool isOn = SPI.isSocket0;
-  if (! isOn)
-  {
-    err = loraStart();
-    if (err) goto exit;
-  }
-
-  if (ack) {
-    //err = sx1272.sendPacketTimeoutACK(dst, (char*)msg);
-    err = sx1272.sendPacketMAXTimeoutACKRetries(dst, (char*)msg);
-    if (err == 0)
-    {
-      err = loraQuality();
+    // Switch ON
+    bool isOn = SPI.isSocket0;
+    if (! isOn) {
+        err = loraStart();
+        if (err)
+            goto exit;
     }
-  } else {
-    err = sx1272.sendPacketTimeout(dst, (char*)msg);
-  }
+
+    if (ack) {
+        //err = sx1272.sendPacketTimeoutACK(dst, (char*)msg);
+        err = sx1272.sendPacketMAXTimeoutACK(dst, (char*)msg);
+        //err = sx1272.sendPacketMAXTimeoutACKRetries(dst, (char*)msg);
+        if (err == 0)
+            err = loraQuality();
+    } else {
+        err = sx1272.sendPacketTimeout(dst, (char*)msg);
+    }
 
 exit:
-  if (! isOn)
-  {
-    loraStop();
-  }
+    if (! isOn)
+        loraStop();
 
-  // Print
-  //USB.ON();
-  //USB.flush();
-  if (err)
-  {
-    log_error("loraSend failed error=%d", err);
-    return 1;
-  }
-
-  // Set network address in auto mode (lora.dst 0)
-  if (ack && dst == 0)
-  {
-    log_info("loraSend success, ack received from %u", sx1272.ACK.src);
-    if (sx1272.ACK.src < lora_addr)
-    {
-      lora_dst2 = sx1272.ACK.src;
+    // Print
+    //USB.ON();
+    //USB.flush();
+    if (err) {
+        log_error("loraSend failed error=%d", err);
+        return 1;
     }
-  }
 
-  return 0;
+    // Set network address in auto mode (lora.dst 0)
+    if (ack && dst == 0) {
+        log_info("loraSend success, ack received from %u", sx1272.ACK.src);
+        if (sx1272.ACK.src < lora_addr)
+            lora_dst2 = sx1272.ACK.src;
+    }
+
+    return 0;
 }
 
 int WaspUIO::loraQuality()
