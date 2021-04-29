@@ -21,42 +21,36 @@
  */
 
 
-#define GPS_SD_BUG true
-bool gps_is_on = false;
+// 0: Disabled
+// 1: Enabled, only when needed
+// 2: Enabled, always
+#define USE_GPS 0
+#define USE_SD 1
 
-
-void gps_on()
+int gps_on()
 {
-    if (gps_is_on)
-        return;
+    if (GPS.getMode() == GPS_ON)
+        return 0;
 
-    if (GPS_SD_BUG)
-        UIO.stopSD();
+    if (USE_GPS == 0)
+        return -1;
 
     if (GPS.ON() == 0) {
-        if (GPS_SD_BUG)
-            UIO.startSD();
-
         log_error("GPS.ON() ERROR: reboot!");
         UIO.reboot();
     }
 
-    gps_is_on = true;
+    return 0;
 }
 
 
 void gps_off()
 {
-    if (! gps_is_on)
+    if (GPS.getMode() == GPS_OFF)
         return;
 
-    if (! GPS_SD_BUG)
-        return;
-
-    GPS.OFF();
-    gps_is_on = false;
-    if (GPS_SD_BUG)
-        UIO.startSD();
+    if (USE_GPS < 2)
+        GPS.OFF();
 }
 
 int8_t gps(bool getPosition)
@@ -120,7 +114,7 @@ int8_t gps(bool getPosition)
 
 exit:
     if (error) {
-        GPS.OFF();
+        gps_off();
         UIO.startSD();
 
         cr.log_P(LOG_ERROR, error);
@@ -174,16 +168,22 @@ void setup()
     USB.ON();
     UIO.boot();
     USB.println();
-    RTC.ON();
+
+    // Switch stuff
+    RTC.OFF();
+
+    if (USE_SD == 2)
+        UIO.startSD();
+    else
+        UIO.stopSD();
+
+    if (USE_GPS == 2)
+        gps_on();
+    else
+        gps_off();
 
     // Network power level
-    UIO.startSD();
     getPowerLevel();
-
-    // GPS
-    gps_is_on = false;
-    if (! GPS_SD_BUG)
-        gps_on();
 }
 
 
@@ -213,7 +213,14 @@ void loop()
         ADD_SENSOR(SENSOR_TST, time);
         ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
         //ADD_SENSOR(SENSOR_SNR, UIO.snr);
-        if (gps(true) == 0)
+        if (USE_GPS)
+            gps(true);
+
+        if (USE_SD) {
+            UIO.startSD();
             UIO.saveFrame();
+            if (USE_SD < 2)
+                UIO.stopSD();
+        }
     }
 }
