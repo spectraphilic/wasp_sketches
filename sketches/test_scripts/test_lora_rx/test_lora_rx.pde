@@ -51,8 +51,8 @@ void setup()
   //// Options to configure: ////
 
   // Select frequency channel
-  e = sx1272.setChannel(CH_11_868);  
-  USB.print(F("Setting Channel CH_11_868.\t state ")); 
+  e = sx1272.setChannel(CH_10_868);  
+  USB.print(F("Setting Channel CH_10_868.\t state ")); 
   USB.println(e);
 
   // Select implicit (off) or explicit (on) header mode
@@ -61,8 +61,8 @@ void setup()
   USB.println(e); 
 
   // Select mode (mode 10 is the faster)
-  e = sx1272.setMode(1);
-  USB.print(F("Setting Mode '1'.\t\t state ")); 
+  e = sx1272.setMode(6);
+  USB.print(F("Setting Mode '6'.\t\t state ")); 
   USB.println(e);  
   
   // Select CRC on or off
@@ -76,8 +76,8 @@ void setup()
   USB.println(e); 
 
   // Select the node address value: from 2 to 255
-  e = sx1272.setNodeAddress(2);
-  USB.print(F("Setting Node Address to '2'.\t state "));
+  e = sx1272.setNodeAddress(1);
+  USB.print(F("Setting Node Address to '1'.\t state "));
   USB.println(e);
   USB.println();
 

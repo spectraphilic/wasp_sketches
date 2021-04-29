@@ -31,7 +31,7 @@
 #include <WaspSX1272.h>
 
 // define the destination address to send packets
-uint8_t rx_address = 2;
+uint8_t rx_address = 1;
 
 // status variable
 int8_t e;
@@ -55,8 +55,8 @@ void setup()
   //// Options to configure: ////
 
   // Select frequency channel
-  e = sx1272.setChannel(CH_11_868);
-  USB.print(F("Setting Channel CH_11_868.\t state ")); 
+  e = sx1272.setChannel(CH_10_868);
+  USB.print(F("Setting Channel CH_10_868.\t state ")); 
   USB.println(e);
 
   // Select implicit (off) or explicit (on) header mode
@@ -65,8 +65,8 @@ void setup()
   USB.println(e); 
 
   // Select mode: from 1 to 10
-  e = sx1272.setMode(1);  
-  USB.print(F("Setting Mode '1'.\t\t state "));  
+  e = sx1272.setMode(6);  
+  USB.print(F("Setting Mode '6'.\t\t state "));  
   USB.println(e);  
 
   // Select CRC on or off
@@ -101,12 +101,18 @@ void setup()
 void loop()
 {
   // Sending packet, with retries if failure, and waiting an ACK response
-  e = sx1272.sendPacketTimeoutACKRetries( rx_address, "this_is_the_data_message");
+  e = sx1272.sendPacketTimeoutACKRetries( rx_address, "ping");
 
   // Check sending status
   if( e == 0 ) 
   {
     USB.println(F("Packet sent OK"));     
+    e = sx1272.getRSSI();
+    if (e == 0) { USB.print(F("RSSI(channel): ")); USB.print(sx1272._RSSI); USB.println(); }
+    e = sx1272.getRSSIpacket();
+    if (e == 0) { USB.print(F("RSSI(packet) : ")); USB.print(sx1272._RSSIpacket); USB.println(); }
+    e = sx1272.getSNR();
+    if (e == 0) { USB.print(F("SNR          : ")); USB.print(sx1272._SNR); USB.println(); }
   }
   else 
   {
