@@ -208,10 +208,15 @@ void loop()
 #endif
 
     if (err == 0) {
-        log_info("RSSI(dBm) = %d SNR(dB) = %d", UIO.rssi, UIO.snr);
+#if WITH_LORA
+        log_info("RSSI(channel)=%d RSSI(packet)=%d SNR=%d",
+                 UIO.rssi, UIO.rssi_packet, UIO.snr);
+#else
+        log_info("RSSI=%d", UIO.rssi);
+#endif
         frame.createFrameBin(BINARY);
         ADD_SENSOR(SENSOR_TST, time);
-        ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
+        ADD_SENSOR(SENSOR_RSSI, UIO.rssi_packet);
         //ADD_SENSOR(SENSOR_SNR, UIO.snr);
         if (USE_GPS)
             gps(true);

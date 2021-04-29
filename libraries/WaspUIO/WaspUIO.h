@@ -411,7 +411,7 @@ public:
 
   // Network
   void networkInit();
-  int rssi, snr;
+  int rssi, rssi_packet, snr;
   #if WITH_XBEE
   // Network: Xbee
   XBee xbee;

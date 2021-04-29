@@ -110,14 +110,14 @@ exit:
 
 int WaspUIO::loraQuality()
 {
-  int err = sx1272.getRSSIpacket() or sx1272.getSNR();
-  if (err == 0)
-  {
-    rssi = sx1272._RSSIpacket; // XXX Check this is a negative value
-    snr = sx1272._SNR;
-  }
+    int err = sx1272.getRSSI() or sx1272.getRSSIpacket() or sx1272.getSNR();
+    if (err == 0) {
+        rssi = sx1272._RSSI;
+        rssi_packet = sx1272._RSSIpacket;
+        snr = sx1272._SNR;
+    }
 
-  return err;
+    return err;
 }
 
 #endif
