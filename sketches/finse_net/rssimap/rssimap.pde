@@ -208,7 +208,7 @@ void loop()
 #endif
 
     if (err == 0) {
-        log_info("RSSI(dBm) = %d", UIO.rssi);
+        log_info("RSSI(dBm) = %d SNR(dB) = %d", UIO.rssi, UIO.snr);
         frame.createFrameBin(BINARY);
         ADD_SENSOR(SENSOR_TST, time);
         ADD_SENSOR(SENSOR_RSSI, UIO.rssi);
