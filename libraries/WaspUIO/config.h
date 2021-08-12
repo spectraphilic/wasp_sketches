@@ -9,21 +9,21 @@
 #define BOARD_TYPE BOARD_NONE
 
 // Features: because we don't have enough program memory to compile everything
-#define WITH_GPS FALSE
-#define WITH_EXT_CHARGE FALSE
+#define WITH_GPS TRUE
+#define WITH_EXT_CHARGE TRUE
 
 // Networking
-#define WITH_XBEE TRUE
-#define WITH_4G FALSE
+#define WITH_XBEE FALSE
+#define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
-#define WITH_LORA FALSE
+#define WITH_LORA TRUE
 
 // Sensors
 #define WITH_I2C FALSE
-#define WITH_SDI TRUE
+#define WITH_SDI FALSE
 #define WITH_1WIRE FALSE
 #define WITH_MB FALSE
-#define WITH_QTPY TRUE // Requires WITH_SDI
+#define WITH_QTPY FALSE // Requires WITH_SDI
 
 #define WITH_AS7265 FALSE
 
@@ -44,7 +44,7 @@
 #define PIN_POWER_SDI12 DIGITAL7 // SDI-12 power switch
 #define PIN_SDI12       DIGITAL8 // Use DIGITAL8 as default (protoboard)
 
-#define PIN_POWER_EXT   DIGITAL1 // External power charge (same as MB power switch)
+#define PIN_POWER_EXT   18 // External power charge (ANALOG5 = 18 to behave as a digital pin)
 
 // I2C addresses
 #define I2C_ADDRESS_LAGOPUS_VL53L1X    0x29 // Distance (Snow depth)

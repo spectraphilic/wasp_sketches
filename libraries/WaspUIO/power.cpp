@@ -249,7 +249,7 @@ void WaspUIO::readBattery()
   }
 
   if      (batteryLevel <= 30) { battery = BATTERY_LOW; }
-  else if (batteryLevel <= 75) { battery = BATTERY_MIDDLE; }
+  else if (batteryLevel < 75) { battery = BATTERY_MIDDLE; }
   else                         { battery = BATTERY_HIGH; }
 
   // cooldown factor
