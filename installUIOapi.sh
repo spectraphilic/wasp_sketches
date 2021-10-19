@@ -21,7 +21,7 @@ git clone git@github.com:spectraphilic/waspmoteapi-uio.git -b v044
 git clone git@github.com:spectraphilic/wasp_sketches.git
 
 # Download Waspmote IDE, and install it
-export NAME=waspmote-pro-ide-v06.19-linux64
+export NAME=waspmote-pro-ide-v06.28-linux64
 printf "Downloading Waspmote IDE, and installing it ...\n"
 mkdir $NAME
 cd $NAME

@@ -33,15 +33,15 @@ fork of waspmoteapi and the sketches:
 
 (2) Download and install the IDE:
 
-    $ mkdir waspmote-pro-ide-v06.19-linux64
-    $ cd waspmote-pro-ide-v06.19-linux64
-    $ wget http://downloads.libelium.com/waspmote-pro-ide-v06.19-linux64.zip
-    $ unzip waspmote-pro-ide-v06.19-linux64.zip
+    $ mkdir waspmote-pro-ide-v06.28-linux64
+    $ cd waspmote-pro-ide-v06.28-linux64
+    $ wget http://downloads.libelium.com/waspmote-pro-ide-v06.28-linux64.zip
+    $ unzip waspmote-pro-ide-v06.28-linux64.zip
     $ ./install.sh
 
 (3) Replace the libraries from the IDE by those in our fork of waspmoteapi:
 
-    $ cd waspmote-pro-ide-v06.19-linux64
+    $ cd waspmote-pro-ide-v06.28-linux64
     $ mv libraries libraries.bak
     $ ln -s ../waspmoteapi-uio/libraries
     $ cd hardware/waspmote/avr/cores
@@ -52,6 +52,18 @@ fork of waspmoteapi and the sketches:
 to point to the sketches project (where the libraries folder is). For example:
 
     [...]/wasp_sketches
+
+
+## Troubleshooting
+
+If the menus don't display in the IDE, then edit the waspmote shell script and
+remove the ``swing.defaultlaf`` java option:
+
+    # vi waspmote
+    [...]
+    #JAVA_OPTIONS=("-DAPP_DIR=$APPDIR" "-Dswing.defaultlaf=com.sun.java.swing.plaf.gtk.GTKLookAndFeel")
+    JAVA_OPTIONS=("-DAPP_DIR=$APPDIR")
+    [...]
 
 
 # Using a different compiler
@@ -75,6 +87,12 @@ hardware/waspmote/avr/platform.local.txt and add the following line:
 It's recommented to enable all compiler warnings.
 
 To do so go to ``File -> Preferences -> Compiler warnings`` and choose ``All``.
+
+It's also possible to edit the configuration file directly. Do so with the IDE
+closed, edit, save and open the IDE again:
+
+    $ vi .waspmote/preferences.txt
+    compiler.warning_level=all
 
 
 # Contents
