@@ -391,8 +391,8 @@ CR_TASK(taskNetworkLoraSend)
 //              Utils.float2String(sx1272.timeOnAir(), str, 2)
 //          );
 
-        // Next
-        UIO.ack_wait = n_frames;
+            // Next
+            UIO.ack_wait = n_frames;
         } else if (cr.timeout(t0, 10 * 1000)) {
             // Max 10s waiting for an ACK
             // If didn't receive the ACK for the 1st frame consider it a failure
@@ -437,11 +437,9 @@ CR_TASK(taskNetworkLoraReceive)
                     sx1272.packet_received.length - 5 // dst(1) + src(1) + packnum(1) + length(1) + data + retry(1)
                 );
                 if (n > 0) {
-                    const int size = 25;
+                    const int size = 12;
                     char cmd[size];
-                    float timeOnAir = sx1272.timeOnAir(21); // strlen(cmd)
-                    uint32_t time = UIO.getEpochTime() + (uint32_t)round(timeOnAir/1000);
-                    cr_snprintf(cmd, size, "time %lu;ack %u", time, n);
+                    cr_snprintf(cmd, size, "ack %u", n);
                     UIO.loraSend(sx1272.packet_received.src, cmd, false);
                 }
             } else {
