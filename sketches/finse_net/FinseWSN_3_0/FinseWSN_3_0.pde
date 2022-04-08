@@ -15,11 +15,11 @@ void setup()
 
     // Boot frame
     frame.setID(UIO.name);
+    #if WITH_XBEE
     frame.createFrameBin(BINARY); // TODO Move this logic to UIO.createFrame
     frame.setFrameType(INFORMATION_FRAME_V15 + EVENT_FRAME);
     UIO.addSensor(SENSOR_TST, UIO._epoch);
     UIO.saveFrame();
-    #if WITH_XBEE
     frame.setID((char*)""); // We only want to send the name once
     #endif
 
