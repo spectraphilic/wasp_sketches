@@ -94,7 +94,7 @@ CR_TASK(taskMain)
     // 5min and run the XBee network every hour at :07 (in this example sensor
     // reading must finish in less than 2 minutes, otherwise the network loop
     // will be skept).
-    if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_LAN)) {
+    if ((UIO.battery > BATTERY_MIDDLE) && UIO.action(1, RUN_LAN)) {
 #if WITH_XBEE
         if (UIO.lan_type == LAN_XBEE) {
             CR_SPAWN2(taskNetworkXBee, network_id);
