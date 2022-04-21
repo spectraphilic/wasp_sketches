@@ -32,7 +32,7 @@
 #define SEND_TIMEOUT 300000L // ms
 
 // Reboot every N loops
-#define MAX_LOOPS 1000
+#define MAX_LOOPS 2000
 
 // Pins
 #define PIN_POWER_MAXB  DIGITAL1 // Maxbotix power switch
