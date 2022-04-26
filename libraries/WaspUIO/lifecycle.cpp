@@ -1,116 +1,6 @@
 #include "WaspUIO.h"
 
 
-int upgradeFIFO()
-{
-  if (SD.isFile("TMP.TXT") == -1)
-  {
-    return 0;
-  }
-
-  // Open old
-  FIFO old = FIFO("TMP.TXT", "QSTART.BIN", 8);
-  if (old.open(O_READ)) { return 1; } // Error
-  int32_t nitems = old.len();
-  cr_printf("Upgrading FIFO: %ld items (1 dot = 20 items)\n", nitems);
-
-  // Create new (delete first in case previous upgrade was interrupted)
-  SD.del("FIFO.BIN");
-  SD.del("FIDX.BIN");
-  fifo.make();
-
-  // Upgrade
-  const int progress_nth = 20; // Print a dot every .. items
-  const int progress_nl = 60 * progress_nth; // Print a new line every .. dots
-
-  fifo.open(O_RDWR | O_CREAT);
-  uint8_t item[9] = {0};
-  for (int32_t idx=0; idx < nitems; idx++)
-  {
-    if (old.peek(&item[1], idx) || fifo.push(item)) { goto fail; }
-
-    // Progress
-    if ((idx+1) % progress_nth == 0)
-    {
-      cr_printf(".");
-      if ((idx+1) % progress_nl == 0)
-      {
-        if (fifo.sync()) { goto fail; }
-        cr_printf("\n");
-      }
-    }
-  }
-  fifo.close();
-
-  // Remove old
-  old.close();
-  SD.del("TMP.TXT");
-  SD.del("QSTART.BIN");
-  cr_printf("Done.\n");
-  return 0;
-
-fail:
-  fifo.close();
-  old.close();
-  return 1;
-}
-
-#if WITH_IRIDIUM
-int upgradeLIFO()
-{
-  if (SD.isFile("LIFO.BIN") == -1)
-  {
-    return 0;
-  }
-
-  // Open old
-  LIFO old = LIFO("LIFO.BIN", 8);
-  if (old.open(O_READ)) { return 1; } // Error
-  int32_t nitems = old.len();
-  cr_printf("Upgrading LIFO: %ld items (1 dot = 20 items)\n", nitems);
-
-  // Create new (delete first in case previous upgrade was interrupted)
-  SD.del("LIFO2.BIN");
-  lifo.make();
-
-  // Upgrade
-  const int progress_nth = 20; // Print a dot every .. items
-  const int progress_nl = 60 * progress_nth; // Print a new line every .. dots
-
-  lifo.open(O_RDWR | O_CREAT);
-  uint8_t item[9] = {0};
-  for (int32_t idx=0; idx < nitems; idx++)
-  {
-    if (old.peek(&item[1], idx) || lifo.push(item)) { goto fail; }
-
-    // Progress
-    if ((idx+1) % progress_nth == 0)
-    {
-      cr_printf(".");
-      if ((idx+1) % progress_nl == 0)
-      {
-        if (lifo.sync()) { goto fail; }
-        cr_printf("\n");
-      }
-    }
-  }
-  lifo.close();
-
-  // Remove old
-  old.close();
-  SD.del("LIFO.BIN");
-  cr_printf("Done.\n");
-  return 0;
-
-fail:
-  lifo.close();
-  old.close();
-  return 1;
-}
-#endif
-
-
-
 /**
  * Verify that what we read is what we have written
  */
@@ -184,17 +74,6 @@ void WaspUIO::boot()
 
   // Command line interface
   clint();
-
-/*
-  // Upgrade queues
-  if (UIO.hasSD)
-  {
-    if (upgradeFIFO()) { cr_printf("ERROR Upgrading FIFO\n"); }
-#if WITH_IRIDIUM
-    if (upgradeLIFO()) { cr_printf("ERROR Upgrading LIFO\n"); }
-#endif
-  }
-*/
 
   RTC.OFF();
   USB.OFF();
