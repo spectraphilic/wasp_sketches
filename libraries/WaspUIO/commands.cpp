@@ -229,6 +229,9 @@ COMMAND(cmdAck)
 #if WITH_IRIDIUM
     if (lifo.drop_end(UIO.ack_wait))
         return cmd_error;
+#elif WITH_4G
+    if (lifo.drop_end(UIO.ack_wait))
+        return cmd_error;
 #else
     if (fifo.drop_begin(UIO.ack_wait))
         return cmd_error;

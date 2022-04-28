@@ -514,10 +514,15 @@ public:
 
 
 extern WaspUIO UIO;
-extern FIFO fifo;
+
 #if WITH_IRIDIUM
 extern IridiumSBD iridium;
+extern FIFO fifo;
 extern LIFO lifo;
+#elif WITH_4G
+extern LIFO lifo;
+#else
+extern FIFO fifo;
 #endif
 
 

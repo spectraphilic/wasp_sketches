@@ -743,6 +743,9 @@ uint8_t WaspUIO::saveFrame(uint8_t src, uint8_t *buffer, uint16_t length)
   {
     if (fifo.push(item)) { return 1; }
   }
+#elif WITH_4G
+  queue_name = "LIFO";
+  if (lifo.push(item)) { return 1; }
 #else
   if (fifo.push(item)) { return 1; }
 #endif
@@ -794,6 +797,8 @@ int WaspUIO::readFrame(uint8_t &n)
 
 #if WITH_IRIDIUM
   int idx = -1;
+#elif WITH_4G
+  int idx = -1;
 #else
   int idx = 0;
 #endif
@@ -801,6 +806,8 @@ int WaspUIO::readFrame(uint8_t &n)
   while (true)
   {
 #if WITH_IRIDIUM
+    int err = lifo.peek(item, idx - n);
+#elif WITH_4G
     int err = lifo.peek(item, idx - n);
 #else
     int err = fifo.peek(item, idx + n);

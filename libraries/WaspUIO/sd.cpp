@@ -49,11 +49,16 @@ int WaspUIO::baselayout()
     if (sd_mkfile(logFilename)) // Log file
         error = 1;
 
+#if WITH_IRIDIUM
     if (fifo.make()) // Queue (first-in-first-out)
         error = 1;
-
-#if WITH_IRIDIUM
     if (lifo.make()) // Queue (last-in-first-out)
+        error = 1;
+#elif WITH_4G
+    if (lifo.make()) // Queue (last-in-first-out)
+        error = 1;
+#else
+    if (fifo.make()) // Queue (first-in-first-out)
         error = 1;
 #endif
 
