@@ -116,7 +116,7 @@ const char frame_name_vl          [] PROGMEM = "VL";
 const char frame_name_mb73xx      [] PROGMEM = "MB73XX";
 const char frame_name_ctd10       [] PROGMEM = "CTD10";
 const char frame_name_ds2         [] PROGMEM = "DS-2";
-const char frame_name_atmos       [] PROGMEM = "ATMOS";
+const char frame_name_atmos22     [] PROGMEM = "ATMOS22";
 const char frame_name_sht31       [] PROGMEM = "SHT31";
 const char frame_name_as7341      [] PROGMEM = "AS7341";
 const char frame_name_icm20x      [] PROGMEM = "ICM20X";
@@ -185,7 +185,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   null,                                                       // 215 Reserved (was ATMOS-22)
   frame_name_ctd10,                                           // 216 CTD-10
   frame_name_ds2,                                             // 217 DS-2
-  frame_name_atmos,                                           // 218 ATMOS-22
+  frame_name_atmos22,                                         // 218 ATMOS-22
   frame_name_sht31,                                           // 219 SHT31
   frame_name_as7341,                                          // 220 AS7341
   frame_name_icm20x,                                          // 221 ICM20X

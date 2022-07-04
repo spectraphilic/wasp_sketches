@@ -26,8 +26,8 @@ This information is used to determine the type to use in the frame and
 the transformation needed to convert the float to an integer.
 
 Unfortunately sometimes the specification does not have this data (e.g. air
-temperature in DS-2 and Atmos), or worse, the data in the specification is
-wrong (e.g. tilt in the Atmos).
+temperature in DS-2 and Atmos-22), or worse, the data in the specification is
+wrong (e.g. tilt in the Atmos-22).
 
 We prefer signed over unsigned integers, even when the value cannot be
 negative, unless using an unsigned allows us to reduce the frame size.

@@ -32,10 +32,10 @@ CR_TASK(taskSdi)
     CR_JOIN(tid);
   }
 
-  // ATMOS
-  if (UIO.action(1, RUN_ATMOS))
+  // ATMOS-22
+  if (UIO.action(1, RUN_ATMOS22))
   {
-    CR_SPAWN2(taskSdiAtmos, tid);
+    CR_SPAWN2(taskSdiAtmos22, tid);
     CR_JOIN(tid);
   }
 
@@ -128,7 +128,7 @@ CR_TASK(taskSdiDs2)
 }
 
 
-CR_TASK(taskSdiAtmos)
+CR_TASK(taskSdiAtmos22)
 {
   char *next;
 
@@ -161,7 +161,7 @@ CR_TASK(taskSdiAtmos)
   double y = strtod(next, &next);
 
   // Frame
-  ADD_SENSOR(SENSOR_ATMOS,
+  ADD_SENSOR(SENSOR_ATMOS22,
     (int16_t)round(speed*100),
     (int16_t)round(dir),
     (int16_t)round(gust*100),

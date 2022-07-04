@@ -95,7 +95,7 @@ enum run_t {
   RUN_LAGOPUS_MLX90614,
   RUN_LAGOPUS_TMP102,
   RUN_LAGOPUS_VL53L1X,
-  RUN_ATMOS, // SDI-12
+  RUN_ATMOS22, // SDI-12
   RUN_LAN, // Lora or XBee
   RUN_WAN, // 4G or Iridium
   RUN_TMP117,
@@ -124,7 +124,7 @@ const char RUN_LAGOPUS_MLX90614_NAME [] PROGMEM = "mlx";    // 13 infrared therm
 const char RUN_LAGOPUS_TMP102_NAME   [] PROGMEM = "tmp102"; // 14 digital temperature
 const char RUN_LAGOPUS_VL53L1X_NAME  [] PROGMEM = "vl";     // 15 distance
 // More
-const char RUN_ATMOS_NAME   [] PROGMEM = "atmos";           // 16 wind
+const char RUN_ATMOS22_NAME [] PROGMEM = "atmos22";         // 16 wind
 const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
 const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
@@ -150,7 +150,7 @@ const char* const run_names[] PROGMEM = {
   RUN_LAGOPUS_MLX90614_NAME,
   RUN_LAGOPUS_TMP102_NAME,
   RUN_LAGOPUS_VL53L1X_NAME,
-  RUN_ATMOS_NAME,
+  RUN_ATMOS22_NAME,
   RUN_LAN_NAME,
   RUN_WAN_NAME,
   RUN_TMP117_NAME,
@@ -635,7 +635,7 @@ CR_TASK(taskSensors);
 CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
-CR_TASK(taskSdiAtmos);
+CR_TASK(taskSdiAtmos22);
 // 3V3
 CR_TASK(task1Wire);
 CR_TASK(taskI2C);
@@ -685,7 +685,7 @@ CR_TASK(taskSlow);
 #define SENSOR_MB73XX       214
 #define SENSOR_CTD10        216
 #define SENSOR_DS2          217
-#define SENSOR_ATMOS        218
+#define SENSOR_ATMOS22      218
 #define SENSOR_SHT31        219
 #define SENSOR_AS7341       220
 #define SENSOR_ICM20X       221
