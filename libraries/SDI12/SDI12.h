@@ -62,7 +62,7 @@
 
 
 // SDI12 definitions
-#define _BUFFER_SIZE 64
+#define _BUFFER_SIZE 116
 #define DISABLED 0
 #define ENABLED 1
 #define HOLDING 2

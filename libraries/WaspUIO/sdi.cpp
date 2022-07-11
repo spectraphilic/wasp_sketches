@@ -6,7 +6,7 @@ WaspSDI12 sdi(PIN_SDI12);
 
 const char* WaspUIO::sdi_command(const char *cmd)
 {
-    size_t size = 80;
+    size_t size = 116 + 1;
     char buffer[size];
 
     // rstrip
