@@ -102,6 +102,7 @@ enum run_t {
   // 2x
   RUN_SHT31,
   RUN_QTPY,
+  RUN_ATMOS41, // SDI-12
   RUN_LEN // Special value
 };
 
@@ -129,8 +130,8 @@ const char RUN_LAN_NAME     [] PROGMEM = "lan";             // 17 Network: LAN
 const char RUN_WAN_NAME     [] PROGMEM = "wan";             // 18 Network: WAN
 const char RUN_TMP117_NAME  [] PROGMEM = "tmp117";          // 19 digital temperature
 const char RUN_SHT31_NAME   [] PROGMEM = "sht31";           // 20 temperature & humidity
-// SDI-12 slave
 const char RUN_QTPY_NAME    [] PROGMEM = "qtpy";            // 21 QT-Py SDI-12
+const char RUN_ATMOS41_NAME [] PROGMEM = "atmos41";         // 22 wind
 
 
 const char* const run_names[] PROGMEM = {
@@ -156,6 +157,7 @@ const char* const run_names[] PROGMEM = {
   RUN_TMP117_NAME,
   RUN_SHT31_NAME,
   RUN_QTPY_NAME,
+  RUN_ATMOS41_NAME,
 };
 
 enum var_indexes {
@@ -636,6 +638,7 @@ CR_TASK(taskSdi);
 CR_TASK(taskSdiCtd10);
 CR_TASK(taskSdiDs2);
 CR_TASK(taskSdiAtmos22);
+CR_TASK(taskSdiAtmos41);
 // 3V3
 CR_TASK(task1Wire);
 CR_TASK(taskI2C);
@@ -691,5 +694,6 @@ CR_TASK(taskSlow);
 #define SENSOR_ICM20X       221
 #define SENSOR_VCNL4040     222
 #define SENSOR_VEML7700     223
+#define SENSOR_ATMOS41      224
 
 #endif

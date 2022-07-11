@@ -27,6 +27,7 @@ const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_uf    [] PROGMEM = "uf";
 const char frame_format_jjk   [] PROGMEM = "jjk";
 const char frame_format_6j    [] PROGMEM = "jjjjjj";
+const char frame_format_11j   [] PROGMEM = "jjjjjjjjjjj";
 const char frame_format_10v   [] PROGMEM = "vvvvvvvvvv";
 const char frame_format_10f   [] PROGMEM = "ffffffffff";
 
@@ -97,6 +98,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_10f,     // 221 ICM20X
   frame_format_vvv,     // 222 VCNL4040
   frame_format_ffv,     // 223 VEML7700
+  frame_format_11j,     // 224 ATMOS-41
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
@@ -122,6 +124,7 @@ const char frame_name_as7341      [] PROGMEM = "AS7341";
 const char frame_name_icm20x      [] PROGMEM = "ICM20X";
 const char frame_name_vcnl4040    [] PROGMEM = "VCNL4040";
 const char frame_name_veml7700    [] PROGMEM = "VEML7700";
+const char frame_name_atmos41     [] PROGMEM = "ATMOS41";
 
 const char* const FRAME_NAME_TABLE[] PROGMEM=
 {
@@ -191,6 +194,7 @@ const char* const FRAME_NAME_TABLE[] PROGMEM=
   frame_name_icm20x,                                          // 221 ICM20X
   frame_name_vcnl4040,                                        // 222 VCNL4040
   frame_name_veml7700,                                        // 223 VEML7700
+  frame_name_atmos41,                                         // 224 ATMOS-41
 };
 
 /**
