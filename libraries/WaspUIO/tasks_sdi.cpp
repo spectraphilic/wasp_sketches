@@ -183,10 +183,7 @@ CR_TASK(taskSdiAtmos22)
 
 CR_TASK(taskSdiAtmos41)
 {
-    static int n;
-    unsigned int ttt;
-    float values[9];    // Average values
-    float m1_values[3]; // Instant values
+    char *next;
 
     CR_BEGIN;
 
@@ -194,45 +191,38 @@ CR_TASK(taskSdiAtmos41)
     // wait at leas 10s, before reading anything.
     CR_DELAY(11000);
 
-    // aM!
-    n = sdi.measure(&ttt, 2);
-    if (n < 1)
-        CR_ERROR;
+    // aR7!
+    if (sdi.sendCommand(2, "R7") == NULL) { CR_ERROR; }
 
-    // TODO We could listen every n ms for a "Service Request" from the sensor
-    if (ttt > 0)
-        CR_DELAY(ttt * 1000);
-
-    // Send the data command
-    if (sdi.data(values, 2, n) < n)
-        CR_ERROR;
-
-    // aM1!
-    n = sdi.measure(&ttt, 2, 1);
-    if (n < 1)
-        CR_ERROR;
-
-    if (ttt > 0)
-        CR_DELAY(ttt * 1000);
-
-    // Send the data command
-    if (sdi.data(m1_values, 2, n) < n)
-        CR_ERROR;
+    double solar = strtod(sdi.buffer+1, &next);
+    double precipitation = strtod(next, &next);
+    double strikes = strtod(next, &next);
+    double strikeDistance = strtod(next, &next); // XXX not used
+    double windSpeed = strtod(next, &next);
+    double windDirection = strtod(next, &next);
+    double gustWindSpeed = strtod(next, &next);
+    double airTemperature = strtod(next, &next);
+    double vaporPressure = strtod(next, &next);
+    double atmosphericPressure = strtod(next, &next);
+    double relativeHumidity = strtod(next, &next);
+    double humiditySensorTemperature = strtod(next, &next);
+    double xOrientation = strtod(next, &next);
+    double yOrientation = strtod(next, &next);
 
     // Frame
     // TODO Verify the factors
     ADD_SENSOR(SENSOR_ATMOS41,
-        (int16_t)round(values[0] * 100),    // solar XXX
-        (int16_t)round(values[1] * 100),    // precipitation XXX
-        (int16_t)round(values[2]),          // strikes
-        (int16_t)round(values[3] * 100),    // windSpeed
-        (int16_t)round(values[4]),          // windDirection
-        (int16_t)round(values[5] * 100),    // gustWindSpeed
-        (int16_t)round(values[6] * 10),     // airTemperature
-        (int16_t)round(values[7] * 100),    // vaporPressure XXX
-        (int16_t)round(values[8] * 100),    // atmosphericPressure XXX
-        (int16_t)round(m1_values[0] * 10),  // xOrientation
-        (int16_t)round(m1_values[1] * 10)   // yOrientation
+        (int16_t)round(solar * 100),
+        (int16_t)round(precipitation * 100),
+        (int16_t)round(strikes),
+        (int16_t)round(windSpeed * 100),
+        (int16_t)round(windDirection),
+        (int16_t)round(gustWindSpeed * 100),
+        (int16_t)round(airTemperature * 10),
+        (int16_t)round(vaporPressure * 100),
+        (int16_t)round(atmosphericPressure * 100),
+        (int16_t)round(xOrientation * 10),
+        (int16_t)round(yOrientation * 10)
     );
 
     CR_END;
