@@ -86,12 +86,21 @@ uint8_t WaspI2C::scanSlaves()
 
 bool WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 {
-  bool new_state = (mode == SENS_ON)? true: false;
+//  cr_printf("*** WaspPWR::setSensorPower(%s, %c)\n",
+//      (type == SENS_3V3) ? "3V"
+//      : (type == SENS_5V) ? "5V"
+//      : (type == SENS_I2C) ? "i2c"
+//      : (type == SENS_ALL) ? "all"
+//      : "?",
+//      (mode == SENS_ON) ? '+' : (mode == SENS_OFF) ? '-' : '?'
+//  );
+    bool new_state = (mode == SENS_ON)? true: false;
 
-  if (type == SENS_3V3) { return UIO.pwr_3v3(new_state); }
-  if (type == SENS_5V)  { return UIO.pwr_5v(new_state); }
-  if (type == SENS_I2C) { return UIO.pwr_i2c(new_state); }
+    if (type == SENS_3V3) { return UIO.pwr_3v3(new_state); }  // SENS_3V3 = 0
+    if (type == SENS_5V)  { return UIO.pwr_5v(new_state); }   // SENS_5V  = 1
+    if (type == SENS_I2C) { return UIO.pwr_i2c(new_state); }  // SENS_I2C = 2
+    if (type == SENS_ALL) { return UIO.pwr_main(new_state); } // SENS_ALL = 3
 
-  // Must be SENS_ALL
-  return UIO.pwr_main(new_state);
+    // XXX Should never reach here
+    return false;
 }

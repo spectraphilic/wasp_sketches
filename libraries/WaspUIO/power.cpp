@@ -265,7 +265,10 @@ void WaspUIO::readBattery()
  */
 void WaspUIO::setSensorPower(uint8_t type, uint8_t mode)
 {
-	//cr_printf("*** WaspUIO::setSensorPower(%d, %d)\n", type, mode);
+//	cr_printf("*** WaspUIO::setSensorPower(%s, %c)\n",
+//		(type == SENS_3V3) ? "3V" : (type == SENS_5V) ? "5V" : "?",
+//		(mode == SENS_ON) ? '+' : (mode == SENS_OFF) ? '-' : '?'
+//	);
 	pinMode(SENS_PW_3V3,OUTPUT);
 	pinMode(SENS_PW_5V,OUTPUT);
 
