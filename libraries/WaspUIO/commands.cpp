@@ -135,7 +135,7 @@ void WaspUIO::clint()
     if (cr.input(buffer, sizeof(buffer), 2000) != NULL) {
         log_info("Entered interactive mode");
         cr_printf("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity.\n");
-        UIO.saveState();
+        //UIO.saveState();
         do {
             cr_printf("> ");
             if (cr.input(buffer, size, 3 * 60 * 1000UL) == NULL) {
@@ -148,7 +148,7 @@ void WaspUIO::clint()
                 break;
 
         } while (true);
-        UIO.loadState();
+        //UIO.loadState();
     } else {
         cr_printf("Timeout.\n");
     }
