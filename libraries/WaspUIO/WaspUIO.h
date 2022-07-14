@@ -112,8 +112,8 @@ const char RUN_BATTERY_NAME [] PROGMEM = "bat";             // 1 battery
 const char RUN_GPS_NAME     [] PROGMEM = "gps";             // 2 gps
 const char RUN_ACC_NAME     [] PROGMEM = "acc";             // 3 accelerometer
 // Sensors
-const char RUN_CTD10_NAME   [] PROGMEM = "sdi_ctd";         // 4 water
-const char RUN_DS2_NAME     [] PROGMEM = "sdi_ds2";         // 5 wind
+const char RUN_CTD10_NAME   [] PROGMEM = "ctd10";           // 4 water
+const char RUN_DS2_NAME     [] PROGMEM = "ds2";             // 5 wind
 const char RUN_DS1820_NAME  [] PROGMEM = "ds1820";          // 6 temperature string
 const char RUN_MB_NAME      [] PROGMEM = "mb";              // 8 sonar
 // I2C
