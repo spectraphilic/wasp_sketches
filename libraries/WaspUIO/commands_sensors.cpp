@@ -225,6 +225,5 @@ COMMAND(cmdSDI12)
 {
     UIO.pwr_sdi12(1);
     UIO.sdi_command(str);
-    UIO.pwr_sdi12(0);
     return cmd_quiet;
 }

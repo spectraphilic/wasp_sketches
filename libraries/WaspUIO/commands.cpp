@@ -135,6 +135,7 @@ void WaspUIO::clint()
     if (cr.input(buffer, sizeof(buffer), 2000) != NULL) {
         log_info("Entered interactive mode");
         cr_printf("Type 'help' for the commands list. Prompt timeouts after 3min of inactivity.\n");
+        UIO.saveState();
         do {
             cr_printf("> ");
             if (cr.input(buffer, size, 3 * 60 * 1000UL) == NULL) {
@@ -147,6 +148,7 @@ void WaspUIO::clint()
                 break;
 
         } while (true);
+        UIO.loadState();
     } else {
         cr_printf("Timeout.\n");
     }
@@ -204,9 +206,7 @@ COMMAND(exeCommand)
         memcpy_P(&cmd, &commands[i], sizeof cmd);
         size_t len = strlen(cmd.prefix);
         if (len > 0 && strncmp(cmd.prefix, str, len) == 0) {
-            UIO.saveState();
             status = cmd.function(&(str[len]));
-            UIO.loadState();
             return status;
         }
     }
