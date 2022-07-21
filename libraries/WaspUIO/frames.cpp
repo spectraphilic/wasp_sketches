@@ -27,7 +27,7 @@ const char frame_format_n     [] PROGMEM = "n";
 const char frame_format_uf    [] PROGMEM = "uf";
 const char frame_format_jjk   [] PROGMEM = "jjk";
 const char frame_format_6j    [] PROGMEM = "jjjjjj";
-const char frame_format_11j   [] PROGMEM = "jjjjjjjjjjj";
+const char frame_format_14j   [] PROGMEM = "jjjjjjjjjjjjjj";
 const char frame_format_10v   [] PROGMEM = "vvvvvvvvvv";
 const char frame_format_10f   [] PROGMEM = "ffffffffff";
 
@@ -98,7 +98,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
   frame_format_10f,     // 221 ICM20X
   frame_format_vvv,     // 222 VCNL4040
   frame_format_ffv,     // 223 VEML7700
-  frame_format_11j,     // 224 ATMOS-41
+  frame_format_14j,     // 224 ATMOS-41
 };
 
 const char frame_name_bat         [] PROGMEM = "BAT";
