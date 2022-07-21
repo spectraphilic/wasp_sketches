@@ -280,7 +280,7 @@ int8_t WaspUIO::addSensor(uint8_t type, ...)
   }
 
   // Read format from program memory
-  char format[11];
+  char format[30];
   strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
   if (strlen(format) == 0) {
     log_error("Unexpected frame type %hhu", type);
