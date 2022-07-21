@@ -6,24 +6,24 @@
 #define LOG_LEVEL (loglevel_t) 5
 
 #define BATTERY_TYPE BATTERY_LITHIUM
-#define BOARD_TYPE BOARD_NONE
+#define BOARD_TYPE BOARD_LEMMING
 
 // Features: because we don't have enough program memory to compile everything
 #define WITH_GPS TRUE
-#define WITH_EXT_CHARGE TRUE
+#define WITH_EXT_CHARGE FALSE
 
 // Networking
 #define WITH_XBEE FALSE
 #define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
-#define WITH_LORA TRUE
+#define WITH_LORA FALSE
 
 // Sensors
-#define WITH_I2C FALSE
-#define WITH_SDI FALSE
+#define WITH_I2C TRUE
+#define WITH_SDI TRUE
 #define WITH_1WIRE FALSE
-#define WITH_MB FALSE
-#define WITH_QTPY FALSE // Requires WITH_SDI
+#define WITH_MB TRUE
+#define WITH_QTPY TRUE // Requires WITH_SDI
 
 #define WITH_AS7265 FALSE
 
