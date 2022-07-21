@@ -8,6 +8,10 @@
 #define BATTERY_TYPE BATTERY_LITHIUM
 #define BOARD_TYPE BOARD_LEMMING
 
+// Power sleep mode: available: ALL_OFF, ALL_ON, 
+#define PWR_SLEEP_MODE ALL_ON
+
+
 // Features: because we don't have enough program memory to compile everything
 #define WITH_GPS TRUE
 #define WITH_EXT_CHARGE FALSE
