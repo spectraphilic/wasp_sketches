@@ -210,17 +210,19 @@ CR_TASK(taskSdiAtmos41)
     double yOrientation = strtod(next, &next);
 
     // Frame
-    // TODO Verify the factors
     ADD_SENSOR(SENSOR_ATMOS41,
-        (int16_t)round(solar * 100),
-        (int16_t)round(precipitation * 100),
+        (int16_t)round(solar),
+        (int16_t)round(precipitation * 1000),
         (int16_t)round(strikes),
+        (int16_t)round(strikeDistance),
         (int16_t)round(windSpeed * 100),
-        (int16_t)round(windDirection),
+        (int16_t)round(windDirection * 10),
         (int16_t)round(gustWindSpeed * 100),
         (int16_t)round(airTemperature * 10),
         (int16_t)round(vaporPressure * 100),
         (int16_t)round(atmosphericPressure * 100),
+        (int16_t)round(relativeHumidity * 1000),
+        (int16_t)round(humiditySensorTemperature * 10),
         (int16_t)round(xOrientation * 10),
         (int16_t)round(yOrientation * 10)
     );
