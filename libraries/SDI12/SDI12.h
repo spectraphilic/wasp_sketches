@@ -69,7 +69,7 @@
 #define TRANSMITTING 3
 #define LISTENING 4
 #define SPACING 830
-#define LISTEN_TIME 500
+#define LISTEN_TIME 750
 
 
 /******************************************************************************
