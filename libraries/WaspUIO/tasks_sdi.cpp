@@ -187,9 +187,10 @@ CR_TASK(taskSdiAtmos41)
 
     CR_BEGIN;
 
-    // The sensor takes a mesurement every 10s, we want averages, we need to
-    // wait at leas 10s, before reading anything.
-    CR_DELAY(11000);
+    if (UIO.nloops == 0) {
+        sdi.sendCommand(2, ""); // 2! Acknowledge Active
+        CR_RETURN;
+    }
 
     // aR7!
     if (sdi.sendCommand(2, "R7") == NULL) { CR_ERROR; }
@@ -197,7 +198,7 @@ CR_TASK(taskSdiAtmos41)
     double solar = strtod(sdi.buffer+1, &next);
     double precipitation = strtod(next, &next);
     double strikes = strtod(next, &next);
-    double strikeDistance = strtod(next, &next); // XXX not used
+    double strikeDistance = strtod(next, &next);
     double windSpeed = strtod(next, &next);
     double windDirection = strtod(next, &next);
     double gustWindSpeed = strtod(next, &next);
