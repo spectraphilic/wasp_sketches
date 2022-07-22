@@ -198,7 +198,7 @@ CR_TASK(taskSdiAtmos41)
 {
     char *next;
 
-    if (UIO.nloops == 0) {
+    if (UIO.nloops == 1) {
         sdi.sendCommand(2, ""); // 2! Acknowledge Active
         return CR_TASK_STOP;
     }
