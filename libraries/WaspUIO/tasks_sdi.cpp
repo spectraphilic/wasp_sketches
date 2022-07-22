@@ -198,12 +198,12 @@ CR_TASK(taskSdiAtmos41)
 {
     char *next;
 
-    CR_BEGIN;
-
     if (UIO.nloops == 0) {
         sdi.sendCommand(2, ""); // 2! Acknowledge Active
-        CR_RETURN;
+        return CR_TASK_STOP;
     }
+
+    CR_BEGIN;
 
     // aR7!
     if (sdi.sendCommand(2, "R7") == NULL) {
