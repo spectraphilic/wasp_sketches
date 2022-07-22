@@ -90,7 +90,7 @@ const char* const FRAME_FORMAT_TABLE[] PROGMEM = {
     frame_format_n,       // 213 VL53L1X
     frame_format_n,       // 214 MB73XX
     null,                 // 215 Reserved (was ATMOS-22)
-    frame_format_14j,     // 216 CTD-10
+    frame_format_jjk,     // 216 CTD-10
     frame_format_6j,      // 217 DS-2
     frame_format_6j,      // 218 ATMOS-22
     frame_format_ff,      // 219 SHT31
