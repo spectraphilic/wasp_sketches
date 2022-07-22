@@ -559,7 +559,7 @@ uint16_t WaspUIO::parseFrame(uint8_t *p, uint16_t max_length)
         nbytes--;
 
         // Read format string
-        char format[11];
+        char format[30];
         strcpy_P(format, (char*)pgm_read_word(&(FRAME_FORMAT_TABLE[type])));
         if (strlen(format) == 0) {
             if (log_usb && cr.loglevel >= LOG_DEBUG) {
