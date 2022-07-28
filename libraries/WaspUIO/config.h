@@ -8,8 +8,8 @@
 #define BATTERY_TYPE BATTERY_LITHIUM
 #define BOARD_TYPE BOARD_LEMMING
 
-// Power sleep mode: available: ALL_OFF, ALL_ON, 
-#define PWR_SLEEP_MODE ALL_ON
+// Power sleep mode: available: ALL_OFF, ALL_ON, SENS_OFF, SOCKET0_OFF. Defined in WaspPWR.h
+#define PWR_SLEEP_MODE ALL_ON   // ALL_OFF default (switching all devices OFF: PWR to sensors and Sockets)
 
 
 // Features: because we don't have enough program memory to compile everything
