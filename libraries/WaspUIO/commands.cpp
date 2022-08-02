@@ -19,9 +19,9 @@
 
 
 typedef struct {
-  char prefix[12];
-  cmd_status_t (*function)(const char *command);
-  const char* help;
+    char prefix[12];
+    cmd_status_t (*function)(const char *command);
+    const char* help;
 } Command;
 
 const char CAT_MAIN      [] PROGMEM = "\nMain commands:";
@@ -144,12 +144,14 @@ void WaspUIO::clint()
             }
 
             USB.println(buffer);
-            if (exeCommands(buffer, true) == cmd_exit)
+            if (exeCommands(buffer, true) == cmd_exit) {
                 break;
+            }
 
         } while (true);
         //UIO.loadState();
-    } else {
+    }
+    else {
         cr_printf("Timeout.\n");
     }
 
@@ -163,38 +165,35 @@ void WaspUIO::clint()
 
 cmd_status_t exeCommands(const char *str, bool interactive)
 {
-  cmd_status_t status = cmd_bad_input;
-  const char *p = str;
+    cmd_status_t status = cmd_bad_input;
+    const char *p = str;
 
-  while (p != NULL)
-  {
-    // Find next command if any (commands separated by semicolon)
-    char *n = strchr(p, ';');
-    if (n != NULL)
-    {
-      *n = '\0';
-      n++;
+    while (p != NULL) {
+        // Find next command if any (commands separated by semicolon)
+        char *n = strchr(p, ';');
+        if (n != NULL) {
+            *n = '\0';
+            n++;
+        }
+
+        if (interactive) {
+            status = exeCommand(p);
+            if      (status == cmd_bad_input)   { cr_printf("I don't understand\n"); }
+            else if (status == cmd_unavailable) { cr_printf("Feature not available\n"); }
+            else if (status == cmd_error)       { cr_printf("Error\n"); }
+            else if (status == cmd_ok)          { cr_printf("OK\n"); }
+            else if (status == cmd_quiet)       { }
+            else if (status == cmd_exit)        { cr_printf("Good bye!\n"); break; }
+        } else {
+            log_info("Command \"%s\"", p);
+            status = exeCommand(p);
+        }
+
+        // Next command
+        p = n;
     }
 
-    if (interactive)
-    {
-      status = exeCommand(p);
-      if      (status == cmd_bad_input)   { cr_printf("I don't understand\n"); }
-      else if (status == cmd_unavailable) { cr_printf("Feature not available\n"); }
-      else if (status == cmd_error)       { cr_printf("Error\n"); }
-      else if (status == cmd_ok)          { cr_printf("OK\n"); }
-      else if (status == cmd_quiet)       { }
-      else if (status == cmd_exit)        { cr_printf("Good bye!\n"); break; }
-    } else {
-      log_info("Command \"%s\"", p);
-      status = exeCommand(p);
-    }
-
-    // Next command
-    p = n;
-  }
-
-  return status;
+    return status;
 }
 
 COMMAND(exeCommand)
@@ -227,14 +226,17 @@ COMMAND(cmdAck)
     }
 
 #if WITH_IRIDIUM
-    if (lifo.drop_end(UIO.ack_wait))
+    if (lifo.drop_end(UIO.ack_wait)) {
         return cmd_error;
+    }
 #elif WITH_4G
-    if (lifo.drop_end(UIO.ack_wait))
+    if (lifo.drop_end(UIO.ack_wait)) {
         return cmd_error;
+    }
 #else
-    if (fifo.drop_begin(UIO.ack_wait))
+    if (fifo.drop_begin(UIO.ack_wait)) {
         return cmd_error;
+    }
 #endif
 
 #if WITH_LORA
@@ -251,7 +253,7 @@ COMMAND(cmdAck)
 
 COMMAND(cmdExit)
 {
-  return cmd_exit;
+    return cmd_exit;
 }
 
 #if WITH_GPS
@@ -264,15 +266,16 @@ COMMAND(cmdExit)
  */
 COMMAND(cmdGPS)
 {
-  // Check feature availability
-  if ((UIO.hasGPS & GPS_YES) == 0) { return cmd_unavailable; }
+    // Check feature availability
+    if ((UIO.hasGPS & GPS_YES) == 0) {
+        return cmd_unavailable;
+    }
 
-  if (UIO.gps(false, true) == -1)
-  {
-    return cmd_error;
-  }
+    if (UIO.gps(false, true) == -1) {
+        return cmd_error;
+    }
 
-  return cmd_ok;
+    return cmd_ok;
 }
 #endif
 
@@ -331,23 +334,28 @@ COMMAND(cmdInfo)
     cr_printf("Battery  : %s\n", UIO.pprintBattery(buffer, size));
     cr_printf("Hardware : board=%s SD=%d GPS=%d\n", UIO.pprintBoard(buffer, size), UIO.hasSD, UIO.hasGPS);
     #if WITH_XBEE
-    if (UIO.lan_type == LAN_XBEE)
+    if (UIO.lan_type == LAN_XBEE) {
         cr_printf("XBee     : %s\n", UIO.pprintXBee(buffer, size));
+    }
     #endif
     #if WITH_LORA
-    if (UIO.lan_type == LAN_LORA)
+    if (UIO.lan_type == LAN_LORA) {
         cr_printf("Lora     : %s\n", UIO.pprintLora(buffer, size));
+    }
     #endif
     #if WITH_4G
-    if (UIO.wan_type == WAN_4G)
+    if (UIO.wan_type == WAN_4G) {
         cr_printf("4G        : %s\n", UIO.pprint4G(buffer, size));
+    }
     #endif
     #if WITH_IRIDIUM
-    if (UIO.wan_type == WAN_IRIDIUM)
+    if (UIO.wan_type == WAN_IRIDIUM) {
         cr_printf("Iridium  : %s\n", UIO.pprintIridium(buffer, size));
+    }
     #endif
-    if (UIO.wan_type == WAN_USB)
+    if (UIO.wan_type == WAN_USB) {
         cr_printf("Dump frames to USB\n");
+    }
     cr_printf("Frames   : %s\n", UIO.pprintFrames(buffer, size));
     cr_printf("Log      : level=%s output=%s\n", cr.loglevel2str(cr.loglevel), UIO.pprintLog(buffer, size));
     cr_printf("Run      : %s\n", UIO.pprintActions(buffer, size));
@@ -358,11 +366,11 @@ COMMAND(cmdInfo)
 
 COMMAND(cmdReboot)
 {
-  cr_printf("Waspmote will reboot in 2s...\n");
-  delay(2000);
+    cr_printf("Waspmote will reboot in 2s...\n");
+    delay(2000);
 
-  UIO.reboot();
-  return cmd_ok;
+    UIO.reboot();
+    return cmd_ok;
 }
 
 /**
@@ -371,64 +379,69 @@ COMMAND(cmdReboot)
 
 COMMAND(cmdRun)
 {
-  char name[11];
-  uint8_t hour, minute;
+    char name[11];
+    uint8_t hour, minute;
 
-  // Check input
-  int n = sscanf(str, "%10s %hhu:%hhu", name, &hour, &minute);
+    // Check input
+    int n = sscanf(str, "%10s %hhu:%hhu", name, &hour, &minute);
 
-  // Print names
-  if (n == -1)
-  {
-    for (uint8_t i=0; i < RUN_LEN; i++)
-    {
-      const char* xname = (const char*)pgm_read_word(&(run_names[i]));
-      if (strcmp_P("", xname) == 0)
-        continue;
+    // Print names
+    if (n == -1) {
+        for (uint8_t i=0; i < RUN_LEN; i++) {
+            const char* xname = (const char*)pgm_read_word(&(run_names[i]));
+            if (strcmp_P("", xname) == 0) {
+                continue;
+            }
 
-      // avr-libc uses %S for string stored in memory, this is very useful. But
-      // GCC uses %S for wide char strings, and so emits a warning for the line
-      // below. We silence this warning using cr.printf_P instead of the
-      // cr_printf macro.
-      cr.printf_P(PSTR("%S\n"), xname);
+            // avr-libc uses %S for string stored in memory, this is very
+            // useful. But GCC uses %S for wide char strings, and so emits a
+            // warning for the line below. We silence this warning using
+            // cr.printf_P instead of the cr_printf macro.
+            cr.printf_P(PSTR("%S\n"), xname);
+        }
+        return cmd_quiet;
     }
-    return cmd_quiet;
-  }
 
-  if (n < 2 || n > 3)
-  {
-    return cmd_bad_input;
-  }
-
-  int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
-  if (value == -1) { return cmd_bad_input; }
-
-  action_t type;
-  if (n == 2)
-  {
-    type = action_minutes;
-    minute = hour;
-    hour = 0;
-    if (minute == 0)
-    {
-      type = action_disabled;
+    if (n < 2 || n > 3) {
+        return cmd_bad_input;
     }
-  }
-  else
-  {
-    type = action_hours;
-    if (hour == 0) { return cmd_bad_input; }
-  }
 
-  if (minute > 59) { return cmd_bad_input; }
-  UIO.actions[value] = (Action){type, hour, minute};
+    int8_t value = UIO.index(run_names, sizeof run_names / sizeof run_names[0], name);
+    if (value == -1) {
+        return cmd_bad_input;
+    }
 
-  uint16_t base = EEPROM_UIO_RUN + (value * 2);
-  minute = minute | (type << 6); // Pack the type within the same byte as the minute
-  if (! UIO.updateEEPROM(base, minute)) { return cmd_error; }
-  if (! UIO.updateEEPROM(base + 1, hour)) { return cmd_error; }
+    action_t type;
+    if (n == 2) {
+        type = action_minutes;
+        minute = hour;
+        hour = 0;
+        if (minute == 0) {
+            type = action_disabled;
+        }
+    }
+    else {
+        type = action_hours;
+        if (hour == 0) {
+            return cmd_bad_input;
+        }
+    }
 
-  return cmd_ok;
+    if (minute > 59) {
+        return cmd_bad_input;
+    }
+    UIO.actions[value] = (Action){type, hour, minute};
+
+    uint16_t base = EEPROM_UIO_RUN + (value * 2);
+    minute = minute | (type << 6); // Pack the type within the same byte as the minute
+    if (! UIO.updateEEPROM(base, minute)) {
+        return cmd_error;
+    }
+    if (! UIO.updateEEPROM(base + 1, hour)) {
+        return cmd_error;
+    }
+
+    return cmd_ok;
 }
 
 
@@ -446,20 +459,24 @@ COMMAND(cmdTime)
     unsigned long epoch;
     uint8_t err;
 
-    if (strcmp(str, "network") == 0)
+    if (strcmp(str, "network") == 0) {
         return (UIO.setTimeFromNetwork()) ? cmd_error : cmd_ok;
+    }
 
-    if (strcmp(str, "gps") == 0)
+    if (strcmp(str, "gps") == 0) {
         return (UIO.gps(true, false) == -1) ? cmd_error : cmd_ok;
+    }
 
     if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6) {
         // time yy:mm:dd:hh:mm:ss
         err = UIO.setTime(year, month, day, hour, minute, second);
-    } else if (sscanf(str, "%lu", &epoch) == 1) {
+    }
+    else if (sscanf(str, "%lu", &epoch) == 1) {
         // time epoch
         // XXX Add half the round trip time to epoch (if command comes from network)
         err = UIO.setTime(epoch);
-    } else {
+    }
+    else {
         return cmd_bad_input;
     }
 
@@ -479,129 +496,145 @@ COMMAND(cmdTime)
 
 COMMAND(cmdVar)
 {
-  // Number of variables
-  uint8_t nvars = sizeof var_names / sizeof var_names[0];
-  // Input data
-  char name[16];
-  int n;
-  uint8_t value;
+    // Number of variables
+    uint8_t nvars = sizeof var_names / sizeof var_names[0];
+    // Input data
+    char name[16];
+    int n;
+    uint8_t value;
 
-  // Read input
-  n = sscanf(str, "%15s %hhu", name, &value);
-  if (n == -1)
-  {
-    for (uint8_t i=0; i < nvars; i++)
-    {
-      const char* xname = (const char*)pgm_read_word(&(var_names[i]));
-      if (strcmp_P("", xname) == 0)
-        continue;
+    // Read input
+    n = sscanf(str, "%15s %hhu", name, &value);
+    if (n == -1) {
+        for (uint8_t i=0; i < nvars; i++) {
+            const char* xname = (const char*)pgm_read_word(&(var_names[i]));
+            if (strcmp_P("", xname) == 0) {
+                continue;
+            }
 
-      const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
-      cr.printf_P(PSTR("%S %S\n"), xname, xhelp);
+            const char* xhelp = (const char*)pgm_read_word(&(var_help[i]));
+            cr.printf_P(PSTR("%S %S\n"), xname, xhelp);
+        }
+        return cmd_quiet;
     }
-    return cmd_quiet;
-  }
 
-  if (n < 1 || n > 2)
-  {
-    return cmd_bad_input;
-  }
+    if (n < 1 || n > 2) {
+        return cmd_bad_input;
+    }
 
-  // Action
-  int8_t idx = UIO.index(var_names, nvars, name);
-  switch (idx)
-  {
-    case -1:
-      return cmd_bad_input;
-    case VAR_LOG_SD_IDX:
-      if (n == 1) {
-        value = UIO.log_sd;
-      } else {
-        if (value > 1) { return cmd_bad_input; }
-        UIO.log_sd = value;
-      }
-      break;
-    case VAR_LOG_USB_IDX:
-      if (n == 1) {
-        value = UIO.log_usb;
-      } else {
-        if (value > 1) { return cmd_bad_input; }
-        UIO.log_usb = value;
-      }
-      break;
-    case VAR_LAN_TYPE_IDX:
-      if (n == 1) {
-        value = (uint8_t)UIO.lan_type;
-      } else {
-        if (value >= LAN_LEN) { return cmd_bad_input; }
-        UIO.lan_type = (lan_type_t)value;
-        UIO.setFrameSize();
-      }
-      break;
-    case VAR_WAN_TYPE_IDX:
-      if (n == 1) {
-        value = (uint8_t)UIO.wan_type;
-      } else {
-        if (value >= WAN_LEN) { return cmd_bad_input; }
-        UIO.wan_type = (wan_type_t)value;
-        UIO.setFrameSize();
-      }
-      break;
-    case VAR_LORA_ADDR_IDX:
-      if (n == 1) {
-        value = UIO.lora_addr;
-      } else {
-        if (value == 0) { return cmd_bad_input; }
-        UIO.lora_addr = value;
-      }
-      break;
-    case VAR_LORA_MODE_IDX:
-      if (n == 1) {
-        value = UIO.lora_mode;
-      } else {
-        if (value == 0 || value > 10) { return cmd_bad_input; }
-        UIO.lora_mode = value;
-      }
-      break;
-    case VAR_XBEE_NETWORK_IDX:
-      if (n == 1) {
-        value = UIO.xbee_network;
-      } else {
-        if (value >= xbee_len) { return cmd_bad_input; }
-        UIO.xbee_network = value;
+    // Action
+    int8_t idx = UIO.index(var_names, nvars, name);
+    switch (idx) {
+        case -1:
+            return cmd_bad_input;
+        case VAR_LOG_SD_IDX:
+            if (n == 1) {
+                value = UIO.log_sd;
+            }
+            else {
+                if (value > 1) { return cmd_bad_input; }
+                UIO.log_sd = value;
+            }
+            break;
+        case VAR_LOG_USB_IDX:
+            if (n == 1) {
+                value = UIO.log_usb;
+            }
+            else {
+                if (value > 1) {
+                    return cmd_bad_input;
+                }
+                UIO.log_usb = value;
+            }
+            break;
+        case VAR_LAN_TYPE_IDX:
+            if (n == 1) {
+                value = (uint8_t)UIO.lan_type;
+            }
+            else {
+                if (value >= LAN_LEN) {
+                    return cmd_bad_input;
+                }
+                UIO.lan_type = (lan_type_t)value;
+                UIO.setFrameSize();
+            }
+            break;
+        case VAR_WAN_TYPE_IDX:
+            if (n == 1) {
+                value = (uint8_t)UIO.wan_type;
+            }
+            else {
+                if (value >= WAN_LEN) {
+                    return cmd_bad_input;
+                }
+                UIO.wan_type = (wan_type_t)value;
+                UIO.setFrameSize();
+            }
+            break;
+        case VAR_LORA_ADDR_IDX:
+            if (n == 1) {
+                value = UIO.lora_addr;
+            }
+            else {
+                if (value == 0) {
+                    return cmd_bad_input;
+                }
+                UIO.lora_addr = value;
+            }
+            break;
+        case VAR_LORA_MODE_IDX:
+            if (n == 1) {
+                value = UIO.lora_mode;
+            }
+            else {
+                if (value == 0 || value > 10) {
+                    return cmd_bad_input;
+                }
+                UIO.lora_mode = value;
+            }
+            break;
+        case VAR_XBEE_NETWORK_IDX:
+            if (n == 1) {
+                value = UIO.xbee_network;
+            }
+            else {
+                if (value >= xbee_len) {
+                    return cmd_bad_input;
+                }
+                UIO.xbee_network = value;
 #if WITH_XBEE
-        UIO.xbeeInit();
+                UIO.xbeeInit();
 #endif
-      }
-      break;
-    case VAR_LAN_WAIT_IDX:
-      if (n == 1) {
-        value = UIO.lan_wait;
-      } else {
-        UIO.lan_wait = value;
-      }
-      break;
-    case VAR_LORA_DST_IDX:
-      if (n == 1) {
-        value = UIO.lora_dst;
-      } else {
-        UIO.lora_dst = value;
-      }
-      break;
-    default:
-      return cmd_bad_input;
-  }
-
-  // Update
-  if (n == 2)
-  {
-    if (! UIO.updateEEPROM(EEPROM_UIO_VARS + idx, value))
-    {
-      return cmd_error;
+            }
+            break;
+        case VAR_LAN_WAIT_IDX:
+            if (n == 1) {
+                value = UIO.lan_wait;
+            }
+            else {
+                UIO.lan_wait = value;
+            }
+            break;
+        case VAR_LORA_DST_IDX:
+            if (n == 1) {
+                value = UIO.lora_dst;
+            }
+            else {
+                UIO.lora_dst = value;
+            }
+            break;
+        default:
+            return cmd_bad_input;
     }
-  }
 
-  // Print
-  cr_printf("%u\n", value);
-  return cmd_quiet;
+    // Update
+    if (n == 2) {
+        if (! UIO.updateEEPROM(EEPROM_UIO_VARS + idx, value)) {
+            return cmd_error;
+        }
+    }
+
+    // Print
+    cr_printf("%u\n", value);
+    return cmd_quiet;
 }
