@@ -3,40 +3,37 @@
 
 
 /**
- * Retturn true if the given sensor is to be read now.
+ * Return true if the given sensor is to be read now.
  */
 bool WaspUIO::action(uint8_t n, ...)
 {
-  va_list args;
-  bool yes = false;
+    va_list args;
+    bool yes = false;
 
-  va_start(args, n);
-  for (; n; n--)
-  {
-    int idx = va_arg(args, int);
-    assert(idx < RUN_LEN); // TODO Define __assert
-    Action action = actions[idx];
+    va_start(args, n);
+    for (; n; n--) {
+        int idx = va_arg(args, int);
+        assert(idx < RUN_LEN); // TODO Define __assert
+        Action action = actions[idx];
 
-    if (action.type == action_minutes)
-    {
-      if (_epoch_minutes % (action.minute * cooldown) == 0)
-      {
-        yes = true; break;
-      }
+        if (action.type == action_minutes) {
+            if (_epoch_minutes % (action.minute * cooldown) == 0) {
+                yes = true;
+                break;
+            }
+        }
+        else if (action.type == action_hours) {
+            uint32_t hours = _epoch_minutes / 60;
+            uint32_t minutes = _epoch_minutes % 60;
+            if (hours % (action.hour * cooldown) == 0 && minutes == action.minute) {
+                yes = true;
+                break;
+            }
+        }
     }
-    else if (action.type == action_hours)
-    {
-      uint32_t hours = _epoch_minutes / 60;
-      uint32_t minutes = _epoch_minutes % 60;
-      if (hours % (action.hour * cooldown) == 0 && minutes == action.minute)
-      {
-        yes = true; break;
-      }
-    }
-  }
-  va_end(args);
+    va_end(args);
 
-  return yes;
+    return yes;
 }
 
 /**
@@ -82,8 +79,9 @@ CR_TASK(taskMain)
     }
 
     // Save the last frame, if there is something to save
-    if (frame.numFields > 1)
+    if (frame.numFields > 1) {
         UIO.saveFrame();
+    }
 
     // Don't use network and sensors at the same time. We have observed issues
     // in the past with SDI-12.
@@ -144,14 +142,14 @@ CR_TASK(taskMain)
 
 CR_TASK(taskSlow)
 {
-  CR_BEGIN;
+    CR_BEGIN;
 
-  // Wait a little bit so this is executed last
-  CR_DELAY(12000);
+    // Wait a little bit so this is executed last
+    CR_DELAY(12000);
 
-  log_warn("Start slow task");
-  delay(5 * 60000); // 5 minutes
-  log_warn("End slow task");
+    log_warn("Start slow task");
+    delay(5 * 60000); // 5 minutes
+    log_warn("End slow task");
 
-  CR_END;
+    CR_END;
 }
