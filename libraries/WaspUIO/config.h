@@ -60,6 +60,10 @@
 #define I2C_ADDRESS_Lemming_BME280     0x76 // Internal temperature, Relative humidity and atmospheric pressure
 #define I2C_ADDRESS_LAGOPUS_BME280     0x77 // Air temperature, Relative humidity and atmospheric pressure
 
+// 4G Network
+#define MESHLIUM_URL (char*)"wsn.latice.eu"
+#define MESHLIUM_PORT 80
+
 // Iridium specific.
 // Save frames to lifo instead of fifo every n hours since epoch at the :mm
 // minutes (like actions).

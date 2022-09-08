@@ -34,7 +34,7 @@ CR_TASK(taskNetwork4G)
         }
 
         // Send
-        status = _4G.sendFrameToMeshlium((char*)"wsn.latice.eu", 80, (uint8_t*)SD.buffer, size);
+        status = _4G.sendFrameToMeshlium(MESHLIUM_URL, MESHLIUM_PORT, (uint8_t*)SD.buffer, size);
         if (status) {
             log_warn("_4G.sendFrameToMeshlium error=%d %d", status, _4G._errorCode);
             break;
