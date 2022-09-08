@@ -92,6 +92,36 @@ COMMAND(cmdLora)
 #endif
 
 
+#if WITH_CRYPTO
+COMMAND(cmdPassword)
+{
+    char value[18];
+
+    // Check input
+    if (sscanf(str, "%16s", value) != 1) {
+        return cmd_bad_input;
+    }
+
+    size_t len = strlen(value);
+    if (len != 16) {
+        cr_printf("Password must have 16 chars\n");
+        UIO.password[0] = '\0';
+    }
+    else {
+        strcpy(UIO.password, value);
+        cr_printf("Password is %s\n", UIO.password);
+    }
+
+    UIO.writeEEPROM(EEPROM_UIO_PWD, UIO.password, sizeof UIO.password);
+
+    // Frame size depends on whether there's encryption or not
+    UIO.setFrameSize();
+
+    return cmd_ok;
+}
+#endif
+
+
 /**
  * Network testing: ping
  */

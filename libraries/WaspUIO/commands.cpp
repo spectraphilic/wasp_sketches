@@ -54,6 +54,7 @@ const char CMD_4G_APN    [] PROGMEM = "  4g apn [APN]       - Set 4G Access Poin
 const char CMD_4G_GPS    [] PROGMEM = "  4g gps             - Get position from 4G's GPS";
 const char CMD_4G_PIN    [] PROGMEM = "  4g pin VALUE       - Set pin for the 4G module (0=disabled)";
 const char CMD_LORA      [] PROGMEM = "  lora               - Print Lora info";
+const char CMD_PASSWORD  [] PROGMEM = "  password VALUE     - Password for frame encryption";
 const char CMD_PING      [] PROGMEM = "  ping               - Network test";
 const char CAT_OTHER     [] PROGMEM = "\nOther commands:";
 const char CMD_GPS       [] PROGMEM = "  gps                - Get position from GPS";
@@ -103,6 +104,9 @@ const Command commands[] PROGMEM = {
     #if WITH_LORA
     {"lora",          &cmdLora,        CMD_LORA},
     #endif
+#if WITH_CRYPTO
+    {"password ",     &cmdPassword,    CMD_PASSWORD},
+#endif
     {"ping",          &cmdPing,        CMD_PING},
     // Other
 #if WITH_GPS

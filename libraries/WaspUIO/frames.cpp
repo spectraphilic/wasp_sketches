@@ -423,6 +423,11 @@ void WaspUIO::setFrameSize()
     }
     else if (lan_type == LAN_XBEE) {
         payloadSize = 73;
+        #if WITH_CRYPTO
+        if (strlen(password) > 0) {
+            payloadSize = 48;
+        }
+        #endif
     }
     else if (lan_type == LAN_LORA) {
         // XXX MAX_PAYLOAD is 251 but I set 250 because from the packet description
@@ -841,6 +846,16 @@ uint8_t WaspUIO::saveFrame()
         parseFrame(frame.buffer, frame.length);
         USB.OFF();
     }
+
+#if WITH_CRYPTO
+    // Encrypt frame
+    if (strlen(password) > 0) {
+        frame.encryptFrame(AES_128, password);
+        if (log_usb) {
+            frame.showFrame();
+        }
+    }
+#endif
 
     return saveFrame(0, frame.buffer, frame.length);
 }

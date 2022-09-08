@@ -104,6 +104,15 @@ void WaspUIO::bootConfig()
         wan_type = WAN_DISABLED;
     }
 
+#if WITH_CRYPTO
+    // Frame encryption
+    UIO.readEEPROM(EEPROM_UIO_PWD, password, sizeof password);
+    size_t len = strlen(password);
+    if (len != 16) {
+        password[0] = '\0';
+    }
+#endif
+
 #if WITH_4G
     // 4G network
     char apn[30];

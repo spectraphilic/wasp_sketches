@@ -21,6 +21,7 @@
 #define WITH_4G TRUE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA FALSE
+#define WITH_CRYPTO FALSE
 
 // Sensors
 #define WITH_I2C TRUE

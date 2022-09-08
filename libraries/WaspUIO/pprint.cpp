@@ -90,6 +90,14 @@ const char* WaspUIO::pprintBoard(char* dst, size_t size)
 const char* WaspUIO::pprintFrames(char* dst, size_t size)
 {
     cr_snprintf(dst, size, "payload-size=%u frame-size=%u encryption=disabled", payloadSize, frameSize);
+
+#if WITH_CRYPTO
+    if (strlen(password) > 0) {
+        cr_snprintf(dst, size, "payload-size=%u frame-size=%u encryption=enabled", payloadSize, frameSize);
+        return dst;
+    }
+#endif
+
     return dst;
 }
 
