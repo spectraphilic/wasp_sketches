@@ -1,5 +1,3 @@
-
-
 /*
  SCRIPT for Finse network, to synchronize DM network, and read basic set of sensors
  April 2017, Simon Filhol
@@ -56,24 +54,12 @@ void setup()
 
 void loop()
 {
-  UIO.deepSleep();
+    UIO.deepSleep();
 
-  // We expect *only* Alarm 1
-  if (intFlag & ~RTC_INT)
-  {
-    log_error("Expected *only* RTC_INT got %d", intFlag);
-    intFlag = 0;
-    return;
-  }
+    // Low battery level: do nothing
+    cr.reset();
+    cr.spawn(taskMain);
+    cr.run();
 
-  // Clean interruption flag
-  intFlag &= ~(RTC_INT);
-  PWR.clearInterruptionPin();
-
-  // Low battery level: do nothing
-  cr.reset();
-  cr.spawn(taskMain);
-  cr.run();
-
-  log_info("Loop done in %lu ms", cr.millisDiff(UIO._loop_start));
+    log_info("Loop done in %lu ms", cr.millisDiff(UIO._loop_start));
 }

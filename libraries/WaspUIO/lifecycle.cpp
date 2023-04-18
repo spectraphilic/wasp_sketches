@@ -30,7 +30,7 @@ void assertAlarms()
     );
 
     if (! success) {
-        log_error("RTC error, what we read is not we we wrote");
+        cr_printf("RTC error, what we read is not we wrote\n");
         UIO.reboot();
     }
 }
@@ -318,12 +318,9 @@ void WaspUIO::deepSleep()
         reboot();
     }
 
-    nextAlarm();  // Set next alarm
-    UIO.stopSD(); // Stop SD, logging ends here
-
-    // Clear interruption flag & pin
-    intFlag = 0;
-    PWR.clearInterruptionPin();
+    Utils.muxOFF1(); // Switch off multiplexer, recommended in the interruptions programming guide
+    nextAlarm();     // Set next alarm
+    UIO.stopSD();    // Stop SD, logging ends here
 
     // Power off and Sleep
     Utils.setLED(LED0, LED_OFF);
@@ -335,12 +332,18 @@ void WaspUIO::deepSleep()
     else {
         PWR.sleep(PWR_SLEEP_MODE);
     }
-    Utils.setLED(LED1, LED_ON);
 
     // Awake
-    nloops++;                 // Next loop
+    // We expect Alarm 1 (intFlag & RTC_INT)
+    clearIntFlag();
+    PWR.clearInterruptionPin();
+
+    // Next loop
+    nloops++;
+    Utils.setLED(LED1, LED_ON);
+
+    // Set watchdog
     if (RTC.setWatchdog(LOOP_TIMEOUT)) {
-        // We cannot log because the SD is not started yet
         cr_printf("FATAL ERROR setting watchdog\n");
         reboot();
     }
