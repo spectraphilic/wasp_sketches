@@ -156,7 +156,7 @@ uint8_t WaspUIO::setTimeFrom4G(const char *value)
         if (answer != 1) {
             return 1;
         }
-  
+
         _4G.waitFor("\"", 2000);
     }
     else {
