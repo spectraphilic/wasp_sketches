@@ -64,7 +64,7 @@ COMMAND(cmdI2C)
         double temperature;
         err = UIO.i2c_TMP117(temperature);
     }
-    else if (value == RUN_LAGOPUS_VL53L1X) { 
+    else if (value == RUN_LAGOPUS_VL53L1X) {
         uint8_t nbsamples = 3;
         int distance[nbsamples];
         uint8_t total = UIO.i2c_VL53L1X(distance, nbsamples);

@@ -27,7 +27,7 @@ void WaspUIO::i2c_scan()
   #if WITH_AS7265
   cr_printf("AS726X   (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_AS726X, I2C.scan(I2C_ADDRESS_LAGOPUS_AS726X));
   #endif
-  
+
   cr_printf("BME280   (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_BME280, I2C.scan(I2C_ADDRESS_LAGOPUS_BME280));
   cr_printf("MLX90614 (%02x) %hhu\n", I2C_ADDRESS_LAGOPUS_MLX90614, I2C.scan(I2C_ADDRESS_LAGOPUS_MLX90614));
   cr_printf("TMP1XX   (%02x) %hhu\n", I2C_ADDRESS_TMP117, I2C.scan(I2C_ADDRESS_TMP117));

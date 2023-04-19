@@ -325,7 +325,7 @@ void WaspUIO::deepSleep()
     // Power off and Sleep
     Utils.setLED(LED0, LED_OFF);
     Utils.setLED(LED1, LED_OFF);
-    
+
     if (batteryLevel <= 30) {
         PWR.sleep(ALL_OFF);
     }
