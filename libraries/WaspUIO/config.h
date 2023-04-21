@@ -33,7 +33,7 @@
 #define WITH_AS7265 FALSE
 
 // Timeouts
-#define LOOP_TIMEOUT 4 // minutes
+#define LOOP_TIMEOUT 5 // minutes
 #define SEND_TIMEOUT 300000L // ms
 
 // Reboot every N loops
