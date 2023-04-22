@@ -322,16 +322,17 @@ void WaspUIO::deepSleep()
     nextAlarm();     // Set next alarm
     UIO.stopSD();    // Stop SD, logging ends here
 
-    // Power off and Sleep
+    // Power offD and Sleep
     Utils.setLED(LED0, LED_OFF);
     Utils.setLED(LED1, LED_OFF);
+    PWR.switchesOFF(PWR_SLEEP_MODE);
 
-    if (batteryLevel <= 30) {
-        PWR.sleep(ALL_OFF);
-    }
-    else {
-        PWR.sleep(PWR_SLEEP_MODE);
-    }
+    // Keep I2C on
+    pwr_i2c(1);
+    pwr_i2c_2(1);
+
+    // Sleep
+    PWR.sleep(ALL_ON);
 
     // Awake
     // We expect Alarm 1 (intFlag & RTC_INT)
