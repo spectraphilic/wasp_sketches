@@ -275,7 +275,7 @@ COMMAND(cmdGPS)
         return cmd_unavailable;
     }
 
-    if (UIO.gps(false, true) == -1) {
+    if (UIO.gps(1, 1) == -1) {
         return cmd_error;
     }
 
@@ -468,7 +468,7 @@ COMMAND(cmdTime)
     }
 
     if (strcmp(str, "gps") == 0) {
-        return (UIO.gps(true, false) == -1) ? cmd_error : cmd_ok;
+        return (UIO.gps(2, 0) == -1) ? cmd_error : cmd_ok;
     }
 
     if (sscanf(str, "%hu:%hu:%hu:%hu:%hu:%hu", &year, &month, &day, &hour, &minute, &second) == 6) {

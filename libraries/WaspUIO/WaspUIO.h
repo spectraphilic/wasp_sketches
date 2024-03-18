@@ -454,7 +454,7 @@ public:
 
   // GPS
   uint8_t hasGPS;
-  int8_t gps(bool setTime, bool getPosition);
+  int8_t gps(int time, int position);
   int8_t gps_old(bool setTime, bool getPosition);
 
   // Frames

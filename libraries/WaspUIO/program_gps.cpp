@@ -7,7 +7,7 @@
 
 CR_TASK(taskGPS)
 {
-  UIO.gps(true, true);
+  UIO.gps(2, 2);
   return CR_TASK_STOP;
 }
 

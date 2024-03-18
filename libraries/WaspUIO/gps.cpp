@@ -25,7 +25,7 @@ static int handle_gga(const char *line)
 {
     struct minmea_sentence_gga frame;
     int ok = minmea_parse_gga(&frame, line);
-    //int ok = minmea_parse_gga(&frame, "$GPGGA,002153.000,3342.6618,N,11751.3858,W,1,10,1.2,27.0,M,-34.2,M,,0000*5E");
+    //int ok = minmea_parse_gga(&frame, "$GPGGA,100121.219,3959.0924,N,00002.8586,W,1,03,4.6,-52.0,M,52.0,M,,0000*53");
     if (ok && frame.satellites_tracked > 1) {
         gga = frame;
         position_ok = true;
@@ -56,7 +56,7 @@ static int handle_sentence(const char *line, enum minmea_sentence_id expect)
 static void read() {
 }
 
-int8_t WaspUIO::gps(bool setTime, bool getPosition)
+int8_t WaspUIO::gps(int time, int position)
 {
     char buffer[160];
     uint8_t uart = 1; // UART1 is shared by 4 ports: Socket1, GPS socket, Auxiliar1 and Auxiliar2
@@ -79,20 +79,26 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
 
     // Read from GPS module in UART
     int i = 0;
-    unsigned long timeout = 150 * 1000L; // 150s
     unsigned long t0 = millis();
-    while (!cr.timeout(t0, timeout)) {
+    bool timeout = true;
+    while (!cr.timeout(t0, 120 * 1000L)) {  // timeout = 2m
         if (serialAvailable(1)) {
             char c = serialRead(uart);
             buffer[i++] = c;
             buffer[i] = 0;
             if (c == '\n') {
                 i = 0;
-                if (getPosition && !position_ok) {
+                if (position && !position_ok) {
                     handle_sentence(buffer, MINMEA_SENTENCE_GGA);
+                    if (time == 0) {
+                        timeout = false;
+                        break;
+                    }
                 }
-                else if (setTime && !time_ok) {
+                else if (time && !time_ok) {
                     handle_sentence(buffer, MINMEA_SENTENCE_RMC);
+                    timeout = false;
+                    break;
                 }
                 else {
                     break;
@@ -107,20 +113,24 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
     // Stop GPS
     GPS.OFF();
 
-    // TODO Set time
+    // Time
     if (time_ok) {
-        USB.print("date=");
-        USB.print(rmc.date.year);
-        USB.print(rmc.date.month);
-        USB.println(rmc.date.day);
-        USB.print("time=");
-        USB.print(rmc.time.hours);
-        USB.print(rmc.time.minutes);
-        USB.println(rmc.time.seconds);
-
-//      RTC.setTime(rmc.date.year, rmc.date.month, rmc.date.day,
-//                  RTC.dow(rmc.date.year, rmc.date.month, rmc.date.day),
-//                  rmc.time.hours, rmc.time.minutes, rmc.time.seconds);
+        if (time >= 2) {
+            // TODO Test
+            RTC.setTime(rmc.date.year, rmc.date.month, rmc.date.day,
+                        RTC.dow(rmc.date.year, rmc.date.month, rmc.date.day),
+                        rmc.time.hours, rmc.time.minutes, rmc.time.seconds);
+        }
+        else if (time == 1) {
+            USB.print("date=");
+            USB.print(rmc.date.year);
+            USB.print(rmc.date.month);
+            USB.println(rmc.date.day);
+            USB.print("time=");
+            USB.print(rmc.time.hours);
+            USB.print(rmc.time.minutes);
+            USB.println(rmc.time.seconds);
+        }
     }
 
     // Start SD card
@@ -129,7 +139,7 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
         log_info("GPS Time updated!");
     }
 
-    // TODO Add frame
+    // Position
     if (position_ok) {
         float lat = minmea_tocoord(&gga.latitude);
         float lon = minmea_tocoord(&gga.longitude);
@@ -137,27 +147,34 @@ int8_t WaspUIO::gps(bool setTime, bool getPosition)
         float acc = minmea_tofloat(&gga.hdop);
         int sat = gga.satellites_tracked;
 
-        USB.print("lat="); USB.println(lat);
-        USB.print("lng="); USB.println(lon);
-        USB.print("alt="); USB.println(alt);
-        USB.print("acc="); USB.println(acc);
-        USB.print("sat="); USB.println(sat);
+        if (position >= 2) {
+            // Debug
+            Utils.float2String(lat, buffer, 6);
+            log_debug("GPS latitude  %s", buffer);
+            Utils.float2String(lon, buffer, 6);
+            log_debug("GPS longitude %s", buffer);
+            Utils.float2String(alt, buffer, 6);
+            log_debug("GPS altitude  %s", buffer);
+            Utils.float2String(acc, buffer, 6);
+            log_debug("GPS satellites=%d accuracy=%s", sat, buffer);
 
-        // Debug
-//      char str[15];
-//      Utils.float2String(lat, str, 6);
-//      log_debug("GPS latitude  %s", lat_str);
-//      Utils.float2String(lon, str, 6);
-//      log_debug("GPS longitude %s", str);
-//      Utils.float2String(alt, str, 6);
-//      log_debug("GPS altitude  %s", str);
-//      Utils.float2String(acc, str, 6);
-//      log_debug("GPS satellites=%d accuracy=%s", sat, str);
+            // Frames
+            ADD_SENSOR(SENSOR_GPS, lat, lon);
+            ADD_SENSOR(SENSOR_ALTITUDE, alt)
+            ADD_SENSOR(SENSOR_GPS_ACCURACY, gga.satellites_tracked, acc);
+        }
+        else if (position == 1) {
+            USB.print("lat="); USB.println(lat);
+            USB.print("lng="); USB.println(lon);
+            USB.print("alt="); USB.println(alt);
+            USB.print("acc="); USB.println(acc);
+            USB.print("sat="); USB.println(sat); // FIXME 03 should be 3 not 311
+        }
+    }
 
-        // Frames
-//      ADD_SENSOR(SENSOR_GPS, lat, lon);
-//      ADD_SENSOR(SENSOR_ALTITUDE, alt)
-//      ADD_SENSOR(SENSOR_GPS_ACCURACY, gga.satellites_tracked, acc);
+    if (timeout) {
+        log_warn("GPS Timeout");
+        return -1;
     }
 
     return 0;
@@ -207,8 +224,6 @@ int8_t WaspUIO::gps_old(bool setTime, bool getPosition)
     }
 
     // Time
-    // TODO optimize, part of the work in setTimeFromGPS is already done in
-    // getPosition above
     if (setTime)
         GPS.setTimeFromGPS(); // Save time to RTC
 
