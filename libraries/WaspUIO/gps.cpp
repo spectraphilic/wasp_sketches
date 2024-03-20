@@ -4,8 +4,6 @@
 
 static struct minmea_sentence_rmc rmc;
 static struct minmea_sentence_gga gga;
-static bool time_ok;
-static bool position_ok;
 
 /* RMC - Recommended Minimum Navigation Information */
 static int handle_rmc(const char *line)
@@ -14,10 +12,10 @@ static int handle_rmc(const char *line)
     int ok = minmea_parse_rmc(&frame, line);
     if (ok && frame.valid) {
         rmc = frame;
-        time_ok = true;
+        return 1;
     }
 
-    return ok;
+    return 0;
 }
 
 /* GGA - Global Positioning System Fix Data */
@@ -26,12 +24,12 @@ static int handle_gga(const char *line)
     struct minmea_sentence_gga frame;
     int ok = minmea_parse_gga(&frame, line);
     //int ok = minmea_parse_gga(&frame, "$GPGGA,100121.219,3959.0924,N,00002.8586,W,1,03,4.6,-52.0,M,52.0,M,,0000*53");
-    if (ok && frame.satellites_tracked > 1) {
+    if (ok && frame.satellites_tracked > 2) {
         gga = frame;
-        position_ok = true;
+        return 1;
     }
 
-    return ok;
+    return 0;
 }
 
 static int handle_sentence(const char *line, enum minmea_sentence_id expect)
@@ -58,10 +56,11 @@ static void read() {
 
 int8_t WaspUIO::gps(int time, int position)
 {
-    char buffer[160];
     uint8_t uart = 1; // UART1 is shared by 4 ports: Socket1, GPS socket, Auxiliar1 and Auxiliar2
-    time_ok = false;
-    position_ok = false;
+    char buffer[160];
+    int max = sizeof(buffer) - 1;  // Max number of chars that the buffer can hold
+    bool time_ok = false;
+    bool position_ok = false;
 
     log_debug("GPS start");
 
@@ -78,34 +77,50 @@ int8_t WaspUIO::gps(int time, int position)
     }
 
     // Read from GPS module in UART
+    int next;
+    if (position) {
+        next = MINMEA_SENTENCE_GGA;
+    }
+    else if (time) {
+        next = MINMEA_SENTENCE_RMC;
+    }
+    else {
+        next = 0;
+    }
+
     int i = 0;
+    int error = 0;  // 1: timeout 2: line too long
     unsigned long t0 = millis();
-    bool timeout = true;
-    while (!cr.timeout(t0, 120 * 1000L)) {  // timeout = 2m
+    while (next) {
+        // Stop conditions
+        if (cr.timeout(t0, 120 * 1000L)) {
+            error = 1;  // Timeout
+            break;
+        }
+        if (i >= sizeof(buffer) - 1) {
+            error = 2;  // Avoid buffer overflow
+            break;
+        }
+
         if (serialAvailable(1)) {
             char c = serialRead(uart);
             buffer[i++] = c;
             buffer[i] = 0;
             if (c == '\n') {
                 i = 0;
-                if (position && !position_ok) {
-                    handle_sentence(buffer, MINMEA_SENTENCE_GGA);
-                    if (time == 0) {
-                        timeout = false;
-                        break;
+                if (handle_sentence(buffer, (enum minmea_sentence_id)next)) {
+                    if (next == MINMEA_SENTENCE_GGA) {
+                        position_ok = true;
+                        next = time ? MINMEA_SENTENCE_RMC : 0;
+                    }
+                    else if (next == MINMEA_SENTENCE_RMC) {
+                        time_ok = true;
+                        next = 0;
+                    }
+                    else {
+                        next = 0;
                     }
                 }
-                else if (time && !time_ok) {
-                    handle_sentence(buffer, MINMEA_SENTENCE_RMC);
-                    timeout = false;
-                    break;
-                }
-                else {
-                    break;
-                }
-            }
-            if (i >= sizeof(buffer) - 1) {
-                break;
             }
         }
     }
@@ -113,15 +128,23 @@ int8_t WaspUIO::gps(int time, int position)
     // Stop GPS
     GPS.OFF();
 
+    // Set time as soon as possible
+    // TODO Test
+    if (time_ok && time >= 2) {
+        RTC.setTime(rmc.date.year, rmc.date.month, rmc.date.day,
+                    RTC.dow(rmc.date.year, rmc.date.month, rmc.date.day),
+                    rmc.time.hours, rmc.time.minutes, rmc.time.seconds);
+    }
+
+    // Start SD card
+    startSD();
+
     // Time
     if (time_ok) {
         if (time >= 2) {
-            // TODO Test
-            RTC.setTime(rmc.date.year, rmc.date.month, rmc.date.day,
-                        RTC.dow(rmc.date.year, rmc.date.month, rmc.date.day),
-                        rmc.time.hours, rmc.time.minutes, rmc.time.seconds);
+            log_info("GPS Time updated!");
         }
-        else if (time == 1) {
+        else {
             USB.print("date=");
             USB.print(rmc.date.year);
             USB.print(rmc.date.month);
@@ -131,12 +154,6 @@ int8_t WaspUIO::gps(int time, int position)
             USB.print(rmc.time.minutes);
             USB.println(rmc.time.seconds);
         }
-    }
-
-    // Start SD card
-    startSD();
-    if (time_ok) {
-        log_info("GPS Time updated!");
     }
 
     // Position
@@ -172,8 +189,12 @@ int8_t WaspUIO::gps(int time, int position)
         }
     }
 
-    if (timeout) {
+    if (error == 1) {
         log_warn("GPS Timeout");
+        return -1;
+    }
+    else if (error == 2) {
+        log_warn("Line too long");
         return -1;
     }
 
