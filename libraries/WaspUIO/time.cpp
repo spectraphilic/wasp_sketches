@@ -17,8 +17,7 @@ uint8_t WaspUIO::saveTime()
 
   // Save time to RTC
   uint8_t err = RTC.setTime(ts.year, ts.month, ts.date, ts.day, ts.hour, ts.minute, ts.second);
-  if (err)
-  {
+  if (err) {
     log_warn("saveTime: RTC.setTime(%lu) failed", time);
   }
 
@@ -81,7 +80,7 @@ void WaspUIO::loadTime()
   _epoch_millis = millis();
 
   // If it's an old time, read it from the SD
-  if (_epoch < 1541030400) // 2018-11-01 A date in the past
+  if (_epoch < 1672527600) // 2023-01-01 A date in the past
   {
     log_warn("Wrong time detected");
     if (sd_open(timeFilename, file, O_READ))

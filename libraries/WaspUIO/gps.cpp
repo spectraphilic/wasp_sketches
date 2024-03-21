@@ -10,9 +10,13 @@ static int handle_rmc(const char *line)
 {
     struct minmea_sentence_rmc frame;
     int ok = minmea_parse_rmc(&frame, line);
-    if (ok && frame.valid) {
-        rmc = frame;
-        return 1;
+    //int ok = minmea_parse_rmc(&frame, "$GPRMC,114933.401,A,3959.0757,N,00002.8708,W,0.50,154.92,210324,,,A*7A");
+    if (ok) {
+        USB.print(line);
+        if (frame.valid && frame.date.year >= 24) {
+            rmc = frame;
+            return 1;
+        }
     }
 
     return 0;
@@ -23,10 +27,13 @@ static int handle_gga(const char *line)
 {
     struct minmea_sentence_gga frame;
     int ok = minmea_parse_gga(&frame, line);
-    //int ok = minmea_parse_gga(&frame, "$GPGGA,100121.219,3959.0924,N,00002.8586,W,1,03,4.6,-52.0,M,52.0,M,,0000*53");
-    if (ok && frame.satellites_tracked > 2) {
-        gga = frame;
-        return 1;
+    //int ok = minmea_parse_gga(&frame, "$GPGGA,114933.401,3959.0757,N,00002.8708,W,1,03,4.4,-52.0,M,52.0,M,,0000*5E");
+    if (ok && frame.satellites_tracked) {
+        USB.print(line);
+        if (frame.satellites_tracked > 2) {
+            gga = frame;
+            return 1;
+        }
     }
 
     return 0;
@@ -38,8 +45,6 @@ static int handle_sentence(const char *line, enum minmea_sentence_id expect)
     if (id != expect) {
         return 0;
     }
-
-    USB.print(line);
 
     switch (id) {
         case MINMEA_SENTENCE_GGA:
@@ -129,11 +134,12 @@ int8_t WaspUIO::gps(int time, int position)
     GPS.OFF();
 
     // Set time as soon as possible
-    // TODO Test
     if (time_ok && time >= 2) {
         RTC.setTime(rmc.date.year, rmc.date.month, rmc.date.day,
                     RTC.dow(rmc.date.year, rmc.date.month, rmc.date.day),
                     rmc.time.hours, rmc.time.minutes, rmc.time.seconds);
+        _epoch = RTC.getEpochTime();
+        _epoch_millis = millis();
     }
 
     // Start SD card
@@ -145,14 +151,15 @@ int8_t WaspUIO::gps(int time, int position)
             log_info("GPS Time updated!");
         }
         else {
-            USB.print("date=");
-            USB.print(rmc.date.year);
-            USB.print(rmc.date.month);
-            USB.println(rmc.date.day);
-            USB.print("time=");
-            USB.print(rmc.time.hours);
-            USB.print(rmc.time.minutes);
-            USB.println(rmc.time.seconds);
+            log_debug("GPS time=%d/%d/%d %d:%d:%d.%d",
+                rmc.date.year,
+                rmc.date.month,
+                rmc.date.day,
+                rmc.time.hours,
+                rmc.time.minutes,
+                rmc.time.seconds,
+                rmc.time.microseconds
+            );
         }
     }
 
@@ -164,28 +171,21 @@ int8_t WaspUIO::gps(int time, int position)
         float acc = minmea_tofloat(&gga.hdop);
         int sat = gga.satellites_tracked;
 
-        if (position >= 2) {
-            // Debug
-            Utils.float2String(lat, buffer, 6);
-            log_debug("GPS latitude  %s", buffer);
-            Utils.float2String(lon, buffer, 6);
-            log_debug("GPS longitude %s", buffer);
-            Utils.float2String(alt, buffer, 6);
-            log_debug("GPS altitude  %s", buffer);
-            Utils.float2String(acc, buffer, 6);
-            log_debug("GPS satellites=%d accuracy=%s", sat, buffer);
+        // Debug
+        Utils.float2String(lat, buffer, 6);
+        log_debug("GPS lat=%s", buffer);
+        Utils.float2String(lon, buffer, 6);
+        log_debug("GPS lng=%s", buffer);
+        Utils.float2String(alt, buffer, 6);
+        log_debug("GPS alt=%s", buffer);
+        Utils.float2String(acc, buffer, 6);
+        log_debug("GPS sat=%d acc=%s", sat, buffer);
 
-            // Frames
+        // Frames
+        if (position >= 2) {
             ADD_SENSOR(SENSOR_GPS, lat, lon);
             ADD_SENSOR(SENSOR_ALTITUDE, alt)
             ADD_SENSOR(SENSOR_GPS_ACCURACY, gga.satellites_tracked, acc);
-        }
-        else if (position == 1) {
-            USB.print("lat="); USB.println(lat);
-            USB.print("lng="); USB.println(lon);
-            USB.print("alt="); USB.println(alt);
-            USB.print("acc="); USB.println(acc);
-            USB.print("sat="); USB.println(sat); // FIXME 03 should be 3 not 311
         }
     }
 
