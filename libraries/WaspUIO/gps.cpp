@@ -30,7 +30,7 @@ static int handle_gga(const char *line)
     //int ok = minmea_parse_gga(&frame, "$GPGGA,114933.401,3959.0757,N,00002.8708,W,1,03,4.4,-52.0,M,52.0,M,,0000*5E");
     if (ok && frame.satellites_tracked) {
         //USB.print(line);
-        if (frame.satellites_tracked >= GPS_MIN_SATS) {
+        if (frame.satellites_tracked >= GPS_MIN_SATS && frame.hdop.scale > 0) {
             gga = frame;
             return 1;
         }
