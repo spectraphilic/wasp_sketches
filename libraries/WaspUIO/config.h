@@ -65,6 +65,10 @@
 #define MESHLIUM_URL (char*)"wsn.latice.eu"
 #define MESHLIUM_PORT 80
 
+// GPS
+#define GPS_MIN_SATS 5  // Minimum number of satellites to accept
+#define GPS_TIMEOUT 120 // Seconds to wait for response
+
 // Iridium specific.
 // Save frames to lifo instead of fifo every n hours since epoch at the :mm
 // minutes (like actions).

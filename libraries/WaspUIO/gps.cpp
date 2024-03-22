@@ -12,7 +12,7 @@ static int handle_rmc(const char *line)
     int ok = minmea_parse_rmc(&frame, line);
     //int ok = minmea_parse_rmc(&frame, "$GPRMC,114933.401,A,3959.0757,N,00002.8708,W,0.50,154.92,210324,,,A*7A");
     if (ok) {
-        USB.print(line);
+        //USB.print(line);
         if (frame.valid && frame.date.year >= 24) {
             rmc = frame;
             return 1;
@@ -29,8 +29,8 @@ static int handle_gga(const char *line)
     int ok = minmea_parse_gga(&frame, line);
     //int ok = minmea_parse_gga(&frame, "$GPGGA,114933.401,3959.0757,N,00002.8708,W,1,03,4.4,-52.0,M,52.0,M,,0000*5E");
     if (ok && frame.satellites_tracked) {
-        USB.print(line);
-        if (frame.satellites_tracked > 2) {
+        //USB.print(line);
+        if (frame.satellites_tracked >= GPS_MIN_SATS) {
             gga = frame;
             return 1;
         }
@@ -98,7 +98,7 @@ int8_t WaspUIO::gps(int time, int position)
     unsigned long t0 = millis();
     while (next) {
         // Stop conditions
-        if (cr.timeout(t0, 120 * 1000L)) {
+        if (cr.timeout(t0, GPS_TIMEOUT * 1000L)) {
             error = 1;  // Timeout
             break;
         }
@@ -195,96 +195,6 @@ int8_t WaspUIO::gps(int time, int position)
     }
     else if (error == 2) {
         log_warn("Line too long");
-        return -1;
-    }
-
-    return 0;
-}
-
-
-int8_t WaspUIO::gps_old(bool setTime, bool getPosition)
-{
-    PGM_P error = NULL;
-    uint8_t satellites;
-
-    log_debug("GPS start");
-    if (_boot_version >= 'J')
-        stopSD();
-
-    // On
-    if (GPS.ON() == 0) {
-        startSD();
-        log_error("GPS.ON() failure");
-        return -1;
-    }
-
-    // Connect
-    if (GPS.waitForSignal(150) == false) { // 150s = 2m30s
-        error = PSTR("GPS Timeout");
-        goto exit;
-    }
-
-    // Position
-    if (getPosition) {
-        // Try twice to get enough satellites (4), wait 10s before each try
-        for (int i=0; i < 3; i++) {
-            delay(10000); // 10s
-            int8_t status = GPS.getPosition();
-            if (status == 1) {
-                satellites = (uint8_t) atoi(GPS.satellites);
-                if (satellites > 4)
-                    break;
-            } else if (status == -1) {
-                error = PSTR("GPS.getPosition() No GPS signal");
-                goto exit;
-            } else { // if (status == 0)
-                error = PSTR("GPS.getPosition() Timeout");
-                goto exit;
-            }
-        }
-    }
-
-    // Time
-    if (setTime)
-        GPS.setTimeFromGPS(); // Save time to RTC
-
-    GPS.OFF();
-    startSD();
-
-    // Set system time. Do this here because we need the SD
-    if (setTime) {
-        UIO.loadTime();
-        log_info("GPS Time updated!");
-    }
-
-    if (getPosition) {
-        float lat = GPS.convert2Degrees(GPS.latitude , GPS.NS_indicator);
-        float lon = GPS.convert2Degrees(GPS.longitude, GPS.EW_indicator);
-        float alt = atof(GPS.altitude);
-        float acc = atof(GPS.accuracy);
-
-        // Debug
-        char lat_str[15];
-        char lon_str[15];
-        Utils.float2String(lat, lat_str, 6);
-        Utils.float2String(lon, lon_str, 6);
-        log_debug("GPS latitude  %s %c => %s", GPS.latitude, GPS.NS_indicator, lat_str);
-        log_debug("GPS longitude %s %c => %s", GPS.longitude, GPS.EW_indicator, lon_str);
-        log_debug("GPS altitude=%s", GPS.altitude);
-        log_debug("GPS satellites=%s accuracy=%s", GPS.satellites, GPS.accuracy);
-
-        // Frames
-        ADD_SENSOR(SENSOR_GPS, lat, lon);
-        ADD_SENSOR(SENSOR_ALTITUDE, alt)
-        ADD_SENSOR(SENSOR_GPS_ACCURACY, satellites, acc);
-    }
-
-exit:
-    if (error) {
-        GPS.OFF();
-        startSD();
-
-        cr.log_P(LOG_ERROR, error);
         return -1;
     }
 

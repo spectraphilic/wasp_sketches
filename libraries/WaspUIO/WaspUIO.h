@@ -455,7 +455,6 @@ public:
   // GPS
   uint8_t hasGPS;
   int8_t gps(int time, int position);
-  int8_t gps_old(bool setTime, bool getPosition);
 
   // Frames
   uint8_t getDataFilename(char* filename, uint8_t src, uint8_t year, uint8_t month, uint8_t date);
