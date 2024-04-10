@@ -57,9 +57,11 @@ void loop()
     UIO.deepSleep();
 
     // Low battery level: do nothing
-    cr.reset();
-    cr.spawn(taskMain);
-    cr.run();
+    if (UIO.battery > BATTERY_BOTTOM) {
+        cr.reset();
+        cr.spawn(taskMain);
+        cr.run();
+    }
 
     log_info("Loop done in %lu ms", cr.millisDiff(UIO._loop_start));
 }
