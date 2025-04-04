@@ -57,7 +57,7 @@ void loop()
     UIO.deepSleep();
 
     // Low battery level: do nothing
-    if (UIO.battery > BATTERY_BOTTOM) {
+    if (UIO.battery > BATTERY_LOW) {
         cr.reset();
         cr.spawn(taskMain);
         cr.run();

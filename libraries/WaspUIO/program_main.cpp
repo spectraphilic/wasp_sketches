@@ -108,7 +108,7 @@ CR_TASK(taskMain)
 #endif
     }
 
-    if ((UIO.battery > BATTERY_LOW) && UIO.action(1, RUN_WAN)) {
+    if ((UIO.battery > BATTERY_MIDDLE) && UIO.action(1, RUN_WAN)) {
 #if WITH_4G
         if (UIO.wan_type == WAN_4G) {
             CR_SPAWN2(taskNetwork4G, network_id);

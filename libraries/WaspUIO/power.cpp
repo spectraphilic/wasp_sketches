@@ -248,13 +248,9 @@ void WaspUIO::readBattery()
     batteryLevel = PWR.getBatteryLevel();
   }
 
-  if      (batteryLevel < 15) { battery = BATTERY_BOTTOM; }
-  else if (batteryLevel < 35) { battery = BATTERY_LOW; }
-  else if (batteryLevel < 70) { battery = BATTERY_MIDDLE; }
-  else                        { battery = BATTERY_HIGH; }
-
-  // cooldown factor
-  cooldown = (battery > BATTERY_LOW) ? 1 : 4;
+  if      (batteryLevel < 30) { battery = BATTERY_LOW;    cooldown = 6; }
+  else if (batteryLevel < 70) { battery = BATTERY_MIDDLE; cooldown = 3; }
+  else                        { battery = BATTERY_HIGH;   cooldown = 1; }
 }
 
 

@@ -18,7 +18,7 @@
 
 // Networking
 #define WITH_XBEE FALSE
-#define WITH_4G TRUE
+#define WITH_4G FALSE
 #define WITH_IRIDIUM FALSE
 #define WITH_LORA FALSE
 #define WITH_CRYPTO FALSE

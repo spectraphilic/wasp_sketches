@@ -57,7 +57,6 @@
 #define GPS_4G 2
 
 enum battery_t {
-  BATTERY_BOTTOM,
   BATTERY_LOW,
   BATTERY_MIDDLE,
   BATTERY_HIGH

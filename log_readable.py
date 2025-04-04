@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import os
 import sys
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         for line in open(filename, 'rb'):
             try:
                 time, tail = line.split(b' ', 1)
-                time = datetime.utcfromtimestamp(float(time))
+                time = datetime.datetime.fromtimestamp(float(time), datetime.UTC)
             except ValueError:
                 pass
             else:
